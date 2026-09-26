@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AbilityIndicatorConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_indicator_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+line_width = 0.06
+line_thickness = 0.02
+ground_offset = 0.05
+fade_duration = 0.25
+start_transparency = 0.6
+pulse_transparency = 0.1
+pulse_duration = 0.2

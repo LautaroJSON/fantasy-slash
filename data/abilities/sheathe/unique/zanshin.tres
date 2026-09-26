@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AbilityUniqueUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_unique_upgrade_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"zanshin"
+max_level = 1
+level_values = Array[float]([])
+level_descriptions = Array[String](["Si Envainar mata a un enemigo,
+tu dash se recarga al instante"])
+title = "Zanshin"
+description = "Si Envainar mata a un enemigo,
+tu dash se recarga al instante"

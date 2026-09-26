@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+stat = 8
+amount = 0.1
+max_stacks = 10
+title = "Bono de daño"
+description = "+10 % de daño"

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="HealthBarConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/health_bar_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+size = Vector2(1, 0.12)
+height_offset = 2.2
+trail_hold_time = 0.4
+trail_drain_speed = 1.5
+level_format = "lv. %d"
+level_font_size = 48
+level_pixel_size = 0.005
+level_gap = 0.08
+heavy_hit_fraction = 0.3333
+shake_duration = 0.25
+shake_amplitude = 0.05
+shake_frequency = 30.0

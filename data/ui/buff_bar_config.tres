@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuffBarConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/buff_bar_config.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/ui/cooldown_text_config.tres" id="2_cooldown_text"]
+[ext_resource type="Resource" path="res://data/ui/cooldown_clock_config.tres" id="9_clock"]
+
+[resource]
+script = ExtResource("1_script")
+max_icons = 4
+icon_size = 36.0
+spacing = 6.0
+time_font_size = 15
+stack_font_size = 10
+clock = ExtResource("9_clock")
+cooldown_text = ExtResource("2_cooldown_text")

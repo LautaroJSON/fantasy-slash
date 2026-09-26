@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ChargeFeedbackConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/charge_feedback_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+milestone_interval = 1.0
+base_shake = 0.25
+step_shake = 0.15
+full_shake = 0.8
+base_tremor = 0.02
+step_tremor = 0.015
+full_tremor = 0.06
+tremor_duration = 0.2
+tremor_frequency = 40.0
+empowered_shake = 0.35

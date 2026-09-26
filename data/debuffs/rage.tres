@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="DebuffData" format=3]
+
+[ext_resource type="Script" path="res://resources/debuff_data.gd" id="1_script"]
+[ext_resource type="Material" path="res://materials/debuff_rage_material.tres" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"rage"
+effect = 2
+max_stacks = 1
+permanent = true
+icon_material = ExtResource("2_icon")

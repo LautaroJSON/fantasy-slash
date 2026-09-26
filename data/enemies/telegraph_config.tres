@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="TelegraphConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/telegraph_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+ground_offset = 0.02
+fill_lift = 0.005
+thickness = 0.01
+base_transparency = 0.75
+fill_transparency = 0.44
+flash_transparency = 0.0
+flash_time = 0.1
+fade_time = 0.25
+sector_segments = 48
+dust_amount = 24
+dust_lifetime = 0.6
+dust_size = 0.35
+dust_rise_speed_min = 0.8
+dust_rise_speed_max = 2.0
+dust_spread = 0.8
+dust_cone_degrees = 30.0

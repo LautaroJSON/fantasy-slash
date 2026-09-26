@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityUniqueUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_unique_upgrade_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"nuki"
+max_level = 1
+level_values = Array[float]([])
+level_descriptions = Array[String](["Cada dash recarga Envainar al instante"])
+title = "Nuki"
+description = "Cada dash recarga Envainar al instante"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharacterClassData" format=3]
+
+[ext_resource type="Script" path="res://resources/character_class_data.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/classes/samurai/samurai_stats.tres" id="2_stats"]
+[ext_resource type="Resource" path="res://data/classes/samurai/samurai_abilities.tres" id="3_abilities"]
+[ext_resource type="Resource" path="res://data/classes/samurai/katana.tres" id="4_weapon"]
+
+[resource]
+script = ExtResource("1_script")
+title = "Samurái"
+description = "Katana. Ágil y letal,
+críticos frecuentes"
+base_stats = ExtResource("2_stats")
+abilities = ExtResource("3_abilities")
+weapon = ExtResource("4_weapon")

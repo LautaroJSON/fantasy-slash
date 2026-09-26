@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/ability_upgrade_data.gd" id="2_upgrade_script"]
+[ext_resource type="PackedScene" path="res://components/abilities/swift_strike_ability.tscn" id="3_behavior"]
+[ext_resource type="Resource" path="res://data/abilities/swift_strike/upgrades/damage.tres" id="4_damage"]
+[ext_resource type="Resource" path="res://data/abilities/swift_strike/upgrades/scaling.tres" id="5_scaling"]
+[ext_resource type="Resource" path="res://data/abilities/swift_strike/upgrades/cooldown.tres" id="6_cooldown"]
+[ext_resource type="Resource" path="res://data/abilities/swift_strike/upgrades/range.tres" id="7_range"]
+[ext_resource type="Resource" path="res://data/abilities/swift_strike/upgrades/width.tres" id="8_width"]
+[ext_resource type="Resource" path="res://data/abilities/swift_strike/upgrades/sprint_speed.tres" id="9_sprint_speed"]
+[ext_resource type="Script" path="res://resources/ability_unique_upgrade_data.gd" id="10_unique_script"]
+[ext_resource type="Resource" path="res://data/abilities/swift_strike/unique/reset.tres" id="11_reset"]
+[ext_resource type="Resource" path="res://data/abilities/swift_strike/unique/execute.tres" id="12_execute"]
+
+[resource]
+script = ExtResource("1_script")
+title = "Swift Strike"
+description = "Esprintás hacia el enemigo más cercano
+rebanando a todos en el camino.
+12 de daño + 10 % de tu daño.
+Recorrido: 6 m · Enfriamiento: 6 s"
+slot = 0
+behavior = ExtResource("3_behavior")
+base_damage = 12.0
+attack_scaling = 0.1
+cooldown = 6.0
+hit_range = 6.0
+hit_width = 1.2
+cast_duration = 0.3
+min_cooldown = 1.5
+min_cast_duration = 0.12
+upgrades = Array[ExtResource("2_upgrade_script")]([ExtResource("4_damage"), ExtResource("5_scaling"), ExtResource("6_cooldown"), ExtResource("7_range"), ExtResource("8_width"), ExtResource("9_sprint_speed")])
+unique_upgrades = Array[ExtResource("10_unique_script")]([ExtResource("11_reset"), ExtResource("12_execute")])

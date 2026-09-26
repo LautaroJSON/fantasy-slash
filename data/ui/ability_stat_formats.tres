@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="AbilityStatFormats" format=3 uid="uid://bolu13iwrxl12"]
+
+[ext_resource type="Script" uid="uid://vau8r7ev676y" path="res://resources/ability_stat_formats.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://clqaknbxq40nf" path="res://resources/value_format.gd" id="2_format"]
+
+[sub_resource type="Resource" id="Format_base_damage"]
+script = ExtResource("2_format")
+format = "%.0f"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Format_scaling"]
+script = ExtResource("2_format")
+format = "%.0f %%"
+multiplier = 100.0
+
+[sub_resource type="Resource" id="Format_cooldown"]
+script = ExtResource("2_format")
+format = "%.1f s"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Format_range"]
+script = ExtResource("2_format")
+format = "%.1f m"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Format_width"]
+script = ExtResource("2_format")
+format = "%.1f m"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Format_cast"]
+script = ExtResource("2_format")
+format = "%.2f s"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Format_tick"]
+script = ExtResource("2_format")
+format = "%.2f s"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Format_charge"]
+script = ExtResource("2_format")
+format = "%.1f s"
+multiplier = 1.0
+
+[resource]
+script = ExtResource("1_script")
+formats = Array[ExtResource("2_format")]([SubResource("Format_base_damage"), SubResource("Format_scaling"), SubResource("Format_cooldown"), SubResource("Format_range"), SubResource("Format_width"), SubResource("Format_cast"), SubResource("Format_tick"), SubResource("Format_charge")])

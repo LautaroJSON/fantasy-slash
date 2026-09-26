@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharacterClassData" format=3 uid="uid://c6g8jf4sjcq0e"]
+
+[ext_resource type="Script" uid="uid://c0anouj3aiswg" path="res://resources/character_class_data.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/classes/warrior/warrior_stats.tres" id="2_stats"]
+[ext_resource type="Resource" path="res://data/classes/warrior/warrior_abilities.tres" id="3_abilities"]
+[ext_resource type="Resource" uid="uid://l2ugd4dallt4" path="res://data/classes/warrior/sword.tres" id="4_weapon"]
+
+[resource]
+script = ExtResource("1_script")
+title = "Guerrero"
+description = "Espada. Golpes en arco
+a corta distancia"
+base_stats = ExtResource("2_stats")
+abilities = ExtResource("3_abilities")
+weapon = ExtResource("4_weapon")

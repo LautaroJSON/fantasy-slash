@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BossChallengeData" format=3]
+
+[ext_resource type="Script" path="res://resources/boss_challenge_data.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/enemies/colmena_stats.tres" id="2_stats"]
+
+[resource]
+script = ExtResource("1_script")
+title = "Colmena"
+stats = ExtResource("2_stats")
+count = 1

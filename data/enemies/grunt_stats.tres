@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="EnemyStats" format=3 uid="uid://e24b0yfedspt"]
+
+[ext_resource type="Script" uid="uid://b7jvh5hu4k1jl" path="res://resources/enemy_stats.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bccm8umkwltgo" path="res://resources/enemy_stat_growth.gd" id="2_growth"]
+[ext_resource type="PackedScene" path="res://components/enemies/melee_behavior.tscn" id="3_behavior"]
+[ext_resource type="Resource" path="res://data/enemies/attacks/grunt_punch.tres" id="4_attack"]
+[ext_resource type="Script" path="res://resources/enemy_attack_data.gd" id="5_attack_script"]
+
+[sub_resource type="Resource" id="Resource_max_health"]
+script = ExtResource("2_growth")
+stat = 2
+amount = 0.2
+
+[sub_resource type="Resource" id="Resource_damage"]
+script = ExtResource("2_growth")
+amount = 0.1
+
+[sub_resource type="Resource" id="Resource_defense"]
+script = ExtResource("2_growth")
+stat = 1
+mode = 1
+amount = 0.5
+has_cap = true
+cap = 5.0
+
+[sub_resource type="Resource" id="Resource_move_speed"]
+script = ExtResource("2_growth")
+stat = 5
+mode = 1
+amount = 0.1
+has_cap = true
+cap = 5.0
+
+[resource]
+script = ExtResource("1_script")
+damage = 8.0
+max_health = 40.0
+attack_interval = 0.4
+attack_range = 2.0
+move_speed = 3.5
+knockback_friction = 20.0
+level_growth = Array[ExtResource("2_growth")]([SubResource("Resource_max_health"), SubResource("Resource_damage"), SubResource("Resource_defense"), SubResource("Resource_move_speed")])
+body_scale = 1.0
+health_bar_scale = 1.0
+behavior = ExtResource("3_behavior")
+attacks = Array[ExtResource("5_attack_script")]([ExtResource("4_attack")])

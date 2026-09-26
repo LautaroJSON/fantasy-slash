@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="EnemyStats" format=3]
+
+[ext_resource type="Script" uid="uid://b7jvh5hu4k1jl" path="res://resources/enemy_stats.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bccm8umkwltgo" path="res://resources/enemy_stat_growth.gd" id="2_growth"]
+[ext_resource type="PackedScene" path="res://components/enemies/boss_behavior.tscn" id="3_behavior"]
+[ext_resource type="Resource" path="res://data/enemies/hands/verdugo_hands.tres" id="4_hands"]
+[ext_resource type="Resource" path="res://data/enemies/configs/verdugo_boss.tres" id="5_config"]
+
+[sub_resource type="Resource" id="Resource_max_health"]
+script = ExtResource("2_growth")
+stat = 2
+amount = 0.095
+
+[sub_resource type="Resource" id="Resource_damage"]
+script = ExtResource("2_growth")
+amount = 0.1
+
+[sub_resource type="Resource" id="Resource_defense"]
+script = ExtResource("2_growth")
+stat = 1
+mode = 1
+amount = 0.25
+has_cap = true
+cap = 8.0
+
+[sub_resource type="Resource" id="Resource_move_speed"]
+script = ExtResource("2_growth")
+stat = 5
+mode = 1
+amount = 0.1
+has_cap = true
+cap = 4.0
+
+[resource]
+script = ExtResource("1_script")
+damage = 18.0
+defense = 2.0
+max_health = 1380.0
+attack_interval = 0.8
+attack_range = 3.0
+move_speed = 3.0
+knockback_friction = 80.0
+level_growth = Array[ExtResource("2_growth")]([SubResource("Resource_max_health"), SubResource("Resource_damage"), SubResource("Resource_defense"), SubResource("Resource_move_speed")])
+body_scale = 2.0
+health_bar_scale = 1.6
+display_name = "Verdugo"
+hud_health_bar = true
+behavior = ExtResource("3_behavior")
+hands_config = ExtResource("4_hands")
+behavior_config = ExtResource("5_config")
+ignores_attack_tokens = true

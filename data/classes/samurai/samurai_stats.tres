@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PlayerStats" format=3 uid="uid://cm6l65mkpon2g"]
+
+[ext_resource type="Script" uid="uid://bbqq4n5tsuc7e" path="res://resources/player_stats.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+damage = 14.0
+defense = 1.0
+max_health = 90.0
+crit_chance = 0.15
+crit_damage = 1.0
+attack_speed = 1.6
+attack_range = 2.3
+move_speed = 6.5
+jump_velocity = 4.5
+dash_distance = 3.5
+dash_cooldown = 1.5
+attack_arc_degrees = 100.0
+dash_speed = 25.0

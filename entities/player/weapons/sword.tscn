@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://bx1elvr64q2yc"]
+
+[ext_resource type="ArrayMesh" uid="uid://o46bxr8dt26w" path="res://assets/models/weapons/hoplite_sword/hoplite_sword.obj" id="1_model"]
+[ext_resource type="Material" path="res://materials/weapons/hoplite_iron_material.tres" id="2_iron"]
+[ext_resource type="Material" path="res://materials/weapons/hoplite_handle_material.tres" id="3_handle"]
+[ext_resource type="Material" path="res://materials/weapons/hoplite_trim_material.tres" id="4_trim"]
+
+[node name="Sword" type="Node3D" unique_id=1936223053]
+
+[node name="Model" type="MeshInstance3D" parent="." unique_id=1058810081]
+transform = Transform3D(0.1468, 0, 0, 0, 0, -0.1468, 0, 0.1468, 0, 0, 0, -0.1468)
+mesh = ExtResource("1_model")
+surface_material_override/0 = ExtResource("2_iron")
+surface_material_override/1 = ExtResource("3_handle")
+surface_material_override/2 = ExtResource("4_trim")
+
+[node name="TrailBase" type="Marker3D" parent="." unique_id=1910955062]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.44)
+
+[node name="TrailTip" type="Marker3D" parent="." unique_id=130707861]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.47)

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AbilityUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_upgrade_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+stat = 0
+amount = 4.0
+max_stacks = 5
+title = "Giro: daño"
+description = "+4 de daño base por vuelta"

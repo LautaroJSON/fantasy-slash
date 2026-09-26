@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="InputPromptConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/input_prompt_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+keyboard_prompts = Dictionary[StringName, String]({
+&"ability_basic": "E",
+&"ability_ultimate": "R"
+})
+gamepad_prompts = Dictionary[StringName, String]({
+&"ability_basic": "LB",
+&"ability_ultimate": "RT"
+})
+gamepad_motion_threshold = 0.5

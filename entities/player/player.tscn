@@ -1,0 +1,334 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://entities/player/player.gd" id="1_script"]
+[ext_resource type="Material" path="res://materials/player_material.tres" id="2_body_material"]
+[ext_resource type="Script" path="res://components/stats_component.gd" id="4_stats"]
+[ext_resource type="Script" path="res://components/health_component.gd" id="5_health"]
+[ext_resource type="Script" path="res://components/movement_component.gd" id="6_movement"]
+[ext_resource type="Script" path="res://components/attack_component.gd" id="7_attack"]
+[ext_resource type="Resource" path="res://data/classes/warrior/warrior_stats.tres" id="8_player_stats"]
+[ext_resource type="Resource" path="res://data/combat/combat_rules.tres" id="9_rules"]
+[ext_resource type="Resource" path="res://data/player/player_tuning.tres" id="10_tuning"]
+[ext_resource type="PackedScene" path="res://components/camera/third_person_camera.tscn" id="11_camera"]
+[ext_resource type="Resource" path="res://data/player/camera_config.tres" id="12_camera_config"]
+[ext_resource type="Script" path="res://components/dash_component.gd" id="13_dash"]
+[ext_resource type="Script" path="res://components/weapon_trail.gd" id="14_trail"]
+[ext_resource type="Resource" path="res://data/player/weapon_trail_config.tres" id="15_trail_config"]
+[ext_resource type="Material" path="res://materials/weapon_trail_material.tres" id="16_trail_material"]
+[ext_resource type="Script" path="res://components/abilities/ability_component.gd" id="17_ability"]
+[ext_resource type="Script" path="res://components/hit_feedback_component.gd" id="18_hit_feedback"]
+[ext_resource type="Resource" path="res://data/player/hit_feedback_config.tres" id="19_hit_feedback_config"]
+[ext_resource type="Script" path="res://components/sword_swing.gd" id="20_sword_swing"]
+[ext_resource type="Resource" path="res://data/classes/warrior/warrior.tres" id="22_warrior"]
+[ext_resource type="Script" path="res://components/charge_feedback_component.gd" id="23_charge_feedback"]
+[ext_resource type="Resource" path="res://data/player/charge_feedback_config.tres" id="24_charge_feedback_config"]
+[ext_resource type="Script" path="res://components/buff_component.gd" id="25_buffs"]
+[ext_resource type="Script" path="res://components/air_slash_component.gd" id="26_air_slash"]
+[ext_resource type="Script" path="res://components/abilities/ability_rect_indicator.gd" id="27_rect_indicator"]
+[ext_resource type="Resource" path="res://data/classes/berserker/air_slash_indicator_config.tres" id="28_air_slash_indicator_config"]
+[ext_resource type="Material" path="res://materials/attack_indicator_material.tres" id="29_indicator_material"]
+[ext_resource type="Script" path="res://components/abilities/wind_cut_vfx.gd" id="30_wind_cut"]
+[ext_resource type="Resource" path="res://data/classes/berserker/air_slash_wind_cut_config.tres" id="31_air_slash_wind_cut_config"]
+[ext_resource type="Material" path="res://materials/vfx/wind_cut_additive_material.tres" id="32_glow_material"]
+[ext_resource type="Material" path="res://materials/vfx/wind_dust_material.tres" id="33_dust_material"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+material = ExtResource("2_body_material")
+radius = 0.4
+height = 1.8
+
+[sub_resource type="Animation" id="Animation_thrust"]
+resource_name = "thrust"
+length = 1.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visual/SwordPivot:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0, 0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Visual/SwordPivot:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.65, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0.3, 1.1, 0.35), Vector3(0.3, 1.1, 0.45), Vector3(0.3, 1.1, -0.5)]
+}
+
+[sub_resource type="Animation" id="Animation_thrust_recover"]
+resource_name = "thrust_recover"
+length = 0.15
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visual/SwordPivot:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.15),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0.9, 0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Visual/SwordPivot:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.15),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(0.3, 1.1, -0.5), Vector3(0.45, 1.3, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_swift_strike"]
+resource_name = "swift_strike"
+length = 1.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visual/SwordPivot:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.35, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(-0.2, -1.6, 0), Vector3(-0.2, -1.6, 0), Vector3(-0.2, 1.3, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Visual/SwordPivot:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.35, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0.45, 1.0, 0.2), Vector3(0.45, 1.0, 0.2), Vector3(0.1, 1.0, -0.4)]
+}
+
+[sub_resource type="Animation" id="Animation_swift_strike_recover"]
+resource_name = "swift_strike_recover"
+length = 0.15
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visual/SwordPivot:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.15),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(-0.2, 1.3, 0), Vector3(0.9, 0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Visual/SwordPivot:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.15),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(0.1, 1.0, -0.4), Vector3(0.45, 1.3, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_sheathe_slash"]
+resource_name = "sheathe_slash"
+length = 1.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Visual/SwordPivot:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(-0.35, 3.1416, 0), Vector3(-0.45, 0.7, 0), Vector3(1.1, -0.7, 0), Vector3(0.93, -0.99, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Visual/SwordPivot:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.3, 0.75, 1),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(-0.42, 0.95, -0.15), Vector3(-0.35, 0.85, -0.35), Vector3(0.3, 1.55, -0.35), Vector3(-0.1, 0.95, -0.5)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_sword"]
+_data = {
+&"thrust": SubResource("Animation_thrust"),
+&"thrust_recover": SubResource("Animation_thrust_recover"),
+&"swift_strike": SubResource("Animation_swift_strike"),
+&"swift_strike_recover": SubResource("Animation_swift_strike_recover"),
+&"sheathe_slash": SubResource("Animation_sheathe_slash")
+}
+
+[node name="Player" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_script")
+default_class = ExtResource("22_warrior")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Body" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("CapsuleMesh_body")
+
+[node name="SwordPivot" type="Node3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 0.62161, -0.78333, 0, 0.78333, 0.62161, 0.45, 1.3, 0)
+
+[node name="SwingPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_sword")
+}
+
+[node name="StatsComponent" type="Node" parent="."]
+script = ExtResource("4_stats")
+base_stats = ExtResource("8_player_stats")
+rules = ExtResource("9_rules")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("5_health")
+rules = ExtResource("9_rules")
+
+[node name="MovementComponent" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "stats")]
+script = ExtResource("6_movement")
+body = NodePath("..")
+visual = NodePath("../Visual")
+stats = NodePath("../StatsComponent")
+tuning = ExtResource("10_tuning")
+
+[node name="DashComponent" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "health", "stats")]
+script = ExtResource("13_dash")
+body = NodePath("..")
+visual = NodePath("../Visual")
+health = NodePath("../HealthComponent")
+stats = NodePath("../StatsComponent")
+
+[node name="SwordSwing" type="Node" parent="." node_paths=PackedStringArray("pivot", "animator")]
+script = ExtResource("20_sword_swing")
+pivot = NodePath("../Visual/SwordPivot")
+animator = NodePath("../SwingPlayer")
+
+[node name="AttackComponent" type="Node" parent="." node_paths=PackedStringArray("visual", "stats", "health", "sword_swing", "movement")]
+script = ExtResource("7_attack")
+visual = NodePath("../Visual")
+stats = NodePath("../StatsComponent")
+health = NodePath("../HealthComponent")
+sword_swing = NodePath("../SwordSwing")
+movement = NodePath("../MovementComponent")
+tuning = ExtResource("10_tuning")
+
+[node name="BuffComponent" type="Node" parent="."]
+script = ExtResource("25_buffs")
+
+[node name="BasicAbility" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "player_stats", "swing_player", "movement", "sword_swing", "health", "buffs", "dash")]
+script = ExtResource("17_ability")
+slot = 0
+body = NodePath("..")
+visual = NodePath("../Visual")
+player_stats = NodePath("../StatsComponent")
+swing_player = NodePath("../SwingPlayer")
+tuning = ExtResource("10_tuning")
+movement = NodePath("../MovementComponent")
+sword_swing = NodePath("../SwordSwing")
+health = NodePath("../HealthComponent")
+charge_feedback = ExtResource("24_charge_feedback_config")
+buffs = NodePath("../BuffComponent")
+dash = NodePath("../DashComponent")
+
+[node name="UltimateAbility" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "player_stats", "swing_player", "movement", "sword_swing", "health", "buffs", "dash")]
+script = ExtResource("17_ability")
+slot = 1
+body = NodePath("..")
+visual = NodePath("../Visual")
+player_stats = NodePath("../StatsComponent")
+swing_player = NodePath("../SwingPlayer")
+tuning = ExtResource("10_tuning")
+movement = NodePath("../MovementComponent")
+sword_swing = NodePath("../SwordSwing")
+health = NodePath("../HealthComponent")
+charge_feedback = ExtResource("24_charge_feedback_config")
+buffs = NodePath("../BuffComponent")
+dash = NodePath("../DashComponent")
+
+[node name="AirSlash" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "stats", "health", "movement", "sword_swing", "camera")]
+script = ExtResource("26_air_slash")
+body = NodePath("..")
+visual = NodePath("../Visual")
+stats = NodePath("../StatsComponent")
+health = NodePath("../HealthComponent")
+movement = NodePath("../MovementComponent")
+sword_swing = NodePath("../SwordSwing")
+camera = NodePath("../CameraRig")
+
+[node name="Indicator" type="Node3D" parent="AirSlash"]
+top_level = true
+script = ExtResource("27_rect_indicator")
+config = ExtResource("28_air_slash_indicator_config")
+material = ExtResource("29_indicator_material")
+
+[node name="WindCut" type="Node3D" parent="AirSlash"]
+top_level = true
+script = ExtResource("30_wind_cut")
+config = ExtResource("31_air_slash_wind_cut_config")
+glow_material = ExtResource("32_glow_material")
+dust_material = ExtResource("33_dust_material")
+
+[node name="WeaponTrail" type="MeshInstance3D" parent="." node_paths=PackedStringArray("sword_swing", "abilities")]
+top_level = true
+script = ExtResource("14_trail")
+sword_swing = NodePath("../SwordSwing")
+abilities = [NodePath("../BasicAbility"), NodePath("../UltimateAbility")]
+config = ExtResource("15_trail_config")
+material = ExtResource("16_trail_material")
+
+[node name="HitFeedback" type="Node" parent="." node_paths=PackedStringArray("health", "visual", "camera")]
+script = ExtResource("18_hit_feedback")
+health = NodePath("../HealthComponent")
+visual = NodePath("../Visual")
+camera = NodePath("../CameraRig")
+config = ExtResource("19_hit_feedback_config")
+
+[node name="ChargeFeedback" type="Node" parent="." node_paths=PackedStringArray("abilities", "camera", "body")]
+script = ExtResource("23_charge_feedback")
+abilities = [NodePath("../BasicAbility"), NodePath("../UltimateAbility")]
+camera = NodePath("../CameraRig")
+body = NodePath("../Visual/Body")
+config = ExtResource("24_charge_feedback_config")
+
+[node name="CameraRig" parent="." node_paths=PackedStringArray("target") instance=ExtResource("11_camera")]
+target = NodePath("..")
+config = ExtResource("12_camera_config")

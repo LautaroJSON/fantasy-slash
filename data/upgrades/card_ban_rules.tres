@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CardBanRules" format=3]
+
+[ext_resource type="Script" path="res://resources/card_ban_rules.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+every_waves = 3
+max_bans = 10
+title = "Bloquear mejora"
+description = "No vuelve a salir en esta run
+(en lugar de una mejora)"

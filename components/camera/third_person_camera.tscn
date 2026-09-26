@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://components/camera/third_person_camera.gd" id="1_script"]
+
+[node name="ThirdPersonCamera" type="Node3D"]
+top_level = true
+script = ExtResource("1_script")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="."]
+collision_mask = 1
+margin = 0.2
+
+[node name="Camera3D" type="Camera3D" parent="SpringArm3D"]
+current = true

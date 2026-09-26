@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CameraConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/camera_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+follow_offset = Vector3(0, 1.5, 0)
+spring_length = 5.0
+mouse_sensitivity = 0.003
+min_pitch_deg = -60.0
+max_pitch_deg = 30.0
+invert_y = false
+stick_yaw_speed = 3.0
+stick_pitch_speed = 2.0
+shake_duration = 0.25
+shake_max_offset = 0.3

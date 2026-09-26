@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://components/abilities/thrust_ability.gd" id="1_script"]
+[ext_resource type="Script" path="res://components/abilities/ability_rect_indicator.gd" id="2_indicator"]
+[ext_resource type="Resource" path="res://data/abilities/thrust/thrust_indicator_config.tres" id="3_indicator_config"]
+[ext_resource type="Material" path="res://materials/attack_indicator_material.tres" id="4_indicator_material"]
+
+[node name="ThrustAbility" type="Node"]
+script = ExtResource("1_script")
+
+[node name="Indicator" type="Node3D" parent="."]
+top_level = true
+script = ExtResource("2_indicator")
+config = ExtResource("3_indicator_config")
+material = ExtResource("4_indicator_material")

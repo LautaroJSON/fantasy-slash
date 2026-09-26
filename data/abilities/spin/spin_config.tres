@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SpinConfig" format=3 uid="uid://cpix1ato4qo7d"]
+
+[ext_resource type="Script" uid="uid://dicpuojm2wh40" path="res://resources/spin_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+move_speed_factor = 0.8
+knockback_speed = 2.5
+blade_position = Vector3(0.4, 1.1, 0)
+blade_rotation = Vector3(0, -1.5708, 0)
+dash_slash_damage_factor = 2.0
+dash_slash_width = 2.5
+dash_slash_knockback_speed = 4.0
+dash_slash_arc_degrees = 220.0
+dash_slash_sweep_duration = 0.2

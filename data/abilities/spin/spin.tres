@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3 uid="uid://b6emgh2r2eyf7"]
+
+[ext_resource type="Script" uid="uid://di4ltwmxxqcq0" path="res://resources/ability_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dm32h1yv4ymv1" path="res://resources/ability_upgrade_data.gd" id="2_upgrade_script"]
+[ext_resource type="PackedScene" uid="uid://dawllkwn7x42v" path="res://components/abilities/spin_ability.tscn" id="3_behavior"]
+[ext_resource type="Resource" path="res://data/abilities/spin/upgrades/damage.tres" id="4_damage"]
+[ext_resource type="Resource" path="res://data/abilities/spin/upgrades/duration.tres" id="5_duration"]
+[ext_resource type="Resource" path="res://data/abilities/spin/upgrades/speed.tres" id="6_speed"]
+[ext_resource type="Resource" path="res://data/abilities/spin/upgrades/range.tres" id="7_range"]
+[ext_resource type="Script" uid="uid://b25xj1rf8r5xt" path="res://resources/ability_unique_upgrade_data.gd" id="8_unique_script"]
+[ext_resource type="Resource" uid="uid://dlco84nikc5bc" path="res://data/abilities/spin/unique/armor_break.tres" id="9_armor_break"]
+[ext_resource type="Resource" uid="uid://cee6gff1w4kgm" path="res://data/abilities/spin/unique/invigorating.tres" id="10_invigorating"]
+[ext_resource type="Resource" uid="uid://cojyv6bd1w167" path="res://data/abilities/spin/unique/tornado.tres" id="11_tornado"]
+
+[resource]
+script = ExtResource("1_script")
+title = "Giro"
+description = "Girás con el mandoble durante 3 s
+golpeando a todos a tu alrededor
+en cada vuelta. Podés moverte lento.
+8 de daño + 15 % de tu daño por vuelta.
+Radio: 2.5 m · Enfriamiento: 9 s"
+behavior = ExtResource("3_behavior")
+attack_scaling = 1.0
+cooldown = 8.0
+hit_range = 3.5
+hit_width = 0.7
+cast_duration = 4.0
+tick_interval = 0.8
+min_tick_interval = 0.1
+min_cooldown = 9.0
+min_cast_duration = 3.0
+dash_cancels_cast = true
+upgrades = Array[ExtResource("2_upgrade_script")]([ExtResource("4_damage"), ExtResource("5_duration"), ExtResource("6_speed"), ExtResource("7_range")])
+unique_upgrades = Array[ExtResource("8_unique_script")]([ExtResource("9_armor_break"), ExtResource("10_invigorating"), ExtResource("11_tornado")])

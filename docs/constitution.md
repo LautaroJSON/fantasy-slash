@@ -1,0 +1,250 @@
+# Constitución de fantasy-slash
+
+> Reglas no negociables del proyecto. Cualquier persona o IA que trabaje en este repo **lee este documento antes de tocar código**.
+> Toda especificación, plan, review y línea de GDScript debe cumplirlo. Ante un conflicto entre este documento y una decisión ad hoc, gana este documento (ver *Governance*).
+
+---
+
+## Principios centrales
+
+### I. Identidad de género
+
+El juego es un **hack and slash roguelike en tercera persona para PC, jugado con teclado y mouse o mando**. Toda mecánica, sistema o feature nueva debe poder responder **"sí"** al menos a una de estas preguntas antes de especificarse:
+
+1. **Combate:** ¿hace más interesante, legible o expresivo el acto de pelear (atacar, esquivar, posicionarse, encadenar)?
+2. **Supervivencia:** ¿crea presión, riesgo o decisiones tácticas dentro de una run (salud, recursos, oleadas, amenazas)?
+3. **Progresión:** ¿alimenta el crecimiento del jugador dentro de la run (mejoras, builds, sinergias) o entre runs (meta-progresión)?
+
+- La spec de cada feature declara explícitamente a cuál de los tres pilares sirve y cómo.
+- Una feature que no sirve a ninguno se rechaza o se pospone, aunque sea "fácil" o "divertida en aislamiento".
+- Las runs son la unidad de juego: una mecánica no debe romper el ciclo *empezar run → pelear → mejorar → morir → volver a empezar*.
+
+**Rationale:** en un prototipo el mayor riesgo es la dispersión. Anclar cada decisión al loop central evita invertir tiempo en sistemas que no mejoran lo que define al juego.
+
+### II. Arte: primitivas por defecto, assets importados con reglas
+
+**Por defecto, toda representación visual se construye con primitivas geométricas de Godot y `StandardMaterial3D`.** Lo que no tiene un asset importado aprobado (enemigos, UI 3D, indicadores…) se hace así.
+
+- Mallas primitivas: `CapsuleMesh`, `BoxMesh` (y, si hace falta, otras `PrimitiveMesh` nativas como `SphereMesh`, `CylinderMesh`, `PlaneMesh`).
+- **Mallas procedurales solo para VFX** (desde 3.1.0): efectos visuales que siguen una trayectoria (p. ej. la estela del arma) pueden construirse con `ImmediateMesh` desde buffers preasignados (Principio V), con material `.tres` compartido y sin texturas. No se usan para entidades ni escenario.
+- **Mallas planas procedurales para avisos enemigos** (desde 4.5.0): los avisos de ataque enemigo en el piso pueden usar sectores circulares construidos como `ArrayMesh` **una vez al cargar** (cuando el pool crea el enemigo), con material `.tres` compartido y sin texturas. Círculos y franjas siguen siendo primitivas (`CylinderMesh`, `BoxMesh`).
+- **Partículas y luces breves solo para VFX** (desde 3.4.0): `CPUParticles3D` con mallas primitivas y material `.tres` compartido, sin texturas, con sus parámetros en un Resource; y `OmniLight3D` que se enciende y apaga en décimas de segundo. No se usan para entidades ni escenario.
+- Materiales: `StandardMaterial3D` con color plano (`albedo_color`). Excepción (desde 3.2.0): el material de un modelo importado puede usar como `albedo_texture` una textura que viva en la carpeta de ese asset.
+- **Assets importados permitidos** (desde 3.0.0), en formatos que Godot importa de forma nativa: modelos `.obj` para mallas estáticas y **`.glb`/`.gltf` como formato preferido** cuando hay jerarquía o animación (`.fbx`/`.blend` se convierten a glTF antes de entrar al repo), y **texturas de imagen** (`.png`) de un modelo importado (desde 3.2.0). A futuro, también audio. Reglas obligatorias:
+  - **Scaffolding:** los archivos fuente viven en `assets/<tipo>/<categoría>/<asset>/` (p. ej. `assets/models/weapons/falchion/falchion.obj`), con nombres en `snake_case`. Nunca junto a scripts (`combat/`, `components/`…).
+  - **Escena adaptadora:** cada asset se usa desde una escena propia del juego (p. ej. `entities/player/weapons/sword.tscn`) que normaliza pivot, rotación y escala a la convención del juego. Scripts y Resources referencian esa escena, nunca el archivo crudo.
+  - **Materiales:** `.tres` compartidos en `materials/<categoría>/`, aplicados con `surface_material_override`. No se usan los materiales embebidos por el importador. Una textura se referencia **solo** desde esos `.tres` y el importador descarta las imágenes embebidas del glTF (`gltf/embedded_image_handling`).
+  - **Mallas derivadas:** si el archivo fuente no permite mostrar por separado una parte que el juego necesita (p. ej. una malla skinned con hoja y funda), se puede derivar una malla estática por parte (`.res` en la carpeta del asset). El procedimiento queda documentado en su `SOURCE.md`.
+  - **Origen y licencia:** cada asset de terceros tiene un `SOURCE.md` en su carpeta con su origen y su licencia.
+  - **Gameplay:** hitboxes y rangos siguen siendo datos (Principio III). El modelo es solo visual y su tamaño se alinea con esos datos.
+- **Prohibido:** shaders personalizados, y assets fuera de `assets/` o usados sin escena adaptadora.
+- **Convención de color obligatoria:**
+  | Elemento | Malla base | Color (`albedo_color`) |
+  |---|---|---|
+  | Jugador (cuerpo) | `CapsuleMesh` | **Blanco**: `Color(1, 1, 1)` |
+  | Arma del jugador (espada del Guerrero) | Modelo `hoplite_sword.obj` | Colores de sus materiales en `materials/weapons/` (no reservados) |
+  | Arma del jugador (mandoble del Berserker) | Modelo `falchion.obj` | Colores de sus materiales en `materials/weapons/` (no reservados) |
+  | Arma del jugador (katana del Samurái, con funda) | Modelo `katana.glb` (mallas derivadas) | Textura de paleta de su material en `materials/weapons/` (no reservada) |
+  | Estela del arma (ataques y habilidades, todas las armas) | Ribbon procedural (`ImmediateMesh`) | **Blanco translúcido**: `Color(1, 1, 1)`, unshaded, alpha ≤ 0.5 en la cabeza y 0 en la cola |
+  | Corte de viento (VFX de Envainar y del Tajo aéreo del Berserker): paredes en V, chispas y destello | `BoxMesh` / `SphereMesh`, partículas | **Blanco**: `Color(1, 1, 1)`, unshaded, blend aditivo, alpha ≤ 0.5 |
+  | Corte del dash (VFX del Giro cancelado con un dash): estela horizontal, chispas y destello | `BoxMesh` / `SphereMesh`, partículas | **Blanco**: `Color(1, 1, 1)`, unshaded, blend aditivo, alpha ≤ 0.5 |
+  | Enemigos | `CapsuleMesh` | **Gris**: `Color(0.5, 0.5, 0.5)` |
+  | Manos de enemigos (las dos esferas que anticipan y dan el golpe) | `SphereMesh` | **Gris**: `Color(0.5, 0.5, 0.5)` (mismo `enemy_material.tres` que el cuerpo) |
+  | Números de daño flotantes (normal) | `TextMesh` | **Blanco**: `Color(1, 1, 1)` |
+  | Números de daño flotantes (crítico) | `TextMesh` | **Ámbar**: `Color(1, 0.55, 0.1)` |
+  | Nivel de enemigo (junto a su barra de vida) | `TextMesh` | **Blanco**: `Color(1, 1, 1)` |
+  | Tiempo restante y stacks de debuff (sobre su ícono, en el enemigo) | `TextMesh` | **Blanco**: `Color(1, 1, 1)` |
+- Los colores de esta tabla quedan **reservados** para los elementos listados (salvo las armas, que se distinguen por su silueta). Ningún otro elemento (escenario, props, proyectiles, otra UI 3D) puede usarlos, para que jugador, arma y enemigos se identifiquen siempre de un vistazo. El blanco se comparte únicamente entre el cuerpo del jugador, los textos flotantes (números de daño, nivel de enemigo, tiempo restante y stacks de debuff), la estela del arma, el corte de viento de Envainar y el corte del dash del Giro, que no se confunden: uno es una cápsula opaca, otros son texto, y la estela y los cortes son franjas translúcidas que se desvanecen en décimas de segundo. El gris se comparte solo entre el cuerpo del enemigo y sus manos, que forman una misma silueta.
+- Colores **no reservados** en uso, a modo de registro: celeste pálido para los indicadores de área y las cartas de mejora de habilidad, rojo para la carta de bloqueo, dorado para las cartas de mejora única (y, desde 4.0.1, el brillo de la katana y el marco del HUD con "Envainar: mejorado"), rojo oscuro para el ícono de sangrado, violeta `Color(0.55, 0.35, 0.8)` para el ícono de Debilitar, verde lima `Color(0.55, 0.85, 0.25)` para el ícono de Conmoción en el HUD, tierra `Color(0.62, 0.52, 0.4)` para el polvo del corte de viento y para el anillo de la onda de choque de los bosses (`TorusMesh` plano, unshaded, alpha ≤ 0.6), y rojo `Color(0.9, 0.1, 0.1)` para el ícono de Rage y su aura (cápsula unshaded translúcida, alpha ≤ 0.3, más grande que el cuerpo gris del enemigo), negro translúcido `Color(0.05, 0.05, 0.05)` (alpha ≤ 0.7, unshaded) para el agujero de aparición de los enemigos (`CylinderMesh` plano sobre el piso), rojo anaranjado `Color(1.0, 0.3, 0.1)` (unshaded, alpha ≤ 0.5, destello hasta 0.8) para los avisos de ataque enemigo en el piso, y miel `Color(0.95, 0.78, 0.25)` para el aura de escudo de la Colmena (cápsula unshaded translúcida, alpha ≤ 0.3, más grande que el cuerpo) y su ícono "Escudo".
+- Los detalles que comunican gameplay (el frente del personaje, una hitbox visible en debug) también son primitivas.
+- Los materiales se definen como recursos `.tres` compartidos (p. ej. `materials/player_material.tres`, `materials/weapons/spartan_iron_material.tres`, `materials/enemy_material.tres`), no como sub-recursos duplicados en cada escena.
+
+**Rationale:** el prototipo valida *mecánicas*, no estética. Las primitivas eliminan dependencias externas, mantienen el repo liviano y hacen trivial iterar tamaños y hitboxes, por eso siguen siendo el default. Los assets importados entran de forma ordenada: carpeta fija, escena adaptadora y materiales compartidos, así el resto del juego no depende del formato ni de la escala del archivo fuente. La convención de color garantiza legibilidad en combate con cualquier cantidad de enemigos en pantalla.
+
+### III. Separación datos/comportamiento vía Resources
+
+**Todo stat, mejora o valor tuneable vive en un Resource personalizado**, nunca como literal dentro de un script de comportamiento. **Nada hardcodeado.**
+
+- Cada tipo de dato configurable es una clase `class_name X extends Resource` con campos `@export` tipados (p. ej. `PlayerStats`, `EnemyStats`, `UpgradeData`, `WaveConfig`).
+- Los valores concretos viven en instancias `.tres` (p. ej. `data/classes/warrior/warrior_stats.tres`, `data/enemies/grunt_stats.tres`, `data/upgrades/*.tres`).
+- Los scripts de comportamiento (Nodes) reciben sus datos por `@export var stats: PlayerStats` y **leen** de ellos. No declaran valores de diseño propios, ni siquiera como valor por defecto de un `@export`.
+- **Stats de gameplay del jugador = mejorables.** Todo valor que define cómo juega el personaje (daño, defensa, vida, velocidad de movimiento, salto, dash, cooldowns, rango y arco de ataque…) es un stat con **valor inicial en `.tres`** y **puede subir con mejoras**. La invulnerabilidad del dash no es un stat propio: dura lo que el dash (`DASH_DISTANCE / DASH_SPEED`), así que sigue dependiendo de stats en `.tres`. Los topes y pisos que protegen reglas de diseño (p. ej. "el cooldown del dash siempre supera la duración del dash") también son datos.
+- **Stats fijos por diseño** (desde 3.1.1): un stat puede no tener carta en el catálogo de mejoras (p. ej. dash, salto, arco). Sigue siendo un stat en `.tres`, leído por los componentes y soportado por el sistema de mejoras; qué stats tienen carta es una decisión de diseño que se registra en la spec.
+- **Qué cuenta como literal prohibido:** velocidades, daños, vidas, cooldowns, rangos, probabilidades, multiplicadores, tiempos de juego, cantidades de spawn, costos… cualquier número que un diseñador querría ajustar.
+- **Qué está permitido en código:** identidades matemáticas y del motor (`0`, `1`, `-1`, `Vector3.UP`, `PI`, `Vector3.ZERO`), índices, y constantes estructurales no tuneables (nombres de acciones, nombres de estados).
+- **Los Resources son de solo lectura en runtime.** Un `.tres` cargado es compartido por todas las instancias que lo referencian. El estado mutable (vida actual, cooldown restante, mejoras adquiridas en la run) vive en el Node o en un Resource creado con `duplicate()` explícitamente documentado.
+- Un Resource contiene **datos y, como máximo, cálculos puros derivados de sus propios campos**. Nunca referencias a nodos, `get_tree()`, señales de gameplay ni efectos secundarios.
+
+#### Mejoras únicas de habilidad
+
+- Una **mejora única de habilidad** cambia *cómo funciona* una habilidad (agrega una regla o un efecto), no solo un número. Ejemplos: reiniciar el cooldown al matar, ejecutar enemigos con poca vida, aplicar un debuff.
+- Es un Resource (`AbilityUniqueUpgradeData`) que pertenece a **una sola habilidad** y aparece en la oferta de cartas solo mientras esa habilidad está equipada.
+- **Niveles explícitos:** cada mejora única declara `max_level`. `max_level = 1` significa **no mejorable**, para efectos binarios donde "más fuerte" no tiene sentido (p. ej. "Reset"). Los valores de cada nivel viven en arrays del `.tres` (`level_values`, `level_descriptions`), nunca como literales en el código. La spec de cada mejora justifica si es mejorable o no.
+- Una mejora única en su nivel máximo **sale del pool** de cartas.
+- **Toda carta de mejora declara su tope en datos:** las de stats con `max_stacks` y las únicas con `max_level`. Una carta en su tope sale del pool y no puede aplicarse de nuevo. Cuando un stat tiene piso o techo, el tope se elige para no desperdiciar copias más allá de ese límite.
+- El código de la habilidad identifica cada mejora única por un id constante (`StringName`, constante estructural permitida) y lee sus valores del Resource.
+- **Estados de entidades (debuffs y buffs)** (buffs desde 3.7.0): todo estado sobre una entidad (sangrado, veneno, lentitud, Rage…) es un Resource de datos (`DebuffData`: efecto —daño por tick, reducción de armadura o mejora de stats—, duración, intervalo de tick, tope de stacks, si es permanente, material del ícono). Cada entidad guarda una **lista** de estados activos, debuffs y buffs juntos, así que agregar un tipo nuevo es un `.tres` nuevo y no una reescritura. Un estado **permanente** no expira con el tiempo y solo se quita al reiniciar la entidad (pool). En un buff de stats (`STAT_BOOST`), la entidad aplica los stats al recibirlo, leyéndolos de su Resource (p. ej. `RageConfig`). Los íconos de estado se construyen con primitivas (Principio II). Los buffs del jugador siguen en `BuffData` (abajo).
+- **Buffs** (desde 3.5.0): todo estado temporal positivo del jugador es un Resource de datos (`BuffData`: tope de stacks, duración por stack, modificadores por stack, color del ícono). El jugador guarda una **lista** de buffs activos. Qué acción aprovecha cada modificador (p. ej. solo durante el Giro) lo decide la mejora que lo otorga y queda registrado en su spec.
+
+**Rationale:** un roguelike vive de tunear números y combinar mejoras. Con los datos en `.tres` se balancea desde el inspector sin tocar lógica, y las mejoras se vuelven contenido (un archivo nuevo, no código nuevo). La lógica de comportamiento queda genérica y testeable con distintos datasets.
+
+### IV. Convenciones de GDScript
+
+Se sigue la [guía de estilo oficial de GDScript](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html), con estas reglas obligatorias:
+
+- **Nombres:**
+  - `snake_case`: variables, funciones, señales, archivos (`.gd`, `.tscn`, `.tres`).
+  - `PascalCase`: `class_name` y nombres de nodos en el árbol de escena.
+  - `CONSTANT_CASE`: constantes y valores de enums.
+  - Prefijo `_` para miembros privados. Señales en pasado (`died`, `health_changed`, `upgrade_selected`).
+  - Identificadores y comentarios de código en **inglés**. Documentación del proyecto en **español**.
+- **Tipado estático explícito:**
+  - Toda firma de función tipa **todos** sus parámetros y su valor de retorno (`func take_damage(amount: float) -> void`).
+  - Toda variable miembro, `@export` y `@onready` lleva tipo explícito. Las referencias a nodos usan su `class_name` concreto, no `Node` genérico.
+  - Se permite `:=` en variables locales solo cuando el tipo es evidente en la misma línea (`var dir := Vector3.ZERO`).
+- **Funciones de ciclo de vida delgadas:** `_ready`, `_process`, `_physics_process`, `_input` y `_unhandled_input` **solo orquestan**. Llaman a métodos con nombre que describen la intención y no contienen lógica de negocio.
+
+  ```gdscript
+  func _physics_process(delta: float) -> void:
+      _apply_gravity(delta)
+      _update_movement(delta)
+      _update_attack_cooldown(delta)
+  ```
+
+  Si una de estas funciones necesita un `if` con lógica propia, un bucle o más de unas pocas líneas, esa lógica se extrae a un método con nombre.
+
+**Rationale:** las convenciones uniformes hacen el código predecible para humanos e IAs. El tipado estático detecta errores en el editor, habilita autocompletado y mejora el rendimiento del intérprete. Los callbacks delgados hacen que el flujo de cada frame se lea de un vistazo y que cada paso sea testeable por separado.
+
+### V. Disciplina de performance
+
+Cada frame se diseña para escalar con la cantidad de enemigos en pantalla, que en un hack and slash roguelike siempre tiende a crecer.
+
+- **Cero allocations evitables por frame:** en `_process` / `_physics_process` no se crean `Array`, `Dictionary`, objetos ni `String` concatenados, y no se llama a `load()`. Los buffers reutilizables se declaran como miembros y se limpian (`clear()`), no se recrean.
+- **Referencias cacheadas:** nodos vía `@onready` o `@export`. Prohibido `get_node()` / `$Path` / `find_child()` / `get_nodes_in_group()` dentro de callbacks por frame.
+- **Object pooling obligatorio** para toda entidad que se instancie con frecuencia (enemigos, proyectiles, efectos de impacto, pickups, números de daño):
+  - Se pre-instancian al cargar el nivel o la run. En runtime se **activan y desactivan** (visibilidad, `process_mode`, colisiones deshabilitadas); no se hace `instantiate()` / `queue_free()` en cada spawn.
+  - El pool resetea el estado de la entidad al reutilizarla.
+- **Física mínima necesaria:**
+  - Cada cuerpo o área declara capas y máscaras de colisión explícitas y mínimas; nada colisiona "contra todo" por defecto.
+  - Formas simples (`CapsuleShape3D`, `BoxShape3D`, `SphereShape3D`). Prohibidas las formas trimesh o convex en entidades dinámicas.
+  - `Area3D` con `monitoring`/`monitorable` desactivados cuando no se usan.
+  - No se usan cuerpos físicos donde basta un cálculo de distancia. Raycasts y queries por frame, solo si son imprescindibles.
+- **Render:** materiales compartidos (ver Principio II), sin luces dinámicas ni sombras innecesarias.
+
+**Rationale:** las allocations por frame provocan picos del recolector y stutter. Instanciar y liberar en combate genera hitches justo cuando hay más acción. La física innecesaria es el costo oculto que más escala con la cantidad de enemigos.
+
+### VI. Input: teclado y mouse, o mando
+
+- El juego se controla con **teclado y mouse** o con **mando** (layout Xbox; otros mandos vía el mapeo SDL de Godot). No hay soporte de pantalla táctil.
+- Todo input pasa por el **InputMap** con acciones nombradas (`move_forward`, `attack`, `dash`…). **Toda acción de juego tiene binding en los dos esquemas.** Prohibido leer teclas o botones físicos directamente en la lógica de juego.
+- **Toda pantalla de UI se puede usar con mando:** foco inicial al mostrarse, foco visible, `ui_accept` para confirmar y `ui_cancel` para volver donde haya "volver".
+- Los textos de teclas y botones que muestra la UI (prompts) salen de datos (`InputPromptConfig`), nunca de literales en escenas o scripts.
+- Excepciones:
+  - El movimiento relativo del mouse para la cámara (`InputEventMouseMotion`), que el InputMap no puede representar. Se lee solo dentro del nodo de cámara.
+  - `InputDeviceMonitor` clasifica los eventos **por tipo** (teclado/mouse o mando) solo para elegir qué prompts mostrar. No lee botones concretos ni decide gameplay.
+
+**Rationale:** el combate de un hack and slash se juega cómodo con mando. Mantener todo en el InputMap y los prompts en datos hace que sumar el mando no duplique la lógica de juego.
+
+---
+
+## Technology Stack
+
+| Área | Decisión |
+|---|---|
+| Motor | **Godot 4.x** (actualmente 4.7) |
+| Lenguaje | **GDScript** con tipado estático (Principio IV). Sin C# ni GDExtension en el prototipo. |
+| Renderer | **Forward+** |
+| Física | Jolt Physics (3D) |
+| Plataforma | **PC (Windows)** |
+| Input | **Teclado y mouse, o mando**, vía InputMap (Principio VI) |
+| Arte | Primitivas de Godot + `StandardMaterial3D` por defecto; assets importados en `assets/` con escena adaptadora (Principio II) |
+| Datos | Resources personalizados en `.tres` (Principio III) |
+| Tests | GdUnit4 |
+
+---
+
+## Development Workflow
+
+1. **Spec antes que código:** cada feature se describe en `docs/specs/<feature>.md` (incluye a qué pilar del Principio I sirve) junto con su plan de implementación. Requiere **aprobación explícita** del responsable antes de escribir GDScript.
+2. **Implementación** estrictamente según la spec aprobada. Si la spec resulta incorrecta, se detiene el código, se corrige la spec y se vuelve a aprobar.
+3. **Review obligatoria** antes de dar cualquier tarea por terminada. El revisor (humano o IA) verifica **todos** estos puntos:
+   - [ ] **Identidad (I):** la feature sirve a combate, supervivencia o progresión, tal como declara su spec.
+   - [ ] **Arte (II):** primitivas por defecto. Todo asset importado vive en `assets/<tipo>/<categoría>/<asset>/`, tiene `SOURCE.md` y se usa vía escena adaptadora. Sin shaders personalizados. Jugador en blanco, enemigos en gris, colores reservados respetados. Materiales compartidos como `.tres`.
+   - [ ] **Datos (III):** ningún valor tuneable quedó como literal en un script de comportamiento. Los nuevos stats y mejoras están en Resources `.tres`, los stats del jugador son mejorables y ningún Resource compartido se muta en runtime. Las mejoras únicas declaran `max_level` y guardan sus valores por nivel en datos.
+   - [ ] **GDScript (IV):** nombres según convención. Todas las firmas y variables miembro tipadas. `_ready` / `_process` / `_physics_process` delgados y delegando en métodos con nombre.
+   - [ ] **Performance (V):** sin allocations ni búsquedas de nodos por frame. Las entidades frecuentes usan pool. Capas y máscaras de colisión mínimas y explícitas.
+   - [ ] **Input (VI):** solo acciones del InputMap, con bindings de teclado/mouse y de mando. Pantallas nuevas navegables con mando. Prompts desde datos.
+   - [ ] **Calidad:** el proyecto abre sin errores ni warnings de tipado nuevos. Los tests de los criterios de aceptación de la spec están en verde y la suite completa sigue en verde.
+4. **Cierre:** la spec se marca como *Implementada* y cualquier violación justificada (ver *Governance*) queda registrada en ella.
+
+---
+
+## Governance
+
+- **Supremacía:** esta constitución tiene prioridad sobre cualquier decisión ad hoc, preferencia puntual, spec o plan. Una spec que la contradiga no puede aprobarse.
+- **Violaciones:** cualquier desvío de un principio debe **justificarse explícitamente antes de implementarse**, en la spec de la feature. La justificación indica el principio afectado, el motivo, la alternativa conforme descartada y por qué, y el alcance y la fecha de revisión de la excepción. Sin justificación aprobada, no se implementa.
+- **Enmiendas:** los cambios a este documento se proponen explícitamente, se aprueban y se reflejan con versionado semántico:
+  - **MAJOR:** se elimina o se redefine un principio.
+  - **MINOR:** se agrega un principio o sección nueva.
+  - **PATCH:** aclaraciones, redacción y correcciones sin cambio de significado.
+- Tras una enmienda **MAJOR**, las specs aprobadas previamente deben revisarse contra la nueva versión.
+- Cada spec declara la versión de la constitución contra la que fue aprobada.
+
+### Historial
+
+- **4.8.0** (2026-09-26): Principio II: el corte de viento de la tabla de colores también es el VFX del impacto del Tajo aéreo del Berserker (mismo efecto y colores; ver `berserker-air-slash.md`).
+
+- **4.7.0** (2026-09-26): Principio II: se agrega a la tabla de colores el corte del dash del Giro (estela horizontal, chispas y destello en blanco aditivo, alpha ≤ 0.5), que comparte el blanco con la estela del arma y el corte de viento (ver `spin-dash-slash.md`).
+
+- **4.6.1** (2026-09-26): Principio III: los iframes dejan de ser un stat propio; la invulnerabilidad del dash dura lo que el dash (`DASH_DISTANCE / DASH_SPEED`). El ejemplo del piso del cooldown pasa a "supera la duración del dash" (ver `dash-iframes.md`).
+
+- **4.6.0** (2026-09-26): Principio II: se registra el miel del aura de escudo de la Colmena y de su ícono como color no reservado (ver `boss-colmena.md`).
+
+- **4.5.0** (2026-09-26): Principio II: se permiten mallas planas procedurales (`ArrayMesh`, construidas al cargar) para los avisos de ataque enemigo en el piso, y se registra el rojo anaranjado de esos avisos como color no reservado (ver `enemy-ground-telegraph.md`).
+
+- **4.4.0** (2026-09-26): Principio II: el tierra no reservado del polvo del corte de viento también colorea el anillo de la onda de choque de los bosses (`TorusMesh` plano, alpha ≤ 0.6; ver `boss-verdugo.md`).
+
+- **4.3.0** (2026-09-26): Principio II: se registra como color no reservado el negro translúcido del agujero de aparición de los enemigos (`CylinderMesh` plano, alpha ≤ 0.7; ver `enemy-group-ai.md`).
+
+- **4.2.0** (2026-09-26): Principio II: se agregan a la tabla de colores las manos de los enemigos (`SphereMesh` gris, mismo material que el cuerpo), que comparten el gris con la cápsula del enemigo (ver `enemy-attack-telegraph.md`).
+
+- **4.1.0** (2026-09-26): Principio II: la fila del tiempo restante de debuff pasa a cubrir también el número de stacks sobre el ícono (`TextMesh` blanco, ver `debuff-stacks-display.md`).
+
+- **4.0.1** (2026-09-26): Principio II: el dorado no reservado de las cartas de mejora única se registra también para el brillo de la katana y el marco del HUD de "Envainar: mejorado" (ver `tsubame-gaeshi.md`).
+
+- **4.0.0** (2026-09-25): Principio VI redefinido: el juego se controla con teclado y mouse **o mando**; toda acción tiene binding en los dos esquemas, toda pantalla se usa con mando y los prompts salen de datos. Nueva excepción: `InputDeviceMonitor` (clasifica eventos por tipo). Principio I y Technology Stack actualizados. Specs revisadas: ninguna contradice el nuevo principio (ver `gamepad-support.md`).
+
+- **3.7.0** (2026-09-25): Principio III: la lista de `DebuffData` de una entidad también guarda buffs (efecto `STAT_BOOST`) y estados permanentes. Principio II: se registra el rojo del ícono y del aura de Rage como color no reservado (ver `enemy-rage.md`).
+
+- **3.6.0** (2026-09-25): Principio II: se agrega a la tabla de colores el tiempo restante de debuff sobre los enemigos (`TextMesh` blanco), que comparte el blanco con los demás textos flotantes (ver `cooldown-timers.md`).
+
+- **3.5.0** (2026-09-25): Principio III: `DebuffData` declara su efecto (daño por tick o reducción de armadura) y su tope de stacks; se agrega la viñeta **Buffs** (`BuffData`, lista por jugador). Principio II: se registran el violeta del ícono de Debilitar y el verde lima del ícono de Conmoción como colores no reservados (ver `spin-golden-upgrades.md`).
+
+- **3.4.0** (2026-09-25): Principio II: se permiten partículas (`CPUParticles3D`) y luces breves (`OmniLight3D`) solo para VFX. El corte de viento de Envainar pasa a ser una V vertical (paredes, chispas y destello en blanco aditivo, alpha ≤ 0.5), y se registra el tierra del polvo como color no reservado (ver `wind-cut-v.md`).
+
+- **3.3.0** (2026-09-25): Principio II: se agrega a la tabla de colores el corte de viento de Envainar (dos `BoxMesh` planos, blanco translúcido, alpha ≤ 0.5), que comparte el blanco con la estela del arma (ver `sheathe-feel.md`).
+
+- **3.2.0** (2026-09-25): Principio II: se permiten texturas de imagen en modelos importados, referenciadas solo desde materiales `.tres` compartidos, y mallas estáticas derivadas de un modelo cuando hay que separar partes. Se agrega la katana del Samurái a la tabla de colores (ver `samurai.md`).
+
+- **3.1.2** (2026-09-25): Principio III: el ejemplo de stats del jugador apunta a `data/classes/warrior/warrior_stats.tres` (los datos de cada clase viven en `data/classes/<clase>/`).
+
+- **3.1.1** (2026-09-25): Principio III: se aclara que un stat puede quedar fijo por diseño (sin carta en el catálogo) y sigue siendo un stat en `.tres` (ver `stats-rework.md`).
+
+- **3.1.0** (2026-09-25): Principio II: se permiten mallas procedurales (`ImmediateMesh`) solo para VFX. La estela de viento del Giro se reemplaza por la estela estándar del arma (ribbon blanco translúcido, alpha ≤ 0.5), usada en todos los ataques y habilidades (ver `weapon-trail.md`).
+
+- **3.0.1** (2026-09-25): tabla de colores del Principio II: la espada del Guerrero pasa a ser el modelo `hoplite_sword.obj`. La Spartan sword queda disponible como escena propia (`spartan_sword.tscn`). Sin cambios de reglas (ver `hoplite-sword.md`).
+
+- **3.0.0** (2026-09-25): Principio II redefinido: primitivas por defecto y assets importados permitidos (`.obj`, glTF preferido; a futuro texturas y audio) con reglas de scaffolding (`assets/<tipo>/<categoría>/<asset>/`), escena adaptadora, materiales `.tres` compartidos y `SOURCE.md`. Las armas del jugador pasan a ser modelos (Spartan sword y Falchion) y el negro y el gris oscuro dejan de estar reservados. Se elimina la cláusula "el Principio II no admite excepciones". Specs revisadas: `berserker.md`, `combat-mvp.md` (ver `weapon-models.md`).
+- **2.6.0** (2026-09-25): Principio II: se agrega a la tabla de colores la estela de viento del Giro, blanco translúcido (transparencia ≥ 0.75, unshaded), compartiendo el blanco con el cuerpo del jugador y los textos flotantes.
+- **2.5.0** (2026-09-25): Principio II: se agrega a la tabla de colores el mandoble del Berserker, gris oscuro `Color(0.2, 0.2, 0.22)`, reservado. Cada clase tiene un arma fija con su propio color.
+- **2.4.0** (2026-09-25): Principio II: los números de daño tienen dos variantes en la tabla de colores; los críticos usan ámbar `Color(1, 0.55, 0.1)`, reservado para ellos.
+- **2.3.0** (2026-09-25): Principio II: se agrega a la tabla de colores que el nivel de enemigo (`TextMesh`, junto a su barra de vida) usa blanco, compartido con el cuerpo del jugador y los números de daño.
+- **2.2.1** (2026-09-25): Principio III: se aclara que toda carta de mejora declara su tope en datos (`max_stacks` / `max_level`) y sale del pool al alcanzarlo.
+- **2.2.0** (2026-09-25): Principio III: se agrega la subsección "Mejoras únicas de habilidad" (niveles explícitos, `max_level = 1` = no mejorable, valores por nivel en `.tres`) y el concepto de debuffs como datos en una lista por entidad. Principio II: se registran los colores no reservados en uso.
+- **2.1.0** (2026-09-25): Principio II: se agrega a la tabla de colores que los números de daño flotantes (`TextMesh`) usan blanco, compartido solo con el cuerpo del jugador.
+- **2.0.0** (2026-09-24): se elimina el target Android. El Principio V se redefine como performance general. Se agrega el Principio VI (solo teclado y mouse). Principio II: la espada del jugador pasa a ser negra. Principio III: todos los stats de gameplay del jugador son mejorables y nada se hardcodea. Stack: PC, Forward+.
+- **1.0.0** (2026-09-24): versión inicial.
+
+---
+
+**Version**: 4.8.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-26

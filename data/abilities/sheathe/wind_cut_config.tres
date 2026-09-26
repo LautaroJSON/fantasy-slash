@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="WindCutConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/wind_cut_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+max_height = 6.0
+half_angle_degrees = 25.0
+wall_thickness = 0.03
+grow_duration = 0.15
+fade_duration = 0.4
+start_transparency = 0.5
+spark_amount = 48
+spark_lifetime = 0.6
+spark_speed_min = 4.0
+spark_speed_max = 9.0
+spark_spread_degrees = 35.0
+spark_gravity = 14.0
+spark_size = 0.06
+dust_amount = 32
+dust_lifetime = 0.8
+dust_rise_speed_min = 0.6
+dust_rise_speed_max = 1.6
+dust_size = 0.35
+dust_width = 0.8
+flash_height = 1.0
+flash_radius = 1.4
+flash_duration = 0.25
+flash_energy = 4.0
+flash_range = 6.0

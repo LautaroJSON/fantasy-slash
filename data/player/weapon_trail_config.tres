@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="WeaponTrailConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/weapon_trail_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+lifetime = 0.15
+head_alpha = 0.5
+max_samples = 32

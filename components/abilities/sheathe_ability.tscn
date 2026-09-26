@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://components/abilities/sheathe_ability.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/abilities/sheathe/sheathe_config.tres" id="2_config"]
+[ext_resource type="Script" path="res://components/abilities/ability_rect_indicator.gd" id="3_indicator"]
+[ext_resource type="Resource" path="res://data/abilities/sheathe/sheathe_indicator_config.tres" id="4_indicator_config"]
+[ext_resource type="Material" path="res://materials/attack_indicator_material.tres" id="5_indicator_material"]
+[ext_resource type="Script" path="res://components/abilities/wind_cut_vfx.gd" id="6_wind_cut"]
+[ext_resource type="Resource" path="res://data/abilities/sheathe/wind_cut_config.tres" id="7_wind_cut_config"]
+[ext_resource type="Material" path="res://materials/vfx/wind_cut_additive_material.tres" id="8_glow_material"]
+[ext_resource type="Material" path="res://materials/vfx/wind_dust_material.tres" id="9_dust_material"]
+
+[node name="SheatheAbility" type="Node"]
+script = ExtResource("1_script")
+config = ExtResource("2_config")
+
+[node name="Indicator" type="Node3D" parent="."]
+top_level = true
+script = ExtResource("3_indicator")
+config = ExtResource("4_indicator_config")
+material = ExtResource("5_indicator_material")
+
+[node name="WindCut" type="Node3D" parent="."]
+top_level = true
+script = ExtResource("6_wind_cut")
+config = ExtResource("7_wind_cut_config")
+glow_material = ExtResource("8_glow_material")
+dust_material = ExtResource("9_dust_material")

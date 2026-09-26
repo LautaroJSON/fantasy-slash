@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://components/enemy_health_bar.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/ui/enemy_health_bar_config.tres" id="2_config"]
+[ext_resource type="Material" path="res://materials/health_bar_background_material.tres" id="3_background"]
+[ext_resource type="Material" path="res://materials/health_bar_trail_material.tres" id="4_trail"]
+[ext_resource type="Material" path="res://materials/health_bar_fill_material.tres" id="5_fill"]
+[ext_resource type="Material" path="res://materials/enemy_level_material.tres" id="6_level"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_background"]
+material = ExtResource("3_background")
+
+[sub_resource type="QuadMesh" id="QuadMesh_trail"]
+material = ExtResource("4_trail")
+
+[sub_resource type="TextMesh" id="TextMesh_level"]
+resource_local_to_scene = true
+material = ExtResource("6_level")
+horizontal_alignment = 2
+depth = 0.0
+
+[sub_resource type="QuadMesh" id="QuadMesh_fill"]
+material = ExtResource("5_fill")
+
+[node name="HealthBar" type="Node3D"]
+script = ExtResource("1_script")
+config = ExtResource("2_config")
+
+[node name="Background" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("QuadMesh_background")
+
+[node name="Trail" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.001)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_trail")
+
+[node name="Fill" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.002)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_fill")
+
+[node name="LevelLabel" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = SubResource("TextMesh_level")

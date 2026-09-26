@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://bdm24i5ry0frr"]
+
+[ext_resource type="ArrayMesh" uid="uid://dfig5pyc77bn" path="res://assets/models/weapons/falchion/falchion.obj" id="1_model"]
+[ext_resource type="Material" path="res://materials/weapons/falchion_iron_material.tres" id="2_iron"]
+[ext_resource type="Material" path="res://materials/weapons/falchion_handle_material.tres" id="3_handle"]
+[ext_resource type="Material" path="res://materials/weapons/falchion_trim_material.tres" id="4_trim"]
+
+[node name="Greatsword" type="Node3D" unique_id=1046336803]
+
+[node name="Model" type="MeshInstance3D" parent="." unique_id=2078521580]
+transform = Transform3D(0.1864, 0, 0, 0, 0, -0.1864, 0, 0.1864, 0, 0, 0, -0.355)
+mesh = ExtResource("1_model")
+surface_material_override/0 = ExtResource("2_iron")
+surface_material_override/1 = ExtResource("3_handle")
+surface_material_override/2 = ExtResource("4_trim")
+
+[node name="TrailBase" type="Marker3D" parent="." unique_id=1860658798]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.77)
+
+[node name="TrailTip" type="Marker3D" parent="." unique_id=686147744]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.21)

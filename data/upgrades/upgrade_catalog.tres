@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UpgradeCatalog" format=3 uid="uid://demi3amr1pkx4"]
+
+[ext_resource type="Script" uid="uid://brhaypqwbjivw" path="res://resources/upgrade_catalog.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bbp4wfw353l2u" path="res://resources/upgrade_data.gd" id="2_upgrade_data"]
+[ext_resource type="Resource" path="res://data/upgrades/damage.tres" id="3_damage"]
+[ext_resource type="Resource" path="res://data/upgrades/defense.tres" id="4_defense"]
+[ext_resource type="Resource" path="res://data/upgrades/max_health.tres" id="5_max_health"]
+[ext_resource type="Resource" uid="uid://byg5bjlsvgk1x" path="res://data/upgrades/crit_chance.tres" id="6_crit_chance"]
+[ext_resource type="Resource" uid="uid://ccjpyn27mnf5s" path="res://data/upgrades/crit_damage.tres" id="7_crit_damage"]
+[ext_resource type="Resource" path="res://data/upgrades/attack_speed.tres" id="8_attack_speed"]
+[ext_resource type="Resource" path="res://data/upgrades/attack_range.tres" id="9_attack_range"]
+[ext_resource type="Resource" path="res://data/upgrades/lifesteal.tres" id="10_lifesteal"]
+[ext_resource type="Resource" path="res://data/upgrades/damage_bonus.tres" id="11_damage_bonus"]
+[ext_resource type="Resource" path="res://data/upgrades/move_speed.tres" id="12_move_speed"]
+
+[resource]
+script = ExtResource("1_script")
+upgrades = Array[ExtResource("2_upgrade_data")]([ExtResource("3_damage"), ExtResource("4_defense"), ExtResource("5_max_health"), ExtResource("6_crit_chance"), ExtResource("7_crit_damage"), ExtResource("8_attack_speed"), ExtResource("9_attack_range"), ExtResource("10_lifesteal"), ExtResource("11_damage_bonus"), ExtResource("12_move_speed")])

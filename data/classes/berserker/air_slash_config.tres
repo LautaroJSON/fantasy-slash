@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AirSlashConfig" format=3 uid="uid://lhlsvhxcm3wd"]
+
+[ext_resource type="Script" uid="uid://b3w2cbf7y4d43" path="res://resources/air_slash_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+hover_duration = 3.0
+hover_move_speed_factor = 0.15
+min_damage_factor = 0.8
+max_damage_factor = 4.0
+hit_length = 4.5
+hit_width = 1.3
+knockback_speed = 5.0
+dive_speed = 20.0
+max_dive_duration = 1.0
+landing_lock = 0.6
+raise_position = Vector3(0, 1.8, 0.25)
+raise_rotation = Vector3(2.3, 0, -1.6)
+slam_position = Vector3(0, 0.9, -0.5)
+slam_rotation = Vector3(-1.3, 0, 0)
+slam_duration = 0.12
+impact_shake = 0.6

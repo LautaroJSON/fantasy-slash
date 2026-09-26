@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyPaceConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_pace_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+windup_scale_first_level = 1.8
+windup_scale_last_level = 1.2
+interval_scale_first_level = 2.5
+interval_scale_last_level = 1.4
+last_level = 25
+windup_scale_per_rage = 0.1
+interval_scale_per_rage = 0.2
+min_scale = 1.0

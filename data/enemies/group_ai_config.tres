@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="GroupAIConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/group_ai_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+base_attackers = 2
+rage_levels_per_extra_attacker = 3
+max_attackers_cap = 4
+token_gap = 0.35
+token_approach_timeout = 2.0
+rest_first_level = 1.5
+rest_last_level = 0.5
+rest_per_rage = 0.1
+min_rest = 0.3
+last_level = 25
+wait_margin = 1.5
+slot_count = 8
+slot_refresh_time = 0.5
+arrive_tolerance = 0.25
+overflow_step = 1.0
+separation_radius = 1.3
+separation_weight = 1.0
+spawn_in_time = 0.9
+spawn_depth = 2.0
+spawn_marker_radius = 0.8
+spawn_marker_grow_time = 0.25

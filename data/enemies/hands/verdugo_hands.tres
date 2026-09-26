@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="EnemyHandsConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_hands_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+rest_offset = Vector3(0.6, 1.3, -0.35)
+bob_amplitude = 0.05
+bob_frequency = 0.9
+return_time = 0.25
+hand_scale = 1.4

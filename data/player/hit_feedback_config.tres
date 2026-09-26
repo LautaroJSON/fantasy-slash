@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="HitFeedbackConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/hit_feedback_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+damage_for_full_shake = 20.0
+min_strength = 0.3
+flicker_duration = 0.4
+flicker_interval = 0.06

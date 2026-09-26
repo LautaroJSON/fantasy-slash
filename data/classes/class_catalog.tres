@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ClassCatalog" format=3]
+
+[ext_resource type="Script" path="res://resources/class_catalog.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/character_class_data.gd" id="2_class_script"]
+[ext_resource type="Resource" path="res://data/classes/warrior/warrior.tres" id="3_warrior"]
+[ext_resource type="Resource" path="res://data/classes/berserker/berserker.tres" id="4_berserker"]
+[ext_resource type="Resource" path="res://data/classes/samurai/samurai.tres" id="5_samurai"]
+
+[resource]
+script = ExtResource("1_script")
+classes = Array[ExtResource("2_class_script")]([ExtResource("3_warrior"), ExtResource("4_berserker"), ExtResource("5_samurai")])

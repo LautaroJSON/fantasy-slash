@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="PlayerTuning" format=3 uid="uid://bi45cqytjptaj"]
+
+[ext_resource type="Script" uid="uid://b7fsl57vp741q" path="res://resources/player_tuning.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+acceleration = 40.0
+deceleration = 50.0
+turn_speed = 12.0
+knockback_speed = 5.0

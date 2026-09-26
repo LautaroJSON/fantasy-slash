@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityUniqueUpgradeData" format=3 uid="uid://cee6gff1w4kgm"]
+
+[ext_resource type="Script" uid="uid://b25xj1rf8r5xt" path="res://resources/ability_unique_upgrade_data.gd" id="1_script"]
+[ext_resource type="Resource" uid="uid://cum6f2bcqu324" path="res://data/buffs/concussion.tres" id="2_concussion"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"invigorating"
+max_level = 1
+buff = ExtResource("2_concussion")
+title = "Vigorizante"
+description = "Cada enemigo que mates con esta habilidad
+ ganas un stack de \"Conmoción\" -\"Conmoción\": 
+Ganas durante el Giro: +12 % de velocidad,
++5 % de giro y +5 % de prod critica. (Max 10 stacks, pierdes 1 stack cada 2.5 s)."

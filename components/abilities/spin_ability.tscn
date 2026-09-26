@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://dawllkwn7x42v"]
+
+[ext_resource type="Script" uid="uid://etku0yqsl3ux" path="res://components/abilities/spin_ability.gd" id="1_script"]
+[ext_resource type="Resource" uid="uid://cpix1ato4qo7d" path="res://data/abilities/spin/spin_config.tres" id="2_config"]
+[ext_resource type="Script" uid="uid://djhtqpbri0y5r" path="res://components/abilities/dash_slash_vfx.gd" id="3_dash_slash"]
+[ext_resource type="Resource" path="res://data/abilities/spin/dash_slash_vfx_config.tres" id="4_dash_slash_config"]
+[ext_resource type="Material" path="res://materials/vfx/wind_cut_additive_material.tres" id="5_glow_material"]
+
+[node name="SpinAbility" type="Node" unique_id=1330578358]
+script = ExtResource("1_script")
+config = ExtResource("2_config")
+
+[node name="DashSlash" type="Node3D" parent="." unique_id=1308081088]
+top_level = true
+script = ExtResource("3_dash_slash")
+config = ExtResource("4_dash_slash_config")
+glow_material = ExtResource("5_glow_material")

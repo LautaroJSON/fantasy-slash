@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="GuardConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/guard_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+block_arc = 140.0
+block_reduction = 0.8
+guard_turn_speed = 100.0
+guard_down_time = 1.2
+guard_down_offset = Vector3(0.4, -0.5, 0.45)

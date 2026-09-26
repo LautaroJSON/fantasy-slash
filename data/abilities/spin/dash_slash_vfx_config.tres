@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="DashSlashVfxConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/dash_slash_vfx_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+blade_height = 1.1
+spark_amount = 24
+spark_lifetime = 0.3
+spark_speed_min = 3.0
+spark_speed_max = 6.0
+spark_size = 0.05
+flash_radius = 0.35
+flash_duration = 0.15
+flash_start_transparency = 0.5
+flash_energy = 2.0
+flash_range = 3.0

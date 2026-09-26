@@ -1,0 +1,79 @@
+[gd_resource type="Resource" script_class="StatDisplayTable" format=3 uid="uid://cs0cfsimq1u83"]
+
+[ext_resource type="Script" uid="uid://cde232v20bjvc" path="res://resources/stat_display_table.gd" id="1_table"]
+[ext_resource type="Script" uid="uid://n5oxyfmnlkkb" path="res://resources/stat_display.gd" id="2_row"]
+
+[sub_resource type="Resource" id="Row_attack_speed"]
+script = ExtResource("2_row")
+stat = 5
+label = "Velocidad de ataque"
+format = "%.2f golpes/s"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Row_move_speed"]
+script = ExtResource("2_row")
+stat = 9
+label = "Velocidad de movimiento"
+format = "%.1f m/s"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Row_attack_range"]
+script = ExtResource("2_row")
+stat = 6
+label = "Rango"
+format = "%.1f m"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Row_damage"]
+script = ExtResource("2_row")
+label = "Daño"
+format = "%.1f"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Row_crit_chance"]
+script = ExtResource("2_row")
+stat = 3
+label = "Probabilidad de crítico"
+format = "%.0f %%"
+multiplier = 100.0
+
+[sub_resource type="Resource" id="Row_crit_damage"]
+script = ExtResource("2_row")
+stat = 4
+label = "Daño crítico"
+format = "%.0f %%"
+multiplier = 100.0
+
+[sub_resource type="Resource" id="Row_lifesteal"]
+script = ExtResource("2_row")
+stat = 7
+label = "Robo de vida"
+format = "%.0f %%"
+multiplier = 100.0
+
+[sub_resource type="Resource" id="Row_damage_bonus"]
+script = ExtResource("2_row")
+stat = 8
+label = "Bono de daño"
+format = "%.0f %%"
+multiplier = 100.0
+
+[sub_resource type="Resource" id="Row_max_health"]
+script = ExtResource("2_row")
+stat = 2
+label = "Vida máxima"
+format = "%.0f"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Row_defense"]
+script = ExtResource("2_row")
+stat = 1
+label = "Defensa"
+format = "%.1f"
+multiplier = 1.0
+
+[resource]
+script = ExtResource("1_table")
+left_column = Array[ExtResource("2_row")]([SubResource("Row_damage"), SubResource("Row_crit_chance"), SubResource("Row_crit_damage"), SubResource("Row_lifesteal"), SubResource("Row_damage_bonus")])
+right_column = Array[ExtResource("2_row")]([SubResource("Row_max_health"), SubResource("Row_defense")])
+bottom_rows = Array[ExtResource("2_row")]([SubResource("Row_attack_speed"), SubResource("Row_move_speed"), SubResource("Row_attack_range")])

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="BuffData" format=3 uid="uid://cum6f2bcqu324"]
+
+[ext_resource type="Script" uid="uid://dmfij0ebi3hi8" path="res://resources/buff_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://be3t2vttqygd2" path="res://resources/buff_modifier.gd" id="2_modifier"]
+
+[sub_resource type="Resource" id="Modifier_move_speed"]
+script = ExtResource("2_modifier")
+per_stack = 0.12
+
+[sub_resource type="Resource" id="Modifier_ability_speed"]
+script = ExtResource("2_modifier")
+stat = 1
+per_stack = 0.05
+
+[sub_resource type="Resource" id="Modifier_crit_chance"]
+script = ExtResource("2_modifier")
+stat = 2
+per_stack = 0.05
+
+[resource]
+script = ExtResource("1_script")
+id = &"concussion"
+title = "Conmoción"
+max_stacks = 10
+stack_duration = 2.5
+icon_color = Color(0.55, 0.85, 0.25, 1)
+modifiers = Array[ExtResource("2_modifier")]([SubResource("Modifier_move_speed"), SubResource("Modifier_ability_speed"), SubResource("Modifier_crit_chance")])

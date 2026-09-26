@@ -1,0 +1,52 @@
+# Godot 4+ specific ignores
+.godot/
+.import/
+*.import
+*.translation
+*.uid
+*.tmp
+*.log
+
+# Editor and local environment
+.vscode/
+.idea/
+.vs/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Build output and exports
+build/
+bin/
+release/
+android/build/
+android/*.apk
+android/*.aab
+web/
+exports/
+
+# Native / binary artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.app
+
+# Temporary / backup files
+*.bak
+*.orig
+*.rej
+*~
+
+# Secrets and local configuration
+.env
+.env.*
+secrets/
+*.pem
+*.key
+
+# Keep source assets, but ignore generated caches
+assets/**/*.import

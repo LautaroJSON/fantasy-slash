@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="CooldownClockConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/cooldown_clock_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+color = Color(0, 0, 0, 0.55)
+steps_per_turn = 48

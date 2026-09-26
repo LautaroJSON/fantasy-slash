@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AbilityUniqueUpgradeData" format=3 uid="uid://5tkme0wijxyd"]
+
+[ext_resource type="Script" uid="uid://b25xj1rf8r5xt" path="res://resources/ability_unique_upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://clqaknbxq40nf" path="res://resources/value_format.gd" id="2_format"]
+
+[sub_resource type="Resource" id="Format_percent"]
+script = ExtResource("2_format")
+format = "%.0f %%"
+multiplier = 100.0
+
+[resource]
+script = ExtResource("1_script")
+id = &"execute"
+max_level = 3
+level_values = Array[float]([0.15, 0.2, 0.25])
+level_descriptions = Array[String](["Swift Strike ejecuta enemigos
+con 15 % de vida o menos", "Ejecuta con 20 % de vida o menos", "Ejecuta con 25 % de vida o menos"])
+value_format = SubResource("Format_percent")
+title = "Asesinato"
+description = "Swift Strike ejecuta enemigos
+con 15 % de vida o menos"

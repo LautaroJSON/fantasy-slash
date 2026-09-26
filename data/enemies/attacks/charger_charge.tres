@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ChargeAttackData" format=3]
+
+[ext_resource type="Script" path="res://resources/charge_attack_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+damage_multiplier = 2.0
+windup_time = 0.8
+active_time = 0.1
+recovery_time = 0.9
+trigger_range = 8.0
+hit_range = 1.0
+hit_arc_degrees = 360.0
+windup_turn_speed = 180.0
+interruptible = false
+hands = 0
+hand_windup_offset = Vector3(0.1, -0.3, 0.45)
+hand_strike_offset = Vector3(-0.2, -0.2, -0.5)
+min_trigger_range = 3.0
+charge_speed = 13.0
+charge_distance = 9.0
+wall_stun_time = 2.0
+stun_hand_offset = Vector3(0.1, -0.5, 0.1)

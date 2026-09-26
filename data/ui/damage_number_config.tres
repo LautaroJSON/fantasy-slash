@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="DamageNumberConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/damage_number_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+pool_size = 24
+lifetime = 0.7
+rise_speed = 1.6
+spawn_height = 2.4
+spread = 0.35
+font_size = 64
+pixel_size = 0.006
+normal_scale = 0.85
+normal_transparency = 0.2
+crit_scale = 1.6
+crit_pop_scale = 2.2
+crit_pop_duration = 0.12
+crit_lifetime = 1.0
+crit_rise_speed = 1.0
+crit_suffix = "!"
+fade_start = 0.55

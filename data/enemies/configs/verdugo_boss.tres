@@ -1,0 +1,71 @@
+[gd_resource type="Resource" script_class="BossConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/boss_config.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/boss_move_data.gd" id="2_move_script"]
+[ext_resource type="Script" path="res://resources/combo_move_data.gd" id="3_combo_script"]
+[ext_resource type="Script" path="res://resources/shockwave_move_data.gd" id="4_wave_script"]
+[ext_resource type="Script" path="res://resources/grab_move_data.gd" id="5_grab_script"]
+[ext_resource type="Script" path="res://resources/boss_phase_data.gd" id="6_phase_script"]
+[ext_resource type="Script" path="res://resources/enemy_attack_data.gd" id="7_attack_script"]
+[ext_resource type="Resource" path="res://data/enemies/attacks/verdugo_slash_1.tres" id="8_slash_1"]
+[ext_resource type="Resource" path="res://data/enemies/attacks/verdugo_slash_2.tres" id="9_slash_2"]
+[ext_resource type="Resource" path="res://data/enemies/attacks/verdugo_slash_3.tres" id="10_slash_3"]
+[ext_resource type="Resource" path="res://data/enemies/attacks/verdugo_slam.tres" id="11_slam"]
+[ext_resource type="Resource" path="res://data/enemies/attacks/verdugo_grab.tres" id="12_grab"]
+
+[sub_resource type="Resource" id="Resource_combo"]
+script = ExtResource("3_combo_script")
+steps = Array[ExtResource("7_attack_script")]([ExtResource("8_slash_1"), ExtResource("9_slash_2"), ExtResource("10_slash_3")])
+advance_distance = 0.8
+phase_two_extra_steps = Array[ExtResource("7_attack_script")]([ExtResource("8_slash_1")])
+max_range = 4.5
+weight = 3.0
+close_weight = 3.0
+in_phase_one = true
+in_phase_two = true
+
+[sub_resource type="Resource" id="Resource_shockwave"]
+script = ExtResource("4_wave_script")
+attack = ExtResource("11_slam")
+start_radius = 0.5
+max_radius = 12.0
+speed = 9.0
+width = 0.8
+clear_height = 0.3
+rings_phase_one = 1
+rings_phase_two = 2
+ring_delay = 0.6
+min_range = 3.0
+max_range = 12.0
+weight = 3.0
+close_weight = 1.0
+in_phase_one = true
+in_phase_two = true
+
+[sub_resource type="Resource" id="Resource_grab"]
+script = ExtResource("5_grab_script")
+attack = ExtResource("12_grab")
+lunge_speed = 10.0
+lunge_distance = 4.0
+stop_distance = 1.2
+hold_time = 1.2
+slam_multiplier = 2.5
+miss_recovery_time = 1.4
+max_range = 5.0
+weight = 2.0
+close_weight = 2.0
+in_phase_one = true
+in_phase_two = true
+
+[sub_resource type="Resource" id="Resource_phase_two"]
+script = ExtResource("6_phase_script")
+health_threshold = 0.5
+transition_time = 1.2
+time_scale = 0.75
+phase_two_hand_scale = 1.2
+transition_hand_offset = Vector3(0, 1.0, 0.1)
+
+[resource]
+script = ExtResource("1_script")
+moves = Array[ExtResource("2_move_script")]([SubResource("Resource_combo"), SubResource("Resource_shockwave"), SubResource("Resource_grab")])
+phase_two = SubResource("Resource_phase_two")

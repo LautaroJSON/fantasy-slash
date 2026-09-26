@@ -1,0 +1,195 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/hud.gd" id="1_script"]
+[ext_resource type="Script" path="res://ui/ability_slot_view.gd" id="2_slot_view"]
+[ext_resource type="Resource" path="res://data/ui/ability_slot_view_config.tres" id="3_slot_config"]
+[ext_resource type="Script" path="res://ui/boss_bar_stack.gd" id="4_boss_bars"]
+[ext_resource type="Resource" path="res://data/ui/boss_bar_config.tres" id="5_boss_bar_config"]
+[ext_resource type="PackedScene" path="res://ui/boss_health_bar.tscn" id="6_boss_bar_scene"]
+[ext_resource type="Resource" path="res://data/ui/player_health_bar_style.tres" id="7_health_bar_style"]
+[ext_resource type="Script" path="res://ui/buff_bar.gd" id="8_buff_bar"]
+[ext_resource type="Resource" path="res://data/ui/buff_bar_config.tres" id="9_buff_bar_config"]
+[ext_resource type="Resource" path="res://data/ui/hud_config.tres" id="10_hud_config"]
+[ext_resource type="Script" path="res://components/input/input_device_monitor.gd" id="11_device_monitor"]
+[ext_resource type="Resource" path="res://data/ui/input_prompt_config.tres" id="12_prompts"]
+
+[node name="Hud" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+health_bar_style = ExtResource("7_health_bar_style")
+config = ExtResource("10_hud_config")
+prompts = ExtResource("12_prompts")
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -44.0
+offset_right = 150.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+show_percentage = false
+
+[node name="HealthLabel" type="Label" parent="HealthBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DashBar" type="ProgressBar" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -36.0
+offset_right = 166.0
+offset_bottom = -16.0
+grow_vertical = 0
+mouse_filter = 2
+max_value = 1.0
+value = 1.0
+show_percentage = false
+
+[node name="WaveLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -216.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 48.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 2
+
+[node name="DashLabel" type="Label" parent="DashBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "DASH"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TopCenter" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_top = 16.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="BossBars" type="VBoxContainer" parent="TopCenter"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("4_boss_bars")
+config = ExtResource("5_boss_bar_config")
+bar_scene = ExtResource("6_boss_bar_scene")
+
+[node name="AbilitySlots" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -16.0
+offset_top = -16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="BasicSlot" type="Control" parent="AbilitySlots" node_paths=PackedStringArray("key_label")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+script = ExtResource("2_slot_view")
+config = ExtResource("3_slot_config")
+key_label = NodePath("KeyLabel")
+prompt_action = &"ability_basic"
+
+[node name="KeyLabel" type="Label" parent="AbilitySlots/BasicSlot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UltimateSlot" type="Control" parent="AbilitySlots" node_paths=PackedStringArray("key_label")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+script = ExtResource("2_slot_view")
+config = ExtResource("3_slot_config")
+key_label = NodePath("KeyLabel")
+prompt_action = &"ability_ultimate"
+
+[node name="KeyLabel" type="Label" parent="AbilitySlots/UltimateSlot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BuffBar" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -84.0
+offset_right = 150.0
+offset_bottom = -56.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+script = ExtResource("8_buff_bar")
+config = ExtResource("9_buff_bar_config")
+
+[node name="InputDeviceMonitor" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("11_device_monitor")
+config = ExtResource("12_prompts")

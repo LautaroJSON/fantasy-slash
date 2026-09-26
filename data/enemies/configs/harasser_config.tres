@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="HarasserConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/harasser_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+orbit_radius = 4.0
+orbit_flip_time = 2.5
+back_angle = 110.0
+opening_window = 0.4
+max_patience = 4.0

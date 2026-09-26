@@ -1,0 +1,36 @@
+class_name SheatheConfig
+extends Resource
+## Feel of the Sheathe ability. Not upgradeable (its upgradeable stats live in
+## AbilityData: damage and charge time).
+
+## Share of the full damage, knockback and reach at zero charge (0.3 = 30 %).
+## It grows linearly to 100 % at full charge.
+@export var min_charge_factor: float
+## Fraction of MOVE_SPEED the player keeps while charging.
+@export var charge_move_speed_factor: float
+## Fraction of the damage taken removed while charging (0.5 = half damage).
+@export var charge_damage_reduction: float
+## Initial speed of the push, in m/s, at full charge (scaled by the charge factor).
+@export var knockback_speed: float
+## Radius around the player of the wave that pushes (without damage) the
+## enemies the slash missed, in meters.
+@export var wave_radius: float
+## Weapon pivot position while charging (katana in its sheath), relative to Visual.
+@export var sheathed_position: Vector3
+## Weapon pivot rotation while charging, in radians.
+@export var sheathed_rotation: Vector3
+## Transparency of the ground outline once fully charged (0 = opaque).
+@export var full_charge_transparency: float
+
+@export_group("Empowered (Tsubame Gaeshi)")
+## Glow laid over the katana while an empowered Sheathe is stored.
+@export var empowered_overlay: Material
+## Brighter glow shown for empowered_flash_duration when it is gained.
+@export var empowered_flash_overlay: Material
+## Seconds the gain flash lasts before the steady glow.
+@export var empowered_flash_duration: float
+
+
+## Multiplier of damage, knockback and reach for a charge ratio in [0, 1].
+func charge_factor(ratio: float) -> float:
+	return lerpf(min_charge_factor, 1.0, clampf(ratio, 0.0, 1.0))

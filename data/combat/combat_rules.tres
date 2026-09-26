@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CombatRules" format=3 uid="uid://nt3va2we8rq4"]
+
+[ext_resource type="Script" uid="uid://dkgywjcbd8bs1" path="res://resources/combat_rules.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+min_damage_after_defense = 1.0
+max_crit_chance = 1.0
+max_crit_damage = 3.0
+max_attack_arc_degrees = 360.0
+min_dash_cooldown_gap = 0.5
+protected_min_health = 1.0
