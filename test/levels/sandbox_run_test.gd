@@ -162,3 +162,26 @@ func test_ac168_pause_shows_the_sandbox_mode() -> void:
 func test_ac117_main_menu_buttons_point_to_an_existing_scene() -> void:
 	assert_bool(ResourceLoader.exists(_pause.main_menu_path)).is_true()
 	assert_bool(ResourceLoader.exists(_game_over.main_menu_path)).is_true()
+
+
+## docs/specs/affliction.md (AC897): the violet cards are in the sandbox panel
+## and add, level and remove Afflictions like any card.
+func test_ac897_affliction_cards_are_in_the_sandbox_panel() -> void:
+	var catalog: AfflictionCatalog = load("res://data/afflictions/affliction_catalog.tres")
+	var poison: AfflictionUpgradeData = load("res://data/afflictions/cards/poison_basic_attack.tres")
+	_pause.open()
+	var pool: Array[UpgradeCard] = _wave_manager.get_card_pool()
+	for card: AfflictionUpgradeData in catalog.cards:
+		assert_bool(pool.has(card)).is_true()
+	assert_int(_panel.get_row_count()).is_equal(pool.size())
+	assert_str(_panel.get_value_text(poison)).is_equal("(—)")
+	_panel.add(poison)
+	assert_int(_player.afflictions.get_type_count()).is_equal(1)
+	assert_str(_panel.get_count_text(poison)).is_equal("1/3")
+	assert_str(_panel.get_value_text(poison)).is_equal("(20)")
+	assert_str(_pause.get_afflictions_text()).is_equal("Aflicciones 1/3\nVeneno (básicos) nv. 1")
+	_panel.add(poison)
+	_panel.add(poison)
+	assert_bool(_panel.is_plus_enabled(poison)).is_false()
+	_panel.remove(poison)
+	assert_str(_panel.get_value_text(poison)).is_equal("(30)")

@@ -1,6 +1,6 @@
 # Feature: Aflicción (acumulación de estados en los enemigos)
 
-- **Estado:** **Implementada** (2026-09-27). Aprobada con las decisiones del responsable (§3) y los supuestos confirmados. ACs: AC851–AC896 (reservados AC851–AC900; AC897–AC900 quedan libres). Tests: solo los de esta spec y los que tocan (a pedido del responsable); ver §6 y §11. Constitución enmendada a 4.17.0 (aplicada).
+- **Estado:** **Implementada** (2026-09-27). Aprobada con las decisiones del responsable (§3) y los supuestos confirmados. ACs: AC851–AC897 (reservados AC851–AC900; AC898–AC900 quedan libres). Tests: solo los de esta spec y los que tocan (a pedido del responsable); ver §6 y §11. Constitución enmendada a 4.17.0 (aplicada).
 - **Constitución:** `docs/constitution.md` v4.16.0 (con la enmienda de `status-icons.md` aplicada) → **enmienda MINOR a 4.17.0** (Principios II y III, ver §9).
 - **Pilar (Principio I):** **progresión** y **combate.**
   - Progresión: cada carta violeta suma una Aflicción a una fuente (básicos o habilidad) y el tope de 3 tipos obliga a armar la build. El stat "Acumulación de Aflicción" las potencia a todas.
@@ -259,7 +259,7 @@ func clear() -> void
 
 **Pausa.** Fila del stat "Acumulación de Aflicción" en su tabla y sección "Aflicciones 2/3" con una línea por carta ("Veneno (básicos) nv. 2").
 
-## 5. Criterios de aceptación (AC851–AC896)
+## 5. Criterios de aceptación (AC851–AC897)
 
 **Datos**
 - **AC851** Existen `AfflictionData`, `AfflictionUpgradeData`, `AfflictionCatalog` y `AfflictionConfig` con los campos de §4.5; `affliction_config.tres` tiene `max_types = 3`, `threshold = 100`, `max_resistance = 0.9`, `decay_delay = 5`, `decay_per_second = 15`.
@@ -320,10 +320,11 @@ func clear() -> void
 **Integración**
 - **AC895** En `arena.tscn`, con el Guerrero y "Veneno (básicos)", un Bruto golpeado 5 veces queda envenenado y su barra verde vuelve a 0.
 - **AC896** Con un Samurái y un Berserker con la misma carta, los golpes hasta el primer disparo contra un Bruto son 7 y 3 (escala del combo).
+- **AC897** Sandbox: el panel de la pausa lista las 8 cartas violetas con el resto del pool; "+" agrega o sube el nivel de una Aflicción (valor "(20)", "1/3", y la sección "Aflicciones" de la pausa se actualiza), se detiene en su nivel máximo y "−" lo baja.
 
 ## 6. Tests
 
-Todos en verde (50 tests de esta spec):
+Todos en verde (51 tests de esta spec):
 
 - `test/components/affliction_status_test.gd` (archivo propio en vez de ampliar `status_effects_test.gd`): AC856, AC871–AC874, AC876, AC894.
 - `test/resources/affliction_data_test.gd`: AC851–AC855, AC857–AC859, AC892.
@@ -331,6 +332,7 @@ Todos en verde (50 tests de esta spec):
 - `test/components/affliction_loadout_test.gd`: AC862 (5 golpes reales del combo con `combo_driver.gd`), AC864–AC868, AC871, AC875, AC877–AC879, AC882, AC889, AC896.
 - `test/components/affliction_bar_row_test.gd`: AC883–AC887.
 - `test/levels/affliction_run_test.gd` (arena): AC878 (pool), AC880, AC881, AC888, AC890, AC891, AC895.
+- `test/levels/sandbox_run_test.gd` (ampliado): AC897.
 - AC860, AC893: review del diff (ningún literal de diseño en los scripts nuevos; `StatusIconView`, `StatusIconRow`, `EnemyStatusOverlay` y sus configs sin cambios).
 
 Suites existentes que tocan el código cambiado, corridas en verde: `test/entities/enemy/`, `test/ui/`, `test/systems/`, `test/effects/`, `status_effects_test`, `stats_component_test`, `dash_component_test`, `unique_upgrades_test`, `thrust_indicator_test`, `ability_run_test`, `sandbox_run_test`, `unique_upgrade_run_test` y `pause_menu_test` (en total 326 tests). Los únicos rojos (ver §11) también fallan en `main` sin esta spec.
