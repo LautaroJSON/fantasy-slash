@@ -1,21 +1,27 @@
 # Feature: re-work de las habilidades del Guerrero (Carga de escudo y Parada)
 
-- **Estado:** Propuesta (2026-09-27). ACs reservados: **AC801–AC850** (se usan AC801–AC846).
-- **Constitución:** `docs/constitution.md` v4.16.0 → **enmienda MINOR** (Principios II, III y VII, ver §9). Toma la 4.17.0 si cierra antes que `affliction.md`; si no, la siguiente libre.
+- **Estado:** Propuesta, revisión 2 (2026-09-27). ACs reservados: **AC801–AC850** (se usan AC801–AC849).
+- **Constitución:** `docs/constitution.md` v4.21.0 → **enmienda MINOR a 4.22.0** (Principios II, III y VII, ver §9), o la siguiente libre si otra spec cierra antes.
 - **Pilar (Principio I):** **combate.**
-  - Carga de escudo: una apertura que reposiciona. Llevarse enemigos contra una pared o contra otros enemigos premia leer el terreno y el grupo.
-  - Parada: un riesgo con recompensa. Levantar el escudo a tiempo contra un golpe telegrafiado lo convierte en un contraataque. Las dos le dan al Guerrero una identidad de "tanque con escudo" que las habilidades viejas (una estocada y un golpe veloz) no tenían.
-- **Dependencias:** `warrior-sword-and-shield.md` (escudo en `wrist_l`, AC751), `sheath-socket-hand-grip.md` y `sheathe-release-animation.md` (clip del cuerpo por habilidad, `holds_weapon_in_hand()`, cola libre de `PlayerAnimator`), `bdo-combat-feel.md` (hit lag local), `status-icons.md` (íconos), `unique-ability-upgrades.md` (mejoras únicas), `sprint-stamina.md` (estamina), `enemy-attack-telegraph.md` (preparaciones).
-- **En paralelo:** `affliction.md` (rama `claude/affliction-spec`, AC851–AC900). Toca los mismos archivos (`DebuffData`, `DebuffComponent`, `Enemy`). Ver §8.
+  - **Carga de escudo** (ofensiva): una apertura que reposiciona. Llevarse enemigos contra una pared o contra otros premia leer el terreno. Si recibe un golpe de frente mientras avanza, el golpe final sale potenciado: cargar *contra* un ataque es una decisión con recompensa.
+  - **Parada** (defensiva): una parada de toque. Levantar el escudo justo cuando llega un golpe telegrafiado lo anula. Fallar deja al Guerrero expuesto y con un enfriamiento largo. Las mejoras doradas convierten la parada en daño (Represalia, Contragolpe) o en impulso para la run (Duelo).
+- **Dependencias:** `warrior-sword-and-shield.md` (escudo en `wrist_l`, AC751), `sheath-socket-hand-grip.md` y `sheathe-release-animation.md` (clip del cuerpo por habilidad, `holds_weapon_in_hand()`), `bdo-combat-feel.md` (hit lag local), `status-icons.md` (íconos), `unique-ability-upgrades.md` y `spin-golden-upgrades.md` (mejoras únicas doradas), `affliction.md` y `frost-freeze.md` (`SLOW`, `resists_control`, congelado), `hit-impact-vfx.md` (impacto de golpe), `spin-visual-rework.md` (`is_trailing`), `enemy-attack-telegraph.md` (preparaciones).
 
 ## 1. Decisiones del responsable (2026-09-27)
 
-1. **Habilidades:** Carga de escudo y Parada, las dos **BASIC** (se elige una al empezar la run, como hoy).
-2. **Ultimate:** por ahora **no hay**. El slot R sigue vacío; Caída del león queda fuera de esta spec.
-3. **Aturdimiento en bosses: reducido.** Se aturden, pero la duración se multiplica por un factor de datos (`EnemyStats.stun_duration_scale`; bosses 0.3). En un boss, el aturdimiento **pausa** su comportamiento (la preparación sigue donde estaba al terminar) y no la cancela.
-4. **Sin sistema de VFX por estado.** No se hacen `StatusVisuals`, ni la migración de Rage y Escudo, ni hooks de animación por tipo de enemigo. El aturdimiento se ve solo por su ícono y porque el enemigo se queda quieto. Entran solo las dos habilidades, **sus VFX** y un **feedback de impacto estándar** para las habilidades, igual al de los básicos: hit lag, sacudida de cámara y empuje.
+1. **Habilidades BASIC:** **Carga de escudo** (ofensiva, variante "con absorción") y **Parada** (defensiva, parada de toque). Se elige una al empezar la run, como hoy.
+2. **La Parada solo anula el daño.** No aturde ni contraataca por sí sola. Las recompensas llegan con tres **mejoras únicas doradas**: devolver el daño (**Represalia**), renovar el enfriamiento con una estocada automática (**Contragolpe**, un golpe nuevo que no reutiliza la Estocada borrada) y la cadena marca → buff (**Duelo**).
+3. **Palanca contra el abuso del bloqueo:** **solo frontal** (arco de 120°). Además, la Parada castiga el fallo con su diseño (recuperación y enfriamiento largo). **No** se agregan ataques imbloqueables (`unblockable`). Los agarres ya no pasan por el daño normal, así que el escudo no los bloquea.
+4. **Bastión descartado.**
+5. **Ofensiva:** sin preferencia del responsable; se toma la recomendada, **Carga con absorción** (§3.1).
+6. **Se mantienen (revisión 1):** se borran Estocada y Swift Strike (con Lacerante, Asesinato y Reset); `bleed.tres` se conserva. Sin ultimate: el slot R queda vacío. Aturdimiento con `stun.tres` (`delapouite/knocked-out-stars`); en bosses, duración × `stun_duration_scale` = 0.3 y el comportamiento se pausa sin cancelar el ataque. Sin sistema de VFX por estado: solo las habilidades, sus VFX y el feedback de impacto estándar (hit lag, sacudida, empuje).
 
-## 2. Relevamiento (verificado sobre `main`, f2c7167)
+**Propuestas de esta revisión (a confirmar en la aprobación):**
+- Nombres: habilidad **Parada**; mejoras **Represalia**, **Contragolpe** y **Duelo**; debuff **Retado**; buff **Triunfo**.
+- Retado dura **6 s**. Triunfo: **+10 % de velocidad de movimiento y +10 % de daño por stack**, hasta **3 stacks**, **8 s**. Cada muerte de un Retado suma un stack y reinicia los 8 s. Al vencer, **se pierden todos los stacks juntos** (no de a uno como Conmoción).
+- "Matar a un Retado" cuenta cualquier muerte mientras lleva la marca: básicos, habilidades o daño de una Aflicción.
+
+## 2. Relevamiento (verificado sobre `main`, 9c05ff3)
 
 | Pieza | Hoy | En esta spec |
 |---|---|---|
@@ -23,13 +29,15 @@
 | Estocada | `data/abilities/thrust/` (6 cartas y "Lacerante"), `components/abilities/thrust_ability.gd/.tscn` | **Se borra** |
 | Swift Strike | `data/abilities/swift_strike/` (6 cartas, "Asesinato" y "Reset"), `components/abilities/swift_strike_ability.gd/.tscn` | **Se borra** |
 | Clips `thrust`, `thrust_recover`, `swift_strike`, `swift_strike_recover` | `AnimationLibrary_sword` del `SwingPlayer` en `player.tscn` | **Se borran** (el Giro conserva los suyos) |
-| `data/debuffs/bleed.tres` | Solo lo aplica Lacerante; varios tests lo usan como debuff genérico | **Se conserva** (lo usará Aflicción) |
+| `data/debuffs/bleed.tres` | Solo lo aplica Lacerante; varios tests lo usan como debuff genérico | **Se conserva** |
+| `affliction_scale` | Estocada 1.0 y Swift Strike 1.0 (`affliction.md`) | Carga 1.5 y Parada 2.0 (§8) |
 | `PlayerAnimator.CLIP_BUSY = &"idle"` | Una habilidad sin clip deja el cuerpo en `idle` | Las dos habilidades tienen clips en `warrior_profile.gd` |
-| `WeaponMount` | Deja de seguir la mano si hay `SwordSwing`/`SwingPlayer` activos; `holds_weapon_in_hand()` solo se consulta durante el lanzamiento | Las dos habilidades dibujan el golpe con el cuerpo. `holds_weapon_in_hand()` también vale durante la carga (la Parada se sostiene) |
-| `HitstopComponent` | Solo escucha a `AttackComponent` | También escucha los golpes de habilidad (§4.4) |
-| `WeaponTrail` | Emite durante todo el lanzamiento de una habilidad | Emite solo mientras la hoja barre (§4.5) |
-| Daño al jugador | 9 llamadas `target.health.receive_hit(x)` en `melee`, `charger`, `harasser`, `leaper`, `boss` (×3) y `titan` (×2); sin dirección | `receive_hit_from(x, origen)` y un `ShieldGuard` en el jugador (§4.3) |
-| Aturdimiento | No existe (hay empuje, hit lag y `EnemyAttackData.interruptible`) | `DebuffData.Effect.STUN`, `data/debuffs/stun.tres` y `Enemy.stun()` (§4.2) |
+| `HitstopComponent` | Solo escucha a `AttackComponent`; `_resume()` usa `attack.get_clip_speed()` | También escucha los golpes de habilidad (§4.4) |
+| `HitImpactVfxHost` | Ya escucha `enemy_hit` de las dos ranuras; dibuja si `AbilityData.shows_hit_impact` | Las dos habilidades nuevas ponen `shows_hit_impact = true`. No hace falta un VFX de impacto propio |
+| `AbilityComponent.is_trailing()` | `is_casting() or behavior.extends_trail()` | La estela puede limitarse a una ventana del lanzamiento (§4.5) |
+| Daño al jugador | 9 llamadas `target.health.receive_hit(x)` en `melee`, `charger`, `harasser`, `leaper`, `boss` (×3) y `titan` (×2); sin dirección | `receive_hit_from(x, enemy)` y un `ShieldGuard` en el jugador (§4.3) |
+| Control de enemigos | `EnemyStats.resists_control` (bosses); `DebuffComponent.get_speed_scale()` en 0 deja al enemigo quieto y con el comportamiento en pausa (Escarcha) | El aturdimiento reutiliza ese camino (§4.2) |
+| Buffs | `BuffData` + `BuffComponent`, stacks que se pierden de a uno; modificadores `MOVE_SPEED`, `ABILITY_SPEED`, `CRIT_CHANCE`, que solo lee quien otorga el buff (el Giro) | Buffs **globales** que `StatsComponent` suma a los stats, modificador `DAMAGE` y vencimiento de todos los stacks juntos (§4.6) |
 | Colisiones | Enemigos: capa 3 (valor 4), máscara mundo + enemigos (5). Jugador: capa 2, máscara solo mundo (1): **atraviesa a los enemigos** | La Carga arrastra empujando (knockback continuo), no con el cuerpo del jugador |
 | `UltimateAbility` | Existe (R y botón en el HUD); nada la equipa | Sin cambios |
 
@@ -37,49 +45,55 @@
 
 ### 3.1 Carga de escudo (BASIC, tecla E)
 
-1. Al apretar E, el Guerrero gira hacia el enemigo más cercano (Principio VII), marca en el piso el recorrido (rectángulo de `HIT_RANGE` × `HIT_WIDTH`, que se desvanece) y **avanza 5 m en 0.4 s** con el escudo adelante y levantando polvo.
+1. Al apretar E, el Guerrero gira hacia el enemigo más cercano (Principio VII), marca en el piso el recorrido (rectángulo de `HIT_RANGE` × `HIT_WIDTH`, que se desvanece) y **avanza 5 m en 0.4 s** con el escudo adelante, levantando polvo.
 2. Mientras avanza, **reduce 50 % el daño que viene de frente** (arco de 120°).
-3. Los enemigos que toca el frente del escudo (una franja de 1.2 m delante) quedan **arrastrados**: van delante de él a la misma velocidad.
-4. Al terminar el recorrido, o antes si choca contra una pared o alcanza a un enemigo que no se deja arrastrar (un Escudero en guardia, un boss), da un **golpe de escudo**: **12 + 10 % del daño** del jugador (sin crítico) a todos los que tiene delante (2 m × `HIT_WIDTH`), con un **empuje fuerte**. El golpe tiene hit lag, sacudida de cámara, destello de impacto y un anillo de polvo.
-5. Durante los 0.6 s siguientes, cada enemigo empujado que **choca contra una pared** queda **aturdido 1 s**. Si **choca contra otro enemigo**, quedan aturdidos los dos. Lo mismo vale para un arrastrado que choca durante el avance.
-6. Enfriamiento: **7 s**, desde que se aprieta la tecla. El dash corta la Carga en cualquier momento, y al cortarla suelta a los arrastrados.
+3. **Absorción:** si durante el avance lo alcanza un golpe de frente, el escudo destella (chispa) y el golpe final queda **potenciado**. Un golpe de atrás no cuenta.
+4. Los enemigos que toca el frente del escudo (una franja de 1.2 m delante) quedan **arrastrados**: van delante de él a la misma velocidad.
+5. Al terminar el recorrido, o antes si choca contra una pared o alcanza a un enemigo que no se deja arrastrar (un Escudero en guardia, un boss), da un **golpe de escudo**: **12 + 10 % del daño** del jugador (sin crítico) a todos los que tiene delante (2 m × `HIT_WIDTH`), con un **empuje fuerte**. Tiene hit lag, sacudida de cámara, el impacto de golpe de `hit-impact-vfx.md` y un anillo de polvo.
+6. **Potenciado:** el golpe hace **×2 de daño** y **aturde 1 s a todos los golpeados**, con más hit lag, más sacudida y un anillo más grande.
+7. Durante los 0.6 s siguientes, cada enemigo empujado que **choca contra una pared** queda **aturdido 1 s**. Si **choca contra otro enemigo**, quedan aturdidos los dos. Lo mismo vale para un arrastrado que choca durante el avance.
+8. Enfriamiento: **7 s**, desde que se aprieta la tecla. El dash corta la Carga en cualquier momento y, al cortarla, suelta a los arrastrados.
 
-**Mejoras únicas** (se ofrecen solo con la Carga equipada):
+**Mejoras únicas** (doradas; se ofrecen solo con la Carga equipada):
 
 | Id | Nombre | Niveles | Efecto |
 |---|---|---|---|
 | `hammer_anvil` | **Martillo y yunque** | 1 | Cuando dos enemigos chocan, cada uno recibe el 50 % del daño de la Carga (con número de daño). |
 | `momentum` | **Impulso** | 1 | Si el golpe de escudo alcanza a 3 o más enemigos, el enfriamiento que queda se reduce a la mitad. |
-| `concussive` | **Contundencia** | 2 | El aturdimiento pasa de 1 s a 1.5 s (nivel 1) y a 2 s (nivel 2). |
+| `concussive` | **Contundencia** | 2 | Todos los aturdimientos de la Carga (choques y golpe potenciado) pasan de 1 s a 1.5 s (nivel 1) y a 2 s (nivel 2). |
 
-*"Contundencia" reemplaza al nombre propuesto "Conmoción del escudo", porque "Conmoción" ya es un buff del Giro (ícono verde lima) y los dos se confundirían en la pausa y en las cartas.*
+*"Contundencia" y no "Conmoción del escudo", porque "Conmoción" ya es un buff del Giro.*
 
 **Cartas de stats** (`AbilityUpgradeData`): daño (+4, ×5), escalado (+5 %, ×4), enfriamiento (−0.75 s, ×4; piso 3 s) y distancia (+1 m, ×3; el tiempo del avance no cambia, así que va más rápido).
 
-### 3.2 Parada (BASIC, se mantiene E)
+### 3.2 Parada (BASIC, tecla E)
 
-1. **Mantener E** levanta el escudo: bloquea el **100 % del daño frontal** (arco de 120°). Los golpes de atrás o de los costados pegan completos. Solo se puede levantar con al menos 10 de estamina.
-2. Mientras sostiene, camina al 40 % de su velocidad mirando al enemigo más cercano y **gasta 25 de estamina por segundo**. Con la estamina en 0, el escudo baja solo, como si se soltara la tecla.
-3. Cada golpe bloqueado da una chispa en el escudo y una sacudida leve. El jugador no recibe daño ni reproduce `hit`.
-4. **Parada perfecta:** si un golpe frontal llega en los **primeros 0.25 s** desde que se levantó el escudo, se dispara una **estocada automática** hacia el atacante: **20 + 30 % del daño** (con crítico según los stats del jugador), en un rectángulo de 3 m × 1.2 m, que **aturde 1 s** y empuja. Tiene hit lag fuerte, sacudida, destello y estela de la espada solo mientras la hoja avanza. El jugador es invulnerable durante la estocada (0.5 s).
-5. **Soltar E** baja el escudo (0.2 s). El enfriamiento de **4 s** arranca al soltar. Tras una parada perfecta queda en **1 s**. El dash durante el bloqueo cuenta como soltar.
+1. **Tocar E** levanta el escudo durante **0.35 s** (la ventana). El Guerrero gira hacia el enemigo más cercano y se queda quieto. El enfriamiento de **6 s** arranca al apretar.
+2. Durante la ventana, **todo golpe de frente (arco de 120°) se anula**: 0 de daño, sin parpadeo ni clip `hit`. Cada uno da una **chispa en el escudo** y una sacudida leve. Los golpes de atrás o de los costados pegan completos. Un agarre no se bloquea.
+3. **Parada exitosa** (al menos un golpe anulado): el escudo sigue arriba hasta el final de la ventana (anula los que lleguen), hace un empujón corto de **0.15 s** y el enfriamiento que queda baja a **1.5 s**.
+4. **Parada fallida** (no llegó nada): el escudo baja con una **recuperación de 0.4 s** (el Guerrero queda expuesto) y el enfriamiento sigue siendo el completo.
+5. El dash corta la Parada en cualquier momento (ventana o recuperación).
 
-**Mejoras únicas:**
+**Mejoras únicas doradas** (solo con la Parada equipada):
 
 | Id | Nombre | Niveles | Efecto |
 |---|---|---|---|
-| `retaliation` | **Represalia** | 1 | La estocada suma el 100 % del daño que tenía el golpe parado (antes de la defensa). |
-| `bulwark` | **Muralla** | 1 | El primer segundo del bloqueo no gasta estamina. |
-| `disarm` | **Desarme** | 3 | La estocada aplica Debilitar (`weaken.tres`): 5 / 7 / 10 % de defensa ignorada por stack, como "Rompe-armadura" del Giro. |
+| `retribution` | **Represalia** | 3 | Cada golpe anulado devuelve al atacante el **100 / 150 / 200 %** del daño que traía (antes de la defensa del jugador), aplicado con la defensa del enemigo, sin crítico y con número de daño. |
+| `riposte` | **Contragolpe** | 1 | La **primera** parada exitosa de cada uso **renueva el enfriamiento** (queda en 0) y dispara una **estocada automática** hacia el atacante: **20 + 30 % del daño** (con crítico), en un rectángulo de 3 m × 1.2 m, con empuje. Dura 0.5 s, es invulnerable y deja estela solo mientras la hoja avanza. Reemplaza el resto de la ventana y el empujón. |
+| `duel` | **Duelo** | 1 | Cada atacante cuyo golpe se anula queda **Retado** durante **6 s** (no hace nada por sí mismo). Si un Retado muere, el Guerrero gana 1 stack de **Triunfo** (+10 % de velocidad de movimiento y +10 % de daño por stack, máximo 3, **8 s**). Cada muerte de otro Retado suma un stack y reinicia los 8 s. Al vencer, se pierden todos los stacks. |
 
-**Cartas de stats:** daño (+5, ×5), escalado (+10 %, ×4) y enfriamiento (−0.5 s, ×4; piso 1.5 s).
+*Represalia es mejorable porque su efecto es un número que crece bien. Contragolpe es binario. Duelo es binario: su fuerza está en los datos del buff.*
+
+**Cartas de stats:** enfriamiento (−0.75 s, ×4; piso 3 s: afecta al enfriamiento completo, no al de 1.5 s tras el éxito) y ventana (+0.05 s, ×2). Las cartas de daño y escalado no existen: el único golpe propio es el de Contragolpe, que usa los valores base de `parry.tres`.
+
+**Por qué no se abusa:** la ventana es corta y solo frontal; fallar cuesta 0.4 s expuesto y 6 s de espera; con varios enemigos, los de los costados siguen pegando. Con Contragolpe el enfriamiento se renueva, pero la estocada compromete 0.5 s y el siguiente éxito exige volver a leer un golpe.
 
 ### 3.3 Aturdido
 
-- Un enemigo aturdido **se queda quieto**: no camina, no gira y no ataca. Si estaba en una **preparación**, se cancela: se apaga su aviso en el piso y devuelve su turno de ataque. Un empuje que ya tenía **sigue deslizándolo**.
-- Muestra el ícono **Aturdido** (`knocked_out_stars.svg`, `delapouite/knocked-out-stars`), con su reloj, en su fila de estados (`EnemyStatusOverlay`, o la barra del boss).
+- Un enemigo aturdido **se queda quieto**: no camina, no gira y no ataca. Si es un enemigo común y estaba en una **preparación**, se cancela: se apaga su aviso en el piso, devuelve su turno de ataque y las manos vuelven al reposo. Un empuje que ya tenía **sigue deslizándolo**.
+- Muestra el ícono **Aturdido** (`knocked_out_stars.svg`), con su reloj, en su fila de estados (`EnemyStatusOverlay`, o la barra del boss).
 - Reaplicarlo mientras dura no suma: queda la duración más larga entre la que le quedaba y la nueva.
-- **Bosses:** duración × `stun_duration_scale` (0.3: 1 s → 0.3 s). No se cancela su ataque; su comportamiento se pausa y sigue donde estaba.
+- **Bosses** (`resists_control`): duración × `stun_duration_scale` (0.3: 1 s → 0.3 s). No se cancela su ataque: el comportamiento se pausa, como con el congelado de Escarcha, y sigue donde estaba.
 
 ## 4. Diseño
 
@@ -89,58 +103,58 @@
 Player (player.tscn)
 ├── HealthComponent                     guard = ShieldGuard (nuevo export, opcional)
 ├── ShieldGuard (ShieldGuard)           ← nuevo: bloqueo frontal (arco, reducción), señal blocked
-├── BasicAbility / UltimateAbility      + exports stamina y guard
+├── BasicAbility / UltimateAbility      + export guard
 ├── Hitstop (HitstopComponent)          + abilities: [BasicAbility, UltimateAbility]
-├── AbilityImpactVfx (AbilityImpactVfx) ← nuevo: pool de destellos y chispas de impacto (tamaño fijo, creado al cargar)
+├── Stats (StatsComponent)              + buffs = BuffComponent
 └── (SwingPlayer › AnimationLibrary_sword pierde thrust*, swift_strike*)
 
 components/abilities/shield_charge_ability.tscn   (ShieldChargeAbility)
 ├── Indicator (AbilityRectIndicator)
-└── BashVfx (ShieldBashVfx)             ← polvo del avance y anillo del golpe
+├── BashVfx (ShieldBashVfx)             ← polvo del avance y anillo del golpe
+└── BlockVfx (BlockSparkVfx)            ← chispa de la absorción (misma escena que la Parada)
 
 components/abilities/parry_ability.tscn            (ParryAbility)
-└── BlockVfx (BlockSparkVfx)            ← chispas y destello en el escudo (pool)
+├── Indicator (AbilityRectIndicator)    ← solo para la estocada de Contragolpe
+└── BlockVfx (BlockSparkVfx)            ← chispas en el escudo (pool)
 ```
 
-Todos los VFX se crean una vez al cargar (Principio V) y se reposicionan.
+Todos los VFX se crean una vez al cargar (Principio V) y se reposicionan. El impacto sobre los enemigos lo dibuja el `HitImpactVfx` existente.
 
 ### 4.2 Aturdimiento
 
-**`DebuffData.Effect.STUN = 5`**, con **valor explícito**. `affliction.md` fija `SLOW = 4` (AC894), así el `effect = 5` guardado en `stun.tres` no cambia sea cual sea el orden de merge.
+**`DebuffData.Effect.STUN`**, agregado **al final** del enum (después de `SLOW`, así que vale 5; los `.tres` guardan el entero).
 
-**`data/debuffs/stun.tres`:** `id = &"stun"`, `effect = 5`, `duration = 1.0` (la real la pasa quien lo aplica), `max_stacks = 1`, `icon = knocked_out_stars.svg`, `icon_color = Color(1.0, 0.95, 0.55)` (amarillo estrella, se registra en el Principio II), `is_beneficial = false`.
+**`data/debuffs/stun.tres`:** `id = &"stun"`, `effect = STUN`, `duration = 1.0` (la real la pasa quien lo aplica), `max_stacks = 1`, `icon = knocked_out_stars.svg`, `icon_color = Color(1.0, 0.95, 0.55)` (amarillo estrella, se registra en el Principio II).
 
 **`DebuffComponent`:**
-- `apply(data, potency, duration: float = 0.0)`: con `duration > 0` usa esa duración en lugar de `data.duration`. Al refrescar un estado con duración propia, queda `max(le_quedaba, duration)`. Sin el parámetro, el comportamiento no cambia.
-- `ActiveDebuff.duration`: la duración con la que se aplicó. `get_remaining_ratio()` la usa para que el reloj del ícono sea correcto con duraciones propias.
-- `is_stunned() -> bool`: hay un estado `STUN` activo. Un `STUN` es temporizado (`_is_timed`) y no toca la defensa.
+- `apply(data, potency, duration: float = 0.0)`: con `duration > 0` usa esa duración en lugar de `data.duration`. Al refrescar un estado con duración propia, queda `max(le_quedaba, duration)`. Sin el parámetro, nada cambia (tampoco `stack_mode`).
+- `ActiveDebuff.duration`: la duración con la que se aplicó. `get_remaining_ratio()` la usa, así el reloj del ícono es correcto con duraciones propias.
+- `is_stunned() -> bool`: hay un `STUN` activo. Es temporizado y no toca la defensa.
+- `get_speed_scale()` devuelve **0** mientras hay un `STUN`. Así `Enemy._update_behaviour` ya lo deja quieto y pausa su comportamiento (el mismo camino que el congelado de Escarcha), y el empuje sigue teniendo prioridad.
 
-**`EnemyStats`:**
-- `@export var stun_duration_scale: float = 1.0`. El default va en el script: un `.tres` que no lo escribe vale 1. Verdugo, Titán y Colmena: 0.3. Con 0, el enemigo es inmune (no recibe el estado).
-- `@export var stun_cancels_attack: bool = true`. Los tres bosses: `false`.
+**`EnemyStats`:** `@export var stun_duration_scale: float = 1.0`. El default va en el script: un `.tres` que no lo escribe vale 1. Verdugo, Titán y Colmena: 0.3. Con 0, el enemigo es inmune (no recibe el estado).
 
 **`Enemy`:**
-- `stun(status: DebuffData, seconds: float)`: aplica `status` con `seconds × stun_duration_scale`. Si `stun_cancels_attack`, llama a `_behavior.stunned()`. No hace nada si el enemigo está muerto, apareciendo o si la duración escalada es ≤ 0.
+- `stun(status: DebuffData, seconds: float)`: aplica `status` con `seconds × stun_duration_scale`. Si **no** `resists_control`, llama a `_behavior.stunned()`. No hace nada si está muerto, desactivado, apareciendo o si la duración escalada es ≤ 0.
 - `is_stunned() -> bool` (delegado en `debuffs`).
-- `_update_behaviour`: si está empujado, desliza (como hoy). Si no, y está aturdido, `stand_still()` y no actualiza el comportamiento. El hit lag sigue teniendo prioridad.
-- `get_push_speed() -> float`: el largo de `_knockback`, para detectar choques (§5).
+- `get_push_speed() -> float`: el largo de `_knockback`, para detectar choques (§5.1).
 
-**`EnemyBehavior.stunned()`** (hook nuevo, vacío por defecto): los cinco comunes (`melee`, `charger`, `leaper`, `harasser`, `shieldbearer`) cancelan el ataque en curso como `_end_attack(false)`, sin importar `interruptible`: se apaga el aviso, se devuelve el turno y vuelven las manos al reposo. Los bosses no lo implementan (su `stun_cancels_attack` es `false`).
+**`EnemyBehavior.stunned()`** (hook nuevo, vacío por defecto): los cinco comunes (`melee`, `charger`, `leaper`, `harasser`, `shieldbearer`) cancelan el ataque en curso como `_end_attack(false)`, sin importar `interruptible`. Los bosses no lo implementan.
 
 ### 4.3 Bloqueo frontal: `ShieldGuard` y `receive_hit_from`
 
 **`HealthComponent`:**
 - `@export var guard: ShieldGuard` (opcional; los enemigos no lo tienen).
-- `receive_hit_from(raw: float, source: Vector3) -> float`: si es invulnerable o está muerto, devuelve 0 sin avisar al guard. Si no, `raw = guard.absorb(raw, source)` cuando hay guard, y sigue como `receive_hit(raw)`. Un golpe bloqueado al 100 % no emite `damaged` (no hay flicker, `hit` ni sacudida de daño).
+- `receive_hit_from(raw: float, attacker: Enemy) -> float`: si es invulnerable o está muerto, devuelve 0 sin avisar al guard. Si no, `raw = guard.absorb(raw, attacker)` cuando hay guard, y sigue como `receive_hit(raw)`. Un golpe anulado al 100 % no emite `damaged` (sin parpadeo, `hit` ni sacudida de daño).
 - `receive_hit(raw)` no cambia: lo siguen usando los golpes del jugador sobre los enemigos.
 
-**Las 9 llamadas de los enemigos** pasan a `target.health.receive_hit_from(x, enemy.global_position)`. En la onda expansiva del Verdugo y en los golpes del Titán, el origen es la posición del boss. Los agarres (`begin_hold`) no pasan por aquí: **el escudo no bloquea un agarre**.
+**Las 9 llamadas de los enemigos** pasan a `target.health.receive_hit_from(x, enemy)`. En la onda expansiva del Verdugo y en los golpes del Titán, el atacante es el boss (su posición es el origen). Los agarres (`begin_hold`) no pasan por aquí: **el escudo no bloquea un agarre**.
 
 **`ShieldGuard extends Node`** (`components/shield_guard.gd`):
 - `@export var visual: Node3D`: su −Z es el frente.
-- `signal blocked(amount: float, source: Vector3)`: la parte absorbida, antes de la defensa.
+- `signal blocked(amount: float, attacker: Enemy)`: la parte absorbida, antes de la defensa.
 - `raise(reduction: float, arc_degrees: float)`, `lower()`, `is_raised() -> bool`.
-- `absorb(raw, source) -> float`: si está levantado y `is_in_front(...)`, emite `blocked(raw × reduction, source)` y devuelve `raw × (1 − reduction)`. Si no, devuelve `raw`.
+- `absorb(raw, attacker) -> float`: si está levantado y `is_in_front(...)` con la posición del atacante, emite `blocked(raw × reduction, attacker)` y devuelve `raw × (1 − reduction)`. Si no, devuelve `raw`.
 - `static is_in_front(facing: Vector3, origin: Vector3, source: Vector3, arc_degrees: float) -> bool`: ángulo plano (XZ) entre `facing` y `source − origin` ≤ `arc/2`. Un origen en el mismo punto cuenta como de frente.
 
 ### 4.4 Feedback de impacto de las habilidades
@@ -148,52 +162,54 @@ Todos los VFX se crean una vez al cargar (Principio V) y se reposicionan.
 **`StrikeFeel`** (`resources/strike_feel.gd`), uno por golpe de habilidad, dentro del config de cada habilidad:
 - `hitlag: float`: segundos de pausa del clip del jugador y de congelamiento con temblor de los golpeados (`Enemy.apply_hitlag`; los bosses solo tiemblan, como hoy).
 - `shake_strength: float`: sacudida de cámara.
-- `impact_scale: float`: tamaño del destello de impacto sobre cada golpeado (0 = sin destello).
 
-**`AbilityComponent`:**
-- `signal struck(feel: StrikeFeel, enemies: Array[Enemy])`, emitida por `report_strike(feel, enemies)`, que los behaviors llaman **una vez por golpe** que alcanzó a alguien, después de sus `report_hit()`. El array es el buffer del behavior (sin copias).
-- `report_hit()` no cambia: sigue dando números de daño, robo de vida si corresponde, y la carga de Aflicción de `affliction.md`.
+**`AbilityComponent`:** `signal struck(feel: StrikeFeel, enemies: Array[Enemy])`, emitida por `report_strike(feel, enemies)`. Los behaviors la llaman **una vez por golpe**, después de sus `report_hit()`. El array es el buffer del behavior (sin copias). Con un array vacío solo sacude la cámara (la chispa de un bloqueo). `report_hit()` no cambia: números de daño, impacto de golpe (`shows_hit_impact`) y carga de Aflicción.
 
 **`HitstopComponent`** (generalizado, sigue siendo el único que pausa el clip):
 - `@export var abilities: Array[AbilityComponent]`. En `struck`: `start(feel.hitlag)`, `camera.shake(feel.shake_strength)` si es > 0, y `apply_hitlag(feel.hitlag, config)` en cada enemigo.
-- `start()` guarda la velocidad del clip al pausarlo, y `_resume()` la restaura. Para los básicos es la misma `get_clip_speed()` de hoy.
+- `start()` guarda la velocidad del clip al pausarlo y `_resume()` la restaura. Para los básicos es la misma `get_clip_speed()` de hoy.
 - Si el lanzamiento termina o se corta (`cast_released`) durante un hit lag de habilidad, este termina y el clip se reanuda.
+- Las habilidades canalizadas (el Giro) no emiten `struck`: el Principio VII no cambia para ellas.
 
-**`AbilityImpactVfx`** (`components/abilities/ability_impact_vfx.gd`, en `player.tscn`): un pool de `impact_pool_size` destellos, cada uno una esfera blanca aditiva que crece y se apaga, más chispas `CPUParticles3D` *one-shot*. Escucha `struck` de las dos ranuras y dispara uno por enemigo, en su centro, con `feel.impact_scale`. Si el pool está lleno, reutiliza el más viejo. Config: `data/player/ability_impact_vfx_config.tres` (`AbilityImpactVfxConfig`: tamaño del pool, radio, duración, alpha ≤ 0.5, cantidad y velocidad de chispas). Material compartido: `materials/vfx/ability_impact_material.tres`. Sirve para cualquier clase: el Giro y Envainar pueden sumarse después poniendo su `StrikeFeel` (fuera de alcance).
-
-**Empuje:** cada golpe de habilidad sigue empujando con `Enemy.apply_knockback` y la velocidad de su config (`bash_knockback_speed`, `counter_knockback_speed`).
+**Empuje:** cada golpe sigue empujando con `Enemy.apply_knockback` y la velocidad de su config.
 
 ### 4.5 Estela solo mientras la hoja barre
 
-- `AbilityBehavior.is_blade_sweeping(ability) -> bool`: por defecto `true` durante todo el lanzamiento (el Giro y Envainar quedan igual).
-- `AbilityComponent.is_blade_sweeping()`: `is_casting() and _behavior.is_blade_sweeping(self)`. Además `signal sweep_changed`, que el behavior emite con `ability.notify_sweep_changed()` al entrar y al salir de la ventana.
-- `WeaponTrail._is_weapon_attacking()` usa `is_blade_sweeping()` y se refresca también con `sweep_changed`.
-- La Carga devuelve siempre `false` (golpea con el escudo). La Parada devuelve `true` solo en `[counter_trail_start, counter_trail_end]` de la estocada.
+- `AbilityBehavior.trails_while_casting(ability) -> bool`: por defecto `true` (el Giro y Envainar quedan igual).
+- `AbilityComponent.is_trailing()` pasa a `(is_casting() and behavior.trails_while_casting(self)) or behavior.extends_trail(self)`. El behavior avisa los cambios con el `notify_trail_changed()` existente, y `WeaponTrail` ya se refresca con `trail_changed`.
+- La Carga devuelve siempre `false` (golpea con el escudo). La Parada devuelve `true` solo durante la estocada de Contragolpe, en `[riposte_trail_start, riposte_trail_end]`.
 
-### 4.6 Otros cambios genéricos en `AbilityBehavior`/`AbilityComponent`
+### 4.6 Buffs globales (para Triunfo)
 
-- `AbilityBehavior.cast_duration(ability) -> float`: por defecto `ability.get_stat(CAST_DURATION)`. `_start_cast()` la usa. La Parada devuelve `counter_duration` tras una parada perfecta.
-- `AbilityBehavior.has_charge_feedback() -> bool`: por defecto `true`. Con `false` no hay hitos de carga (sin sacudida ni temblor de `ChargeFeedbackComponent`) y `get_charge_ratio()` devuelve 0, así el HUD no llena el anillo de carga. La Parada devuelve `false`.
-- `AbilityComponent.holds_weapon_in_hand()`: se consulta mientras carga **o** lanza. Envainar devuelve `not _charging` y queda igual.
-- `AbilityComponent` gana `@export var stamina: StaminaComponent` y `@export var guard: ShieldGuard`.
+- **`BuffModifier.Stat.DAMAGE`**, agregado al final del enum: fracción sumada al daño.
+- **`BuffData.global: bool`**: sus modificadores `MOVE_SPEED` y `DAMAGE` se aplican siempre, a través de `StatsComponent`. Con `false` (Conmoción), nada cambia: los lee solo quien los otorga.
+- **`BuffData.expires_all_stacks: bool`**: al vencer `stack_duration` se pierden todos los stacks juntos. Cada `add_stack` reinicia el tiempo (como hoy).
+- **`StatsComponent`:** `@export var buffs: BuffComponent` (opcional). `get_stat(MOVE_SPEED)` y `get_stat(DAMAGE)` devuelven `cache × (1 + Σ modificadores de los buffs globales activos)`. El caché de las mejoras no cambia: la suma se hace en la lectura, recorriendo los buffs activos (pocos, sin allocations). `BuffComponent.changed` reemite `stats_changed`, así la pausa y el movimiento ven el valor con el buff.
 
-### 4.7 Clips del cuerpo (`warrior_profile.gd`)
+### 4.7 Otros cambios genéricos
+
+- `AbilityBehavior.cast_duration(ability) -> float`: por defecto `ability.get_stat(CAST_DURATION)`. `_start_cast()` la usa. La Parada devuelve ventana + recuperación fallida.
+- `AbilityComponent.set_cast_remaining(seconds)`: acorta o alarga el lanzamiento en curso (la Parada tras un éxito o para la estocada).
+- `AbilityComponent` gana `@export var guard: ShieldGuard`.
+
+### 4.8 Clips del cuerpo (`warrior_profile.gd`)
 
 Poses nuevas del brazo izquierdo (el escudo cuelga de `wrist_l`): `SHIELD_BASH` (escudo al frente, a la altura del pecho, empujando) y `SHIELD_BLOCK` (escudo alto, cubriendo torso y cabeza). La espada va en la mano derecha en todos los clips (`holds_weapon_in_hand()`).
 
 | Clip | Tipo | Largo | Qué hace | Tiempos atados a datos |
 |---|---|---|---|---|
 | `shield_charge` | loop | 0.4 s por ciclo | Torso inclinado, escudo en `SHIELD_BASH`, zancadas cortas | — |
-| `shield_bash` | one-shot | 0.35 s | Empujón del escudo hacia delante y vuelta a la guardia | pico del empujón = `bash_hit_time` (0.08 s) |
-| `shield_block` | loop | 1.2 s | Guardia baja, escudo en `SHIELD_BLOCK`, espada atrás lista | — |
-| `shield_lower` | one-shot | 0.2 s | De `shield_block` a la guardia de reposo | — |
-| `shield_counter` | one-shot | 0.5 s | Desde `shield_block`: estocada horizontal que sale por el costado del escudo y recupera | extensión máxima = `counter_hit_time` (0.15 s); la hoja barre en `[counter_trail_start, counter_trail_end]` = [0.08, 0.25] |
+| `shield_bash` | one-shot | 0.35 s | Empujón del escudo hacia delante y vuelta a la guardia | pico = `bash_hit_time` (0.08 s) |
+| `shield_parry` | one-shot | 0.35 s (el último cuadro se sostiene si la ventana crece) | Escudo arriba de golpe, en `SHIELD_BLOCK`, peso adelante | escudo arriba = `raise_time` (0.06 s) |
+| `shield_parry_success` | one-shot | 0.15 s | Empujón corto del escudo y vuelta a la guardia | — |
+| `shield_parry_whiff` | one-shot | 0.4 s | El escudo baja pesado, el torso cae un poco (expuesto) | — |
+| `shield_riposte` | one-shot | 0.5 s | Desde `SHIELD_BLOCK`: estocada horizontal que sale por el costado del escudo y recupera | extensión = `riposte_hit_time` (0.15 s); la hoja barre en [0.08, 0.25] |
 
 Los clips llevan un evento (*method track* vacío, como los del combo) en los tiempos de la tabla, y un test los compara con el config (como AC641). Todos cumplen AC751: el escudo no atraviesa el torso ni pasa detrás de la espalda, y la punta de la espada no toca el piso.
 
 `get_body_clip()`:
-- Carga: `shield_charge` mientras avanza, `shield_bash` desde el golpe (termina como cola libre de `PlayerAnimator`).
-- Parada: `shield_block` mientras sostiene, `shield_lower` al soltar y `shield_counter` en la estocada.
+- Carga: `shield_charge` mientras avanza y `shield_bash` desde el golpe.
+- Parada: `shield_parry` en la ventana, `shield_parry_success` o `shield_parry_whiff` después, y `shield_riposte` en la estocada.
 
 ## 5. Lógica interna
 
@@ -202,65 +218,66 @@ Los clips llevan un evento (*method track* vacío, como los del combo) en los ti
 Fases dentro del lanzamiento (`CAST_DURATION` = 0.7 s), según el tiempo transcurrido en `channel()`:
 
 1. **TRAVEL** `[0, travel_time)`:
-   - `begin()`: `face_nearest_enemy`, mostrar el indicador, `guard.raise(guard_reduction, guard_arc_degrees)` y arrancar el polvo.
-   - `move_body()` (`controls_motion()` es `true` en TRAVEL): velocidad `HIT_RANGE / travel_time` hacia el frente, con las reglas de `MovementComponent` contra paredes. Si en un paso el jugador avanzó menos de `stall_ratio` × lo esperado (una pared), pasa a BASH.
-   - En cada paso: los enemigos activos cuyo centro está en la franja `capture_depth` × `HIT_WIDTH` delante del jugador (con `get_hit_padding()`) entran a `_dragged`. A cada arrastrado se le aplica `apply_knockback(frente, velocidad × drag_speed_factor)`. Si después de aplicarlo `is_knocked_back()` es falso (lo resistió: un Escudero en guardia o un boss), pasa a BASH.
+   - `begin()`: `face_nearest_enemy`, mostrar el indicador, `guard.raise(guard_reduction, guard_arc_degrees)`, conectar `guard.blocked`, `_absorbed = false` y arrancar el polvo.
+   - `move_body()` (`controls_motion()` es `true` en TRAVEL): velocidad `HIT_RANGE / travel_time` hacia el frente, con las reglas de `MovementComponent` contra paredes. Si en un paso avanzó menos de `stall_ratio` × lo esperado (una pared), pasa a BASH.
+   - En cada paso: los enemigos activos cuyo centro está en la franja `capture_depth` × `HIT_WIDTH` delante (con `get_hit_padding()`) entran a `_dragged`, y reciben `apply_knockback(frente, velocidad × drag_speed_factor)`. Si después `is_knocked_back()` es falso (lo resistió), pasa a BASH.
+   - `_on_blocked()`: `_absorbed = true`, chispa en el escudo y `report_strike(absorb_feel, [])`.
 2. **BASH** (instante `travel_time`, o antes):
-   - `guard.lower()`, fin del arrastre y del polvo.
-   - Se juntan los enemigos en el rectángulo `bash_range` × `HIT_WIDTH`. Cada uno recibe `hit_damage()` (sin crítico) con `report_hit`, y `apply_knockback(desde el jugador, bash_knockback_speed)`.
-   - `report_strike(bash_feel, golpeados)`, anillo de polvo y destello del escudo.
+   - `guard.lower()`, desconectar `blocked`, fin del arrastre y del polvo.
+   - Enemigos en el rectángulo `bash_range` × `HIT_WIDTH`: cada uno recibe `hit_damage()` (× `absorb_damage_multiplier` si `_absorbed`), sin crítico, con `report_hit`, y `apply_knockback(desde el jugador, bash_knockback_speed)`. Si `_absorbed`, además `stun(stun, duración)`.
+   - `report_strike(bash_feel o empowered_feel, golpeados)` y el anillo (× `empowered_ring_scale` si potenciado).
    - "Impulso": con `golpeados ≥ momentum_min_hits`, `reduce_cooldown(restante × (1 − valor))`.
    - Los golpeados y los que seguían arrastrados pasan a la vigilancia de choques por `impact_window` segundos.
-3. **RECOVERY** hasta el final: sin movimiento libre (el jugador queda quieto, como hoy durante un lanzamiento). El dash la corta (`dash_cancels_cast = true`).
+3. **RECOVERY** hasta el final: el jugador queda quieto. El dash la corta (`dash_cancels_cast = true`).
 
-**Vigilancia de choques** (en el `_physics_process` del behavior, solo mientras la lista no está vacía; también durante TRAVEL para los arrastrados):
+**Vigilancia de choques** (en `_physics_process` del behavior, solo con la lista no vacía; también durante TRAVEL para los arrastrados):
 - Un vigilado choca si `enemy.hit_wall()` y todavía se desliza (`get_push_speed() > impact_min_speed`).
-- `static find_contact(position, push_direction, others, contact_distance) -> int`: índice del enemigo activo más cercano delante de él, en el sentido del empuje (a ≤ `contact_distance` + paddings), o −1 si fue una pared. Sin allocations: recorre `registry.get_active()`.
-- **Pared:** `stun(stun, duración)` al vigilado. **Enemigo:** `stun` a los dos y, con "Martillo y yunque", `receive_hit(daño × valor)` y `report_hit` a cada uno, más `report_strike(impact_feel, par)`.
-- Cada vigilado choca una sola vez y sale de la lista. La duración es `stun_duration`, o el valor de "Contundencia".
+- `static find_contact(position, push_direction, others, self_index, contact_distance) -> int`: índice del enemigo activo más cercano delante de él, en el sentido del empuje (a ≤ `contact_distance` + paddings), o −1 si fue una pared. Sin allocations: recorre `registry.get_active()`.
+- **Pared:** `stun` al vigilado. **Enemigo:** `stun` a los dos y, con "Martillo y yunque", `receive_hit(daño × valor)` y `report_hit` a cada uno, más `report_strike(impact_feel, par)`.
+- Cada vigilado choca una sola vez y sale de la lista. La duración de todo aturdimiento de la Carga es `stun_duration`, o el valor de "Contundencia".
 
-**Corte** (`cancel_cast`, p. ej. el dash): `guard.lower()`, se vacía `_dragged`, se apaga el polvo y el indicador se desvanece. La vigilancia de los ya empujados sigue.
+**Corte** (`cancel_cast`, p. ej. el dash): `guard.lower()`, se desconecta `blocked`, se vacía `_dragged`, se apaga el polvo y el indicador se desvanece. La vigilancia de los ya empujados sigue.
 
 ### 5.2 `ParryAbility extends AbilityBehavior`
 
-- `is_charged() = true`, `has_charge_feedback() = false` y `controls_motion()` es `true` mientras bloquea.
-- **Poder levantar:** `can_cast()` depende de `AbilityComponent` (enfriamiento). Además, `begin_charge()` verifica `stamina.has_at_least(min_stamina_to_block)`. Si no alcanza, cancela la carga en el acto (`ability.cancel_charge()`, sin enfriamiento) y no pasa nada.
-- `begin_charge()`: `_block_time = 0`, `guard.raise(block_reduction, block_arc_degrees)`, conecta `guard.blocked` y hace `face_nearest_enemy`.
-- `charge(step)`: `_block_time += step`. Gasta `stamina_per_second × step` salvo durante el primer `valor` s con "Muralla". Si `stamina.get_current() <= 0`, llama a `ability.release_charge()`.
-- `move_body()`: `movement.move(wish, delta, move_speed_factor)` y encara al enemigo más cercano (sin enemigos, mantiene el último giro, como Envainar).
-- `_on_blocked(amount, source)`:
-  - `report_strike(block_feel, [])` (solo la cámara) y la chispa en el escudo.
-  - Si `_block_time <= perfect_window`: guarda `_parried = true`, `_parried_amount = amount` y `_counter_target = source`, y llama a `ability.release_charge()`.
-- `dash_during_charge()`: `ability.release_charge()`. El dash corta el bajado del escudo (`dash_cancels_cast = true`).
-- `cancel_charge()` (p. ej. un agarre o la muerte): `guard.lower()`.
-- `begin()` (al soltar, o por la parada):
-  - `guard.lower()`.
-  - **Sin parada:** clip `shield_lower`; el lanzamiento dura `CAST_DURATION`.
-  - **Con parada:** gira hacia `_counter_target`, `health.is_invulnerable = true` por el lanzamiento y `reduce_cooldown(max(restante − perfect_cooldown, 0))`. El lanzamiento dura `counter_duration` (vía `cast_duration()`), y chispa grande con `report_strike(perfect_feel, [])`.
-- `channel()` de la estocada:
-  - Al cruzar `counter_hit_time`, golpe: rectángulo `HIT_RANGE` × `HIT_WIDTH`. Daño `hit_damage() + parried_amount × valor` (con "Represalia"), con tirada de crítico (`DamageMath.roll_crit`/`apply_crit`, como Envainar).
-  - A cada golpeado: `report_hit`, `apply_knockback(counter_knockback_speed)` y `stun(stun, stun_duration)`. Con "Desarme", `debuffs.apply(weaken, valor)`.
-  - Después, `report_strike(counter_feel, golpeados)`.
-  - Al cruzar `counter_trail_start` y `counter_trail_end`: `notify_sweep_changed()`.
-- `release()` / `cancel_cast()`: `health.is_invulnerable = false`, `_parried = false`.
+Estados: `WINDOW`, `SUCCESS`, `WHIFF`, `RIPOSTE`.
+
+- `cast_duration()` = `CAST_DURATION` (la ventana) + `whiff_recovery`.
+- `begin()`: `face_nearest_enemy`, `guard.raise(block_reduction, guard_arc_degrees)`, conectar `guard.blocked`, `_state = WINDOW`, `_blocked_any = false`.
+- `channel()`:
+  - En `WINDOW`, al pasar `CAST_DURATION`: `guard.lower()`. Si `_blocked_any`, `_state = SUCCESS` y `set_cast_remaining(success_recovery)`. Si no, `_state = WHIFF` (el lanzamiento ya incluye la recuperación).
+  - En `RIPOSTE`: al cruzar `riposte_hit_time`, el golpe (abajo). Al cruzar `riposte_trail_start` y `riposte_trail_end`, `notify_trail_changed()`.
+- `_on_blocked(amount, attacker)` (solo en `WINDOW`):
+  - Chispa en el escudo, del lado del atacante, y `report_strike(block_feel, [])`.
+  - La primera vez: `_blocked_any = true` y `reduce_cooldown(max(restante − success_cooldown, 0))`.
+  - **Represalia:** si el atacante sigue activo, `attacker.health.receive_hit(amount × valor)` y `report_hit(attacker, aplicado)`.
+  - **Duelo:** `attacker.debuffs.apply(challenged, 1.0)` y, si no estaba conectado, `attacker.killed.connect(_on_challenged_killed, CONNECT_ONE_SHOT)`.
+  - **Contragolpe** (solo la primera vez): `reset_cooldown()`, `guard.lower()`, `_state = RIPOSTE`, `_riposte_target = attacker`, gira hacia él, `health.is_invulnerable = true`, `set_cast_remaining(riposte_duration)` y reinicia el reloj de fase.
+- Golpe de la estocada: rectángulo `HIT_RANGE` × `HIT_WIDTH` desde el jugador. Daño `hit_damage()` con tirada de crítico (`DamageMath.roll_crit`/`apply_crit`, como Envainar). A cada golpeado: `report_hit` y `apply_knockback(riposte_knockback_speed)`. Después, `report_strike(riposte_feel, golpeados)`.
+- `_on_challenged_killed(enemy)`: si `enemy.debuffs` todavía tiene `challenged`, `buffs.add_stack(triumph)`. Si la marca venció antes de la muerte, nada.
+- `trails_while_casting()`: `true` solo en `RIPOSTE` dentro de `[riposte_trail_start, riposte_trail_end]`.
+- `release()` / `cancel_cast()` (fin, dash, agarre, muerte): `guard.lower()`, desconectar `blocked`, `health.is_invulnerable = false` si la había puesto.
+
+`Retado` usa `DebuffData.Effect.STATUS` (solo se lista). `Triunfo` es un `BuffData` con `global = true` y `expires_all_stacks = true`.
 
 ## 6. Resources y datos
 
 | Archivo | Tipo | Contenido |
 |---|---|---|
-| `resources/strike_feel.gd` | `StrikeFeel` | `hitlag`, `shake_strength`, `impact_scale` |
-| `resources/shield_charge_config.gd` → `data/abilities/shield_charge/shield_charge_config.tres` | `ShieldChargeConfig` | `travel_time` 0.4, `capture_depth` 1.2, `drag_speed_factor` 1.1, `stall_ratio` 0.2, `guard_reduction` 0.5, `guard_arc_degrees` 120, `bash_range` 2.0, `bash_hit_time` 0.08, `bash_knockback_speed` 14, `impact_window` 0.6, `impact_min_speed` 2.0, `contact_distance` 1.0, `stun` (`stun.tres`), `stun_duration` 1.0, `momentum_min_hits` 3, `bash_feel` (0.1 s, 0.45, 1.3), `impact_feel` (0.06 s, 0.25, 0.8), `charge_body_clip`, `bash_body_clip`, dust (`dust_amount`, `ring_radius`, `ring_duration`) |
-| `data/abilities/shield_charge/shield_charge.tres` | `AbilityData` | "Carga de escudo", BASIC, `base_damage` 12, `attack_scaling` 0.10, `cooldown` 7, `hit_range` 5, `hit_width` 1.8, `cast_duration` 0.7, `min_cooldown` 3, `min_cast_duration` 0.7, `interrupts_dash` false, `dash_cancels_cast` true; 4 cartas y 3 únicas |
-| `data/abilities/shield_charge/shield_charge_indicator_config.tres` | `AbilityIndicatorConfig` | como el de la Estocada |
-| `resources/parry_config.gd` → `data/abilities/parry/parry_config.tres` | `ParryConfig` | `block_reduction` 1.0, `block_arc_degrees` 120, `stamina_per_second` 25, `min_stamina_to_block` 10, `move_speed_factor` 0.4, `perfect_window` 0.25, `perfect_cooldown` 1.0, `counter_duration` 0.5, `counter_hit_time` 0.15, `counter_trail_start` 0.08, `counter_trail_end` 0.25, `counter_knockback_speed` 10, `stun`, `stun_duration` 1.0, `block_feel` (0, 0.15, 0), `perfect_feel` (0, 0.4, 0), `counter_feel` (0.12 s, 0.5, 1.2), `block_body_clip`, `lower_body_clip`, `counter_body_clip`, chispa (`spark_amount`, `perfect_spark_scale` 1.8) |
-| `data/abilities/parry/parry.tres` | `AbilityData` | "Parada", BASIC, `base_damage` 20, `attack_scaling` 0.30, `cooldown` 4, `hit_range` 3.0, `hit_width` 1.2, `cast_duration` 0.2, `min_cooldown` 1.5, `min_cast_duration` 0.2, `dash_cancels_cast` true; 3 cartas y 3 únicas |
-| `data/abilities/<habilidad>/upgrades/*.tres`, `unique/*.tres` | `AbilityUpgradeData`, `AbilityUniqueUpgradeData` | §3.1 y §3.2. "Desarme" lleva `debuff = weaken.tres`; los valores por nivel van en `level_values` (Principio III) |
+| `resources/strike_feel.gd` | `StrikeFeel` | `hitlag`, `shake_strength` |
+| `resources/shield_charge_config.gd` → `data/abilities/shield_charge/shield_charge_config.tres` | `ShieldChargeConfig` | `travel_time` 0.4, `capture_depth` 1.2, `drag_speed_factor` 1.1, `stall_ratio` 0.2, `guard_reduction` 0.5, `guard_arc_degrees` 120, `bash_range` 2.0, `bash_hit_time` 0.08, `bash_knockback_speed` 14, `absorb_damage_multiplier` 2.0, `empowered_ring_scale` 1.6, `impact_window` 0.6, `impact_min_speed` 2.0, `contact_distance` 1.0, `stun` (`stun.tres`), `stun_duration` 1.0, `momentum_min_hits` 3, `bash_feel` (0.1 s, 0.45), `empowered_feel` (0.14 s, 0.7), `absorb_feel` (0, 0.2), `impact_feel` (0.06 s, 0.25), clips, polvo (`dust_amount`, `ring_radius`, `ring_duration`) |
+| `data/abilities/shield_charge/shield_charge.tres` | `AbilityData` | "Carga de escudo", BASIC, `base_damage` 12, `attack_scaling` 0.10, `cooldown` 7, `hit_range` 5, `hit_width` 1.8, `cast_duration` 0.7, `min_cooldown` 3, `min_cast_duration` 0.7, `interrupts_dash` false, `dash_cancels_cast` true, `affliction_scale` 1.5, `shows_hit_impact` true; 4 cartas y 3 únicas |
+| `data/abilities/shield_charge/shield_charge_indicator_config.tres` | `AbilityIndicatorConfig` | como el de la Estocada (opacidades del Principio II) |
+| `resources/parry_config.gd` → `data/abilities/parry/parry_config.tres` | `ParryConfig` | `block_reduction` 1.0, `guard_arc_degrees` 120, `raise_time` 0.06, `success_cooldown` 1.5, `success_recovery` 0.15, `whiff_recovery` 0.4, `riposte_duration` 0.5, `riposte_hit_time` 0.15, `riposte_trail_start` 0.08, `riposte_trail_end` 0.25, `riposte_knockback_speed` 10, `challenged` (`challenged.tres`), `triumph` (`triumph.tres`), `block_feel` (0, 0.2), `riposte_feel` (0.12 s, 0.5), clips, chispa (`spark_amount`, `spark_pool_size`) |
+| `data/abilities/parry/parry.tres` | `AbilityData` | "Parada", BASIC, `base_damage` 20, `attack_scaling` 0.30, `cooldown` 6, `hit_range` 3.0, `hit_width` 1.2, `cast_duration` 0.35, `min_cooldown` 3, `min_cast_duration` 0.35, `dash_cancels_cast` true, `affliction_scale` 2.0, `shows_hit_impact` true; 2 cartas y 3 únicas |
+| `data/abilities/<habilidad>/upgrades/*.tres`, `unique/*.tres` | `AbilityUpgradeData`, `AbilityUniqueUpgradeData` | §3.1 y §3.2. Represalia `level_values = [1.0, 1.5, 2.0]`; Contundencia `[1.5, 2.0]`; Martillo `[0.5]`; Impulso `[0.5]`. Duelo lleva `debuff = challenged.tres` y `buff = triumph.tres` |
 | `data/debuffs/stun.tres` | `DebuffData` | §4.2 |
-| `assets/icons/status/knocked_out_stars.svg` | SVG | game-icons.net `delapouite/knocked-out-stars`, CC BY 3.0, preparado como pide `status-icons.md` §2.3, con su fila en `SOURCE.md` |
-| `resources/ability_impact_vfx_config.gd` → `data/player/ability_impact_vfx_config.tres` | `AbilityImpactVfxConfig` | pool 8, radio 0.35, duración 0.18 s, alpha 0.5, chispas 10 a 6 m/s |
-| `materials/vfx/ability_impact_material.tres` | `StandardMaterial3D` | blanco, unshaded, aditivo, alpha ≤ 0.5 |
+| `data/debuffs/challenged.tres` | `DebuffData` | "Retado", `id = &"challenged"`, `effect = STATUS`, `duration = 6.0`, `max_stacks = 1`, `icon = crossed_swords.svg`, `icon_color = Color(0.85, 0.3, 0.6)` (magenta) |
+| `data/buffs/triumph.tres` | `BuffData` | "Triunfo", `max_stacks = 3`, `stack_duration = 8.0`, `global = true`, `expires_all_stacks = true`, `MOVE_SPEED` 0.10 y `DAMAGE` 0.10 por stack, `icon = laurels.svg`, `icon_color = Color(0.35, 0.6, 1.0)` (azul) |
+| `assets/icons/status/{knocked_out_stars,crossed_swords,laurels}.svg` | SVG | game-icons.net `delapouite/knocked-out-stars`, `lorc/crossed-swords` y `lorc/laurels`, CC BY 3.0, preparados como pide `status-icons.md` §2.3, con su fila en `SOURCE.md`. Si alguno no existe con ese nombre, se elige otro del sitio y se anota en §13 |
 | `materials/vfx/shield_dust_material.tres` | `StandardMaterial3D` | tierra `Color(0.62, 0.52, 0.4)`, unshaded, alpha ≤ 0.6 |
-| `data/enemies/{verdugo,titan,colmena}_stats.tres` | `EnemyStats` | `stun_duration_scale = 0.3`, `stun_cancels_attack = false` |
+| `materials/vfx/block_spark_material.tres` | `StandardMaterial3D` | blanco, unshaded, aditivo, alpha ≤ 0.5 |
+| `data/enemies/{verdugo,titan,colmena}_stats.tres` | `EnemyStats` | `stun_duration_scale = 0.3` |
 | `data/classes/warrior/warrior_abilities.tres` | `AbilityCatalog` | `[shield_charge, parry]` |
 
 Ningún Resource compartido se muta en runtime. Los valores de las mejoras se leen con `get_unique_value()`.
@@ -270,14 +287,14 @@ Ningún Resource compartido se muta en runtime. Los valores de las mejoras se le
 ```gdscript
 # HealthComponent
 @export var guard: ShieldGuard
-func receive_hit_from(raw: float, source: Vector3) -> float
+func receive_hit_from(raw: float, attacker: Enemy) -> float
 
 # ShieldGuard
-signal blocked(amount: float, source: Vector3)
+signal blocked(amount: float, attacker: Enemy)
 func raise(reduction: float, arc_degrees: float) -> void
 func lower() -> void
 func is_raised() -> bool
-func absorb(raw: float, source: Vector3) -> float
+func absorb(raw: float, attacker: Enemy) -> float
 static func is_in_front(facing: Vector3, origin: Vector3, source: Vector3, arc_degrees: float) -> bool
 
 # DebuffComponent
@@ -294,142 +311,156 @@ func stunned() -> void
 
 # AbilityBehavior
 func cast_duration(ability: AbilityComponent) -> float
-func has_charge_feedback() -> bool
-func is_blade_sweeping(ability: AbilityComponent) -> bool
+func trails_while_casting(ability: AbilityComponent) -> bool
 
 # AbilityComponent
 signal struck(feel: StrikeFeel, enemies: Array[Enemy])
-signal sweep_changed
-@export var stamina: StaminaComponent
 @export var guard: ShieldGuard
 func report_strike(feel: StrikeFeel, enemies: Array[Enemy]) -> void
-func notify_sweep_changed() -> void
-func is_blade_sweeping() -> bool
+func set_cast_remaining(seconds: float) -> void
+
+# StatsComponent
+@export var buffs: BuffComponent
+
+# BuffData
+@export var global: bool
+@export var expires_all_stacks: bool
 
 # ShieldChargeAbility
 static func find_contact(position: Vector3, push_direction: Vector3, others: Array[Enemy], self_index: int, contact_distance: float) -> int
 ```
 
-## 8. Coordinación con `affliction.md`
+## 8. Coordinación con Aflicción (ya en `main`)
 
-- **`DebuffData.Effect`:** Aflicción agrega `SLOW = 4`; esta spec, `STUN = 5` con valor explícito. Cualquiera de las dos puede mergearse primero sin tocar los `.tres`. Si esta entra antes, el enum queda con un hueco en 4 hasta que llegue `SLOW`, y AC894 ("`SLOW` vale 4") sigue valiendo.
-- **`DebuffComponent.apply`:** Aflicción cambia cómo se refresca y apila (`stack_mode`). Esta spec solo agrega el parámetro opcional `duration` y `ActiveDebuff.duration`. Al resolver el conflicto: `duration > 0` manda sobre `data.duration` en los tres modos, y el reloj usa `ActiveDebuff.duration`.
-- **`Enemy._update_behaviour`:** Aflicción aplica ahí la escala de `SLOW`. El aturdimiento se evalúa **antes** (un aturdido no se mueve, lento o no). Es el enganche que su §8 prevé para una futura "Aflicción que aturde", que solo necesita un `AfflictionData` con `debuff = stun.tres`. Ojo: para que respete `stun_duration_scale` y cancele la preparación, Aflicción tendría que aplicarlo con `Enemy.stun()` y no con `debuffs.apply()`. Queda anotado para esa spec.
-- **`enemy.tscn`:** esta spec no le agrega nodos. Solo cambian scripts y los `.tres` de los bosses.
-- **Fuente "habilidad":** los golpes de la Carga, de "Martillo y yunque" y de la estocada pasan por `report_hit()`, así que cargan las Aflicciones de habilidad. Aflicción necesita su `AbilityData.affliction_scale` (su tabla nombra "Estocada 1.0, Golpe veloz 1.0", que dejan de existir). Propuesta: **Carga 1.5** (un golpe cada 7 s a varios enemigos) y **Parada 2.0** (un golpe raro y difícil). Lo decide Aflicción al rebasar.
-- **Constitución:** las dos specs enmiendan el Principio III. La que cierre segunda toma el número siguiente y rebasa el texto.
+- **`DebuffData.Effect`:** `SLOW` quedó último con valor 4; `STUN` se agrega detrás (5). AC894 ("`SLOW` vale 4") sigue valiendo.
+- **`DebuffComponent.apply`:** el parámetro `duration` manda sobre `data.duration` en los dos `stack_mode`, y el reloj usa `ActiveDebuff.duration`. Sin el parámetro, Aflicción no cambia.
+- **Congelado:** el aturdimiento reutiliza `get_speed_scale() == 0` (`frost-freeze.md`), así que un aturdido y un congelado se comportan igual en lo que no es cancelar la preparación.
+- **Fuente "habilidad":** la Carga, "Martillo y yunque", la estocada de Contragolpe y el daño de Represalia pasan por `report_hit()`, así que cargan las Aflicciones de habilidad. `affliction_scale`: **Carga 1.5** (un golpe cada 7 s a varios enemigos) y **Parada 2.0** (golpes raros que exigen leer al enemigo). `affliction.md` y los tests que nombran "Estocada 1.0, Golpe veloz 1.0" se actualizan (§10).
+- Una futura "Aflicción que aturde" debe aplicarlo con `Enemy.stun()` (respeta `stun_duration_scale` y cancela la preparación), no con `debuffs.apply()`.
 
-## 9. Enmienda de la constitución (MINOR 4.16.0 → 4.17.0, o la siguiente libre)
+## 9. Enmienda de la constitución (MINOR 4.21.0 → 4.22.0)
 
-**Principio II**, lista de blancos compartidos: se agregan **el destello y las chispas de impacto de las habilidades, del bloqueo y de la parada** (esfera y partículas, blanco unshaded aditivo, alpha ≤ 0.5, duran décimas de segundo). Registro de colores no reservados: el tierra `Color(0.62, 0.52, 0.4)` también colorea el polvo y el anillo de la Carga de escudo, y el amarillo estrella `Color(1.0, 0.95, 0.55)` es el `icon_color` del estado Aturdido.
+**Principio II:**
+- Lista de blancos compartidos: se agregan **las chispas del bloqueo del escudo** (partículas blancas, unshaded, aditivas, alpha ≤ 0.5, duran décimas de segundo).
+- Registro de colores no reservados: el tierra `Color(0.62, 0.52, 0.4)` también colorea el polvo y el anillo de la Carga de escudo; amarillo estrella `Color(1.0, 0.95, 0.55)` para el ícono de Aturdido; magenta `Color(0.85, 0.3, 0.6)` para el ícono de Retado; azul `Color(0.35, 0.6, 1.0)` para el ícono de Triunfo.
 
-**Principio III**, viñeta "Estados de entidades": se agrega el efecto **aturdido** (`STUN`): el enemigo se queda quieto y, si su tipo lo permite (`stun_cancels_attack`), cancela su preparación. La duración la pasa quien lo aplica y la escala el enemigo (`stun_duration_scale`; los bosses se aturden menos y no cancelan su ataque). Nueva viñeta: **bloqueo frontal**, donde el daño que recibe el jugador puede traer su origen y un `ShieldGuard` reduce el que llega dentro de un arco al frente. Arco y reducción son datos de quien lo levanta.
+**Principio III:**
+- Viñeta "Estados de entidades": se agrega el efecto **aturdido** (`STUN`): el enemigo se queda quieto y, si no resiste el control, cancela su preparación. La duración la pasa quien lo aplica y la escala el enemigo (`stun_duration_scale`; los bosses se aturden menos y no cancelan su ataque).
+- Nueva viñeta **bloqueo frontal**: el daño que recibe el jugador de un enemigo trae a su atacante, y un `ShieldGuard` reduce el que llega dentro de un arco al frente. Arco y reducción son datos de quien lo levanta. Los agarres no se bloquean.
+- Viñeta "Buffs": un buff puede ser **global** (sus modificadores de movimiento y daño se suman a los stats del jugador) y puede **vencer con todos sus stacks juntos**.
 
-**Principio VII**, "Hit lag local": los golpes de **habilidad** también pausan el clip del jugador, congelan y sacuden a los golpeados y sacuden la cámara, con valores por golpe en su config (`StrikeFeel`). "Estela": solo mientras la hoja barre, no durante todo el lanzamiento.
+**Principio VII:**
+- "Hit lag local": los golpes de **habilidad** no canalizados también pausan el clip del jugador, congelan y sacuden a los golpeados y sacuden la cámara, con valores por golpe en su config (`StrikeFeel`).
+- Nueva viñeta "Estela": durante una habilidad, la estela del arma se ve solo mientras la hoja barre, si el behavior lo declara.
 
-**Historial:** `4.17.0 (fecha de cierre): Principio II: destellos y chispas de impacto blancos, polvo de la Carga y color del ícono Aturdido. Principio III: estado aturdido (STUN) y bloqueo frontal con origen del golpe. Principio VII: hit lag y estela de las habilidades (ver warrior-abilities-rework.md).`
+**Historial:** `4.22.0 (fecha de cierre): Principio II: chispas del bloqueo, polvo de la Carga y colores de Aturdido, Retado y Triunfo. Principio III: estado aturdido (STUN), bloqueo frontal con atacante del golpe y buffs globales. Principio VII: hit lag de los golpes de habilidad y estela solo mientras la hoja barre (ver warrior-abilities-rework.md).`
 
 ## 10. Tests existentes que cambian
 
-31 archivos mencionan `THRUST`, `SWIFT_STRIKE` o sus datos. Criterio: **lo que verifican no cambia**; cambia qué habilidad usan.
+35 archivos mencionan `THRUST`, `SWIFT_STRIKE` o sus datos. Criterio: **lo que verifican no cambia**; cambia qué habilidad usan.
 
 | Tipo | Archivos | Cambio |
 |---|---|---|
-| Solo usan una habilidad del Guerrero para arrancar la run o equipar algo | `cooldown_hud_test` (`_start_titan()`), `cooldown_clock_test`, `cooldown_timers_test`, `boss_hud_bar_test`, `input_prompts_test`, `pause_menu_test`, `harasser_test`, `boss_body_test`, `arena_waves_test`, `boss_challenge_run_test`, `berserker_run_test`, `character_class_run_test`, `upgrade_ban_run_test`, `card_ban_test`, `sheathe_test`, `sheathe_feel_test`, `weapon_mount_test`, `sword_swing_test`, `class_combat_identity_test`, `character_class_test` | `THRUST` → `SHIELD_CHARGE` y `SWIFT_STRIKE` → `PARRY` (constantes con la ruta nueva). Donde se contaba el catálogo del Guerrero (2), sigue siendo 2 |
-| Mecánicas genéricas probadas con la Estocada o el Golpe veloz | `ability_component_test` (lanzamiento, enfriamiento, cartas, pisos), `upgrade_offer_test`, `upgrade_caps_test`, `ability_run_test`, `sandbox_run_test`, `unique_upgrade_run_test`, `dash_cancel_test`, `weapon_trail_test` | Pasan a la Carga (no cargada) o a la Parada (cargada, donde hoy se usa Envainar no hace falta). Los valores fijos (enfriamiento 4 → 7, daño 10 → 12, piso…) se reescriben desde los `.tres`, no a mano, y se anotan en §13. `weapon_trail_test`: el caso "la estela emite en un lanzamiento" pasa a verificar que emite solo en la ventana de la hoja (AC830) y que el Giro sigue igual (AC831) |
-| Verifican el comportamiento de lo que se borra | `thrust_indicator_test`, `swift_strike_test`; los casos de Lacerante, Asesinato y Reset en `unique_upgrades_test` | **Se borran con la feature**. Lo genérico que cubrían (niveles de una única, `reset_cooldown`, `health.execute`) ya lo cubren Envainar, el Giro y `health_component_test`. Si algún caso genérico queda sin cobertura, se reescribe con la Carga y se anota |
+| Solo usan una habilidad del Guerrero para arrancar la run o equipar algo | `cooldown_hud_test`, `cooldown_clock_test`, `cooldown_timers_test`, `boss_hud_bar_test`, `input_prompts_test`, `pause_menu_test`, `harasser_test`, `boss_body_test`, `arena_waves_test`, `boss_challenge_run_test`, `berserker_run_test`, `character_class_run_test`, `upgrade_ban_run_test`, `card_ban_test`, `sheathe_test`, `sheathe_feel_test`, `weapon_mount_test`, `sword_swing_test`, `class_combat_identity_test`, `character_class_test`, `affliction_run_test` | `THRUST` → `SHIELD_CHARGE` y `SWIFT_STRIKE` → `PARRY` (constantes con la ruta nueva). Donde se contaba el catálogo del Guerrero (2), sigue siendo 2 |
+| Mecánicas genéricas probadas con la Estocada o el Golpe veloz | `ability_component_test`, `upgrade_offer_test`, `upgrade_caps_test`, `ability_run_test`, `sandbox_run_test`, `unique_upgrade_run_test`, `dash_cancel_test`, `weapon_trail_test`, `hit_impact_abilities_test`, `affliction_loadout_test`, `affliction_data_test` | Pasan a la Carga o a la Parada (las dos son de toque). Los valores fijos (enfriamiento 4 → 7, daño 10 → 12, `affliction_scale` 1.0 → 1.5/2.0…) se leen de los `.tres`, no a mano, y se anotan en §13. `weapon_trail_test`: el caso "la estela emite en un lanzamiento" pasa a verificar la ventana (AC841) y que el Giro sigue igual (AC842). `hit_impact_abilities_test`: el caso "la Estocada no dibuja impacto" pasa a una habilidad con `shows_hit_impact = false` (el Tajo aéreo o un `AbilityData` de test) |
+| Verifican el comportamiento de lo que se borra | `thrust_indicator_test`, `swift_strike_test`; los casos de Lacerante, Asesinato y Reset en `unique_upgrades_test` | **Se borran con la feature**. Lo genérico que cubrían (niveles de una única, `reset_cooldown`, `health.execute`) ya lo cubren Envainar, el Giro y `health_component_test`. Si algún caso queda sin cobertura, se reescribe con la Carga o la Parada y se anota |
 
-La línea base de `main` tiene 15 fallas previas (Giro, alcance y estela del arma, oleadas, datos de clases, escudo del Guerrero). La meta es cero fallas nuevas.
+La línea base de `main` tiene 15 fallas previas (Giro, alcance y estela del arma, oleadas, datos de clases, escudo del Guerrero); se vuelve a medir en el paso 1 del plan, porque `main` avanzó. La meta es cero fallas nuevas.
 
 ## 11. Criterios de aceptación
 
 **Limpieza y catálogo**
 - **AC801** `warrior_abilities.tres` lista exactamente `shield_charge.tres` y `parry.tres`, las dos `slot = BASIC`, y `WaveManager.offer_abilities()` ofrece esas dos al Guerrero.
 - **AC802** No existen `data/abilities/thrust/`, `data/abilities/swift_strike/`, `thrust_ability.*` ni `swift_strike_ability.*`, y el `AnimationLibrary_sword` de `player.tscn` no tiene `thrust`, `thrust_recover`, `swift_strike` ni `swift_strike_recover`. Ningún `.gd`, `.tscn` ni `.tres` los referencia. `bleed.tres` sigue existiendo.
-- **AC803** Ningún Guerrero, con ninguna de las dos habilidades, deja el cuerpo en `idle` durante una carga o un lanzamiento: `PlayerAnimator` pide un clip del perfil del Guerrero en cada fase (§4.7).
+- **AC803** Durante cualquier fase de las dos habilidades, `PlayerAnimator` pide un clip del perfil del Guerrero (§4.8), nunca `idle`.
 
 **Aturdimiento**
-- **AC804** `DebuffData.Effect.STUN == 5`, y `stun.tres` tiene `effect = 5`, `icon` = `knocked_out_stars.svg`, `icon_color = Color(1.0, 0.95, 0.55)` e `is_beneficial = false`. El SVG tiene su fila en `SOURCE.md`.
-- **AC805** `DebuffComponent.apply(data, p, 2.5)` deja `get_remaining_seconds() == 2.5` aunque `data.duration` sea 1. Reaplicar con 1.0 cuando quedan 2 deja 2, y con 3.0 deja 3. `get_remaining_ratio()` usa la duración aplicada. Sin el tercer parámetro, todo como antes (los tests viejos de debuffs no cambian).
-- **AC806** Un común aturdido no se mueve ni gira durante el estado (posición y `rotation.y` constantes, sin empuje), y vuelve a actuar al terminar.
+- **AC804** `DebuffData.Effect.STUN == 5` (y `SLOW` sigue en 4). `stun.tres` tiene `effect = 5`, `icon` = `knocked_out_stars.svg`, `icon_color = Color(1.0, 0.95, 0.55)`. El SVG tiene su fila en `SOURCE.md`.
+- **AC805** `DebuffComponent.apply(data, p, 2.5)` deja 2.5 s aunque `data.duration` sea 1. Reaplicar con 1.0 cuando quedan 2 deja 2, y con 3.0 deja 3. `get_remaining_ratio()` usa la duración aplicada. Sin el tercer parámetro, todo como antes (los tests de debuffs y de Aflicción no cambian).
+- **AC806** Un común aturdido tiene `get_speed_scale() == 0`, no se mueve ni gira (posición y `rotation.y` constantes, sin empuje), y vuelve a actuar al terminar.
 - **AC807** Un común aturdido en `WINDUP` cancela el ataque, aunque sea `interruptible = false`: `is_attacking()` es falso, el aviso del piso está limpio y el coordinador ya no le cuenta el turno. Vale para `grunt`, `charger`, `leaper`, `harasser` y `shieldbearer`.
 - **AC808** Un aturdido que estaba siendo empujado sigue deslizándose hasta frenar.
-- **AC809** Un boss (Verdugo, Titán, Colmena) aturdido 1 s queda aturdido 0.3 s (`stun_duration_scale`), no cancela su ataque en curso y lo retoma en la misma fase y tiempo al terminar.
+- **AC809** Un boss (Verdugo, Titán, Colmena) aturdido 1 s queda aturdido 0.3 s, no cancela su ataque y lo retoma en la misma fase y tiempo al terminar.
 - **AC810** `stun_duration_scale = 0` no aplica el estado. Un enemigo muerto, desactivado o apareciendo no se aturde.
 - **AC811** El ícono de Aturdido aparece en `EnemyStatusOverlay` (comunes) y en la fila de la barra del boss mientras dura, con su reloj.
 
 **Bloqueo frontal**
-- **AC812** `ShieldGuard.is_in_front`: con arco de 120°, un origen a 59° del frente cuenta, uno a 61° no, y uno detrás no. Un origen en el mismo punto cuenta.
-- **AC813** `receive_hit_from` con el guard levantado al 100 %, de frente: 0 de daño, sin `damaged` y `blocked` emitido con el golpe entero. De espaldas: daño completo y sin `blocked`. Con 50 %: la mitad antes de la defensa.
+- **AC812** `ShieldGuard.is_in_front`: con arco de 120°, un origen a 59° del frente cuenta, uno a 61° no y uno detrás no. Un origen en el mismo punto cuenta.
+- **AC813** `receive_hit_from` con el guard levantado al 100 %, de frente: 0 de daño, sin `damaged` y `blocked` emitido con el golpe entero y el atacante. De espaldas: daño completo y sin `blocked`. Con 50 %: la mitad antes de la defensa.
 - **AC814** Con iframes (dash), `receive_hit_from` devuelve 0 y **no** emite `blocked`.
-- **AC815** Las 9 llamadas de daño de los enemigos al jugador usan `receive_hit_from` con la posición del enemigo. Ningún comportamiento enemigo llama `target.health.receive_hit(`.
+- **AC815** Las 9 llamadas de daño de los enemigos al jugador usan `receive_hit_from` con el enemigo. Ningún comportamiento enemigo llama `target.health.receive_hit(`. Un agarre con el guard levantado sujeta al jugador igual.
 
 **Carga de escudo**
 - **AC816** Sin obstáculos, la Carga desplaza al jugador `HIT_RANGE` (5 m ± 0.1) en `travel_time` (0.4 s) hacia el enemigo más cercano, y el golpe de escudo cae en ese instante.
 - **AC817** Durante el avance, un golpe frontal hace el 50 % y uno de atrás el 100 %. Terminado el avance, el guard está bajo.
 - **AC818** Un enemigo en la franja de captura avanza con el jugador (sigue delante, a menos de `capture_depth` + su padding) y no recibe daño hasta el golpe de escudo.
-- **AC819** El golpe de escudo hace `12 + 0.10 × DAMAGE` (sin crítico, con defensa) a cada enemigo en `bash_range` × `HIT_WIDTH`, los empuja a `bash_knockback_speed` y emite un `enemy_hit` por cada uno.
-- **AC820** Contra una pared, la Carga pasa al golpe de escudo apenas se frena. Contra un Escudero en guardia de frente o un boss, pasa al golpe al alcanzarlo.
-- **AC821** Un enemigo empujado por el golpe que choca contra una pared dentro de `impact_window` queda aturdido `stun_duration`. Uno que no choca, no.
-- **AC822** Un empujado que choca contra otro enemigo deja aturdidos a los dos. `find_contact` distingue pared (−1) de enemigo (índice) en casos puros.
+- **AC819** Sin absorción, el golpe de escudo hace `12 + 0.10 × DAMAGE` (sin crítico, con defensa) a cada enemigo en `bash_range` × `HIT_WIDTH`, los empuja a `bash_knockback_speed`, emite un `enemy_hit` por cada uno y no aturde.
+- **AC820** Absorción: tras un golpe frontal durante el avance, el golpe de escudo hace `absorb_damage_multiplier` × el daño de AC819 y aturde `stun_duration` a cada golpeado, con `empowered_feel`. Un golpe de atrás durante el avance no lo potencia.
+- **AC821** Contra una pared, la Carga pasa al golpe de escudo apenas se frena. Contra un Escudero en guardia de frente o un boss, pasa al golpe al alcanzarlo.
+- **AC822** Un empujado que choca contra una pared dentro de `impact_window` queda aturdido `stun_duration`. Uno que no choca, no. Uno que choca contra otro enemigo deja aturdidos a los dos. `find_contact` distingue pared (−1) de enemigo (índice) en casos puros.
 - **AC823** Cada vigilado choca una sola vez y la lista se vacía al pasar `impact_window`.
 - **AC824** "Martillo y yunque": en un choque entre enemigos, cada uno recibe `0.5 × daño de la Carga`, con `enemy_hit`. Sin la mejora, el choque no hace daño.
 - **AC825** "Impulso": con 3 golpeados, el enfriamiento restante queda a la mitad justo después del golpe. Con 2, no cambia.
-- **AC826** "Contundencia": niveles 1 y 2 dan 1.5 s y 2 s de aturdimiento. `max_level = 2`.
+- **AC826** "Contundencia": niveles 1 y 2 dan 1.5 s y 2 s, tanto en los choques como en el golpe potenciado. `max_level = 2`.
 - **AC827** Un dash durante la Carga la corta: el guard baja, los arrastrados dejan de recibir empuje y no hay golpe de escudo. El enfriamiento sigue corriendo.
-- **AC828** El enfriamiento es 7 s desde la tecla. Las cartas de stats de la Carga respetan su `max_stacks` y los pisos (`min_cooldown` 3).
-
-**Estela**
-- **AC829** La estela del arma no emite en ningún momento de la Carga.
-- **AC830** En la estocada de la Parada, la estela emite solo con el tiempo del lanzamiento en `[counter_trail_start, counter_trail_end]`.
-- **AC831** El Giro y Envainar siguen emitiendo como hoy (todo el lanzamiento).
+- **AC828** El enfriamiento es 7 s desde la tecla. Las cartas de stats de la Carga respetan su `max_stacks` y el piso (`min_cooldown` 3).
 
 **Parada**
-- **AC832** Mantener E con ≥ 10 de estamina levanta el guard al 100 % con arco de 120° y gasta 25/s: tras 1 s quedan 75 ± 1 de 100. Con menos de 10, no se levanta y no hay enfriamiento.
-- **AC833** Con la estamina en 0, el escudo baja solo, como al soltar: enfriamiento de 4 s.
-- **AC834** Soltar E baja el guard, reproduce `shield_lower` durante `CAST_DURATION` y arranca el enfriamiento de 4 s. Mientras sostiene, el jugador camina a `move_speed_factor` de su velocidad.
-- **AC835** Un golpe frontal a los 0.2 s dispara la estocada, que gira hacia el atacante. A los 0.3 s, no: se bloquea y el escudo sigue arriba.
-- **AC836** La estocada hace `20 + 0.30 × DAMAGE` (con crítico según `CRIT_CHANCE`/`CRIT_DAMAGE`) en `HIT_RANGE` × `HIT_WIDTH` al cruzar `counter_hit_time`, aturde `stun_duration` y empuja.
-- **AC837** Durante la estocada el jugador es invulnerable, y al terminarla o cortarla deja de serlo. Tras una parada perfecta, el enfriamiento restante es 1 s.
-- **AC838** "Represalia": la estocada suma el daño bloqueado por la parada. "Muralla": durante el primer segundo no se gasta estamina y después sí. "Desarme": la estocada aplica `weaken` con el valor de su nivel.
-- **AC839** Un dash durante el bloqueo baja el escudo y arranca el enfriamiento. `ChargeFeedbackComponent` no recibe hitos durante el bloqueo y `get_charge_ratio()` es 0.
-- **AC840** Un agarre (`begin_hold`) durante el bloqueo cancela la carga, baja el guard y no bloquea el agarre.
+- **AC829** Tocar E levanta el guard al 100 % con arco de 120° durante `CAST_DURATION` (0.35 s) y arranca el enfriamiento de 6 s. Durante la ventana el jugador no se mueve.
+- **AC830** Fallida: sin golpes en la ventana, el guard baja a los 0.35 s, el lanzamiento dura 0.35 + `whiff_recovery` (0.75 s) con `shield_parry_whiff`, y el enfriamiento no se reduce.
+- **AC831** Exitosa: un golpe frontal en la ventana hace 0 de daño, sin `damaged`, y deja el enfriamiento restante en `success_cooldown` (1.5 s). Un segundo golpe frontal en la misma ventana también se anula. El lanzamiento termina `success_recovery` después del final de la ventana, con `shield_parry_success`.
+- **AC832** Un golpe de atrás en la ventana pega completo y no cuenta como éxito. Un golpe frontal después de la ventana pega completo.
+- **AC833** Un dash corta la Parada en la ventana o en la recuperación: el guard baja y el enfriamiento sigue corriendo. Un agarre en la ventana sujeta al jugador y baja el guard.
+- **AC834** Las cartas de la Parada: enfriamiento (−0.75 s, ×4, piso 3 s) y ventana (+0.05 s, ×2). Con 2 cartas de ventana, un golpe a los 0.42 s se anula.
+
+**Mejoras de la Parada**
+- **AC835** "Represalia": cada golpe anulado hace al atacante `valor × golpe` (niveles 1.0 / 1.5 / 2.0; con su defensa, sin crítico) con `enemy_hit`. Un atacante muerto o desactivado no recibe nada. `max_level = 3`.
+- **AC836** "Contragolpe": el primer éxito deja el enfriamiento en 0, gira al jugador hacia el atacante y dispara la estocada: al cruzar `riposte_hit_time` hace `20 + 0.30 × DAMAGE` (con crítico según `CRIT_CHANCE`/`CRIT_DAMAGE`) en `HIT_RANGE` × `HIT_WIDTH` y empuja a `riposte_knockback_speed`. El lanzamiento dura `riposte_duration` desde el éxito. Un segundo golpe no dispara otra.
+- **AC837** Durante la estocada el jugador es invulnerable, y al terminarla o cortarla (dash) deja de serlo.
+- **AC838** "Duelo": el atacante de un golpe anulado queda Retado 6 s (ícono y reloj). Si muere Retado, el jugador gana 1 stack de Triunfo. Otra muerte de un Retado dentro de los 8 s suma un stack y reinicia el tiempo, hasta 3. A los 8 s sin muertes se pierden todos. Matar a un enemigo sin marca, o después de que la marca venció, no da nada.
+- **AC839** Con Triunfo en N stacks, `StatsComponent.get_stat(MOVE_SPEED)` y `get_stat(DAMAGE)` valen la base × (1 + 0.1 × N), y vuelven a la base al vencer. Conmoción (no global) no cambia `get_stat`.
+
+**Estela**
+- **AC840** La estela del arma no emite en ningún momento de la Carga, ni en la Parada sin Contragolpe.
+- **AC841** En la estocada de Contragolpe, la estela emite solo con el tiempo de la estocada en `[riposte_trail_start, riposte_trail_end]`.
+- **AC842** El Giro (con su corte del dash) y Envainar siguen emitiendo como hoy.
 
 **Feedback de impacto y VFX**
-- **AC841** Un `struck` con `hitlag > 0` pausa el clip del jugador (`speed_scale == 0`) ese tiempo y luego restaura la velocidad previa. Aplica `apply_hitlag` a cada golpeado y sacude la cámara con `shake_strength`. Un golpe del combo sigue igual (los tests de `bdo-combat-feel.md` no cambian).
-- **AC842** Si el lanzamiento termina o se corta durante el hit lag de una habilidad, el clip se reanuda.
-- **AC843** `AbilityImpactVfx` crea su pool al cargar (`impact_pool_size` nodos) y no crea nodos en runtime. Un `struck` con 3 enemigos e `impact_scale > 0` activa 3 destellos en sus posiciones. Con `impact_scale = 0`, ninguno.
-- **AC844** La Carga muestra polvo durante el avance y el anillo al golpear, y la Parada da una chispa por golpe bloqueado (más grande en la perfecta). Todos usan nodos creados al cargar.
+- **AC843** Un `struck` con `hitlag > 0` pausa el clip del jugador (`speed_scale == 0`) ese tiempo y después restaura la velocidad previa. Aplica `apply_hitlag` a cada golpeado y sacude la cámara con `shake_strength`. Un golpe del combo sigue igual (los tests de `bdo-combat-feel.md` no cambian).
+- **AC844** Si el lanzamiento termina o se corta durante el hit lag de una habilidad, el clip se reanuda.
+- **AC845** El golpe de escudo y la estocada de Contragolpe disparan el impacto de golpe de `HitImpactVfx` (`shows_hit_impact = true`).
+- **AC846** La Carga muestra polvo durante el avance y el anillo al golpear (más grande si está potenciada). La Parada y la absorción dan una chispa por golpe bloqueado. Todos usan nodos creados al cargar, sin crear nodos en runtime.
 
-**Cuerpo y armas**
-- **AC845** Los clips `shield_charge`, `shield_bash`, `shield_block`, `shield_lower` y `shield_counter` existen en el perfil del Guerrero, y sus eventos coinciden con `bash_hit_time`, `counter_hit_time`, `counter_trail_start` y `counter_trail_end`. Durante las dos habilidades `holds_weapon_in_hand()` es `true` y `WeaponMount` sigue la mano.
-- **AC846** AC751 vale en cada cuadro muestreado de los cinco clips nuevos: el escudo no atraviesa el torso ni pasa detrás de la espalda, y la punta de la espada no toca el piso.
+**Cuerpo, armas y Aflicción**
+- **AC847** Los clips `shield_charge`, `shield_bash`, `shield_parry`, `shield_parry_success`, `shield_parry_whiff` y `shield_riposte` existen en el perfil del Guerrero, y sus eventos coinciden con `bash_hit_time`, `raise_time`, `riposte_hit_time`, `riposte_trail_start` y `riposte_trail_end`. Durante las dos habilidades `holds_weapon_in_hand()` es `true` y `WeaponMount` sigue la mano.
+- **AC848** AC751 vale en cada cuadro muestreado de los seis clips nuevos: el escudo no atraviesa el torso ni pasa detrás de la espalda, y la punta de la espada no toca el piso.
+- **AC849** `affliction_scale` es 1.5 en `shield_charge.tres` y 2.0 en `parry.tres`, y un golpe de escudo carga una Aflicción de habilidad `base × 1.5 × (1 + ACUMULACIÓN)`.
 
 ## 12. Plan
 
-Cada paso deja el proyecto abriendo y la suite sin fallas nuevas respecto de la línea base (15).
+Cada paso deja el proyecto abriendo y la suite sin fallas nuevas respecto de la línea base.
 
-1. **Entorno:** Godot 4.7.2 Linux y gdUnit4 v6.2.0 en el scratchpad; correr la línea base de `main` y guardar la lista de fallas.
-2. **Aturdimiento:** `Effect.STUN`, `duration` en `apply`/`ActiveDebuff`, `is_stunned()`, `EnemyStats.stun_*`, `Enemy.stun()`/`is_stunned()`/`get_push_speed()`, el hook `stunned()` en los cinco comunes, los `.tres` de los bosses, `stun.tres` y el SVG (bajado, preparado, `.import` desde la copia y fila en `SOURCE.md`). Tests AC804–AC811.
+1. **Entorno:** copia en el scratchpad, import, y correr la línea base de esta rama (ya con `main`) para guardar la lista de fallas.
+2. **Aturdimiento:** `Effect.STUN`, `duration` en `apply`/`ActiveDebuff`, `is_stunned()`, `get_speed_scale()` en 0, `EnemyStats.stun_duration_scale`, `Enemy.stun()`/`is_stunned()`/`get_push_speed()`, el hook `stunned()` en los cinco comunes, los `.tres` de los bosses, `stun.tres` y el SVG (bajado, preparado, `.import` desde la copia y fila en `SOURCE.md`). Tests AC804–AC811.
 3. **Bloqueo frontal:** `ShieldGuard`, `receive_hit_from` y las 9 llamadas; el nodo en `player.tscn`. Tests AC812–AC815.
-4. **Feedback genérico:** `StrikeFeel`, `struck`/`report_strike`, `HitstopComponent` generalizado, `AbilityImpactVfx` con su config y material, `is_blade_sweeping`/`sweep_changed` en `WeaponTrail`, `cast_duration()`, `has_charge_feedback()`, `holds_weapon_in_hand()` durante la carga, y exports `stamina`/`guard`. Tests AC829 (preparado), AC831, AC841–AC843.
-5. **Clips:** poses `SHIELD_BASH`/`SHIELD_BLOCK` y los cinco clips en `warrior_profile.gd`, con captura visual de cada uno. Tests AC845–AC846.
-6. **Carga de escudo:** config, behavior, escena, VFX, `.tres`, cartas y únicas. Tests AC816–AC829, AC844 (parte).
-7. **Parada:** config, behavior, escena, VFX, `.tres`, cartas y únicas. Tests AC830, AC832–AC840, AC844 (parte).
-8. **Cambio de catálogo y borrado:** `warrior_abilities.tres` pasa a las nuevas. Se adaptan los tests de §10 y se borran Estocada, Swift Strike, sus clips y sus tests. Tests AC801–AC803.
-9. **Cierre:** enmienda de la constitución (§9) y `CLAUDE.md` (lo que se ajusta: Carga, Parada, aturdimiento, `ShieldGuard`, `StrikeFeel`/`AbilityImpactVfx`; specs recientes). Suite completa, import, smoke test (`--quit-after 300` y la arena), capturas de las dos habilidades en la arena, checklist §14 y estado **Implementada**.
+4. **Genéricos:** `StrikeFeel`, `struck`/`report_strike`, `HitstopComponent` generalizado, `trails_while_casting()`, `cast_duration()`, `set_cast_remaining()`, export `guard`; buffs globales (`DAMAGE`, `global`, `expires_all_stacks`, `StatsComponent.buffs`). Tests AC839 (con un buff de test), AC842–AC844.
+5. **Clips:** poses `SHIELD_BASH`/`SHIELD_BLOCK` y los seis clips en `warrior_profile.gd`, con una hoja de capturas de cada uno para revisarlas. Tests AC847–AC848.
+6. **Carga de escudo:** config, behavior, escena, VFX, `.tres`, cartas y únicas. Tests AC816–AC828, AC840 (parte), AC845–AC846 (parte), AC849 (parte).
+7. **Parada:** config, behavior, escena, VFX, `.tres`, cartas, únicas, Retado, Triunfo y sus SVG. Tests AC829–AC838, AC840–AC841, AC845–AC846 (parte), AC849 (parte).
+8. **Cambio de catálogo y borrado:** `warrior_abilities.tres` pasa a las nuevas. Se adaptan los tests de §10 y `affliction.md`, y se borran Estocada, Swift Strike, sus clips y sus tests. Tests AC801–AC803.
+9. **Cierre:** enmienda de la constitución (§9) y `CLAUDE.md` (dónde se ajustan la Carga, la Parada, el aturdimiento, `ShieldGuard`, `StrikeFeel` y los buffs globales; specs recientes). Suite completa, import, smoke test (`--quit-after 300` y la arena), capturas de las dos habilidades en la arena, checklist §14 y estado **Implementada**. Sin merge a `main` hasta que lo pida el responsable.
 
 ## 13. Notas de implementación
 
-(Se completa al implementar: tests viejos adaptados y sus valores, desvíos aprobados.)
+(Se completa al implementar: tests viejos adaptados y sus valores, íconos elegidos, desvíos aprobados.)
 
 ## 14. Checklist de review (constitución)
 
-- [ ] **Identidad (I):** combate (apertura con posicionamiento; riesgo y recompensa de la parada).
-- [ ] **Arte (II):** primitivas y partículas; el blanco solo en destellos translúcidos y breves (enmienda); el SVG con `SOURCE.md`; materiales `.tres` compartidos.
-- [ ] **Datos (III):** tiempos, distancias, arcos, reducciones, estamina, hit lag y VFX en configs `.tres`; las únicas con `max_level` y valores por nivel; sin mutar Resources compartidos.
+- [ ] **Identidad (I):** combate (apertura con posicionamiento y absorción; parada de riesgo y recompensa).
+- [ ] **Arte (II):** primitivas y partículas; el blanco solo en chispas translúcidas y breves (enmienda); los SVG con `SOURCE.md`; materiales `.tres` compartidos.
+- [ ] **Datos (III):** tiempos, distancias, arcos, reducciones, hit lag, buffs y VFX en configs `.tres`; las únicas con `max_level` y valores por nivel; sin mutar Resources compartidos.
 - [ ] **GDScript (IV):** tipado estricto; `_physics_process` delgados.
-- [ ] **Performance (V):** pools de VFX creados al cargar; la vigilancia de choques recorre el registro sin allocations; buffers reutilizados.
-- [ ] **Input (VI):** solo `ability_basic` (mantener y soltar), sin acciones nuevas.
+- [ ] **Performance (V):** pools de VFX creados al cargar; la vigilancia de choques recorre el registro sin allocations; los buffs globales se suman sin allocations.
+- [ ] **Input (VI):** solo `ability_basic` (toque), sin acciones nuevas.
 - [ ] **Combate (VII):** hit lag local sin `Engine.time_scale`; auto-apuntado al más cercano; estela solo mientras la hoja barre; los bosses se aturden menos y no cancelan su ataque.
 - [ ] **Calidad:** sin fallas nuevas respecto de la línea base; sin warnings de tipado nuevos.
