@@ -37,7 +37,7 @@ Un **cuadrado** con cinco capas, de abajo hacia arriba:
 
 1. **Fondo:** el color del estado oscurecido (`icon_color.darkened(background_darken)`).
 2. **Glifo:** el SVG del estado, centrado, con un margen interior (`glyph_margin`). Se tiñe con el color del estado aclarado (`icon_color.lightened(glyph_lighten)`), así el glifo contrasta con su fondo sin usar blanco puro (reservado, Principio II).
-3. **Reloj:** el `CooldownClock` cuadrado de siempre, un sector oscuro translúcido. **Cubre el tiempo transcurrido** y crece en sentido horario desde las 12 hasta cubrir todo el ícono al vencer, como en el LoL (D1). Los estados permanentes (Rage, Escudo) no tienen reloj.
+3. **Reloj:** el `CooldownClock` cuadrado de siempre, un sector oscuro translúcido que **cubre el tiempo que falta** (D1). El ícono arranca oscurecido al aplicarse y se va limpiando en sentido horario, desde las 12, a medida que pasan las agujas. Al vencer queda limpio y desaparece. Es la misma convención que los botones de habilidad y que la de hoy en buffs y bosses. Los estados permanentes (Rage, Escudo) no tienen reloj.
 4. **Marco:** un borde de `border_width` px. Es **rojo** en los debuffs y **verde** en los buffs. Los estados que benefician a quien los tiene (Rage y Escudo en un enemigo, Conmoción en el jugador) llevan marco de buff.
 5. **Stacks:** un número abajo a la derecha, con el contorno de `CooldownTextConfig`. Se muestra solo en los estados que acumulan (`get_stack_cap() > 1` o, en buffs, `max_stacks > 1`), igual que hoy (AC383).
 
@@ -45,15 +45,24 @@ Un **cuadrado** con cinco capas, de abajo hacia arriba:
 
 ### 2.2 Dónde se muestra
 
-| Dónde | Contenedor | Tamaño | Cambio |
-|---|---|---|---|
-| Buffs del jugador | `BuffBar` (HUD, mismo lugar) | 36 px (`BuffBarConfig.icon_size`) | `ColorRect` → `StatusIconView` |
-| Debuffs de un boss | `BossHealthBar` (HUD) | 28 px (`BossBarConfig.debuff_icon_size_px`, hoy 24) | `ColorRect` → `StatusIconView` |
-| Estados de un enemigo común | **`EnemyStatusOverlay`**, una capa 2D nueva del HUD | 22 px | reemplaza a la fila 3D |
+| Dónde | Contenedor | Tamaño | Íconos antes del "+" | Cambio |
+|---|---|---|---|---|
+| Buffs del jugador | `BuffBar` (HUD, mismo lugar) | 36 px (`BuffBarConfig.icon_size`) | 6 (hoy 4) | `ColorRect` → `StatusIconRow` |
+| Debuffs de un boss | `BossHealthBar` (HUD) | 28 px (`BossBarConfig.debuff_icon_size_px`, hoy 24) | 8 (hoy 4) | `ColorRect` → `StatusIconRow` |
+| Estados de un enemigo común | **`EnemyStatusOverlay`**, una capa 2D nueva del HUD | el ancho de la barra ÷ 5 (ver abajo) | 5 (hoy 4) | reemplaza a la fila 3D |
+
+**Desborde, el ícono "+" (D4):**
+- Cada fila muestra hasta N íconos (N por contenedor, tabla de arriba). Si hay más estados, después del último ícono aparece una casilla **"+"**: del mismo tamaño, fondo oscuro, **borde negro** y un "+" gris claro en el centro. Avisa que hay más estados, sin decir cuáles.
+- Se muestran los primeros N en el orden de la lista (el orden de aplicación, como hoy). Con N estados justos no hay "+".
+- El "+" no tiene reloj ni stacks.
 
 **Capa 2D para los enemigos comunes:**
 - La fila de cada enemigo se dibuja en pantalla, centrada sobre el punto de su barra de vida (`unproject_position` de `EnemyHealthBar.global_position`) y corrida `row_offset_px` hacia arriba.
-- El tamaño en píxeles es fijo, no se achica con la distancia, como en el LoL.
+- **Tamaño:** cinco íconos ocupan justo el ancho de la barra de vida sin desbordarla.
+  - Cada frame se proyectan los dos extremos de la barra (centro ± `camera.basis.x × ancho / 2`, con el ancho de `HealthBarConfig.size.x`, hoy 1 m) y se mide su ancho en pantalla.
+  - El lado del ícono es `(ancho − 4 × spacing_px) / 5`, acotado a [`min_icon_size_px`, `max_icon_size_px`] (14 y 32 px), para que de lejos se siga leyendo y de cerca no tape al enemigo.
+  - Con las 5 casillas llenas, el "+" queda a la derecha, por fuera del ancho de la barra.
+  - La fila se redimensiona solo si el lado cambia más de 1 px.
 - Se ve **aunque la barra de vida esté oculta** (enemigo sin golpear), en el mismo lugar donde aparecería la barra. La barra sigue apareciendo recién con el primer golpe.
 - No se muestra para bosses (barra suprimida: sus estados van en el HUD), ni para enemigos detrás de la cámara, inactivos o apareciendo desde el piso.
 
@@ -83,12 +92,15 @@ StatusIconView (Control, ui/status_icon_view.gd)        ← creado una vez por c
 ├── Border (Control que dibuja el marco con draw_rect(filled=false))
 └── StackLabel (Label, abajo a la derecha)
 
+StatusIconRow (HBoxContainer, ui/status_icon_row.gd)    ← la fila reutilizable, creada una vez
+├── StatusIconView × max_icons
+└── Overflow (StatusIconView en modo "+": fondo oscuro, borde negro, Label "+")
+
 Hud
 ├── EnemyStatusOverlay (Control, full rect, mouse ignore)   ← nuevo, primer hijo (debajo del resto del HUD)
-│   └── Row × max_rows (HBoxContainer)
-│       └── StatusIconView × max_icons
-├── TopCenter/BossBars/…/DebuffIcons → StatusIconView × max_debuff_icons
-└── BuffBar → StatusIconView × max_icons
+│   └── StatusIconRow × max_rows (max_icons = 5)
+├── TopCenter/BossBars/…/DebuffIcons → StatusIconRow (max_icons = 8)
+└── BuffBar → StatusIconRow (max_icons = 6)
 
 Enemy (entities/enemy/enemy.tscn)
 └── HealthBar
@@ -107,14 +119,21 @@ Enemy (entities/enemy/enemy.tscn)
   - `debuff_border_color: Color`: `Color(0.85, 0.2, 0.15)`
   - `buff_border_color: Color`: `Color(0.3, 0.8, 0.35)`
   - `stack_font_ratio: float`: tamaño de fuente = lado × ratio (0.42)
+  - `overflow_background_color: Color`: `Color(0.1, 0.1, 0.12, 0.9)`
+  - `overflow_border_color: Color`: `Color(0, 0, 0)` (negro)
+  - `overflow_text: String`: `"+"`
+  - `overflow_text_color: Color`: `Color(0.85, 0.85, 0.85)`
+  - `overflow_font_ratio: float`: (0.7)
   - `clock: CooldownClockConfig`
   - `cooldown_text: CooldownTextConfig`: solo el estilo del contorno
 - **`EnemyStatusOverlayConfig`** (nuevo, `data/ui/enemy_status_overlay_config.tres`):
   - `max_rows: int` (24)
-  - `max_icons: int` (4)
-  - `icon_size_px: float` (22)
+  - `icons_per_bar: int`: cuántos íconos entran sobre la barra, que también es el tope antes del "+" (5)
+  - `min_icon_size_px: float` (14)
+  - `max_icon_size_px: float` (32)
   - `spacing_px: int` (3)
   - `row_offset_px: Vector2`: `Vector2(0, -16)`
+  - `health_bar: HealthBarConfig`: el ancho de la barra, que es el mismo `.tres` que usa `EnemyHealthBar`
   - `status_icon: StatusIconConfig`
 - **`DebuffData`:**
   - `+ icon: Texture2D`
@@ -125,11 +144,11 @@ Enemy (entities/enemy/enemy.tscn)
 - **`BuffBarConfig`:**
   - `− time_font_size`, `− stack_font_size`, `− clock`, `− cooldown_text`
   - `+ status_icon: StatusIconConfig`
-  - Se quedan `max_icons`, `icon_size` y `spacing`.
+  - Se quedan `max_icons` (pasa de 4 a 6), `icon_size` y `spacing`.
 - **`BossBarConfig`:**
   - `− debuff_time_font_size`, `− debuff_stack_font_size`
   - `+ status_icon: StatusIconConfig`
-  - `debuff_icon_size_px` pasa de 24 a 28.
+  - `debuff_icon_size_px` pasa de 24 a 28, y `max_debuff_icons` de 4 a 8.
   - `clock` y `cooldown_text` se quedan solo si los usa otra cosa del boss bar; si no, se borran.
 - **`DebuffComponent`:** `+ var revision: int`, que se incrementa cada vez que emite `changed`. Es estado del nodo (Principio III) y le permite al overlay saber sin señales si tiene que reescribir una fila.
 
@@ -140,9 +159,12 @@ class_name StatusIconView extends Control
 enum Kind { DEBUFF, BUFF }
 static func create(config: StatusIconConfig, side: float) -> StatusIconView
 func show_status(icon: Texture2D, color: Color, kind: Kind, stacks: int, shows_stacks: bool) -> void
-## Remaining time over the full duration, in [0, 1]; the clock covers 1 - ratio.
-## Permanent statuses pass `has_clock = false`.
+## Remaining time over the full duration, in [0, 1]; the clock covers `ratio`
+## (the time still left). Permanent statuses pass `has_clock = false`.
 func set_remaining(ratio: float, has_clock: bool) -> void
+func show_overflow() -> void          # the "+" look: no glyph, clock or stacks
+func set_side(side: float) -> void
+func is_overflow() -> bool
 func get_glyph_texture() -> Texture2D
 func get_glyph_color() -> Color
 func get_border_color() -> Color
@@ -152,6 +174,16 @@ func get_clock() -> CooldownClock
 static func debuff_kind(data: DebuffData) -> Kind
 static func shows_debuff_stacks(data: DebuffData) -> bool
 
+class_name StatusIconRow extends HBoxContainer
+static func create(config: StatusIconConfig, max_icons: int, side: float, spacing: int) -> StatusIconRow
+## Shows the first max_icons entries; `total` > max_icons also shows the "+".
+## Each container fills the icons with icon(i).show_status(...) and then calls:
+func set_shown(shown: int, total: int) -> void
+func icon(index: int) -> StatusIconView
+func set_side(side: float) -> void
+func get_visible_icon_count() -> int      # without the "+"
+func is_overflow_visible() -> bool
+
 class_name EnemyStatusOverlay extends Control
 @export var config: EnemyStatusOverlayConfig
 var registry: EnemyRegistry        # set by Hud
@@ -159,7 +191,7 @@ func update_rows() -> void          # called by _process and by tests
 func get_row_enemy(index: int) -> Enemy
 func get_row_position(index: int) -> Vector2
 func get_visible_row_count() -> int
-func get_icon(row: int, index: int) -> StatusIconView
+func get_row(index: int) -> StatusIconRow
 ```
 
 `BuffBar` y `BossHealthBar` conservan sus *getters* de conteo y devuelven `StatusIconView` en `get_icon()` / `get_debuff_icon()`. Se borran `get_time_text()` y `get_debuff_time_text()`.
@@ -169,8 +201,10 @@ func get_icon(row: int, index: int) -> StatusIconView
 - **`StatusIconView`:**
   - Crea sus cinco hijos en `create()`, una sola vez.
   - `show_status` solo asigna textura y colores y ajusta el texto de stacks. Se llama cuando cambia la lista de estados, nunca por frame.
-  - `set_remaining` llama a `clock.set_fraction(1 − ratio)`; el reloj ya redibuja solo si cambia la fracción.
+  - `set_remaining` llama a `clock.set_fraction(ratio)`: el reloj cubre lo que falta. El reloj ya redibuja solo si cambia la fracción.
   - Sin `has_clock`, el reloj se oculta.
+  - `show_overflow` oculta el glifo, el reloj y los stacks, pone el fondo y el borde del "+" y muestra el texto `overflow_text` centrado en el label.
+- **`StatusIconRow`:** crea `max_icons` íconos y el "+" una sola vez. `set_shown(shown, total)` muestra los primeros `shown` íconos y el "+" si `total > max_icons`. Los tres contenedores usan la misma fila, así que la regla del "+" es una sola.
 - **`BuffBar` y `BossHealthBar`:** misma lógica que hoy (refrescan contenido en `changed` y fracciones en `_process` mientras haya estados), sin labels de tiempo. La fracción sale de:
   - buffs: `time_left / stack_duration`;
   - debuffs: `DebuffComponent.get_remaining_ratio()`, que ya existe y devuelve 0 en los permanentes.
@@ -183,7 +217,7 @@ func get_icon(row: int, index: int) -> StatusIconView
      - no está apareciendo desde el piso;
      - no está detrás de la cámara (`camera.is_position_behind`).
   4. Si la fila `k` estaba asignada a otro enemigo, o si la `revision` del `DebuffComponent` cambió desde la última vez, reescribe su contenido con `show_status`.
-  5. Posiciona la fila (centrada en X) y actualiza las fracciones de sus íconos.
+  5. Mide el ancho de la barra en pantalla (dos `unproject_position`, §2.2), calcula el lado y, si cambió más de 1 px, llama a `set_side`. Después posiciona la fila, centrando en X los íconos sin contar el "+", y actualiza las fracciones de sus íconos.
   6. Oculta las filas que sobran después de `k`.
   7. Con más enemigos elegibles que `max_rows`, los que sobran no se muestran. Nunca se crean nodos en runtime.
   8. Con cero filas visibles, el `_process` sigue corriendo: el recorrido es barato y lo necesita para detectar estados nuevos. Alternativa descartada: conectarse a `changed` de cada enemigo, porque obliga a conectar y desconectar cada vez que el pool recicla.
@@ -209,6 +243,7 @@ func get_icon(row: int, index: int) -> StatusIconView
 - En el registro de colores no reservados se suman:
   - el rojo del marco de debuff `Color(0.85, 0.2, 0.15)`;
   - el verde del marco de buff `Color(0.3, 0.8, 0.35)`;
+  - el ícono "+" de desborde: fondo oscuro, borde negro y un "+" gris claro `Color(0.85, 0.85, 0.85)`;
   - los fondos y glifos de los íconos, derivados del color de cada estado.
 - Se aclara que los colores de estado viven en `icon_color`, ya no en materiales `.tres` de íconos.
 
@@ -224,7 +259,7 @@ Lo que verifican se mantiene. Cambia cómo se ve.
 | AC322 (`cooldown_timers_test`) | Buffs: segundos `"2.5"` en el centro | Sin segundos; se verifican el stack y el reloj (AC906) |
 | AC324 (`cooldown_timers_test`) | Texto de tiempo en la fila 3D | **Reemplazado** por AC909 (el overlay no tiene texto de tiempo) |
 | AC325 (`cooldown_timers_test`) | Boss: `"4.0"` centrado, 24 px | Sin segundos; 28 px (AC907) |
-| AC349 y AC350 (`cooldown_hud_test`) | El reloj vale 1 al aplicar y baja (cubre lo que falta) | Vale 0 al aplicar y sube (cubre lo transcurrido, D1). Los valores pasan a `1 − x`. La parte "los íconos 3D no tienen reloj" se reemplaza por AC909. |
+| AC349 y AC350 (`cooldown_hud_test`) | El reloj vale 1 al aplicar y baja; los íconos 3D no tienen reloj | Los valores del reloj **no cambian** (D1). Cambia cómo se lo encuentra: es el tercer hijo del `StatusIconView`. La parte de los íconos 3D se reemplaza por AC909. |
 | AC382 (`status_effects_test`) | Stacks en `TextMesh` 3D | Stacks en el `StatusIconView` del overlay |
 | AC162, AC384 (`boss_hud_bar_test`) | Color del material | `icon_color` y textura |
 | AC285 (`spin_golden_upgrades_test`) | `icon_material.albedo_color` violeta | `icon_color` violeta |
@@ -246,18 +281,26 @@ Los tests de `unique_upgrades_test` que crean un veneno de prueba con `icon_mate
   - Debilitar aplicado 1, 2, 3 y 4 veces muestra `"1"`, `"2"`, `"3"` y `"3"`;
   - Sangrado muestra el texto vacío;
   - Conmoción con 2 stacks muestra `"2"`.
-- **AC904** Reloj (D1):
-  - Debilitar recién aplicado: fracción 0. A 1.5 s: 0.375. Reaplicado: vuelve a 0.
-  - Sangrado recién aplicado: 0.
+- **AC904** Reloj (D1: arranca oscurecido y se limpia):
+  - Debilitar recién aplicado: fracción 1 (ícono cubierto). A 1.5 s: 0.625. A 3.9 s: 0.025. Reaplicado: vuelve a 1.
+  - Sangrado recién aplicado: 1.
   - Rage: el reloj está oculto todo el tiempo.
 - **AC905** Todo `DebuffData` de `data/debuffs/` y todo `BuffData` de `data/buffs/` cumple:
   - tiene `icon` no nulo, en `assets/icons/status/`;
   - tiene un `icon_color` con alpha 1;
   - ningún SVG de esa carpeta contiene el path de fondo `M0 0h512v512H0z`.
-- **AC906** Buffs del jugador: con 2 stacks de Conmoción, la `BuffBar` muestra un `StatusIconView` de 36 px con el glifo de Conmoción, `"2"` y el reloj en 0. A 1.0 s el reloj vale 0.4. Al perder un stack vuelve a 0. Al vaciarse, el ícono se oculta y la barra deja de procesar. No hay texto de tiempo.
+- **AC906** Buffs del jugador: con 2 stacks de Conmoción, la `BuffBar` muestra un `StatusIconView` de 36 px con el glifo de Conmoción, `"2"` y el reloj en 1. A 1.0 s el reloj vale 0.6. Al perder un stack vuelve a 1. Al vaciarse, el ícono se oculta y la barra deja de procesar. No hay texto de tiempo.
 - **AC907** Boss: con Sangrado, la barra del boss muestra un `StatusIconView` de 28 px con el glifo y el color de `bleed.tres`, sin stacks. Desaparece al limpiar el debuff. Con 2 stacks de Debilitar muestra `"2"`.
 - **AC908** `assets/icons/status/SOURCE.md` existe y lista cada SVG de la carpeta con su autor, la URL de origen y la licencia CC BY 3.0.
 - **AC909** Overlay: un enemigo común con Debilitar que **nunca fue golpeado** (barra de vida oculta) tiene una fila visible con 1 ícono. La fila está centrada en `camera.unproject_position(health_bar.global_position) + row_offset_px` (±1 px).
+- **AC917** Overlay, tamaño: con la cámara a una distancia en la que la barra de 1 m mide 150 px en pantalla, el lado del ícono es `(150 − 4 × 3) / 5 = 27.6` px (±1). Cinco íconos más sus 4 espacios miden lo mismo que la barra (±2 px). Si la barra mide 40 px, el lado queda en el mínimo (14 px); si mide 400 px, en el máximo (32 px). Si el lado cambia menos de 1 px, `set_side` no se llama.
+- **AC918** Desborde (`StatusIconRow`):
+  - con 5 estados, la fila del enemigo muestra 5 íconos y no muestra el "+";
+  - con 7 estados, muestra los 5 primeros (en orden de aplicación) y el "+";
+  - el "+" tiene borde `overflow_border_color` (negro) y texto `"+"`, sin glifo, reloj ni stacks;
+  - al volver a 5 estados, el "+" se oculta.
+
+  La misma regla vale en la `BuffBar` con 7 buffs (6 + "+") y en la barra del boss con 9 debuffs (8 + "+"). Se prueba con estados de test.
 - **AC910** Overlay, casos sin fila:
   - enemigo sin estados;
   - boss con estados (barra suprimida);
@@ -265,7 +308,7 @@ Los tests de `unique_upgrades_test` que crean un veneno de prueba con `icon_mate
   - enemigo apareciendo desde el piso.
 
   Al desactivar (pool) un enemigo con estados, su fila se oculta en el siguiente `update_rows()`.
-- **AC911** Overlay, capacidad: la cantidad de hijos se fija en `_ready` (`max_rows` filas de `max_icons` íconos) y no cambia después de 100 `update_rows()` con enemigos que ganan y pierden estados. Con `max_rows + 2` enemigos con estados, hay exactamente `max_rows` filas visibles. Un enemigo con 5 estados muestra 4.
+- **AC911** Overlay, capacidad: la cantidad de hijos se fija en `_ready` (`max_rows` filas de `icons_per_bar` íconos más el "+") y no cambia después de 100 `update_rows()` con enemigos que ganan y pierden estados. Con `max_rows + 2` enemigos con estados, hay exactamente `max_rows` filas visibles.
 - **AC912** Overlay, contenido: `show_status` se llama para una fila solo cuando cambia su enemigo o la `revision` de su `DebuffComponent` (se cuenta con un doble del ícono o un contador de test). Diez `update_rows()` sin cambios de estados no lo llaman.
 - **AC913** `DebuffComponent.revision` sube en 1 cada vez que se emite `changed` (aplicar, sumar un stack, vencer, `remove` y `clear` con estados).
 - **AC914** Limpieza:
@@ -293,10 +336,10 @@ Cada paso deja el proyecto abriendo y la suite en verde.
    - `DebuffComponent.revision`.
 
    Todavía conviven con `icon_material`. Tests AC905, AC913 y AC915.
-3. **`StatusIconView`** y sus tests (AC901–AC904).
-4. **`BuffBar`** migra a `StatusIconView` (config reducida). Adaptar AC322, AC349 y AC295. Test AC906.
-5. **`BossHealthBar`** migra (28 px). Adaptar AC325, AC350, AC162 y AC384. Test AC907.
-6. **`EnemyStatusOverlay`** en el HUD y enlace en `arena.tscn`. Tests AC909–AC912 y AC916.
+3. **`StatusIconView` y `StatusIconRow`** (con el "+") y sus tests (AC901–AC904 y la parte de fila de AC918).
+4. **`BuffBar`** migra a `StatusIconRow` (config reducida, 6 íconos). Adaptar AC322, AC349 y AC295. Tests AC906 y AC918.
+5. **`BossHealthBar`** migra (28 px, 8 íconos). Adaptar AC325, AC350, AC162 y AC384. Tests AC907 y AC918.
+6. **`EnemyStatusOverlay`** en el HUD (tamaño por el ancho de la barra) y enlace en `arena.tscn`. Tests AC909–AC912 y AC916–AC918.
 7. **Limpieza:**
    - borrar `DebuffIconRow`, el nodo, la config, los materiales y `icon_material`;
    - adaptar AC324 y AC382 y los tests de `unique_upgrades_test`;
@@ -308,15 +351,16 @@ Cada paso deja el proyecto abriendo y la suite en verde.
    - suite completa, import y smoke test;
    - checklist de review y estado **Implementada**.
 
-## 12. Decisiones para aprobar
+## 12. Decisiones (resueltas por el responsable, 2026-09-27)
 
-- **D1 — Dirección del reloj:** el sector oscuro cubre el tiempo **transcurrido**: ícono limpio al aplicarse, que se oscurece hasta vencer, como en el LoL. Hoy los buffs y los bosses hacen lo contrario, igual que los botones de habilidad (el sector cubre lo que falta). Los botones de habilidad no cambian.
-- **D2 — Colores del marco:** rojo `Color(0.85, 0.2, 0.15)` para los debuffs y verde `Color(0.3, 0.8, 0.35)` para los buffs.
-- **D3 — Rage y Escudo:** llevan marco de buff porque benefician al enemigo, como en el LoL. La alternativa es clasificar todo lo que está sobre un enemigo como debuff.
-- **D4 — Límites:**
-  - 4 íconos por enemigo común (hoy también 4);
-  - 24 filas en pantalla;
-  - tamaños de 22, 28 y 36 px.
+- **D1 — Reloj:** el ícono arranca oscurecido y se va limpiando a medida que avanzan las agujas: el sector cubre el tiempo que falta. Es la misma convención de hoy en buffs, bosses y botones de habilidad.
+- **D2 — Colores del marco:** rojo `Color(0.85, 0.2, 0.15)` para los debuffs y verde `Color(0.3, 0.8, 0.35)` para los buffs. Aceptado.
+- **D3 — Rage y Escudo:** marco de buff, porque benefician al enemigo. Aceptado.
+- **D4 — Cuántos íconos:**
+  - Sobre un enemigo común entran los íconos que llenan el ancho de la barra de vida sin desbordarla: **5**. El tamaño se ajusta al ancho de la barra en pantalla (§2.2).
+  - Si hay más, se agrega un ícono **"+" con borde negro**: avisa que hay más estados, sin decir cuáles.
+  - La misma regla se usa en el HUD: 6 buffs del jugador y 8 debuffs del boss antes del "+".
+  - Hasta 24 filas en pantalla.
 
 ## 13. Checklist de review (al cerrar)
 
