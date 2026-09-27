@@ -12,4 +12,12 @@ gamepad_prompts = Dictionary[StringName, String]({
 &"ability_basic": "LB",
 &"ability_ultimate": "RT"
 })
+touch_prompts = Dictionary[StringName, String]({
+&"ability_basic": "",
+&"ability_ultimate": "",
+&"attack": "Atacar",
+&"dash": "Dash",
+&"jump": "Saltar",
+&"pause": "II"
+})
 gamepad_motion_threshold = 0.5

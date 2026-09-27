@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="TouchControlsConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/touch_controls_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+stick_zone_width_ratio = 0.5
+stick_radius = 90.0
+stick_knob_radius = 38.0
+stick_dead_zone = 0.15
+stick_rest_position = Vector2(200, -170)
+stick_follows_thumb = true
+cluster_anchor = Vector2(-190, -170)
+attack_radius = 72.0
+side_button_radius = 44.0
+jump_offset = Vector2(105, -105)
+dash_offset = Vector2(105, 105)
+basic_offset = Vector2(-105, 105)
+ultimate_offset = Vector2(-105, -105)
+pause_radius = 30.0
+pause_anchor = Vector2(-50, 50)
+touch_slop = 8.0
+idle_color = Color(1, 1, 1, 0.25)
+pressed_color = Color(1, 1, 1, 0.5)
+stick_color = Color(1, 1, 1, 0.2)
+knob_color = Color(1, 1, 1, 0.45)
+label_color = Color(1, 1, 1, 0.9)
+label_font_size = 18
+ring_width = 3.0
+arc_point_count = 48

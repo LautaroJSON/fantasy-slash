@@ -51,7 +51,7 @@ func choose(upgrade: UpgradeCard) -> void:
 	hide()
 	_offered = []
 	get_tree().paused = false
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	PointerMode.capture_for_gameplay()
 	upgrade_chosen.emit(upgrade)
 
 
@@ -88,7 +88,7 @@ func get_card_buttons() -> Array[Button]:
 
 func _open() -> void:
 	get_tree().paused = true
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	PointerMode.release_for_ui()
 	show()
 	_focus_first_card()
 

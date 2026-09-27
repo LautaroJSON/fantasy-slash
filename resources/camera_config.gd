@@ -8,6 +8,8 @@ extends Resource
 @export var spring_length: float
 ## Radians of rotation per pixel of mouse motion.
 @export var mouse_sensitivity: float
+## Radians of rotation per base pixel of touch drag (right half of the screen).
+@export var touch_look_sensitivity: float
 ## Yaw speed with the right stick fully tilted, in radians per second.
 @export var stick_yaw_speed: float
 ## Pitch speed with the right stick fully tilted, in radians per second.

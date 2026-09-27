@@ -7,10 +7,20 @@ extends Resource
 @export var keyboard_prompts: Dictionary[StringName, String] = {}
 ## Action -> prompt while playing with a gamepad.
 @export var gamepad_prompts: Dictionary[StringName, String] = {}
+## Action -> text of its on-screen touch button (docs/specs/mobile-touch-controls.md).
+@export var touch_prompts: Dictionary[StringName, String] = {}
 ## Smallest absolute axis value that counts as using the gamepad (ignores stick drift).
 @export var gamepad_motion_threshold: float
 
 
 func get_prompt(action: StringName, device: InputDeviceMonitor.Device) -> String:
-	var prompts: Dictionary[StringName, String] = gamepad_prompts if device == InputDeviceMonitor.Device.GAMEPAD else keyboard_prompts
-	return prompts.get(action, "")
+	return _prompts_for(device).get(action, "")
+
+
+func _prompts_for(device: InputDeviceMonitor.Device) -> Dictionary[StringName, String]:
+	match device:
+		InputDeviceMonitor.Device.GAMEPAD:
+			return gamepad_prompts
+		InputDeviceMonitor.Device.TOUCH:
+			return touch_prompts
+	return keyboard_prompts

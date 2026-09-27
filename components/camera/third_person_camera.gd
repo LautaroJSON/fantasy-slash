@@ -78,6 +78,12 @@ func apply_stick_look(look: Vector2, delta: float) -> void:
 	rotate_camera(-look.x * config.stick_yaw_speed * delta, -look.y * config.stick_pitch_speed * delta * _y_sign())
 
 
+## Turns the view with a touch drag: `relative` is the drag in base pixels,
+## like mouse motion but with its own sensitivity (docs/specs/mobile-touch-controls.md).
+func apply_touch_look(relative: Vector2) -> void:
+	rotate_camera(-relative.x * config.touch_look_sensitivity, -relative.y * config.touch_look_sensitivity * _y_sign())
+
+
 func get_yaw() -> float:
 	return _yaw
 
@@ -93,16 +99,22 @@ func to_world_direction(input: Vector2) -> Vector3:
 
 
 func capture_mouse() -> void:
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	PointerMode.capture_for_gameplay()
 
 
 func release_mouse() -> void:
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	PointerMode.release_for_ui()
+
+
+## True for real mouse motion while the mouse is captured. Motion that Godot
+## emulates from a touch drag is not the mouse: touch look has its own path.
+static func is_look_motion(motion: InputEventMouseMotion, mouse_captured: bool) -> bool:
+	return motion != null and mouse_captured and motion.device != InputEvent.DEVICE_ID_EMULATION
 
 
 func _handle_mouse_motion(event: InputEvent) -> void:
 	var motion: InputEventMouseMotion = event as InputEventMouseMotion
-	if motion == null or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	if not is_look_motion(motion, Input.mouse_mode == Input.MOUSE_MODE_CAPTURED):
 		return
 	rotate_camera(-motion.relative.x * config.mouse_sensitivity, -motion.relative.y * config.mouse_sensitivity * _y_sign())
 
