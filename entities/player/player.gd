@@ -251,13 +251,12 @@ func _release_charge_if_key_up(ability: AbilityComponent, action: StringName) ->
 		ability.release_charge()
 
 
-## A committed strike ignores the jump; in its recovery the jump cuts it
-## (docs/specs/bdo-combat-feel.md).
+## The jump cuts any strike of the combo, like the dash
+## (docs/specs/jump-cancels-strike.md); in the air there is nothing to cut.
 func _handle_jump() -> void:
-	if not _input_guard.is_just_pressed(ACTION_JUMP) or is_casting() or attack.is_committed():
+	if not _input_guard.is_just_pressed(ACTION_JUMP) or is_casting() or not is_on_floor():
 		return
-	if attack.is_attacking():
-		attack.cancel()
+	attack.cancel()
 	_movement.jump()
 
 

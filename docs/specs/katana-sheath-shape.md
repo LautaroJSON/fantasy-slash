@@ -1,7 +1,7 @@
 # Feature: funda de la katana más gruesa y con el final redondeado
 
-- **Estado:** Propuesta (2026-09-27).
-- **Constitución:** `docs/constitution.md` v4.11.0 → **enmienda PATCH 4.11.1** (ver §8).
+- **Estado:** Aprobada, en implementación (2026-09-27).
+- **Constitución:** `docs/constitution.md` v4.12.0 → **enmienda PATCH 4.12.1** (ver §8).
 - **Pilar (Principio I):** **combate.** La funda tiene casi el mismo ancho que la hoja y es una tira de 1.1 cm, así que en la mano izquierda y en la carga de Envainar se confunde con una segunda espada. Más gruesa y con el final (*kojiri*) redondeado, se lee como vaina, y la katana del Samurái se distingue de su funda.
 - **Dependencias:** `katana-hand-proportions.md` (generador `build_katana_meshes.gd`, AC683–AC688), `sheath-in-left-hand.md` (AC671–AC677), `sheath-socket-hand-grip.md` (AC670).
 - **Decisiones del responsable (2026-09-27):**
@@ -72,7 +72,7 @@ Sin cambios. El generador suma constantes; sus funciones estáticas (`build`, `s
 
 Cada paso deja el proyecto andando.
 
-1. **Base:** traer `main` a la rama (tiene `jump-cancels-strike`, AC689–AC693, y ahí el próximo libre es AC694). Reservar AC694–AC697 en `CLAUDE.md` (próximo libre → AC698) y aplicar la enmienda 4.11.1 (§8).
+1. **Base:** traer `main` a la rama (tiene `jump-cancels-strike`, AC689–AC693, y ahí el próximo libre es AC694). Reservar AC694–AC697 en `CLAUDE.md` (próximo libre → AC698) y aplicar la enmienda 4.12.1 (§8).
 2. **Generador:** paso de espesor (§2.1), estiramiento y esquinas del final (§2.2). Regenerar `katana_sheath.res` sobre la copia del scratchpad y copiarla al proyecto.
 3. **Capturas:** funda suelta (arriba y de costado), en la mano izquierda en la guardia, en la carga de Envainar y en la vista del juego, antes y después. Te las muestro, y si el radio o el espesor no convencen se ajustan dentro de los rangos de los ACs.
 4. **Tests:** AC694–AC696 en `weapon_model_test.gd` y `sheath_grip_test.gd`; AC697 extiende AC688. Suite completa comparada con `main` y smoke tests.
@@ -88,13 +88,13 @@ Cada paso deja el proyecto andando.
 - **Ocho puntos para dos arcos:** cada esquina queda con 3–4 segmentos. Si se ve dentada, se puede bajar el radio dentro de AC695 o repartir los puntos distinto. No se agregan vértices.
 - **Margen de la hoja en el borde interior:** el vértice (0.081, −1.2593) queda a ~2 mm del borde interior. AC696 exige ≥ 1.5 mm; si no alcanza, se estira el final unos milímetros más.
 
-## 8. Enmienda propuesta: 4.11.1 (PATCH)
+## 8. Enmienda: 4.12.1 (PATCH)
 
-La regla de **mallas derivadas** (Principio II, 4.11.0) habla de reproporcionar regiones "estirando o escalando". Se aclara que también cubre reubicar los vértices de un extremo sobre un perfil más suave, siempre sin agregar ni quitar vértices ni cambiar UV o materiales:
+La regla de **mallas derivadas** (Principio II, desde 4.11.0) habla de reproporcionar regiones "estirando o escalando". Se aclara que también cubre reubicar los vértices de un extremo sobre un perfil más suave, siempre sin agregar ni quitar vértices ni cambiar UV o materiales:
 
 > … Una malla derivada también puede reproporcionar regiones del modelo (estirar o escalar un mango, una guarda, **o redondear un extremo reubicando sus vértices**) para que encaje con el cuerpo del jugador **o se distinga de otra parte**, sin agregar ni quitar vértices ni cambiar UV o materiales (desde 4.11.0). …
 
-Historial: *4.11.1 (2026-09-27): Principio II: la reproporción de una malla derivada incluye redondear un extremo reubicando sus vértices, y puede servir para distinguir una parte de otra (ver `katana-sheath-shape.md`).*
+Historial: *4.12.1 (2026-09-27): Principio II: la reproporción de una malla derivada incluye redondear un extremo reubicando sus vértices, y puede servir para distinguir una parte de otra (ver `katana-sheath-shape.md`).*
 
 Es PATCH porque no agrega un permiso nuevo: mantiene los mismos límites (ni vértices, ni UV, ni materiales nuevos) y precisa qué entra en "reproporcionar".
 
@@ -105,7 +105,7 @@ Es PATCH porque no agrega un permiso nuevo: mantiene los mismos límites (ni vé
 ### Checklist de la constitución
 
 - [ ] Principio I: pilar de combate (la silueta del Samurái: katana y funda distinguibles).
-- [ ] Principio II: la malla derivada sigue en la carpeta del asset, con `SOURCE.md` y su generador (4.11.1); mismo material de paleta; sin colores nuevos.
+- [ ] Principio II: la malla derivada sigue en la carpeta del asset, con `SOURCE.md` y su generador (4.12.1); mismo material de paleta; sin colores nuevos.
 - [ ] Principio III: sin valores de gameplay nuevos; las medidas son constantes del generador (preparación del asset).
 - [ ] Principio IV: el generador con tipado estricto, en inglés.
 - [ ] Principio V: sin cambios en runtime (solo una malla precalculada).

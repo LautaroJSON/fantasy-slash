@@ -16,6 +16,7 @@
   - El golpe apunta al enemigo más cercano, de golpe, y queda fijo.
 - **Nuevo:**
   - **A. Compromiso:** desde que empieza el golpe hasta que se abre su ventana de combo (*cancel point*), el input de movimiento y el salto no hacen nada. Después, moverse o saltar corta la recuperación. El dash corta siempre.
+    - *Reemplazado en parte por `jump-cancels-strike.md` (2026-09-27):* el salto desde el piso corta el golpe en cualquier momento, como el dash.
   - **B. Estocada:** cada golpe hace avanzar al personaje una distancia de datos, atada al tiempo del clip (como root motion). Se frena ante un enemigo que tiene delante.
   - **C. Hit lag local:** al impactar se pausa el clip del jugador y se congelan los enemigos golpeados, que tiemblan. La duración y el shake de cámara van por golpe (el remate pesa más). `Engine.time_scale` no se toca nunca.
   - **D. Apuntado:** el golpe se orienta según `aim_mode` (enemigo más cercano por defecto, o cámara) y durante la anticipación puede corregirse girando con velocidad limitada. Desde el impacto la orientación queda fija.
@@ -95,7 +96,7 @@ La estocada del remate cae durante la bajada de la espada (0.20–0.34 s, antes 
 - **AC611** Con el Guerrero, sin enemigos y con la estocada en 0: durante `STRIKING`, mantener input de movimiento no desplaza al jugador (≤ 0.01 m en XZ).
 - **AC612** En `CHAIN_OPEN`, input de movimiento con magnitud > `move_cancel_threshold` termina el golpe (`step_ended`, estado `READY`) y el jugador se desplaza ese mismo cuadro. El próximo toque empieza por `attack_1`.
 - **AC613** En `CHAIN_OPEN`, un toque de ataque en el mismo cuadro que el input de movimiento encadena `attack_2` (no cancela).
-- **AC614** Saltar durante `STRIKING` no cambia `velocity.y`. Saltar en `CHAIN_OPEN` termina el golpe y salta.
+- **AC614** Saltar durante `STRIKING` no cambia `velocity.y`. Saltar en `CHAIN_OPEN` termina el golpe y salta. *(Primera mitad reemplazada por AC689 de `jump-cancels-strike.md`; la segunda sigue en AC693.)*
 - **AC615** Regresión: el dash corta el golpe en `STRIKING` y en `CHAIN_OPEN`.
 
 **B. Estocada**

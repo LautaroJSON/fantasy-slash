@@ -1,7 +1,8 @@
 extends GdUnitTestSuite
 ## Commitment, lunge and aim of the basic attack combo
-## (docs/specs/bdo-combat-feel.md, AC611–AC618, AC624–AC626, AC628–AC634 and AC636–AC638). The hit lag
-## (AC619–AC623) lives in hitstop_test.gd.
+## (docs/specs/bdo-combat-feel.md, AC611–AC613, AC615–AC618, AC624–AC626, AC628–AC634 and AC636–AC638). The hit lag
+## (AC619–AC623) lives in hitstop_test.gd. The jump cancel is docs/specs/jump-cancels-strike.md
+## (AC689–AC693).
 
 const TestWorld := preload("res://test/helpers/test_world.gd")
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
@@ -143,15 +144,99 @@ func test_ac613_an_attack_tap_with_movement_chains_instead_of_cutting() -> void:
 	assert_int(_player.attack.get_step_index()).is_equal(1)
 
 
-func test_ac614_jump_is_ignored_while_committed_and_cuts_the_recovery() -> void:
+# --- Jump cancel (docs/specs/jump-cancels-strike.md, AC689–AC693) ---
+
+func test_ac689_the_jump_cuts_a_committed_strike() -> void:
+	var ended: Array[int] = [0]
+	_player.attack.step_ended.connect(func() -> void: ended[0] += 1)
 	await _tap(&"attack")
 	assert_bool(_player.attack.is_committed()).is_true()
 	await _tap(&"jump")
-	assert_float(_player.velocity.y).is_less_equal(STILL)
-	await _wait_committed_end()
+	assert_int(ended[0]).is_equal(1)
+	assert_bool(_player.attack.is_attacking()).is_false()
+	assert_float(_player.velocity.y).is_greater(0.0)
+	await _wait_landing()
+	await _tap(&"attack")
+	assert_int(_player.attack.get_step_index()).is_equal(0)
+
+
+func test_ac690_a_strike_cut_before_its_hit_window_deals_no_damage() -> void:
+	ComboDriver.drive_by_hand(_player)
+	var enemy: Enemy = _spawn_idle_enemy(Vector3(0.0, 0.0, -1.5))
+	var full: float = enemy.health.current_health
+	assert_bool(_player.attack.try_attack_with_roll(NO_CRIT_ROLL)).is_true()
+	var hit_start: float = _player.attack.get_current_step().hit_start
+	_advance_clip(hit_start * 0.5)
+	assert_bool(_player.attack.is_committed()).is_true()
 	await _tap(&"jump")
 	assert_bool(_player.attack.is_attacking()).is_false()
 	assert_float(_player.velocity.y).is_greater(0.0)
+	_advance_clip(1.0)
+	assert_float(enemy.health.current_health).is_equal(full)
+
+
+func test_ac691_a_strike_cut_after_its_hit_keeps_the_damage() -> void:
+	ComboDriver.drive_by_hand(_player)
+	var enemy: Enemy = _spawn_idle_enemy(Vector3(0.0, 0.0, -1.5))
+	var full: float = enemy.health.current_health
+	assert_bool(ComboDriver.strike(_player, NO_CRIT_ROLL)).is_true()
+	assert_bool(_player.attack.is_committed()).is_true()
+	var after_hit: float = enemy.health.current_health
+	assert_float(after_hit).is_less(full)
+	await _tap(&"jump")
+	assert_bool(_player.attack.is_attacking()).is_false()
+	assert_float(_player.velocity.y).is_greater(0.0)
+	_advance_clip(1.0)
+	assert_float(enemy.health.current_health).is_equal(after_hit)
+
+
+func test_ac692_the_jump_drops_a_buffered_attack() -> void:
+	await _tap(&"attack")
+	await _tap(&"attack")
+	assert_bool(_player.attack.is_committed()).is_true()
+	assert_bool(_player.attack.has_buffered_attack()).is_true()
+	await _tap(&"jump")
+	assert_bool(_player.attack.has_buffered_attack()).is_false()
+	await _wait_landing()
+	await _physics_frames(5)
+	assert_bool(_player.attack.is_attacking()).is_false()
+
+
+func test_ac693_the_jump_still_cuts_the_recovery() -> void:
+	await _tap(&"attack")
+	await _wait_committed_end()
+	assert_bool(_player.attack.is_attacking()).is_true()
+	await _tap(&"jump")
+	assert_bool(_player.attack.is_attacking()).is_false()
+	assert_float(_player.velocity.y).is_greater(0.0)
+
+
+func test_ac693_in_the_air_the_jump_does_not_cut_a_strike() -> void:
+	await _tap(&"jump")
+	await _physics_frames(2)
+	assert_bool(_player.is_on_floor()).is_false()
+	await _tap(&"attack")
+	assert_bool(_player.attack.is_attacking()).is_true()
+	await _tap(&"jump")
+	assert_bool(_player.attack.is_attacking()).is_true()
+
+
+func _wait_landing() -> void:
+	var frames: int = 0
+	await _physics_frames(2)
+	while not _player.is_on_floor() and frames < 240:
+		await get_tree().physics_frame
+		frames += 1
+
+
+## Advances the strike clip by hand (after ComboDriver.drive_by_hand) for `seconds`.
+func _advance_clip(seconds: float) -> void:
+	var anim: AnimationPlayer = ComboDriver.humanoid_of(_player).anim
+	var hitstop: HitstopComponent = _player.get_node("Hitstop") as HitstopComponent
+	for i: int in roundi(seconds / ComboDriver.STEP):
+		anim.advance(ComboDriver.STEP)
+		_player.attack.advance(ComboDriver.STEP)
+		hitstop.advance(ComboDriver.STEP)
 
 
 func test_ac615_the_dash_cuts_a_committed_strike() -> void:

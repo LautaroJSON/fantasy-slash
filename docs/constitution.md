@@ -35,7 +35,7 @@ El juego es un **hack and slash roguelike en tercera persona para PC, jugado con
   - **Scaffolding:** los archivos fuente viven en `assets/<tipo>/<categoría>/<asset>/` (p. ej. `assets/models/weapons/falchion/falchion.obj`), con nombres en `snake_case`. Nunca junto a scripts (`combat/`, `components/`…).
   - **Escena adaptadora:** cada asset se usa desde una escena propia del juego (p. ej. `entities/player/weapons/sword.tscn`) que normaliza pivot, rotación y escala a la convención del juego. Scripts y Resources referencian esa escena, nunca el archivo crudo.
   - **Materiales:** `.tres` compartidos en `materials/<categoría>/`, aplicados con `surface_material_override`. No se usan los materiales embebidos por el importador. Una textura se referencia **solo** desde esos `.tres` y el importador descarta las imágenes embebidas del glTF (`gltf/embedded_image_handling`).
-  - **Mallas derivadas:** si el archivo fuente no permite mostrar por separado una parte que el juego necesita (p. ej. una malla skinned con hoja y funda), se puede derivar una malla estática por parte (`.res` en la carpeta del asset). Una malla derivada también puede reproporcionar regiones del modelo (estirar o escalar un mango, una guarda) para que encaje con el cuerpo del jugador, sin agregar ni quitar vértices ni cambiar UV o materiales (desde 4.11.0). El procedimiento queda documentado en su `SOURCE.md`, y el script que la genera vive en la carpeta del asset.
+  - **Mallas derivadas:** si el archivo fuente no permite mostrar por separado una parte que el juego necesita (p. ej. una malla skinned con hoja y funda), se puede derivar una malla estática por parte (`.res` en la carpeta del asset). Una malla derivada también puede reproporcionar regiones del modelo (estirar o escalar un mango, una guarda, o redondear un extremo reubicando sus vértices) para que encaje con el cuerpo del jugador o se distinga de otra parte, sin agregar ni quitar vértices ni cambiar UV o materiales (desde 4.11.0; redondear y distinguir, desde 4.12.1). El procedimiento queda documentado en su `SOURCE.md`, y el script que la genera vive en la carpeta del asset.
   - **Origen y licencia:** cada asset de terceros tiene un `SOURCE.md` en su carpeta con su origen y su licencia.
   - **Gameplay:** hitboxes y rangos siguen siendo datos (Principio III). El modelo es solo visual y su tamaño se alinea con esos datos.
 - **Prohibido:** shaders personalizados, y assets fuera de `assets/` o usados sin escena adaptadora.
@@ -150,7 +150,7 @@ Cada frame se diseña para escalar con la cantidad de enemigos en pantalla, que 
 
 El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (desde 4.10.0, ver `bdo-combat-feel.md`).
 
-- **Compromiso:** un golpe del ataque básico no permite moverse libremente ni saltar hasta su *cancel point* (la apertura de su ventana de combo). En la recuperación, el movimiento se limita a un desplazamiento lento sin girar (o la corta, según datos). El dash corta el golpe en cualquier momento.
+- **Compromiso:** un golpe del ataque básico no permite moverse libremente hasta su *cancel point* (la apertura de su ventana de combo). En la recuperación, el movimiento se limita a un desplazamiento lento sin girar (o la corta, según datos). El dash y el salto (desde el piso) cortan el golpe en cualquier momento (el salto desde 4.12.0, ver `jump-cancels-strike.md`).
 - **Estocada:** los golpes desplazan al jugador con una distancia de datos atada al tiempo del clip (root motion por datos), que se frena ante un enemigo delante.
 - **Hit lag local:** el impacto se comunica pausando el clip del atacante y congelando y sacudiendo a los golpeados, con duración por golpe. **Prohibido modificar `Engine.time_scale`** como feedback de impacto. Los bosses solo tiemblan, para que el combo no los congele en cadena.
 - **Apuntado:** por defecto, el golpe apunta al enemigo más cercano y lo sigue durante la anticipación. La cámara solo mira, y el input de movimiento no desvía el golpe salvo que los datos lo indiquen.
@@ -205,6 +205,9 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 - Cada spec declara la versión de la constitución contra la que fue aprobada.
 
 ### Historial
+
+- **4.12.1** (2026-09-27): Principio II: la reproporción de una malla derivada incluye redondear un extremo reubicando sus vértices, y puede servir para distinguir una parte de otra (ver `katana-sheath-shape.md`).
+- **4.12.0** (2026-09-27): Principio VII: el salto (desde el piso) corta el golpe del ataque básico en cualquier momento, como el dash (ver `jump-cancels-strike.md`).
 
 - **4.11.0** (2026-09-27): Principio II: las mallas derivadas pueden reproporcionar regiones del modelo para encajar con el cuerpo del jugador; su generador vive en la carpeta del asset (ver `katana-hand-proportions.md`).
 
@@ -269,4 +272,4 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 ---
 
-**Version**: 4.11.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-27
+**Version**: 4.12.1 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-27
