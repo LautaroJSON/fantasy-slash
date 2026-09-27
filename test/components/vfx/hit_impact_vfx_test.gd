@@ -7,7 +7,6 @@ const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.tres")
 const CONFIG: HitImpactVfxConfig = preload("res://data/player/hit_impact_vfx_config.tres")
 const GLOW: StandardMaterial3D = preload("res://materials/vfx/hit_impact_material.tres")
-const CRIT: StandardMaterial3D = preload("res://materials/vfx/hit_impact_crit_material.tres")
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const SCRIPTS: Array[String] = ["res://components/vfx/hit_impact_vfx.gd", "res://components/vfx/hit_impact_vfx_host.gd"]
 const NO_CRIT_ROLL: float = 0.99
@@ -82,8 +81,8 @@ func test_ac931_the_config_has_every_field_set_and_the_scripts_no_tuneable_liter
 
 
 func test_ac932_a_combo_strike_shows_one_impact_per_enemy_hit() -> void:
-	var left: Enemy = _spawn_enemy(Vector3(-0.45, 0.0, -1.5))
-	var right: Enemy = _spawn_enemy(Vector3(0.45, 0.0, -1.5))
+	var left: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.2))
+	var right: Enemy = _spawn_enemy(Vector3(0.15, 0.0, -2.1))
 	var left_at: Vector3 = left.global_position
 	var right_at: Vector3 = right.global_position
 	var hits: Array[Enemy] = []
@@ -150,13 +149,26 @@ func test_ac936_the_shard_follows_the_tip_motion_or_lies_flat_across_the_normal(
 	assert_float(still.length()).is_equal_approx(1.0, TOLERANCE)
 
 
-func test_ac937_a_critical_hit_is_amber_bigger_and_crossed() -> void:
+func test_ac936_the_impact_faces_the_camera() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	var camera: Camera3D = auto_free(Camera3D.new())
+	add_child(camera)
+	camera.global_position = Vector3(3.0, 2.5, 4.0)
+	camera.make_current()
+	_host.show_impact(enemy, false)
+	var effect: HitImpactVfx = _playing()[0]
+	var to_camera: Vector3 = (camera.global_position - effect.global_position).normalized()
+	assert_float(rad_to_deg(effect.global_basis.z.angle_to(to_camera))).is_less(MAX_ANGLE_DEGREES)
+	assert_float(absf(effect.global_basis.x.normalized().dot(to_camera))).is_less(TOLERANCE)
+
+
+func test_ac937_a_critical_hit_is_white_bigger_and_crossed() -> void:
 	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
 	_host.show_impact(enemy, true)
 	var crit: HitImpactVfx = _playing()[0]
 	assert_bool(crit.is_crit()).is_true()
-	assert_object(crit.get_shard().material_override).is_same(CRIT)
-	assert_object(crit.get_sparks().material_override).is_same(CRIT)
+	assert_object(crit.get_shard().material_override).is_same(GLOW)
+	assert_object(crit.get_sparks().material_override).is_same(GLOW)
 	assert_bool(crit.get_cross_shard().visible).is_true()
 	assert_float(crit.global_basis.get_scale().x).is_equal_approx(CONFIG.crit_scale, TOLERANCE)
 	assert_float(rad_to_deg(crit.get_cross_shard().rotation.z)).is_equal_approx(CONFIG.crit_cross_angle, TOLERANCE)
@@ -211,11 +223,9 @@ func test_ac940_the_impact_grows_then_ends_after_its_duration() -> void:
 	assert_float(effect.get_flash_light().light_energy).is_equal_approx(0.0, TOLERANCE)
 
 
-func test_ac941_both_materials_are_unshaded_additive_and_translucent() -> void:
-	for material: StandardMaterial3D in [GLOW, CRIT]:
-		assert_int(material.shading_mode).is_equal(BaseMaterial3D.SHADING_MODE_UNSHADED)
-		assert_int(material.blend_mode).is_equal(BaseMaterial3D.BLEND_MODE_ADD)
-		assert_int(material.transparency).is_equal(BaseMaterial3D.TRANSPARENCY_ALPHA)
-		assert_float(material.albedo_color.a).is_less_equal(0.5)
+func test_ac941_the_material_is_white_unshaded_additive_and_translucent() -> void:
+	assert_int(GLOW.shading_mode).is_equal(BaseMaterial3D.SHADING_MODE_UNSHADED)
+	assert_int(GLOW.blend_mode).is_equal(BaseMaterial3D.BLEND_MODE_ADD)
+	assert_int(GLOW.transparency).is_equal(BaseMaterial3D.TRANSPARENCY_ALPHA)
+	assert_float(GLOW.albedo_color.a).is_less_equal(0.5)
 	assert_bool(GLOW.albedo_color.is_equal_approx(Color(1, 1, 1, 0.5))).is_true()
-	assert_bool(CRIT.albedo_color.is_equal_approx(Color(1, 0.55, 0.1, 0.5))).is_true()

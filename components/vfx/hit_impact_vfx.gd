@@ -3,8 +3,8 @@ extends Node3D
 ## One impact where the blade crossed an enemy (docs/specs/hit-impact-vfx.md):
 ## a thin shard of light stretches along the cut, then thins and fades, while a
 ## flash sphere grows and fades with a brief light and sparks fly along the
-## cut. A critical hit is scaled up, shows a second crossed shard and uses the
-## critical material. Built from primitives and one-shot CPUParticles3D
+## cut. A critical hit is scaled up and shows a second crossed shard, in the
+## same white. Built from primitives and one-shot CPUParticles3D
 ## (Principle II); every node is created once and reused by the pool of
 ## HitImpactVfxHost (Principle V). Must be top_level.
 
@@ -13,10 +13,12 @@ const MIN_SIZE: float = 0.001
 
 var config: HitImpactVfxConfig
 var glow_material: StandardMaterial3D
-var crit_material: StandardMaterial3D
 
 var _shard: MeshInstance3D = null
 var _cross_shard: MeshInstance3D = null
+## Wider, fainter copy of each shard (its child), so the cut glows.
+var _halo: MeshInstance3D = null
+var _cross_halo: MeshInstance3D = null
 var _flash: MeshInstance3D = null
 var _flash_light: OmniLight3D = null
 var _sparks: CPUParticles3D = null
@@ -26,15 +28,17 @@ var _is_crit: bool = false
 
 
 ## Builds every node once; called by the host before the effect enters the tree.
-func setup(vfx_config: HitImpactVfxConfig, glow: StandardMaterial3D, crit: StandardMaterial3D) -> void:
+func setup(vfx_config: HitImpactVfxConfig, glow: StandardMaterial3D) -> void:
 	config = vfx_config
 	glow_material = glow
-	crit_material = crit
 	top_level = true
 	_shard = _create_shard()
 	_cross_shard = _create_shard()
+	_halo = _create_halo(_shard)
+	_cross_halo = _create_halo(_cross_shard)
 	_create_flash()
 	_create_sparks()
+	_apply_material(glow_material)
 	_stop()
 
 
@@ -42,15 +46,14 @@ func _process(delta: float) -> void:
 	advance(delta)
 
 
-## Plays at `point` on the enemy's surface: `normal` points out of the enemy and
-## `slash_dir` is the cut direction, already tangent to the surface.
+## Plays at `point` on the enemy's surface, facing `normal` (towards the camera);
+## `slash_dir` is the cut direction, already perpendicular to `normal`.
 func play(point: Vector3, normal: Vector3, slash_dir: Vector3, is_crit: bool) -> void:
 	_is_crit = is_crit
 	_elapsed = 0.0
 	_playing = true
 	var effect_scale: float = config.crit_scale if is_crit else 1.0
 	global_transform = Transform3D(_basis_for(normal, slash_dir).scaled(Vector3.ONE * effect_scale), point)
-	_apply_material(crit_material if is_crit else glow_material)
 	_cross_shard.rotation = Vector3(0.0, 0.0, deg_to_rad(config.crit_cross_angle))
 	_shard.show()
 	_cross_shard.visible = is_crit
@@ -92,6 +95,10 @@ func get_cross_shard() -> MeshInstance3D:
 	return _cross_shard
 
 
+func get_halo() -> MeshInstance3D:
+	return _halo
+
+
 func get_flash() -> MeshInstance3D:
 	return _flash
 
@@ -104,7 +111,7 @@ func get_sparks() -> CPUParticles3D:
 	return _sparks
 
 
-## Local X runs along the cut, Z out of the enemy and Y across the cut.
+## Local X runs along the cut, Z towards the viewer and Y across the cut.
 static func _basis_for(normal: Vector3, slash_dir: Vector3) -> Basis:
 	var z: Vector3 = normal.normalized()
 	var x: Vector3 = slash_dir.normalized()
@@ -112,8 +119,9 @@ static func _basis_for(normal: Vector3, slash_dir: Vector3) -> Basis:
 	return Basis(x, y, z)
 
 
-## The shard stretches during grow_time, then thins and fades until duration;
-## the flash grows and fades over the whole duration.
+## The shard (core and halo) stretches during grow_time, then thins and fades
+## until duration; the flash reaches its radius with the shard and fades over
+## the whole duration.
 func _update(elapsed: float) -> void:
 	var grow: float = minf(elapsed / config.grow_time, 1.0)
 	var fade: float = clampf((elapsed - config.grow_time) / (config.duration - config.grow_time), 0.0, 1.0)
@@ -125,9 +133,12 @@ func _update(elapsed: float) -> void:
 	_cross_shard.scale = shard_size
 	var shard_transparency: float = lerpf(config.shard_start_transparency, 1.0, fade)
 	_shard.transparency = shard_transparency
+	var halo_transparency: float = lerpf(config.shard_halo_transparency, 1.0, fade)
+	_halo.transparency = halo_transparency
+	_cross_halo.transparency = halo_transparency
 	_cross_shard.transparency = shard_transparency
 	var progress: float = minf(elapsed / config.duration, 1.0)
-	_flash.scale = Vector3.ONE * maxf(config.flash_radius * progress, MIN_SIZE)
+	_flash.scale = Vector3.ONE * maxf(config.flash_radius * grow, MIN_SIZE)
 	_flash.transparency = lerpf(config.flash_start_transparency, 1.0, progress)
 	_flash_light.light_energy = config.flash_energy * (1.0 - progress)
 
@@ -135,18 +146,38 @@ func _update(elapsed: float) -> void:
 func _apply_material(material: StandardMaterial3D) -> void:
 	_shard.material_override = material
 	_cross_shard.material_override = material
+	_halo.material_override = material
+	_cross_halo.material_override = material
 	_flash.material_override = material
 	_sparks.material_override = material
 	_flash_light.light_color = material.albedo_color
 
 
-## Unit box scaled each frame to the shard's size.
+## Unit-diameter ellipsoid scaled each frame to the shard's size, so its ends
+## taper like a streak of light.
 func _create_shard() -> MeshInstance3D:
 	var shard := MeshInstance3D.new()
-	shard.mesh = BoxMesh.new()
+	shard.mesh = _unit_sphere()
 	shard.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(shard)
 	return shard
+
+
+## Child of `shard`: same length, shard_halo_scale times wider, fainter.
+func _create_halo(shard: MeshInstance3D) -> MeshInstance3D:
+	var halo := MeshInstance3D.new()
+	halo.mesh = shard.mesh
+	halo.scale = Vector3(1.0, config.shard_halo_scale, 1.0)
+	halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	shard.add_child(halo)
+	return halo
+
+
+func _unit_sphere() -> SphereMesh:
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.5
+	sphere.height = 1.0
+	return sphere
 
 
 func _create_flash() -> void:

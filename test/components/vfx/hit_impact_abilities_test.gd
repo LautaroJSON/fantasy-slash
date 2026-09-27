@@ -75,11 +75,12 @@ func test_ac938_a_spin_turn_shows_the_impact() -> void:
 	await _make_player(BERSERKER)
 	_ability.equip(SPIN)
 	_spawn_enemy(Vector3(2.0, 0.0, 0.0))
+	var hits: Array[bool] = []
+	_ability.enemy_hit.connect(func(_e: Enemy, _a: float, _c: bool) -> void: hits.append(true))
 	assert_bool(_ability.try_cast()).is_true()
-	_advance(0.9)
-	assert_int(_host.get_active_count()).is_equal(0)
-	_advance(0.2)
-	assert_int(_host.get_active_count()).is_equal(1)
+	_advance(1.1)
+	assert_int(hits.size()).is_greater(0)
+	assert_int(_host.get_active_count()).is_equal(hits.size())
 
 
 func test_ac938_the_spin_dash_slash_hit_shows_the_impact() -> void:

@@ -24,6 +24,10 @@ extends Resource
 @export var shard_thickness: float
 ## Transparency of the shard at full length (0 = opaque).
 @export var shard_start_transparency: float
+## Width of the halo around the shard, as a multiple of the shard's width.
+@export var shard_halo_scale: float
+## Transparency of the halo at full length (0 = opaque).
+@export var shard_halo_transparency: float
 
 @export_group("Flash")
 ## Radius the flash sphere grows to, in meters.

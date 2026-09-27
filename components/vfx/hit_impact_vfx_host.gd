@@ -4,8 +4,9 @@ extends Node
 ## combo or by an ability whose data asks for it (docs/specs/hit-impact-vfx.md).
 ## Hits are decided by a logical sector, so the contact point is computed: the
 ## point of the blade (TrailBase→TrailTip) closest to the enemy's axis, carried
-## to the enemy's surface. The cut direction is the tip's movement since the
-## last physics step. Effects come from a pool built once (Principle V).
+## to the enemy's surface. The effect faces the camera and its cut direction is
+## the tip's movement since the last physics step, projected on that view
+## plane. Effects come from a pool built once (Principle V).
 
 ## Runs after the gameplay nodes, so the stored tip is last step's when a hit
 ## lands this step. Structural.
@@ -18,10 +19,8 @@ const DIRECTION_EPSILON: float = 0.00001
 ## The player's visual: fallback side of the impact and height reference.
 @export var visual: Node3D
 @export var config: HitImpactVfxConfig
-## White, unshaded, additive.
+## White, unshaded, additive (normal and critical hits alike).
 @export var glow_material: StandardMaterial3D
-## Amber, unshaded, additive: critical hits.
-@export var crit_material: StandardMaterial3D
 
 var _pool: Array[HitImpactVfx] = []
 var _base: Node3D = null
@@ -52,10 +51,10 @@ func show_impact(enemy: Enemy, is_crit: bool) -> void:
 	var blade_b: Vector3 = _blade_end()
 	var player_pos: Vector3 = visual.global_position
 	var enemy_pos: Vector3 = enemy.global_position
-	var normal: Vector3 = impact_normal(enemy_pos, blade_a, blade_b, player_pos)
 	var point: Vector3 = impact_point(enemy_pos, enemy.get_hit_padding(), blade_a, blade_b, player_pos, config.min_height, config.max_height)
-	var slash_dir: Vector3 = cut_direction(blade_b - _last_tip, normal, config.min_tip_speed)
-	_next_effect().play(point, normal, slash_dir, is_crit)
+	var facing: Vector3 = _facing(point, impact_normal(enemy_pos, blade_a, blade_b, player_pos))
+	var slash_dir: Vector3 = cut_direction(blade_b - _last_tip, facing, config.min_tip_speed)
+	_next_effect().play(point, facing, slash_dir, is_crit)
 
 
 func get_active_count() -> int:
@@ -104,7 +103,7 @@ static func closest_blade_point(enemy_pos: Vector3, blade_a: Vector3, blade_b: V
 	return blade_a.lerp(blade_b, t)
 
 
-## Tip movement projected on the surface (perpendicular to `normal`); when it is
+## Tip movement projected on the plane perpendicular to `normal`; when it is
 ## shorter than `min_speed`, the horizontal direction across the normal.
 static func cut_direction(tip_motion: Vector3, normal: Vector3, min_speed: float) -> Vector3:
 	var tangent: Vector3 = tip_motion - normal * tip_motion.dot(normal)
@@ -121,7 +120,7 @@ func _create_pool() -> void:
 	for index: int in config.pool_size:
 		var effect := HitImpactVfx.new()
 		effect.name = "Impact%d" % index
-		effect.setup(config, glow_material, crit_material)
+		effect.setup(config, glow_material)
 		add_child(effect)
 		_pool.append(effect)
 
@@ -142,6 +141,18 @@ func _next_effect() -> HitImpactVfx:
 		if effect.get_elapsed() > oldest.get_elapsed():
 			oldest = effect
 	return oldest
+
+
+## The effect faces the camera, so the shard is never seen edge-on; the
+## surface normal when there is no camera.
+func _facing(point: Vector3, normal: Vector3) -> Vector3:
+	var camera: Camera3D = get_viewport().get_camera_3d()
+	if camera == null:
+		return normal
+	var to_camera: Vector3 = camera.global_position - point
+	if to_camera.length() < DIRECTION_EPSILON:
+		return normal
+	return to_camera.normalized()
 
 
 func _sample_tip() -> void:

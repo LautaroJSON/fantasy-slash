@@ -46,7 +46,6 @@
 [ext_resource type="Script" path="res://components/vfx/hit_impact_vfx_host.gd" id="47_hit_impact"]
 [ext_resource type="Resource" path="res://data/player/hit_impact_vfx_config.tres" id="48_hit_impact_config"]
 [ext_resource type="Material" path="res://materials/vfx/hit_impact_material.tres" id="49_hit_impact_material"]
-[ext_resource type="Material" path="res://materials/vfx/hit_impact_crit_material.tres" id="50_hit_impact_crit_material"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -339,7 +338,6 @@ abilities = [NodePath("../BasicAbility"), NodePath("../UltimateAbility")]
 visual = NodePath("../Visual")
 config = ExtResource("48_hit_impact_config")
 glow_material = ExtResource("49_hit_impact_material")
-crit_material = ExtResource("50_hit_impact_crit_material")
 
 [node name="HitFeedback" type="Node" parent="." node_paths=PackedStringArray("health", "visual", "camera")]
 script = ExtResource("18_hit_feedback")
