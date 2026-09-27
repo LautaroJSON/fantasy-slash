@@ -15,6 +15,29 @@ enum Effect {
 	STAT_BOOST,
 	## Only listed (icon, aura): the owner applies what it means (e.g. a boss shield).
 	STATUS,
+	## Moves and acts slower: potency x stacks is the fraction of speed lost
+	## (docs/specs/affliction.md). Keep new effects after this one: .tres files
+	## store the integer.
+	SLOW,
+}
+
+## What re-applying does while the status is active.
+enum StackMode {
+	## Upgradable: one instance whose strength is potency x stacks; re-applying
+	## adds a stack (up to the cap) and restarts the duration.
+	INTENSITY,
+	## Stackable: every stack is a full instance that waits for its turn; the
+	## strength never grows. Re-applying queues a stack, or restarts the
+	## running instance when the queue is full.
+	QUEUE,
+}
+
+## What a DAMAGE_OVER_TIME tick removes.
+enum DamageScaling {
+	## potency x max health (e.g. bleeding).
+	MAX_HEALTH,
+	## potency health points, computed by whoever applies it (e.g. poison).
+	FLAT,
 }
 
 ## Identity: applying a debuff with the same id refreshes the existing one.
@@ -26,6 +49,11 @@ enum Effect {
 @export var tick_interval: float
 ## Highest stack count; each application adds one. 1 or less = no stacking.
 @export var max_stacks: int
+@export var stack_mode: StackMode
+@export var damage_scaling: DamageScaling
+## Upgradable (INTENSITY) statuses: strength multiplier for 1, 2, 3… stacks
+## (e.g. [1, 3, 6]). Empty = the stack count (docs/specs/affliction-bleed.md).
+@export var stack_multipliers: Array[float]
 ## Never expires with time; only clear() (the entity's reset) removes it.
 ## Its icon has no clock.
 @export var permanent: bool
@@ -35,8 +63,24 @@ enum Effect {
 @export var icon_color: Color
 ## Good for whoever carries it (e.g. Rage on an enemy): its icon gets the buff frame.
 @export var is_beneficial: bool
+## Material of the damage numbers of its ticks (null = the white default;
+## docs/specs/affliction-damage-colors.md).
+@export var damage_number_material: StandardMaterial3D
 
 
 ## At least 1: debuffs that do not declare it never stack.
 func get_stack_cap() -> int:
 	return maxi(max_stacks, 1)
+
+
+## Whether its strength grows with the stack count (upgradable statuses).
+func stacks_intensity() -> bool:
+	return stack_mode == StackMode.INTENSITY
+
+
+## Strength multiplier of an upgradable status with `stacks` stacks: its
+## stack_multipliers entry (the last one past the table), or `stacks`.
+func stack_multiplier(stacks: int) -> float:
+	if stack_multipliers.is_empty():
+		return stacks
+	return stack_multipliers[clampi(stacks, 1, stack_multipliers.size()) - 1]

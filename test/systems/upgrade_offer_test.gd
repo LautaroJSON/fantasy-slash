@@ -2,8 +2,9 @@ extends GdUnitTestSuite
 
 const CATALOG: UpgradeCatalog = preload("res://data/upgrades/upgrade_catalog.tres")
 const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
-## Stats with a card: all but the five fixed by design (docs/specs/stats-rework.md).
-const UPGRADEABLE_STAT_COUNT: int = 10
+## Stats with a card: all but the five fixed by design (docs/specs/stats-rework.md),
+## plus AFFLICTION_BUILDUP (docs/specs/affliction.md).
+const UPGRADEABLE_STAT_COUNT: int = 11
 
 
 func _player_pool() -> Array[UpgradeCard]:

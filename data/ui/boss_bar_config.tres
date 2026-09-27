@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://resources/boss_bar_config.gd" id="1_script"]
 [ext_resource type="Resource" path="res://data/ui/enemy_health_bar_config.tres" id="2_health_bar_config"]
 [ext_resource type="Resource" path="res://data/ui/status_icon_config.tres" id="3_status_icon"]
+[ext_resource type="Resource" path="res://data/combat/affliction_config.tres" id="4_affliction_config"]
 
 [resource]
 script = ExtResource("1_script")
@@ -20,3 +21,4 @@ debuff_spacing_px = 4
 max_debuff_icons = 8
 status_icon = ExtResource("3_status_icon")
 health_bar_config = ExtResource("2_health_bar_config")
+affliction_config = ExtResource("4_affliction_config")

@@ -45,6 +45,7 @@ const WEAPON_OFF_HAND: NodePath = ^"OffHand"
 @onready var air_slash: AirSlashComponent = $AirSlash
 @onready var stamina: StaminaComponent = $StaminaComponent
 @onready var sprint: SprintComponent = $SprintComponent
+@onready var afflictions: AfflictionLoadout = $Afflictions
 @onready var _weapon_pivot: Node3D = $Visual/SwordPivot
 @onready var _movement: MovementComponent = $MovementComponent
 @onready var _camera: ThirdPersonCamera = $CameraRig
@@ -54,6 +55,7 @@ const WEAPON_OFF_HAND: NodePath = ^"OffHand"
 @onready var _humanoid: LowPolyHumanoid = $Visual/Humanoid
 @onready var _hitstop: HitstopComponent = $Hitstop
 @onready var _dash_vfx: DashVfxHost = $DashVfx
+@onready var _hit_impact_vfx: HitImpactVfxHost = $HitImpactVfx
 
 ## Scabbard of the class weapon, or null when the weapon has none.
 var _sheath: Node3D = null
@@ -74,6 +76,7 @@ func _ready() -> void:
 	basic_ability.registry = enemy_registry
 	ultimate_ability.registry = enemy_registry
 	air_slash.registry = enemy_registry
+	afflictions.registry = enemy_registry
 	_apply_character_class()
 	_setup_health()
 	stamina.refill()
@@ -171,6 +174,16 @@ func get_body_clip() -> StringName:
 	return clip if clip != &"" else ultimate_ability.get_body_clip()
 
 
+## Clip the body plays while dashing: the one an ability asks for (e.g. the
+## Spin's dash slash, docs/specs/spin-visual-rework.md §2.3), else the class
+## dash clip.
+func get_dash_clip() -> StringName:
+	var clip: StringName = basic_ability.get_dash_clip()
+	if clip == &"":
+		clip = ultimate_ability.get_dash_clip()
+	return clip if clip != &"" else dash.get_clip()
+
+
 ## True while an ability's cast keeps the weapon in the humanoid's hand, so
 ## WeaponMount keeps following it (docs/specs/sheathe-release-animation.md).
 func is_weapon_in_hand_cast() -> bool:
@@ -203,6 +216,8 @@ func apply_upgrade(card: UpgradeCard) -> void:
 		return
 	if card is UpgradeData:
 		stats.add_upgrade(card as UpgradeData)
+	elif card is AfflictionUpgradeData:
+		afflictions.apply_card(card as AfflictionUpgradeData)
 	elif basic_ability.owns_upgrade(card):
 		basic_ability.apply_card(card)
 	elif ultimate_ability.owns_upgrade(card):
@@ -213,6 +228,8 @@ func apply_upgrade(card: UpgradeCard) -> void:
 func remove_upgrade(card: UpgradeCard) -> void:
 	if card is UpgradeData:
 		stats.remove_upgrade(card as UpgradeData)
+	elif card is AfflictionUpgradeData:
+		afflictions.remove_card(card as AfflictionUpgradeData)
 	elif basic_ability.owns_upgrade(card):
 		basic_ability.remove_card(card)
 	elif ultimate_ability.owns_upgrade(card):
@@ -223,22 +240,30 @@ func remove_upgrade(card: UpgradeCard) -> void:
 func count_upgrade(card: UpgradeCard) -> int:
 	if card is UpgradeData:
 		return stats.count_upgrade(card as UpgradeData)
+	if card is AfflictionUpgradeData:
+		return afflictions.count_card(card as AfflictionUpgradeData)
 	if basic_ability.owns_upgrade(card):
 		return basic_ability.count_card(card)
 	return ultimate_ability.count_card(card)
 
 
 ## Highest count a card can reach: max_stacks for stat cards, max_level for
-## unique upgrades.
+## unique and Affliction upgrades.
 func max_count(card: UpgradeCard) -> int:
 	if card is UpgradeData:
 		return (card as UpgradeData).max_stacks
 	if card is AbilityUpgradeData:
 		return (card as AbilityUpgradeData).max_stacks
+	if card is AfflictionUpgradeData:
+		return (card as AfflictionUpgradeData).max_level
 	return (card as AbilityUniqueUpgradeData).max_level
 
 
+## An Affliction card is also maxed when its Affliction is new and the run
+## already holds AfflictionConfig.max_types (docs/specs/affliction.md).
 func is_maxed(card: UpgradeCard) -> bool:
+	if card is AfflictionUpgradeData:
+		return afflictions.is_card_maxed(card as AfflictionUpgradeData)
 	return count_upgrade(card) >= max_count(card)
 
 
@@ -253,6 +278,7 @@ func reset_upgrades() -> void:
 	basic_ability.clear_upgrades()
 	ultimate_ability.clear_upgrades()
 	buffs.clear()
+	afflictions.clear()
 
 
 ## Level a unique upgrade card would grant if chosen now (1 when not taken yet).
@@ -477,6 +503,8 @@ func _apply_combat_style(character_class: CharacterClassData) -> void:
 	_humanoid.set_profile(character_class.animation_profile)
 	attack.combo = character_class.combo
 	_hitstop.config = character_class.hitstop
+	basic_ability.hitstop = character_class.hitstop
+	ultimate_ability.hitstop = character_class.hitstop
 
 
 ## The class weapon is fixed: placed once on the pivot, held in the humanoid's
@@ -487,6 +515,7 @@ func _equip_weapon(weapon: WeaponData) -> void:
 	_weapon_pivot.add_child(model)
 	sword_swing.setup(weapon)
 	_weapon_trail.attach(model.get_node(WEAPON_TRAIL_BASE) as Node3D, model.get_node(WEAPON_TRAIL_TIP) as Node3D)
+	_hit_impact_vfx.attach(model.get_node(WEAPON_TRAIL_BASE) as Node3D, model.get_node(WEAPON_TRAIL_TIP) as Node3D)
 	_grip_with_right_hand(model)
 	_grip_with_left_hand(model)
 	_equip_sheath(weapon)

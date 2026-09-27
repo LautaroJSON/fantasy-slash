@@ -21,6 +21,7 @@ var _ban_button: Button = null
 ## Built once in _ready and shared by every card of their kind.
 var _ability_style: CardStyle
 var _unique_style: CardStyle
+var _affliction_style: CardStyle
 var _ban_style: CardStyle
 
 @onready var _cards: HBoxContainer = %Cards
@@ -31,6 +32,7 @@ func _ready() -> void:
 	hide()
 	_ability_style = CardStyle.new(config.ability_card_color, config.ability_card_hover_color, config.ability_card_font_color, config)
 	_unique_style = CardStyle.new(config.unique_card_color, config.unique_card_hover_color, config.unique_card_font_color, config)
+	_affliction_style = CardStyle.new(config.affliction_card_color, config.affliction_card_hover_color, config.affliction_card_font_color, config)
 	_ban_style = CardStyle.new(config.ban_card_color, config.ban_card_hover_color, config.ban_card_font_color, config)
 
 
@@ -111,11 +113,17 @@ func _make_card(upgrade: UpgradeCard) -> Button:
 		_ability_style.apply_to(card)
 	elif upgrade is AbilityUniqueUpgradeData:
 		_unique_style.apply_to(card)
+	elif upgrade is AfflictionUpgradeData:
+		_affliction_style.apply_to(card)
 	return card
 
 
-## Unique upgrades show the level they grant and that level's text.
+## Unique and Affliction upgrades show the level they grant and that level's text.
 func _card_text(upgrade: UpgradeCard) -> String:
+	var affliction: AfflictionUpgradeData = upgrade as AfflictionUpgradeData
+	if affliction != null:
+		var next: int = player.count_upgrade(affliction) + 1 if player != null else 1
+		return "%s (Nv %d)\n%s" % [affliction.title, next, affliction.get_description(next)]
 	var unique: AbilityUniqueUpgradeData = upgrade as AbilityUniqueUpgradeData
 	if unique == null:
 		return "%s\n%s" % [upgrade.title, upgrade.description]

@@ -4,8 +4,9 @@ extends Node
 
 signal enemy_killed(enemy: Enemy)
 signal all_dead
-## A debuff tick (e.g. bleeding) removed health from a registered enemy.
-signal enemy_debuff_ticked(enemy: Enemy, amount: float)
+## A debuff tick (e.g. bleeding) removed health from a registered enemy; `data`
+## is the status that ticked.
+signal enemy_debuff_ticked(enemy: Enemy, amount: float, data: DebuffData)
 
 var _active: Array[Enemy] = []
 
@@ -56,8 +57,8 @@ func _on_enemy_killed(enemy: Enemy) -> void:
 		all_dead.emit()
 
 
-func _on_debuff_ticked(target: Node3D, amount: float) -> void:
-	enemy_debuff_ticked.emit(target as Enemy, amount)
+func _on_debuff_ticked(target: Node3D, amount: float, data: DebuffData) -> void:
+	enemy_debuff_ticked.emit(target as Enemy, amount, data)
 
 
 func _flat_distance_sq(a: Vector3, b: Vector3) -> float:

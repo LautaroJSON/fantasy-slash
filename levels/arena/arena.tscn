@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://bo6f8jpgex76d" path="res://systems/wave_manager.gd" id="9_wave_manager"]
 [ext_resource type="Resource" path="res://data/waves/wave_config.tres" id="10_wave_config"]
 [ext_resource type="Resource" path="res://data/upgrades/upgrade_catalog.tres" id="11_catalog"]
+[ext_resource type="Resource" path="res://data/afflictions/affliction_catalog.tres" id="90_affliction_catalog"]
 [ext_resource type="PackedScene" path="res://ui/upgrade_picker.tscn" id="12_picker"]
 [ext_resource type="PackedScene" path="res://ui/game_over_screen.tscn" id="13_game_over"]
 [ext_resource type="PackedScene" path="res://ui/pause_menu.tscn" id="14_pause_menu"]
@@ -248,6 +249,7 @@ wave_manager = NodePath("../../WaveManager")
 script = ExtResource("9_wave_manager")
 config = ExtResource("10_wave_config")
 catalog = ExtResource("11_catalog")
+affliction_catalog = ExtResource("90_affliction_catalog")
 ban_rules = ExtResource("21_ban_rules")
 rage = ExtResource("27_rage_config")
 pace = ExtResource("36_pace")

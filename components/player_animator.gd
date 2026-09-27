@@ -10,7 +10,10 @@ extends Node
 ## then casts, charges, the air slash and holds (`idle`, or the clip the
 ## ability asks for, e.g. Sheathe's charge crouch), then locomotion. A one-shot
 ## clip an ability asked for (Sheathe's release) finishes after the cast while
-## the body stays idle.
+## the body stays idle. Out of any clip an ability asked for, locomotion blends
+## in slowly (attack_exit_blend). An ability riding a dash may replace the dash
+## clip and pause it briefly on impact (the Spin's dash slash,
+## docs/specs/spin-visual-rework.md).
 
 enum Locomotion {
 	IDLE,
@@ -66,6 +69,8 @@ var _in_strike_pose: bool = false
 var _tail_clip: StringName = &""
 ## True while the dash clip plays: the first locomotion after it picks the exit.
 var _dash_playing: bool = false
+## Seconds left of a pause of the dash clip (hold_dash_clip); 0 when none.
+var _dash_hold_left: float = 0.0
 
 
 func _ready() -> void:
@@ -73,7 +78,8 @@ func _ready() -> void:
 	health.damaged.connect(_on_damaged)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	advance_dash_hold(delta)
 	update()
 
 
@@ -172,6 +178,30 @@ func update() -> void:
 	_request_locomotion(LOCOMOTION_CLIPS[_locomotion])
 
 
+## Pauses the dash clip for `duration` seconds (restarts, never adds up); the
+## dash itself keeps moving. When it resumes, the clip speeds up to end with
+## the dash (Principle VII, docs/specs/spin-visual-rework.md §2.5).
+func hold_dash_clip(duration: float) -> void:
+	if duration <= 0.0 or not dash.is_dashing():
+		return
+	_dash_hold_left = duration
+	humanoid.anim.speed_scale = 0.0
+
+
+func is_dash_clip_held() -> bool:
+	return _dash_hold_left > 0.0
+
+
+## Counts down the pause of the dash clip and resumes it when it is over.
+func advance_dash_hold(delta: float) -> void:
+	if not is_dash_clip_held():
+		return
+	_dash_hold_left -= delta
+	if _dash_hold_left <= 0.0:
+		_dash_hold_left = 0.0
+		_resume_dash_clip()
+
+
 ## Plays a combo strike clip at `speed` (the AttackComponent decides when).
 func play_attack(clip: StringName, speed: float) -> void:
 	_hit_playing = false
@@ -206,9 +236,11 @@ func _play_action_clip() -> void:
 		return
 	var clip: StringName = _busy_clip()
 	_request(clip)
-	if clip != CLIP_BUSY and humanoid.anim.get_animation(clip).loop_mode == Animation.LOOP_NONE:
+	if clip == CLIP_BUSY:
+		return
+	_in_strike_pose = true  # cut by locomotion, it blends out slowly
+	if humanoid.anim.get_animation(clip).loop_mode == Animation.LOOP_NONE:
 		_tail_clip = clip
-		_in_strike_pose = true  # cut by locomotion, it blends out slowly
 
 
 ## The ability's one-shot clip keeps playing after its cast while the body is
@@ -307,10 +339,11 @@ func _busy_clip() -> StringName:
 	return CLIP_BUSY
 
 
-## The class dash clip, entered with dash_entry_blend and stretched to last
-## exactly the dash; `run` when the profile has none.
+## The dash clip (the class one, or the one an ability riding the dash asks
+## for), entered with dash_entry_blend and stretched to last exactly the dash;
+## `run` when the profile has none.
 func _play_dash() -> void:
-	var clip: StringName = dash.get_clip()
+	var clip: StringName = player.get_dash_clip()
 	if clip == &"" or not humanoid.anim.has_animation(clip):
 		_request(CLIP_DASH)
 		return
@@ -322,11 +355,24 @@ func _play_dash() -> void:
 	_in_strike_pose = false
 
 
+## After a pause, the rest of the dash clip plays in the rest of the dash.
+func _resume_dash_clip() -> void:
+	if not dash.is_dashing():
+		return
+	var dash_left: float = dash.get_duration() * (1.0 - dash.get_progress())
+	var clip_left: float = humanoid.anim.current_animation_length - humanoid.anim.current_animation_position
+	if dash_left <= 0.0 or clip_left <= 0.0:
+		humanoid.anim.speed_scale = 1.0
+		return
+	humanoid.anim.speed_scale = clip_left / dash_left
+
+
 ## Out of a dash (docs/specs/dash-feel.md §2.3): the dash ends on the sprint's
 ## first frame, so a sprint goes on from frame 0 with no blend; with no input
 ## the body skids (sprint_stop); moving but winded, it walks.
 func _leave_dash() -> void:
 	_dash_playing = false
+	_dash_hold_left = 0.0
 	_locomotion_clip_finished = false
 	if not player.is_on_floor():
 		_locomotion = Locomotion.AIR

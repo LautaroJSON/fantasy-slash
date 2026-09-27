@@ -54,10 +54,15 @@ var _hitlag_left: float = 0.0
 var _hitlag_shake: ShakeState = ShakeState.new()
 var _hitlag_amplitude: float = 0.0
 var _hitlag_frequency: float = 0.0
+## Speed the behavior runs at this frame (SLOW statuses, docs/specs/affliction.md):
+## its delta and the walking speed are scaled, gravity is not.
+var _speed_scale: float = 1.0
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var debuffs: DebuffComponent = $DebuffComponent
+@onready var afflictions: AfflictionComponent = $AfflictionComponent
 @onready var health_bar: EnemyHealthBar = $HealthBar
+@onready var affliction_bars: AfflictionBarRow = $HealthBar/AfflictionBars
 @onready var _collision: CollisionShape3D = $CollisionShape3D
 @onready var _body: MeshInstance3D = $Body
 @onready var _hands: EnemyHands = $Hands
@@ -99,6 +104,7 @@ func activate(at: Vector3, new_target: Player, new_level: int = 1) -> void:
 	_knockback = Vector3.ZERO
 	_gravity_scale = 1.0
 	_windup_scale = 1.0
+	_speed_scale = 1.0
 	_target_padding = _collision_radius(target)
 	_behavior.reset()
 	_hands.reset()
@@ -113,6 +119,8 @@ func activate(at: Vector3, new_target: Player, new_level: int = 1) -> void:
 	stats.write_scaled(level, _scaled)
 	health.setup(_scaled.max_health, _scaled.defense)
 	debuffs.clear()
+	afflictions.setup(_scaled)
+	affliction_bars.bind(null if target == null else target.afflictions)
 	health_bar.reset()
 	health_bar.set_level(level)
 	visible = true
@@ -159,6 +167,7 @@ func deactivate() -> void:
 	if registry != null:
 		registry.unregister(self)
 	debuffs.clear()
+	afflictions.clear()
 	_end_hitlag()
 	visible = false
 	process_mode = Node.PROCESS_MODE_DISABLED
@@ -228,9 +237,9 @@ func walk(direction: Vector3, delta: float) -> void:
 	var heading: Vector3 = direction
 	if coordinator != null:
 		heading = (direction + coordinator.separation_for(self)).limit_length(1.0)
-	velocity.x = heading.x * _scaled.move_speed
-	velocity.z = heading.z * _scaled.move_speed
-	_apply_gravity(delta)
+	velocity.x = heading.x * _scaled.move_speed * _speed_scale
+	velocity.z = heading.z * _scaled.move_speed * _speed_scale
+	_apply_gravity(_unscaled(delta))
 	move_and_slide()
 
 
@@ -337,9 +346,9 @@ func _end_spawn_in() -> void:
 
 ## Moves with a given flat velocity (charges, lunges, jumps), without facing it.
 func move_with_velocity(horizontal: Vector3, delta: float) -> void:
-	velocity.x = horizontal.x
-	velocity.z = horizontal.z
-	_apply_gravity(delta)
+	velocity.x = horizontal.x * _speed_scale
+	velocity.z = horizontal.z * _speed_scale
+	_apply_gravity(_unscaled(delta))
 	move_and_slide()
 
 
@@ -365,7 +374,7 @@ func get_gravity_strength() -> float:
 func stand_still(delta: float) -> void:
 	velocity.x = 0.0
 	velocity.z = 0.0
-	_apply_gravity(delta)
+	_apply_gravity(_unscaled(delta))
 	move_and_slide()
 
 
@@ -405,7 +414,20 @@ func _update_behaviour(delta: float) -> void:
 	if is_knocked_back():
 		_slide_back(delta)
 		return
-	_behavior.physics_update(delta)
+	_speed_scale = debuffs.get_speed_scale()
+	if _speed_scale <= 0.0:
+		stand_still(delta)
+		return
+	_behavior.physics_update(delta * _speed_scale)
+
+
+func get_speed_scale() -> float:
+	return _speed_scale
+
+
+## Real frame time from a behavior's (slowed) delta, so gravity never slows down.
+func _unscaled(delta: float) -> float:
+	return delta / _speed_scale if _speed_scale > 0.0 else delta
 
 
 ## While pushed the enemy only slides; its behavior (and its timers) is paused.

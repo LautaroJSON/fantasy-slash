@@ -15,11 +15,12 @@
 [resource]
 script = ExtResource("1_script")
 title = "Giro"
-description = "Girás con el mandoble durante 3 s
+description = "Girás con el mandoble durante 4 s
 golpeando a todos a tu alrededor
-en cada vuelta. Podés moverte lento.
-8 de daño + 15 % de tu daño por vuelta.
-Radio: 2.5 m · Enfriamiento: 9 s"
+en cada vuelta (una cada 0.8 s).
+Podés moverte lento.
+100 % de tu daño por vuelta.
+Radio: 3.5 m · Enfriamiento: 9 s"
 behavior = ExtResource("3_behavior")
 attack_scaling = 1.0
 cooldown = 8.0
@@ -31,5 +32,7 @@ min_tick_interval = 0.1
 min_cooldown = 9.0
 min_cast_duration = 3.0
 dash_cancels_cast = true
+shows_hit_impact = true
 upgrades = Array[ExtResource("2_upgrade_script")]([ExtResource("4_damage"), ExtResource("5_duration"), ExtResource("6_speed"), ExtResource("7_range")])
 unique_upgrades = Array[ExtResource("8_unique_script")]([ExtResource("9_armor_break"), ExtResource("10_invigorating"), ExtResource("11_tornado")])
+affliction_scale = 0.4

@@ -26,3 +26,5 @@ extends Resource
 ## Shared look of the status icons (docs/specs/status-icons.md).
 @export var status_icon: StatusIconConfig
 @export var health_bar_config: HealthBarConfig
+## Affliction rows under the bar (docs/specs/affliction.md).
+@export var affliction_config: AfflictionConfig

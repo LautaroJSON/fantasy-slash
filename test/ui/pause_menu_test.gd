@@ -10,7 +10,7 @@ const LEFT_COLUMN: Array[PlayerStats.Stat] = [
 	PlayerStats.Stat.LIFESTEAL, PlayerStats.Stat.DAMAGE_BONUS,
 ]
 # Adapted (sprint-stamina.md): the max stamina joins the right column.
-const RIGHT_COLUMN: Array[PlayerStats.Stat] = [PlayerStats.Stat.MAX_HEALTH, PlayerStats.Stat.DEFENSE, PlayerStats.Stat.STAMINA_MAX]
+const RIGHT_COLUMN: Array[PlayerStats.Stat] = [PlayerStats.Stat.MAX_HEALTH, PlayerStats.Stat.DEFENSE, PlayerStats.Stat.STAMINA_MAX, PlayerStats.Stat.AFFLICTION_BUILDUP]
 const BOTTOM_ROWS: Array[PlayerStats.Stat] = [
 	PlayerStats.Stat.ATTACK_SPEED, PlayerStats.Stat.MOVE_SPEED, PlayerStats.Stat.ATTACK_RANGE,
 ]
@@ -179,5 +179,5 @@ func _labels_in(grid_name: String) -> Array[String]:
 func test_ac233_pause_lays_out_two_columns_and_a_block_below() -> void:
 	_pause.toggle()
 	assert_array(_labels_in("LeftGrid")).is_equal(["Daño", "Probabilidad de crítico", "Daño crítico", "Robo de vida", "Bono de daño"])
-	assert_array(_labels_in("RightGrid")).is_equal(["Vida máxima", "Defensa", "Estamina máxima"])
+	assert_array(_labels_in("RightGrid")).is_equal(["Vida máxima", "Defensa", "Estamina máxima", "Acum. Aflicción"])
 	assert_array(_labels_in("BottomGrid")).is_equal(["Velocidad de ataque", "Velocidad de movimiento", "Rango"])

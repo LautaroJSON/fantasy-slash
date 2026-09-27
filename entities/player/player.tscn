@@ -41,6 +41,11 @@
 [ext_resource type="Script" path="res://components/sprint_component.gd" id="42_sprint"]
 [ext_resource type="Resource" path="res://data/player/sprint_config.tres" id="43_sprint_config"]
 [ext_resource type="Script" path="res://components/dash/dash_vfx_host.gd" id="44_dash_vfx"]
+[ext_resource type="Script" path="res://components/affliction_loadout.gd" id="45_afflictions"]
+[ext_resource type="Resource" path="res://data/combat/affliction_config.tres" id="46_affliction_config"]
+[ext_resource type="Script" path="res://components/vfx/hit_impact_vfx_host.gd" id="47_hit_impact"]
+[ext_resource type="Resource" path="res://data/player/hit_impact_vfx_config.tres" id="48_hit_impact_config"]
+[ext_resource type="Material" path="res://materials/vfx/hit_impact_material.tres" id="49_hit_impact_material"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -256,7 +261,7 @@ config = ExtResource("36_animation_config")
 [node name="BuffComponent" type="Node" parent="."]
 script = ExtResource("25_buffs")
 
-[node name="BasicAbility" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "player_stats", "swing_player", "movement", "sword_swing", "health", "buffs", "dash", "weapon_mount")]
+[node name="BasicAbility" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "player_stats", "swing_player", "movement", "sword_swing", "health", "buffs", "dash", "weapon_mount", "camera", "animator")]
 script = ExtResource("17_ability")
 slot = 0
 body = NodePath("..")
@@ -271,8 +276,11 @@ health = NodePath("../HealthComponent")
 charge_feedback = ExtResource("24_charge_feedback_config")
 buffs = NodePath("../BuffComponent")
 dash = NodePath("../DashComponent")
+camera = NodePath("../CameraRig")
+animator = NodePath("../PlayerAnimator")
+hitstop = ExtResource("39_hitstop_config")
 
-[node name="UltimateAbility" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "player_stats", "swing_player", "movement", "sword_swing", "health", "buffs", "dash", "weapon_mount")]
+[node name="UltimateAbility" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "player_stats", "swing_player", "movement", "sword_swing", "health", "buffs", "dash", "weapon_mount", "camera", "animator")]
 script = ExtResource("17_ability")
 slot = 1
 body = NodePath("..")
@@ -287,6 +295,9 @@ health = NodePath("../HealthComponent")
 charge_feedback = ExtResource("24_charge_feedback_config")
 buffs = NodePath("../BuffComponent")
 dash = NodePath("../DashComponent")
+camera = NodePath("../CameraRig")
+animator = NodePath("../PlayerAnimator")
+hitstop = ExtResource("39_hitstop_config")
 
 [node name="AirSlash" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "stats", "health", "movement", "sword_swing", "camera")]
 script = ExtResource("26_air_slash")
@@ -319,6 +330,14 @@ attack = NodePath("../AttackComponent")
 abilities = [NodePath("../BasicAbility"), NodePath("../UltimateAbility")]
 config = ExtResource("15_trail_config")
 material = ExtResource("16_trail_material")
+
+[node name="HitImpactVfx" type="Node" parent="." node_paths=PackedStringArray("attack", "abilities", "visual")]
+script = ExtResource("47_hit_impact")
+attack = NodePath("../AttackComponent")
+abilities = [NodePath("../BasicAbility"), NodePath("../UltimateAbility")]
+visual = NodePath("../Visual")
+config = ExtResource("48_hit_impact_config")
+glow_material = ExtResource("49_hit_impact_material")
 
 [node name="HitFeedback" type="Node" parent="." node_paths=PackedStringArray("health", "visual", "camera")]
 script = ExtResource("18_hit_feedback")
@@ -355,3 +374,11 @@ health = NodePath("../HealthComponent")
 camera = NodePath("../CameraRig")
 humanoid = NodePath("../Visual/Humanoid")
 config = ExtResource("39_hitstop_config")
+
+[node name="Afflictions" type="Node" parent="." node_paths=PackedStringArray("stats", "attack", "air_slash", "basic_ability")]
+script = ExtResource("45_afflictions")
+config = ExtResource("46_affliction_config")
+stats = NodePath("../StatsComponent")
+attack = NodePath("../AttackComponent")
+air_slash = NodePath("../AirSlash")
+basic_ability = NodePath("../BasicAbility")

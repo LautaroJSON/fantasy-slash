@@ -110,21 +110,26 @@ func test_ac188_enemies_outside_the_radius_are_not_hit() -> void:
 	assert_int(_hits.size()).is_equal(0)
 
 
+## Adapted (docs/specs/spin-visual-rework.md): the weapon no longer sits at a
+## fixed blade pose while spinning; it stays in the hands (the spin clip holds
+## it) and follows the hand after the spin. The turn is timed from the data.
 func test_ac189_one_full_turn_per_tick_and_the_blade_returns_to_rest() -> void:
 	var yaw_at_start: float = _player.get_node("Visual").rotation.y
+	var tick: float = _ability.get_stat(AbilityData.Stat.TICK_INTERVAL)
 	_cast_by_hand()
 	var visual: Node3D = _player.get_node("Visual") as Node3D
-	_advance(0.25)
+	_advance(tick / 4.0)
 	assert_float(angle_difference(yaw_at_start, visual.rotation.y)).is_equal_approx(PI / 2.0, 0.01)
-	_advance(0.75)
+	_advance(tick * 3.0 / 4.0)
 	assert_float(angle_difference(yaw_at_start, visual.rotation.y)).is_equal_approx(0.0, 0.01)
-	var pivot: Node3D = _player.get_node("Visual/SwordPivot") as Node3D
-	assert_vector(pivot.position).is_equal_approx(SPIN_CONFIG.blade_position, Vector3.ONE * 0.001)
-	_advance(2.1)
+	assert_bool(_player.is_weapon_in_hand_cast()).is_true()
+	assert_bool(_player.sword_swing.is_active()).is_false()
+	_advance(_ability.get_stat(AbilityData.Stat.CAST_DURATION))
 	assert_bool(_ability.is_casting()).is_false()
-	_player.sword_swing.advance(BERSERKER.weapon.swing.recover_duration)
-	assert_vector(pivot.position).is_equal_approx(BERSERKER.weapon.rest_position, Vector3.ONE * 0.01)
-	assert_vector(pivot.rotation).is_equal_approx(BERSERKER.weapon.rest_rotation, Vector3.ONE * 0.01)
+	var mount: WeaponMount = _player.get_node("WeaponMount") as WeaponMount
+	mount.update(1.0)
+	var pivot: Node3D = _player.get_node("Visual/SwordPivot") as Node3D
+	assert_float(pivot.global_position.distance_to(mount.get_hand_pose().origin)).is_less(0.01)
 
 
 func test_ac190_hit_enemies_are_pushed_away_with_the_spin_knockback() -> void:

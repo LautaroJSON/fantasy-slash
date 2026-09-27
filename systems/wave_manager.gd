@@ -11,6 +11,8 @@ signal boss_wave_started(bosses: Array[Enemy])
 
 @export var config: WaveConfig
 @export var catalog: UpgradeCatalog
+## Violet Affliction cards, offered next to the stat cards (docs/specs/affliction.md).
+@export var affliction_catalog: AfflictionCatalog
 @export var ban_rules: CardBanRules
 ## Pace of the enemies: slower without Rage (docs/specs/enemy-pace.md).
 @export var pace: EnemyPaceConfig
@@ -203,6 +205,8 @@ func _on_ability_chosen(ability: AbilityData) -> void:
 	player.basic_ability.equip(ability)
 	_card_pool = UpgradeOffer.build_pool(catalog, ability.upgrades)
 	_card_pool.append_array(ability.unique_upgrades)
+	if affliction_catalog != null:
+		_card_pool.append_array(affliction_catalog.cards)
 	start_wave()
 
 

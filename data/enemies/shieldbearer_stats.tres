@@ -49,3 +49,4 @@ behavior = ExtResource("3_behavior")
 attacks = Array[ExtResource("5_attack_script")]([ExtResource("4_attack")])
 hands_config = ExtResource("6_hands")
 behavior_config = ExtResource("7_config")
+affliction_resistance = 0.25

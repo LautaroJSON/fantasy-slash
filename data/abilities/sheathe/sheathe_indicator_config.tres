@@ -4,10 +4,9 @@
 
 [resource]
 script = ExtResource("1_script")
-line_width = 0.06
 line_thickness = 0.02
 ground_offset = 0.05
 fade_duration = 0.25
-start_transparency = 0.6
-pulse_transparency = 0.1
+start_transparency = 0.75
+pulse_transparency = 0.55
 pulse_duration = 0.2

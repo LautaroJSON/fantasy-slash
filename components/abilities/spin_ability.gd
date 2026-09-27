@@ -4,11 +4,16 @@ extends AbilityBehavior
 ## TICK_INTERVAL. Each completed turn hits every enemy within HIT_RANGE once:
 ## BASE_DAMAGE + ATTACK_SCALING x player DAMAGE, no bonus or lifesteal, with a
 ## light push outwards. A turn left unfinished when the spin ends does not hit.
-## The player can walk while spinning, slowed by SpinConfig. The player's
-## WeaponTrail follows the blade while the spin is cast.
+## The player can walk while spinning, slowed by SpinConfig. The body loops its
+## spin clip with the weapon in its hands, and the player's WeaponTrail follows
+## the blade while the spin is cast (docs/specs/spin-visual-rework.md). Dust
+## rises from the player's feet while spinning. A turn that hits shakes the
+## camera and the enemies hit; the player never pauses (Principle VII,
+## channelled abilities).
 ## A dash cuts the spin short and turns into a horizontal slash: every enemy
 ## the dash crosses takes one spin hit x dash_slash_damage_factor and is pushed
-## sideways (docs/specs/spin-dash-slash.md).
+## sideways (docs/specs/spin-dash-slash.md). The body plays the slash clip
+## instead of the dash clip, and its first hit pauses that clip briefly.
 ## Unique upgrades (spin turns and dash slash alike): "Rompecorazas" makes
 ## every hit apply Weaken (armor reduction); "Vigorizante" grants a Concussion
 ## stack per kill, and while spinning each stack speeds up walking and turning
@@ -42,6 +47,7 @@ var _slash_from: Vector3 = Vector3.ZERO
 var _slashed: Array[Enemy] = []
 
 @onready var _dash_slash: DashSlashVfx = $DashSlash
+@onready var _dust: SpinDustVfx = $Dust
 
 
 func _ready() -> void:
@@ -57,7 +63,7 @@ func begin(ability: AbilityComponent) -> void:
 	_start_yaw = ability.visual.rotation.y
 	_turn_progress = 0.0
 	_turns_done = 0
-	ability.sword_swing.hold_pose(config.blade_position, config.blade_rotation)
+	_dust.begin(ability.visual)
 
 
 func channel(ability: AbilityComponent, step: float) -> void:
@@ -74,17 +80,38 @@ func move_body(ability: AbilityComponent, delta: float, wish_direction: Vector3)
 	ability.movement.move(wish_direction, delta, get_move_speed_factor(ability))
 
 
-func release(ability: AbilityComponent) -> void:
-	ability.sword_swing.recover()
+func release(_ability: AbilityComponent) -> void:
+	_dust.finish()
 
 
-## Cut short without a dash (e.g. a boss grab): the weapon goes back to rest.
-func cancel_cast(ability: AbilityComponent) -> void:
-	ability.sword_swing.recover()
+## Cut short (a dash or a boss grab): the dust stops. The weapon stays in the
+## hand, which the next clip moves.
+func cancel_cast(_ability: AbilityComponent) -> void:
+	_dust.finish()
+
+
+## The body loops the spin clip while casting (AbilityComponent only asks then).
+func get_body_clip(_ability: AbilityComponent) -> StringName:
+	return config.body_clip
+
+
+## The spin clip swings the weapon with the hands.
+func holds_weapon_in_hand(_ability: AbilityComponent) -> bool:
+	return true
+
+
+## The dash slash clip replaces the dash clip while the slash runs.
+func get_dash_clip(_ability: AbilityComponent) -> StringName:
+	return config.dash_slash_body_clip if is_dash_slashing() else &""
+
+
+## The weapon trail keeps following the blade through the dash slash.
+func extends_trail(_ability: AbilityComponent) -> bool:
+	return is_dash_slashing()
 
 
 ## The dash that cut the spin short becomes a horizontal slash: the player
-## faces the dash, the weapon sweeps and the blade of light starts.
+## faces the dash, the body plays the slash clip and the blade of light starts.
 func cast_cut_by_dash(ability: AbilityComponent) -> void:
 	_slash_ability = ability
 	_slash_direction = ability.dash.get_direction()
@@ -92,9 +119,9 @@ func cast_cut_by_dash(ability: AbilityComponent) -> void:
 	_slashed.clear()
 	var yaw: float = atan2(-_slash_direction.x, -_slash_direction.z)
 	ability.visual.rotation.y = yaw
-	ability.sword_swing.play(config.dash_slash_arc_degrees, config.dash_slash_sweep_duration, 1.0)
 	_dash_slash.begin(_slash_from, yaw, config.dash_slash_width)
 	set_physics_process(true)
+	ability.notify_trail_changed()
 
 
 ## Slices the stretch the dash covered since the last step; ends with the dash.
@@ -115,6 +142,10 @@ func is_dash_slashing() -> bool:
 
 func get_dash_slash() -> DashSlashVfx:
 	return _dash_slash
+
+
+func get_dust() -> SpinDustVfx:
+	return _dust
 
 
 func get_turns_done() -> int:
@@ -150,12 +181,16 @@ func _hit_completed_turns(ability: AbilityComponent) -> void:
 		_strike(ability)
 
 
+## One turn's damage: every enemy within reach, then the turn's impact.
 func _strike(ability: AbilityComponent) -> void:
 	_collect_hits(ability)
 	var damage: float = hit_damage(ability)
 	var origin: Vector3 = ability.visual.global_position
 	for enemy: Enemy in _hit_buffer:
 		_hit_enemy(ability, enemy, damage, enemy.global_position - origin, config.knockback_speed)
+		_freeze(ability, enemy, config.turn_hitlag)
+	if not _hit_buffer.is_empty():
+		_shake_camera(ability, config.turn_shake)
 
 
 func _collect_hits(ability: AbilityComponent) -> void:
@@ -182,15 +217,34 @@ func _slice_along(ability: AbilityComponent, from: Vector3, to: Vector3) -> void
 	if _hit_buffer.is_empty():
 		return
 	var damage: float = get_dash_slash_damage(ability)
+	if _slashed.is_empty() and ability.animator != null:
+		ability.animator.hold_dash_clip(config.dash_slash_hitlag)
 	for enemy: Enemy in _hit_buffer:
 		_slashed.append(enemy)
 		_hit_enemy(ability, enemy, damage, _sideways_from_path(enemy.global_position - from), config.dash_slash_knockback_speed)
+		_freeze(ability, enemy, config.dash_slash_hitlag)
+		_shake_camera(ability, config.dash_slash_shake)
 
 
 func _end_dash_slash() -> void:
+	var ability: AbilityComponent = _slash_ability
 	_slash_ability = null
 	_dash_slash.finish()
 	set_physics_process(false)
+	ability.notify_trail_changed()
+
+
+## Hit lag of the enemy hit: it freezes and shakes like under the class combo.
+func _freeze(ability: AbilityComponent, enemy: Enemy, duration: float) -> void:
+	if ability.hitstop == null:
+		return
+	enemy.apply_hitlag(duration, ability.hitstop)
+
+
+func _shake_camera(ability: AbilityComponent, strength: float) -> void:
+	if ability.camera == null:
+		return
+	ability.camera.shake(strength)
 
 
 ## Perpendicular to the dash, towards the side the enemy is on.

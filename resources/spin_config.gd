@@ -8,10 +8,16 @@ extends Resource
 ## Initial speed of the push applied to enemies hit, in m/s (lighter than the
 ## basic attack's PlayerTuning.knockback_speed).
 @export var knockback_speed: float
-## Weapon pivot position while spinning (blade held out), relative to Visual.
-@export var blade_position: Vector3
-## Weapon pivot rotation while spinning, in radians.
-@export var blade_rotation: Vector3
+## Humanoid clip the body loops while spinning, with the weapon in its hands
+## (docs/specs/spin-visual-rework.md §2.1).
+@export var body_clip: StringName
+
+@export_group("Impact")
+## Seconds each enemy hit by a turn freezes and shakes (Enemy.apply_hitlag).
+## The player never pauses during the turns (Principle VII, channelled abilities).
+@export var turn_hitlag: float
+## Camera shake of a turn that hits at least one enemy.
+@export var turn_shake: float
 
 @export_group("Dash slash")
 ## Damage of the slash of a dash that cuts the spin short, as a multiple of one
@@ -21,7 +27,11 @@ extends Resource
 @export var dash_slash_width: float
 ## Initial speed of the sideways push applied to slashed enemies, in m/s.
 @export var dash_slash_knockback_speed: float
-## Arc crossed by the weapon's horizontal sweep, in degrees.
-@export var dash_slash_arc_degrees: float
-## Seconds the sweep takes to cross the arc.
-@export var dash_slash_sweep_duration: float
+## Humanoid clip that replaces the dash clip while the dash slashes, stretched
+## to the dash like it (docs/specs/spin-visual-rework.md §2.3).
+@export var dash_slash_body_clip: StringName
+## Seconds each slashed enemy freezes and shakes; the player's clip also pauses
+## this long once, on the first enemy slashed (the dash keeps moving).
+@export var dash_slash_hitlag: float
+## Camera shake of each enemy slashed.
+@export var dash_slash_shake: float

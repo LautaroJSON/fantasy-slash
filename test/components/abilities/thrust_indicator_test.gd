@@ -38,23 +38,21 @@ func _upgrade_ability(stat: AbilityData.Stat, amount: float) -> void:
 	_ability.add_upgrade(upgrade)
 
 
-## Horizontal offset from the indicator origin to the centre of a segment.
-func _offset(edge: AbilityRectIndicator.Edge) -> Vector2:
-	var segment: Vector3 = _indicator.get_segment(edge).global_position
+## Horizontal offset from the indicator origin to the centre of the fill.
+func _offset() -> Vector2:
+	var center: Vector3 = _indicator.get_fill().global_position
 	var origin: Vector3 = _indicator.global_position
-	return Vector2(segment.x - origin.x, segment.z - origin.z)
+	return Vector2(center.x - origin.x, center.z - origin.z)
 
 
+## Adapted (docs/specs/spin-visual-rework.md §2.6): the area is one fill, so
+## its size and the centre halfway along the facing replace the four edges.
 func _assert_rect(length: float, width: float, facing: Vector2) -> void:
-	var left: MeshInstance3D = _indicator.get_segment(AbilityRectIndicator.Edge.LEFT)
-	var far: MeshInstance3D = _indicator.get_segment(AbilityRectIndicator.Edge.FAR)
-	assert_float(left.scale.z).is_equal_approx(length, TOLERANCE)
-	assert_float(far.scale.x).is_equal_approx(width + CONFIG.line_width, TOLERANCE)
-	var far_offset: Vector2 = _offset(AbilityRectIndicator.Edge.FAR)
-	assert_float(far_offset.length()).is_equal_approx(length, TOLERANCE)
-	assert_float(far_offset.normalized().dot(facing)).is_equal_approx(1.0, TOLERANCE)
-	var side_gap: float = _offset(AbilityRectIndicator.Edge.LEFT).distance_to(_offset(AbilityRectIndicator.Edge.RIGHT))
-	assert_float(side_gap).is_equal_approx(width, TOLERANCE)
+	assert_float(_indicator.get_length()).is_equal_approx(length, TOLERANCE)
+	assert_float(_indicator.get_width()).is_equal_approx(width, TOLERANCE)
+	var center: Vector2 = _offset()
+	assert_float(center.length()).is_equal_approx(length / 2.0, TOLERANCE)
+	assert_float(center.normalized().dot(facing)).is_equal_approx(1.0, TOLERANCE)
 
 
 func test_ac61_pressing_outlines_the_hitbox_towards_the_aimed_enemy() -> void:
@@ -63,7 +61,7 @@ func test_ac61_pressing_outlines_the_hitbox_towards_the_aimed_enemy() -> void:
 	assert_bool(_ability.try_cast()).is_true()
 	assert_bool(_indicator.is_showing()).is_true()
 	assert_bool(_indicator.visible).is_true()
-	assert_int(_indicator.get_segment_count()).is_equal(4)
+	assert_int(_indicator.get_child_count()).is_equal(1)
 	_assert_rect(THRUST.hit_range, THRUST.hit_width, Vector2(1.0, 0.0))
 
 
