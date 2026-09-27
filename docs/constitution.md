@@ -150,7 +150,7 @@ Cada frame se diseña para escalar con la cantidad de enemigos en pantalla, que 
 
 El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (desde 4.10.0, ver `bdo-combat-feel.md`).
 
-- **Compromiso:** un golpe del ataque básico no permite moverse libremente ni saltar hasta su *cancel point* (la apertura de su ventana de combo). En la recuperación, el movimiento se limita a un desplazamiento lento sin girar (o la corta, según datos). El dash corta el golpe en cualquier momento.
+- **Compromiso:** un golpe del ataque básico no permite moverse libremente hasta su *cancel point* (la apertura de su ventana de combo). En la recuperación, el movimiento se limita a un desplazamiento lento sin girar (o la corta, según datos). El dash y el salto (desde el piso) cortan el golpe en cualquier momento (el salto desde 4.12.0, ver `jump-cancels-strike.md`).
 - **Estocada:** los golpes desplazan al jugador con una distancia de datos atada al tiempo del clip (root motion por datos), que se frena ante un enemigo delante.
 - **Hit lag local:** el impacto se comunica pausando el clip del atacante y congelando y sacudiendo a los golpeados, con duración por golpe. **Prohibido modificar `Engine.time_scale`** como feedback de impacto. Los bosses solo tiemblan, para que el combo no los congele en cadena.
 - **Apuntado:** por defecto, el golpe apunta al enemigo más cercano y lo sigue durante la anticipación. La cámara solo mira, y el input de movimiento no desvía el golpe salvo que los datos lo indiquen.
@@ -205,6 +205,8 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 - Cada spec declara la versión de la constitución contra la que fue aprobada.
 
 ### Historial
+
+- **4.12.0** (2026-09-27): Principio VII: el salto (desde el piso) corta el golpe del ataque básico en cualquier momento, como el dash (ver `jump-cancels-strike.md`).
 
 - **4.11.0** (2026-09-27): Principio II: las mallas derivadas pueden reproporcionar regiones del modelo para encajar con el cuerpo del jugador; su generador vive en la carpeta del asset (ver `katana-hand-proportions.md`).
 
@@ -269,4 +271,4 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 ---
 
-**Version**: 4.11.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-27
+**Version**: 4.12.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-27

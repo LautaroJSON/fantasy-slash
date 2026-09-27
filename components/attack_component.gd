@@ -100,7 +100,8 @@ func is_attacking() -> bool:
 
 
 ## True from the start of a strike until its combo window opens (the cancel
-## point): the player can neither move nor jump (docs/specs/bdo-combat-feel.md).
+## point): the player cannot move; only the dash or the jump cut it
+## (docs/specs/bdo-combat-feel.md, docs/specs/jump-cancels-strike.md).
 func is_committed() -> bool:
 	return _state == ComboState.STRIKING
 

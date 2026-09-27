@@ -1,7 +1,7 @@
 # Feature: el salto corta el golpe como el dash
 
-- **Estado:** Propuesta (pendiente de aprobación). ACs reservados: AC689–AC693.
-- **Constitución:** `docs/constitution.md` v4.11.0 → **enmienda MINOR a 4.12.0** (ver §6).
+- **Estado:** Implementada (2026-09-27). ACs: AC689–AC693. Tests: solo los de esta spec (`combat_feel_test.gd`, a pedido del responsable); ver §8.
+- **Constitución:** `docs/constitution.md` v4.11.0 → **enmienda MINOR a 4.12.0** (aplicada, ver §6).
 - **Pilar (Principio I):** **combate.** Los jugadores piden poder salir de un golpe del combo saltando. Hoy la única salida de un golpe comprometido es el dash, que tiene recarga. Con el salto como segunda salida se puede esquivar verticalmente en medio del combo y encadenar golpe → salto → golpe aéreo (o Tajo aéreo del Berserker): el combate gana opciones de posicionamiento y de encadenamiento.
 - **Dependencias:** `bdo-combat-feel.md` (Implementada; esta spec **reemplaza** la primera mitad de su AC614 y su regla A de compromiso para el salto), `humanoid-player-model.md`, `berserker-air-slash.md`.
 
@@ -62,7 +62,7 @@ func _handle_jump() -> void:
 - **AC690** Con un enemigo delante, saltar en `STRIKING` antes de `hit_start` corta el golpe sin daño: la vida del enemigo sigue intacta después del tiempo que habría durado el clip.
 - **AC691** Saltar después de `hit_start` pero antes del `cancel_point` (durante el hit lag si lo hay) corta el golpe y salta; el daño ya aplicado al enemigo se conserva y no se aplica otra vez.
 - **AC692** Un toque de ataque en buffer se descarta al cortar con el salto: al aterrizar no arranca ningún golpe solo.
-- **AC693** Regresiones: (a) saltar en `CHAIN_OPEN` sigue cortando y saltando (segunda mitad de AC614); (b) en el aire, durante un golpe aéreo, apretar saltar no corta el golpe; (c) cargando Envainar el salto sigue ignorado (AC246).
+- **AC693** Regresiones: (a) saltar en `CHAIN_OPEN` sigue cortando y saltando (segunda mitad de AC614); (b) en el aire, durante un golpe aéreo, apretar saltar no corta el golpe; (c) cargando Envainar el salto sigue ignorado (AC246). El caso (c) lo sigue cubriendo el test de AC246 (`sheathe_test.gd`); no se duplica.
 
 ## 4. Tests
 
@@ -83,7 +83,7 @@ Principio VII, viñeta **Compromiso**, pasa a decir:
 
 > **Compromiso:** un golpe del ataque básico no permite moverse libremente hasta su *cancel point* (la apertura de su ventana de combo). En la recuperación, el movimiento se limita a un desplazamiento lento sin girar (o la corta, según datos). El dash y el salto (desde el piso) cortan el golpe en cualquier momento.
 
-Historial: **4.12.0** (fecha de cierre): Principio VII: el salto corta el golpe en cualquier momento, como el dash (ver `jump-cancels-strike.md`).
+Historial: **4.12.0** (2026-09-27): Principio VII: el salto corta el golpe en cualquier momento, como el dash (ver `jump-cancels-strike.md`).
 
 Por qué MINOR y no MAJOR: el principio (golpes con peso, compromiso del movimiento, cancel point) no se elimina ni se redefine; se amplía el conjunto de salidas explícitas, que ya existía para el dash. Por qué no PATCH: cambia el significado de una regla.
 
@@ -93,4 +93,16 @@ El salto no tiene recarga, así que se vuelve una salida gratuita del compromiso
 
 ## 8. Checklist de review de la constitución
 
-_(se completa al cerrar)_
+- [x] Principio I: pilar de combate (una segunda salida del golpe, vertical, y el encadenamiento golpe → salto → golpe aéreo).
+- [x] Principio II: sin geometría, materiales ni clips nuevos.
+- [x] Principio III: sin valores nuevos; el salto usa `JUMP_VELOCITY` de `<clase>_stats.tres`.
+- [x] Principio IV: tipado estricto; código y comentarios en inglés.
+- [x] Principio V: sin allocations por cuadro (se quitó una condición de `_handle_jump`).
+- [x] Principio VI: el salto sigue siendo la acción `jump` del InputMap.
+- [x] Principio VII: enmendado a 4.12.0 (§6). Estocada, hit lag, apuntado y compromiso del movimiento no cambian.
+
+## 9. Notas de implementación
+
+- `test_ac614_jump_is_ignored_while_committed_and_cuts_the_recovery` no se adaptó porque su primera mitad verificaba lo contrario de esta spec: se reemplazó por `test_ac689_the_jump_cuts_a_committed_strike`, y su segunda mitad quedó como `test_ac693_the_jump_still_cuts_the_recovery`. Anotado en `bdo-combat-feel.md` (regla A y AC614).
+- Las lambdas de varias líneas dentro de un test hacen que GdUnit deje de descubrir los tests siguientes del archivo; `_advance_clip()` avanza el clip con un bucle.
+- Resultado: `combat_feel_test.gd` 30/30 en verde. Antes del pedido de correr solo los tests de la spec, una corrida de la suite completa mostró 11 fallos que también fallan en `main` sin este cambio (datos de clases, Giro, funda, `class_combat_identity`); no son de esta spec.
