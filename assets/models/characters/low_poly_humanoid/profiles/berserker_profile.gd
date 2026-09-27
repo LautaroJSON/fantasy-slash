@@ -17,7 +17,7 @@ extends HumanoidProfile
 ## Mandoble al hombro: la mano delante del hombro derecho y la hoja apoyada,
 ## apuntando atrás y arriba por detrás de la cabeza.
 const SHOULDER_REST := {
-	"shoulder_r": Vector3(44, 57, 66), "elbow_r": Vector3(87, 0, 0), "wrist_r": Vector3(-4, 2, 0),
+	"shoulder_r": Vector3(121, -29, 42), "elbow_r": Vector3(23, 0, 0), "wrist_r": Vector3(32, -10, 90),
 }
 ## Mandoble vertical delante del hombro derecho (vuelve a apoyarlo al terminar un golpe).
 const RAISED_UPRIGHT := {
@@ -103,7 +103,7 @@ func _add_idle(lib: AnimationLibrary) -> void:
 	lib.add_animation("idle", _h.make_clip([
 		[0.0, _stance()],
 		[0.5, _stance({"hips_pos": Vector3(0, -0.09, 0), "torso": Vector3(-10, -8, 0), "neck": Vector3(8, 12, 0),
-				"elbow_l": Vector3(26, 0, 0), "shoulder_r": Vector3(41, 57, 66)})],
+				"elbow_l": Vector3(26, 0, 0), "shoulder_r": Vector3(118, -29, 42)})],
 		[1.0, _stance()],
 	], true, true))
 
@@ -136,7 +136,7 @@ func _run_pass(m: int) -> Dictionary:
 		"hip_" + b: Vector3(32, 0, 0), "knee_" + b: Vector3(-100, 0, 0), "ankle_" + b: Vector3(30, 0, 0),
 		"shoulder_l": Vector3(8, 0, -22), "elbow_l": Vector3(45, 0, 0),
 		"left_grip": 0.0,
-	}, _h.with(SHOULDER_REST, {"shoulder_r": Vector3(48, 57, 66)})))
+	}, _h.with(SHOULDER_REST, {"shoulder_r": Vector3(124, -29, 42)})))
 
 
 func _add_run(lib: AnimationLibrary) -> void:
