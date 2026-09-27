@@ -12,6 +12,7 @@
 [ext_resource type="Resource" path="res://data/ui/hud_config.tres" id="10_hud_config"]
 [ext_resource type="Script" path="res://components/input/input_device_monitor.gd" id="11_device_monitor"]
 [ext_resource type="Resource" path="res://data/ui/input_prompt_config.tres" id="12_prompts"]
+[ext_resource type="PackedScene" path="res://ui/touch/touch_controls.tscn" id="13_touch_controls"]
 
 [node name="Hud" type="Control"]
 layout_mode = 3
@@ -114,6 +115,7 @@ config = ExtResource("5_boss_bar_config")
 bar_scene = ExtResource("6_boss_bar_scene")
 
 [node name="AbilitySlots" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -188,6 +190,10 @@ grow_vertical = 0
 alignment = 1
 script = ExtResource("8_buff_bar")
 config = ExtResource("9_buff_bar_config")
+
+[node name="TouchControls" parent="." instance=ExtResource("13_touch_controls")]
+unique_name_in_owner = true
+layout_mode = 1
 
 [node name="InputDeviceMonitor" type="Node" parent="."]
 unique_name_in_owner = true

@@ -15,6 +15,8 @@ extends Control
 @export var prompt_action: StringName
 
 var _ability: AbilityComponent = null
+## Radius set by setup() for the touch cluster; below 0 the config radius of the slot is used.
+var _radius_override: float = -1.0
 var _drawn_ratio: float = -1.0
 var _drawn_charge: float = 0.0
 var _drawn_charging: bool = false
@@ -39,8 +41,9 @@ func _draw() -> void:
 	_draw_slot()
 
 
-func setup(ability: AbilityComponent) -> void:
+func setup(ability: AbilityComponent, radius_override: float = -1.0) -> void:
 	_ability = ability
+	_radius_override = radius_override
 	var diameter: float = get_radius() * 2.0
 	custom_minimum_size = Vector2(diameter, diameter)
 	pivot_offset = Vector2(get_radius(), get_radius())
@@ -57,6 +60,8 @@ func advance(delta: float) -> void:
 
 
 func get_radius() -> float:
+	if _radius_override > 0.0:
+		return _radius_override
 	return config.get_radius(_ability.slot)
 
 

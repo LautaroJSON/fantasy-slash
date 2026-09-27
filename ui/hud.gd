@@ -3,6 +3,9 @@ extends Control
 ## In-game HUD: player health, dash cooldown, current wave, ability slots, the
 ## boss health bars (top centre), the active buffs (above the health bar). The game mode is shown in the pause menu.
 ## The ability slots show the key or the gamepad button, after the last device used.
+## With touch the on-screen controls replace the ability slots and the dash bar
+## (the slots move into the touch cluster), and the HUD keeps to the safe area
+## of the screen (docs/specs/mobile-touch-controls.md).
 
 @export var player: Player
 @export var run_state: RunState
@@ -28,6 +31,8 @@ var _dash_step: int = -1
 @onready var _boss_bars: BossBarStack = %BossBars
 @onready var _buff_bar: BuffBar = %BuffBar
 @onready var _device_monitor: InputDeviceMonitor = %InputDeviceMonitor
+@onready var _ability_slots: Control = %AbilitySlots
+@onready var _touch_controls: TouchControls = %TouchControls
 
 
 func _ready() -> void:
@@ -35,8 +40,11 @@ func _ready() -> void:
 	_basic_slot.setup(player.basic_ability)
 	_ultimate_slot.setup(player.ultimate_ability)
 	_buff_bar.setup(player.buffs)
-	_device_monitor.device_changed.connect(_show_prompts)
-	_show_prompts(_device_monitor.get_device())
+	_touch_controls.setup(player)
+	_device_monitor.device_changed.connect(_apply_device)
+	_apply_device(_device_monitor.get_device())
+	get_viewport().size_changed.connect(_apply_safe_area)
+	_apply_safe_area()
 	player.health.health_changed.connect(_on_health_changed)
 	run_state.changed.connect(_on_run_changed)
 	if wave_manager != null:
@@ -73,6 +81,23 @@ func _update_dash_bar() -> void:
 		return
 	_dash_step = step
 	_dash_label.text = config.dash_ready_text if step == 0 else CooldownText.text_for_step(step, config.cooldown_text)
+
+
+## Keyboard/mouse and gamepad show the PC HUD with its prompts; touch shows the
+## touch controls instead of the ability slots and the dash bar.
+func _apply_device(device: InputDeviceMonitor.Device) -> void:
+	var touch: bool = device == InputDeviceMonitor.Device.TOUCH
+	_touch_controls.set_active(touch)
+	_ability_slots.visible = not touch
+	_dash_bar.visible = not touch
+	_show_prompts(device)
+
+
+## Keeps the whole HUD inside the safe area (notches, rounded corners). On PC
+## the safe area is the window and nothing moves.
+func _apply_safe_area() -> void:
+	var canvas_size: Vector2 = get_viewport_rect().size
+	SafeArea.inset(self, SafeArea.get_canvas_rect(canvas_size), canvas_size)
 
 
 func _show_prompts(device: InputDeviceMonitor.Device) -> void:

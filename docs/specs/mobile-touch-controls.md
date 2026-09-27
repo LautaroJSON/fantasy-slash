@@ -4,7 +4,7 @@
 - **Constitución:** `docs/constitution.md` v4.12.1 → **v5.0.0** (enmienda MAJOR del Principio VI, del Principio I y del Technology Stack, sección 8).
 - **Criterios de aceptación:** AC698–AC727 (reservados en `CLAUDE.md`).
 - **Pilares (Principio I):**
-  - **Combate:** el esquema de control define cómo se ataca, se esquiva, se salta y se encadenan habilidades. En el teléfono el pulgar izquierdo mueve con intensidad analógica (joystick flotante), el derecho gira la cámara arrastrando y tiene el ataque, el salto, el dash y las dos habilidades en un solo racimo alrededor del ataque (distribución de *Wuthering Waves* móvil), sin perder el mantener-para-repetir del ataque ni la carga de Envainar.
+  - **Combate:** el esquema de control define cómo se ataca, se esquiva, se salta y se encadenan habilidades. En el teléfono el pulgar izquierdo mueve con intensidad analógica (joystick flotante), el derecho gira la cámara arrastrando y tiene el ataque, el salto, el dash y las dos habilidades en un solo racimo alrededor del ataque (distribución de *Wuthering Waves* móvil), con las mismas reglas que el clic: un toque es un golpe del combo, el Tajo aéreo se mantiene y Envainar carga mientras el dedo sigue apoyado.
 - **Dependencias:** `gamepad-support.md` (Aprobada, en implementación). Esta spec reutiliza lo que ya está hecho de ella (`InputDeviceMonitor`, `HeldInputGuard`, prompts por dispositivo, foco en los menús) y no la cierra.
 
 ## 1. Objetivo
@@ -79,7 +79,7 @@ Preset "Android" (`export_presets.cfg`):
 | `side_button_radius` | `float` | 44 | Salto, dash, habilidad básica y ultimate. |
 | `jump_offset` / `dash_offset` / `basic_offset` / `ultimate_offset` | `Vector2` | (105, −105) / (105, 105) / (−105, 105) / (−105, −105) | Centro de cada botón respecto del centro del ataque (diagonales). |
 | `pause_radius` | `float` | 30 | Botón de pausa. |
-| `pause_anchor` | `Vector2` | (−50, 50) | Desde la esquina superior derecha del área segura. |
+| `pause_anchor` | `Vector2` | (−46, 96) | Desde la esquina superior derecha del área segura (debajo del número de oleada). |
 | `touch_slop` | `float` | 8 | Radio extra de acierto de todo botón (un toque apenas afuera cuenta). |
 | `idle_color` / `pressed_color` / `stick_color` / `knob_color` | `Color` | blanco translúcido α 0.25 / α 0.5 / α 0.2 / α 0.45 | Colores de UI 2D (no reservados: la tabla de colores reserva elementos 3D; se registran en la enmienda). |
 | `label_color` | `Color` | blanco α 0.9 | Texto de los botones. |
@@ -172,12 +172,12 @@ func setup(ability: AbilityComponent, radius_override: float = -1.0) -> void
   4. Si no, se ignora.
 - **Arrastre** (`InputEventScreenDrag`): el dedo del joystick → `drag`; el dedo de la cámara → `camera.apply_touch_look(event.relative)` (con `relative` en píxeles base, ya escalado por el stretch). Un dedo asignado a un botón no hace nada al arrastrar (no se "desliza" a otro botón ni mueve la cámara).
 - **Soltar** (`InputEventScreenTouch` no apretado): libera lo que tenga ese dedo. Las liberaciones se procesan **siempre**, aunque el árbol esté pausado (`process_mode ALWAYS`), para que ninguna acción quede trabada.
-- Todo evento de toque procesado se marca como manejado (`set_input_as_handled`) para que no llegue a `_unhandled_input` de otros nodos.
+- Los eventos de toque **no** se marcan como manejados: `InputDeviceMonitor` también tiene que verlos para pasar a `TOUCH` (va después de `TouchControls` en el árbol, así recibe el toque primero y activa los controles antes de que `TouchControls` lo procese), y ningún otro nodo lee eventos de toque.
 
 ### 5.2 Acciones
 
 - Cada botón, al apretar, envía `InputEventAction` (`action`, `pressed = true`, `strength = 1`) con `Input.parse_input_event`; al soltar, el mismo evento con `pressed = false`. Así el estado de la acción (`is_action_pressed`, `is_action_just_pressed`), `HeldInputGuard` y los nodos que leen eventos (la pausa con `_unhandled_input`) se comportan igual que con una tecla. Nada del `Player` cambia:
-  - **Ataque**: mantener repite (ya lo hace el `Player` con `is_pressed`).
+  - **Ataque**: un toque es un golpe del combo y mantener no repite, igual que el clic (`humanoid-player-model.md`); en el aire, mantener sostiene el Tajo aéreo del Berserker (`is_pressed`).
   - **Habilidades de carga** (Envainar): mantener carga y levantar el dedo suelta (el `Player` ya llama `release_charge()` cuando la acción deja de estar apretada).
 - **Joystick**: en cada cambio del vector `v`, envía `move_right` con fuerza `max(v.x, 0)`, `move_left` con `max(−v.x, 0)`, `move_back` con `max(v.y, 0)` y `move_forward` con `max(−v.y, 0)`; `pressed = fuerza > 0`. `Player._read_move_input()` sigue con `Input.get_vector`. Solo se envían las fuerzas que cambiaron (sin eventos redundantes por frame).
 - `get_vector()`: `(perilla − centro) / stick_radius`, limitado a longitud 1; 0 si la longitud es menor que `stick_dead_zone`. Si `stick_follows_thumb` y el pulgar pasa el radio, el centro se corre hacia el pulgar para que quede justo a `stick_radius`.
@@ -197,7 +197,7 @@ func setup(ability: AbilityComponent, radius_override: float = -1.0) -> void
 
 ### 5.5 Área segura
 
-`TouchControls` y el `Hud` leen `DisplayServer.get_display_safe_area()` al estar listos y al cambiar el tamaño del viewport (`size_changed`), la convierten a coordenadas del canvas (dividiendo por el factor de stretch) y la usan como márgenes: el joystick en reposo, el racimo y la pausa se anclan a sus esquinas, y los elementos anclados del HUD (vida, oleada, buffs) se corren lo necesario. En PC el área segura es la ventana entera y no cambia nada.
+`SafeArea` (`ui/safe_area.gd`, estático y puro en `to_canvas`) convierte `DisplayServer.get_display_safe_area()` a coordenadas del canvas (relativa a la ventana y escalada por el stretch). El `Hud` la aplica **a su propio rect** (`offset_*`) al estar listo y en cada `size_changed` del viewport, así todo el HUD (vida, oleada, buffs, bosses y `TouchControls`, que es su hijo) queda dentro del área segura. `TouchControls` se ubica relativo a sus esquinas: el joystick en reposo, el racimo y la pausa. En PC el área segura cubre la ventana y no cambia nada.
 
 ### 5.6 Menús al tacto
 
@@ -235,13 +235,13 @@ func setup(ability: AbilityComponent, radius_override: float = -1.0) -> void
 - **AC711** Solo un dedo a la vez controla la cámara: un segundo dedo en la mitad derecha (fuera de botones) mientras el primero mira se ignora.
 - **AC712** `release_all()` suelta todas las acciones que había apretado `TouchControls` (botones y las cuatro de movimiento). Se llama al desactivar (`set_active(false)`) y al pausarse el árbol: con `attack` y `move_forward` apretadas, pausar el árbol deja ambas sueltas.
 - **AC713** Con el árbol en pausa, un toque nuevo no aprieta ninguna acción, pero soltar un dedo que se apretó antes de la pausa sí la suelta.
-- **AC714** Player (con `ComboDriver`): mantener el botón de ataque encadena golpes como mantener el clic (regresión de "mantener repite"). Mantener el botón de la habilidad básica con Envainar equipada carga, y levantar el dedo llama a `release_charge()`.
+- **AC714** Player: tocar el botón de ataque da un golpe, y mantenerlo apoyado no da un segundo (igual que el clic); levantar el dedo y volver a tocar da otro. Mantener el botón de la habilidad básica con Envainar equipada carga, y levantar el dedo la suelta (`is_charging()` pasa a `false`).
 - **AC715** Player: tras una pausa simulada con el botón de dash apretado (`HeldInputGuard`), no hay dash al volver hasta soltar y volver a tocar (misma regla que AC379).
 - **AC716** HUD: con `TOUCH`, `TouchControls` es visible y `AbilitySlots` y `DashBar` no; con `KEYBOARD_MOUSE` o `GAMEPAD`, al revés. Cambiar de `TOUCH` a otro dispositivo con un botón apretado lo suelta.
 - **AC717** Los slots del racimo son `AbilitySlotView` enlazados a las habilidades del jugador, con radio `side_button_radius`: tras usar la habilidad básica muestran el mismo `get_clock_fraction()` y `get_time_text()` que el slot de PC. El botón de dash muestra la fracción de recarga y el texto de `CooldownText` del dash.
 - **AC718** Tamaño de toque: todo `Button` de `main_menu.tscn`, `pause_menu.tscn`, `sandbox_upgrade_panel.tscn`, `upgrade_picker.tscn`, `upgrade_ban_picker.tscn`, `ability_picker.tscn` y `game_over_screen.tscn` (incluidos los que se instancian desde plantillas) tiene alto mínimo efectivo ≥ 44.
 - **AC719** Posiciones: con viewport base y área segura igual a la ventana, el centro del ataque está en `esquina inferior derecha + cluster_anchor`, cada botón lateral en `centro del ataque + su offset`, la pausa en `esquina superior derecha + pause_anchor` y el joystick en reposo en `esquina inferior izquierda + stick_rest_position`.
-- **AC720** Área segura: con un área segura simulada (margen izquierdo de 60 px y derecho de 40 px), el racimo y la pausa se corren 40 px a la izquierda, el joystick en reposo 60 px a la derecha, y ningún botón queda fuera del área segura.
+- **AC720** Área segura: `SafeArea.to_canvas` convierte un área segura de pantalla a canvas (ventana desplazada y escalada) y la recorta al canvas; sin área válida devuelve el canvas entero. `SafeArea.inset` (lo que usa el `Hud`) con márgenes izquierdo de 60 px y derecho de 40 px deja el `TouchControls` dentro de esos márgenes: el racimo y la pausa se corren 40 px a la izquierda, el joystick en reposo 60 px a la derecha, y ningún botón queda fuera del área segura.
 - **AC721** `ThirdPersonCamera` ignora un `InputEventMouseMotion` con `device = DEVICE_ID_EMULATION` aunque el mouse esté capturado; con `device = DEVICE_ID_MOUSE` gira como antes.
 - **AC722** Gesto atrás (`Session` con el evento simulado): con el árbol en pausa y la pausa abierta, la cierra. En juego sin pausa, la abre y queda abierta. En el panel de clases del menú principal vuelve al de modos.
 - **AC723** Tocar el botón táctil de pausa (evento de acción vía `parse_input_event`) abre la pausa y pausa el árbol. Con el árbol pausado el racimo no acepta toques nuevos (AC713), así que la pausa se cierra con "Reanudar" o con el gesto atrás.

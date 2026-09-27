@@ -127,6 +127,11 @@ func get_facing() -> Vector3:
 
 
 ## Scabbard of the class weapon, or null when the weapon has none.
+## Orbit camera of the player (the touch controls turn it with a drag).
+func get_camera() -> ThirdPersonCamera:
+	return _camera
+
+
 func get_sheath() -> Node3D:
 	return _sheath
 

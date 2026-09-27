@@ -1,0 +1,133 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/touch/touch_controls.gd" id="1_script"]
+[ext_resource type="Script" path="res://ui/touch/virtual_stick.gd" id="2_stick"]
+[ext_resource type="Script" path="res://ui/touch/touch_action_button.gd" id="3_button"]
+[ext_resource type="Script" path="res://ui/ability_slot_view.gd" id="4_slot_view"]
+[ext_resource type="Resource" path="res://data/ui/touch_controls_config.tres" id="5_config"]
+[ext_resource type="Resource" path="res://data/ui/input_prompt_config.tres" id="6_prompts"]
+[ext_resource type="Resource" path="res://data/ui/ability_slot_view_config.tres" id="7_slot_config"]
+
+[node name="TouchControls" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+config = ExtResource("5_config")
+prompts = ExtResource("6_prompts")
+slot_config = ExtResource("7_slot_config")
+
+[node name="MoveStick" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_stick")
+config = ExtResource("5_config")
+
+[node name="Cluster" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="AttackButton" type="Control" parent="Cluster"]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("3_button")
+action = &"attack"
+config = ExtResource("5_config")
+
+[node name="JumpButton" type="Control" parent="Cluster"]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("3_button")
+action = &"jump"
+config = ExtResource("5_config")
+
+[node name="DashButton" type="Control" parent="Cluster"]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("3_button")
+action = &"dash"
+config = ExtResource("5_config")
+
+[node name="BasicButton" type="Control" parent="Cluster"]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("3_button")
+action = &"ability_basic"
+config = ExtResource("5_config")
+draws_slot = true
+
+[node name="BasicSlot" type="Control" parent="Cluster/BasicButton" node_paths=PackedStringArray("key_label")]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("4_slot_view")
+config = ExtResource("7_slot_config")
+key_label = NodePath("KeyLabel")
+prompt_action = &"ability_basic"
+
+[node name="KeyLabel" type="Label" parent="Cluster/BasicButton/BasicSlot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UltimateButton" type="Control" parent="Cluster"]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("3_button")
+action = &"ability_ultimate"
+config = ExtResource("5_config")
+draws_slot = true
+
+[node name="UltimateSlot" type="Control" parent="Cluster/UltimateButton" node_paths=PackedStringArray("key_label")]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("4_slot_view")
+config = ExtResource("7_slot_config")
+key_label = NodePath("KeyLabel")
+prompt_action = &"ability_ultimate"
+
+[node name="KeyLabel" type="Label" parent="Cluster/UltimateButton/UltimateSlot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PauseButton" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("3_button")
+action = &"pause"
+config = ExtResource("5_config")
