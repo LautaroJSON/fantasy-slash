@@ -15,11 +15,12 @@
 [resource]
 script = ExtResource("1_script")
 title = "Giro"
-description = "Girás con el mandoble durante 3 s
+description = "Girás con el mandoble durante 4 s
 golpeando a todos a tu alrededor
-en cada vuelta. Podés moverte lento.
-8 de daño + 15 % de tu daño por vuelta.
-Radio: 2.5 m · Enfriamiento: 9 s"
+en cada vuelta (una cada 0.8 s).
+Podés moverte lento.
+100 % de tu daño por vuelta.
+Radio: 3.5 m · Enfriamiento: 9 s"
 behavior = ExtResource("3_behavior")
 attack_scaling = 1.0
 cooldown = 8.0

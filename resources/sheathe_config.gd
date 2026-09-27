@@ -21,7 +21,8 @@ extends Resource
 ## Humanoid clip played during the release cast: draw, follow-through and
 ## chiburi, with the katana in the hand (docs/specs/sheathe-release-animation.md).
 @export var release_body_clip: StringName
-## Transparency of the ground outline once fully charged (0 = opaque).
+## Transparency of the area on the ground once fully charged (0 = opaque; at
+## most 0.5 opacity, Principle II).
 @export var full_charge_transparency: float
 
 @export_group("Empowered (Tsubame Gaeshi)")

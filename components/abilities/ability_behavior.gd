@@ -151,3 +151,17 @@ func get_body_clip(_ability: AbilityComponent) -> StringName:
 ## E.g. Sheathe's release (docs/specs/sheathe-release-animation.md).
 func holds_weapon_in_hand(_ability: AbilityComponent) -> bool:
 	return false
+
+
+## Humanoid clip that replaces the class dash clip while this ability rides a
+## dash (e.g. the Spin's dash slash); &"" = the dash clip
+## (docs/specs/spin-visual-rework.md §2.3).
+func get_dash_clip(_ability: AbilityComponent) -> StringName:
+	return &""
+
+
+## True while the ability keeps the weapon trail on after its cast (e.g. the
+## Spin's dash slash). Call AbilityComponent.notify_trail_changed() when it
+## changes.
+func extends_trail(_ability: AbilityComponent) -> bool:
+	return false

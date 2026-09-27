@@ -112,8 +112,9 @@ func test_ac567_dash_slash_data() -> void:
 	assert_float(SPIN_CONFIG.dash_slash_damage_factor).is_equal(2.0)
 	assert_float(SPIN_CONFIG.dash_slash_width).is_equal(2.5)
 	assert_float(SPIN_CONFIG.dash_slash_knockback_speed).is_equal(4.0)
-	assert_float(SPIN_CONFIG.dash_slash_arc_degrees).is_equal(220.0)
-	assert_float(SPIN_CONFIG.dash_slash_sweep_duration).is_equal_approx(0.2, TOLERANCE)
+	# Adapted (docs/specs/spin-visual-rework.md): the sweep is the body clip's,
+	# no longer an arc and a duration of SwordSwing.
+	assert_str(String(SPIN_CONFIG.dash_slash_body_clip)).is_equal("spin_dash_slash")
 	assert_float(VFX_CONFIG.blade_height).is_equal_approx(1.1, TOLERANCE)
 	assert_float(VFX_CONFIG.flash_start_transparency).is_equal_approx(0.5, TOLERANCE)
 	assert_float(VFX_CONFIG.flash_duration).is_equal_approx(0.15, TOLERANCE)
@@ -226,8 +227,12 @@ func test_ac573_faces_the_dash_sweeps_and_trails() -> void:
 	await _start_dash()
 	var dash_direction: Vector3 = _player.dash.get_direction()
 	assert_float(_player.get_facing().dot(dash_direction)).is_equal_approx(1.0, 0.001)
-	assert_bool(_player.sword_swing.is_swinging()).is_true()
-	assert_float(_player.sword_swing.get_swing_duration()).is_equal_approx(SPIN_CONFIG.dash_slash_sweep_duration, TOLERANCE)
+	# Adapted (docs/specs/spin-visual-rework.md): the body sweeps the weapon in
+	# its hands with the slash clip instead of SwordSwing.
+	await _physics_frames(1)
+	var humanoid: LowPolyHumanoid = _player.get_node("Visual/Humanoid") as LowPolyHumanoid
+	assert_str(String(humanoid.anim.current_animation)).is_equal(String(SPIN_CONFIG.dash_slash_body_clip))
+	assert_bool(_player.sword_swing.is_swinging()).is_false()
 	assert_bool(trail.is_emitting()).is_true()
 
 

@@ -89,9 +89,11 @@ func _connect_sources() -> void:
 	for ability: AbilityComponent in abilities:
 		ability.cast_started.connect(_refresh_emitting)
 		ability.cast_released.connect(_refresh_emitting)
+		ability.trail_changed.connect(_refresh_emitting)
 
 
-## Emits during a combo strike, while the weapon sweeps or any ability is being cast.
+## Emits during a combo strike, while the weapon sweeps or any ability is being
+## cast (or keeps its trail on after the cast, e.g. the Spin's dash slash).
 func _refresh_emitting() -> void:
 	_emitting = _base != null and _is_weapon_attacking()
 	if _emitting:
@@ -103,7 +105,7 @@ func _is_weapon_attacking() -> bool:
 	if sword_swing.is_swinging() or (attack != null and attack.is_attacking()):
 		return true
 	for ability: AbilityComponent in abilities:
-		if ability.is_casting():
+		if ability.is_trailing():
 			return true
 	return false
 

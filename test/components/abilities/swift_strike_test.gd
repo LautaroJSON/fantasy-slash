@@ -126,7 +126,8 @@ func test_ac79_range_upgrade_lengthens_sprint_and_indicator() -> void:
 	_ability.try_cast()
 	var indicator: AbilityRectIndicator = (_ability.get_behavior() as SwiftStrikeAbility).get_indicator()
 	assert_bool(indicator.is_showing()).is_true()
-	assert_float(indicator.get_segment(AbilityRectIndicator.Edge.LEFT).scale.z).is_equal_approx(7.5, 0.01)
-	assert_float(indicator.get_segment(AbilityRectIndicator.Edge.FAR).scale.x).is_equal_approx(SWIFT_STRIKE.hit_width + INDICATOR_CONFIG.line_width, 0.01)
+	# Adapted (docs/specs/spin-visual-rework.md §2.6): one fill instead of the outline.
+	assert_float(indicator.get_length()).is_equal_approx(7.5, 0.01)
+	assert_float(indicator.get_width()).is_equal_approx(SWIFT_STRIKE.hit_width, 0.01)
 	await _physics_frames(SPRINT_FRAMES)
 	assert_float(start.z - _player.global_position.z).is_equal_approx(7.5, DISTANCE_TOLERANCE)

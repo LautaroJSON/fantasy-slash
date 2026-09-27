@@ -1,22 +1,15 @@
 class_name AbilityRectIndicator
 extends Node3D
-## Outline of a rectangular ability hitbox on the ground, built from four thin
-## BoxMesh segments (Principle II). Shown while the ability is cast, then fades
-## out after the hit. Must be top_level so it stays where the cast happened.
-
-## Named Edge, not Side: Side is a global enum of the engine.
-enum Edge {
-	LEFT,
-	RIGHT,
-	FAR,
-	NEAR,
-}
+## Area of a rectangular ability hitbox on the ground: one flat BoxMesh filling
+## it, white and very transparent (Principle II; docs/specs/spin-visual-rework.md
+## §2.6). Shown while the ability is cast, then fades out after the hit. Must
+## be top_level so it stays where the cast happened.
 
 @export var config: AbilityIndicatorConfig
 @export var material: StandardMaterial3D
 
 ## Created once in _ready and reused on every cast (Principle V).
-var _segments: Array[MeshInstance3D] = []
+var _fill: MeshInstance3D = null
 var _showing: bool = false
 var _fading: bool = false
 var _fade_elapsed: float = 0.0
@@ -28,7 +21,7 @@ var _pulse_elapsed: float = 0.0
 
 
 func _ready() -> void:
-	_create_segments()
+	_create_fill()
 	_hide_indicator()
 
 
@@ -36,7 +29,7 @@ func _process(delta: float) -> void:
 	advance(delta)
 
 
-## Places the outline starting at `origin` (the player's feet) and extending
+## Places the area starting at `origin` (the player's feet) and extending
 ## `length` towards `yaw`, `width` wide. Stays still until start_fade().
 func show_rect(origin: Vector3, yaw: float, length: float, width: float) -> void:
 	resize(origin, yaw, length, width)
@@ -50,12 +43,14 @@ func show_rect(origin: Vector3, yaw: float, length: float, width: float) -> void
 	set_process(true)
 
 
-## Moves and resizes the shown outline without touching its transparency
+## Moves and resizes the shown area without touching its transparency
 ## (e.g. a charge that grows the reach while the player walks).
+## Local space: forward is -Z.
 func resize(origin: Vector3, yaw: float, length: float, width: float) -> void:
 	global_position = origin + Vector3.UP * config.ground_offset
 	global_basis = Basis(Vector3.UP, yaw)
-	_layout_segments(length, width)
+	_fill.position = Vector3(0.0, 0.0, -length / 2.0)
+	_fill.scale = Vector3(width, config.line_thickness, length)
 
 
 ## Changes the resting transparency while it is shown (e.g. fully charged).
@@ -103,52 +98,38 @@ func is_pulsing() -> bool:
 	return _pulsing
 
 
-func get_segment_count() -> int:
-	return _segments.size()
+## The flat box that fills the area (its scale is width x thickness x length).
+func get_fill() -> MeshInstance3D:
+	return _fill
 
 
-func get_segment(edge: Edge) -> MeshInstance3D:
-	return _segments[edge]
+## Horizontal distance from the player's feet to the far edge of the area.
+func get_length() -> float:
+	return _fill.scale.z
+
+
+func get_width() -> float:
+	return _fill.scale.x
 
 
 func get_transparency() -> float:
 	return _transparency
 
 
-func _create_segments() -> void:
+func _create_fill() -> void:
 	var box := BoxMesh.new()
 	box.size = Vector3.ONE
 	box.material = material
-	for i: int in Edge.size():
-		var segment := MeshInstance3D.new()
-		segment.mesh = box
-		segment.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		add_child(segment)
-		_segments.append(segment)
-
-
-## Local space: forward is -Z. The end edges span the width plus one line so
-## the corners close.
-func _layout_segments(length: float, width: float) -> void:
-	var half_width: float = width / 2.0
-	var side_scale := Vector3(config.line_width, config.line_thickness, length)
-	var edge_scale := Vector3(width + config.line_width, config.line_thickness, config.line_width)
-	_place(Edge.LEFT, Vector3(-half_width, 0.0, -length / 2.0), side_scale)
-	_place(Edge.RIGHT, Vector3(half_width, 0.0, -length / 2.0), side_scale)
-	_place(Edge.FAR, Vector3(0.0, 0.0, -length), edge_scale)
-	_place(Edge.NEAR, Vector3.ZERO, edge_scale)
-
-
-func _place(edge: Edge, at: Vector3, size: Vector3) -> void:
-	var segment: MeshInstance3D = _segments[edge]
-	segment.position = at
-	segment.scale = size
+	_fill = MeshInstance3D.new()
+	_fill.name = "Fill"
+	_fill.mesh = box
+	_fill.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_fill)
 
 
 func _apply_transparency(value: float) -> void:
 	_transparency = value
-	for segment: MeshInstance3D in _segments:
-		segment.transparency = value
+	_fill.transparency = value
 
 
 func _hide_indicator() -> void:

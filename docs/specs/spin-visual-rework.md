@@ -190,9 +190,9 @@ AbilityRectIndicator
 ## 5. Interfaz pública
 
 - **`SpinVortexVfx`** (`components/abilities/spin_vortex_vfx.gd`):
-  - `begin(visual: Node3D, radius: float)`, `follow(visual: Node3D, blade_tip: Vector3)`, `set_radius(radius: float)`;
-  - `pulse()`, `finish()`, `advance(delta: float)`;
-  - para tests: `is_showing()`, `get_area_radius()`, `get_area_alpha()`, `is_dust_emitting()`.
+  - `begin(visual: Node3D, radius: float)`, `follow(visual: Node3D)`, `set_radius(radius: float)`;
+  - `pulse()`, `finish()`, `advance(delta: float)` y la señal `pulsed`;
+  - para tests: `is_showing()`, `is_pulsing()`, `get_area_radius()`, `get_area_alpha()`, `is_dust_emitting()`, `get_area()`, `get_dust()`.
 - **`AbilityBehavior`:** `get_dash_clip(ability) -> StringName` y `extends_trail(ability) -> bool`.
 - **`AbilityComponent`:**
   - `@export var camera: ThirdPersonCamera`, `@export var hitstop: HitstopConfig` y `@export var animator: PlayerAnimator`;
@@ -203,7 +203,7 @@ AbilityRectIndicator
 - **`SpinAbility`:**
   - `get_body_clip()`, `holds_weapon_in_hand()`, `get_dash_clip()`, `extends_trail()`, `get_vortex()`;
   - llama `vortex.pulse()` en cada vuelta completada. Al golpear, llama `camera.shake()` y `enemy.apply_hitlag()`, y en el corte además `animator.hold_dash_clip()`.
-- **`AbilityRectIndicator`:** misma interfaz. `get_fill()` reemplaza el acceso a los segmentos en los tests.
+- **`AbilityRectIndicator`:** misma interfaz. `get_fill()`, `get_length()` y `get_width()` reemplazan el acceso a los segmentos en los tests.
 
 ## 6. Criterios de aceptación
 
