@@ -5,8 +5,6 @@ const SPIN_SCENE: PackedScene = preload("res://components/abilities/spin_ability
 const CONFIG: WeaponTrailConfig = preload("res://data/player/weapon_trail_config.tres")
 const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.tres")
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
-const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
 const SPIN: AbilityData = preload("res://data/abilities/spin/spin.tres")
 const NO_CRIT_ROLL: float = 0.99
 const FRAME: float = 1.0 / 60.0
@@ -74,14 +72,8 @@ func test_ac215_basic_attack_lights_the_trail_until_the_strike_ends() -> void:
 	assert_bool(_trail.visible).is_false()
 
 
-func test_ac216_trail_emits_for_the_whole_thrust() -> void:
-	_assert_emits_during_cast(THRUST)
-
-
-func test_ac216_trail_emits_for_the_whole_swift_strike() -> void:
-	_assert_emits_during_cast(SWIFT_STRIKE)
-
-
+## The Warrior abilities trail only while the blade sweeps: see
+## warrior_abilities_trail_test.gd (warrior-abilities-rework.md, AC840-AC842).
 func test_ac216_trail_emits_for_the_whole_spin() -> void:
 	_assert_emits_during_cast(SPIN)
 

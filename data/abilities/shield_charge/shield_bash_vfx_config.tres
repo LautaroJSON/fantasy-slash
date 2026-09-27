@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ShieldBashVfxConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/shield_bash_vfx_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+ground_offset = 0.05
+dust_amount = 24
+dust_lifetime = 0.45
+dust_size = 0.28
+dust_speed = 1.2
+dust_spread_degrees = 50.0
+ring_forward_offset = 1.2
+ring_radius = 1.4
+ring_thickness = 0.25
+ring_duration = 0.35
+ring_start_transparency = 0.4

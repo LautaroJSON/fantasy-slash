@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="ShieldChargeConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/shield_charge_config.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/strike_feel.gd" id="2_feel"]
+[ext_resource type="Resource" path="res://data/debuffs/stun.tres" id="3_stun"]
+
+[sub_resource type="Resource" id="Feel_bash"]
+script = ExtResource("2_feel")
+hitlag = 0.1
+shake_strength = 0.45
+
+[sub_resource type="Resource" id="Feel_empowered"]
+script = ExtResource("2_feel")
+hitlag = 0.14
+shake_strength = 0.7
+
+[sub_resource type="Resource" id="Feel_absorb"]
+script = ExtResource("2_feel")
+shake_strength = 0.2
+
+[sub_resource type="Resource" id="Feel_impact"]
+script = ExtResource("2_feel")
+hitlag = 0.06
+shake_strength = 0.25
+
+[resource]
+script = ExtResource("1_script")
+travel_time = 0.4
+capture_depth = 1.2
+drag_speed_factor = 1.1
+stall_ratio = 0.2
+guard_reduction = 0.5
+guard_arc_degrees = 120.0
+bash_range = 2.0
+bash_hit_time = 0.08
+bash_knockback_speed = 14.0
+absorb_damage_multiplier = 2.0
+empowered_ring_scale = 1.6
+impact_window = 0.6
+impact_min_speed = 2.0
+contact_distance = 1.0
+stun = ExtResource("3_stun")
+stun_duration = 1.0
+momentum_min_hits = 3
+bash_feel = SubResource("Feel_bash")
+empowered_feel = SubResource("Feel_empowered")
+absorb_feel = SubResource("Feel_absorb")
+impact_feel = SubResource("Feel_impact")
+charge_body_clip = &"shield_charge"
+bash_body_clip = &"shield_bash"

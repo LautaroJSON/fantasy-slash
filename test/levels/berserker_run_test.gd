@@ -6,8 +6,8 @@ const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.
 const BERSERKER: CharacterClassData = preload("res://data/classes/berserker/berserker.tres")
 const CLASS_CATALOG: ClassCatalog = preload("res://data/classes/class_catalog.tres")
 const SPIN: AbilityData = preload("res://data/abilities/spin/spin.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
-const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
+const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
 const KNIGHT_SWORD_MODEL: Mesh = preload("res://assets/models/weapons/knight_set/knight_sword.res")
 const FALCHION_MODEL: Mesh = preload("res://assets/models/weapons/falchion/falchion.obj")
 const STAT_FORMATS: AbilityStatFormats = preload("res://data/ui/ability_stat_formats.tres")
@@ -139,7 +139,7 @@ func test_ac193_the_berserker_run_offers_only_spin_cards() -> void:
 	var pool: Array[UpgradeCard] = (arena.get_node("WaveManager") as WaveManager).get_card_pool()
 	for upgrade: AbilityUpgradeData in SPIN.upgrades:
 		assert_bool(pool.has(upgrade)).is_true()
-	for upgrade: AbilityUpgradeData in THRUST.upgrades + SWIFT_STRIKE.upgrades:
+	for upgrade: AbilityUpgradeData in SHIELD_CHARGE.upgrades + PARRY.upgrades:
 		assert_bool(pool.has(upgrade)).is_false()
 
 

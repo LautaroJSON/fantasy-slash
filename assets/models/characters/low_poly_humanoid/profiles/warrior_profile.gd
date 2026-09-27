@@ -38,6 +38,20 @@ const SHIELD_TUCK := {
 const SHIELD_FORE := {
 	"shoulder_l": Vector3(10, -79, -51), "elbow_l": Vector3(39, 0, 0), "wrist_l": Vector3(-56, 16, 35),
 }
+## Escudo al frente a la altura del pecho, empujando: el brazo más estirado
+## que en SHIELD_COVER (Carga de escudo, docs/specs/warrior-abilities-rework.md §4.8).
+const SHIELD_BASH := {
+	"shoulder_l": Vector3(64, -22, -1), "elbow_l": Vector3(30, 0, 0), "wrist_l": Vector3(-37, -102, 111),
+}
+## Brazo de la espada al cargar: la hoja lista, adelante y a la derecha, alta,
+## así la punta no toca el piso con el torso volcado.
+const CHARGE_BLADE := {
+	"shoulder_r": Vector3(-20, -22, -12), "elbow_r": Vector3(90, 0, 0), "wrist_r": Vector3(-30, -4, -5),
+}
+## Escudo alto, cubriendo el torso y la cabeza (Parada).
+const SHIELD_BLOCK := {
+	"shoulder_l": Vector3(74, -26, -1), "elbow_l": Vector3(62, 0, 0), "wrist_l": Vector3(-37, -102, 111),
+}
 ## Muñeca del arma al marchar: la hoja un poco más alta que en reposo, porque el
 ## torso se inclina y el brazo se balancea (la punta no toca el piso).
 const WALK_WRIST := Vector3(-101, -4, -5)
@@ -66,6 +80,8 @@ func build(humanoid: LowPolyHumanoid) -> AnimationLibrary:
 	_add_jump(lib)
 	_add_hit(lib)
 	_add_attacks(lib)
+	_add_shield_charge(lib)
+	_add_parry(lib)
 	return lib
 
 
@@ -398,3 +414,104 @@ func _add_deep_thrust(lib: AnimationLibrary) -> void:
 				"torso": Vector3(-18, 18, -4)})],
 		[0.7, _stance()],
 	], false, false, _h.strike_events(0.24, 0.32, 0.46, 0.7)))
+
+
+# ---------------------------------------------------------------- HABILIDADES
+
+## Carga de escudo (docs/specs/warrior-abilities-rework.md §4.8): el torso
+## volcado detrás del escudo, que empuja al frente del pecho; zancadas cortas y
+## la espada atrás y alta, lista. m = 1 pie derecho adelante.
+func _charge_step(m: int) -> Dictionary:
+	var f := "r" if m == 1 else "l"
+	var b := "l" if m == 1 else "r"
+	return _h.pose(_h.with(_h.with(_h.with({
+		"hips_pos": Vector3(0, -0.14, 0),
+		"hips": Vector3(0, 14 * m, 0),
+		"torso": Vector3(-36, -16, 0), "neck": Vector3(30, 10, 0),
+		"hip_" + f: Vector3(52, 0, 0), "knee_" + f: Vector3(-34, 0, 0), "ankle_" + f: Vector3(-4, 0, 0),
+		"hip_" + b: Vector3(-36, 0, 0), "knee_" + b: Vector3(-50, 0, 0), "ankle_" + b: Vector3(30, 0, 0),
+	}, CHARGE_BLADE), SHIELD_BASH), {
+		"shoulder_r": Vector3(-24 if m == 1 else -16, -22, -12),
+	}))
+
+
+func _add_shield_charge(lib: AnimationLibrary) -> void:
+	lib.add_animation("shield_charge", _h.make_clip([
+		[0.0, _charge_step(1)], [0.2, _charge_step(-1)], [0.4, _charge_step(1)],
+	], true, true))
+
+	# Golpe de escudo: recoge el escudo contra el pecho y lo descarga al frente
+	# con todo el cuerpo (pico en bash_hit_time = 0.08 s), y vuelve al reposo.
+	var push := _stance(_h.with(_h.with(DEEP_STRIDE, SHIELD_BASH), {
+		"hips_pos": Vector3(0, -0.2, 0), "hips": Vector3(0, -18, 0),
+		"torso": Vector3(-32, -34, 4), "neck": Vector3(26, 40, -4),
+		"shoulder_l": Vector3(78, -14, -1), "elbow_l": Vector3(8, 0, 0),
+		"shoulder_r": Vector3(-26, -22, -12), "elbow_r": Vector3(90, 0, 0), "wrist_r": Vector3(-30, -4, -5),
+	}))
+	lib.add_animation("shield_bash", _h.make_clip([
+		[0.0, _stance(_h.with(SHIELD_COVER, {
+			"hips_pos": Vector3(0, -0.14, 0), "hips": Vector3(0, 10, 0),
+			"torso": Vector3(-28, 6, 0), "neck": Vector3(22, -4, 0),
+			"hip_l": Vector3(40, 8, -5), "knee_l": Vector3(-40, 0, 0), "ankle_l": Vector3(4, 0, 0),
+			"hip_r": Vector3(-24, 8, 5), "knee_r": Vector3(-30, 0, 0), "ankle_r": Vector3(30, 0, 0),
+			"shoulder_r": Vector3(-20, -22, -12), "elbow_r": Vector3(90, 0, 0), "wrist_r": Vector3(-30, -4, -5)}))],
+		[0.08, push],  # empujón
+		[0.16, _h.with(push, {"torso": Vector3(-34, -38, 5), "shoulder_l": Vector3(80, -12, -1)})],  # sostiene
+		[0.35, _stance()],
+	], false, false, [[0.08, "bash"]]))
+
+
+## Parada: el escudo sube de golpe y cubre el torso y la cabeza, el peso
+## adelante, la espada atrás y lista (escudo arriba en raise_time = 0.06 s).
+func _block_pose(over := {}) -> Dictionary:
+	return _stance(_h.with(_h.with(SHIELD_BLOCK, {
+		"hips_pos": Vector3(0, -0.12, 0), "hips": Vector3(0, -12, 0),
+		"torso": Vector3(-14, -22, 0), "neck": Vector3(8, 26, 0),
+		"hip_l": Vector3(36, 10, -6), "knee_l": Vector3(-40, 0, 0), "ankle_l": Vector3(4, 0, 0),
+		"hip_r": Vector3(-20, 10, 6), "knee_r": Vector3(-34, 0, 0), "ankle_r": Vector3(34, 0, 0),
+		"shoulder_r": Vector3(-6, 20, 20), "elbow_r": Vector3(100, 0, 0), "wrist_r": Vector3(-80, 0, 12),
+	}), over))
+
+
+func _add_parry(lib: AnimationLibrary) -> void:
+	var block := _block_pose()
+	lib.add_animation("shield_parry", _h.make_clip([
+		[0.0, _stance()],
+		[0.06, block],  # escudo arriba
+		[0.35, _block_pose({"torso": Vector3(-16, -24, 0), "hips_pos": Vector3(0, -0.14, 0)})],
+	], false, false, [[0.06, "raise"]]))
+
+	# Parada exitosa: empujón corto del escudo y vuelta al reposo.
+	lib.add_animation("shield_parry_success", _h.make_clip([
+		[0.0, block],
+		[0.08, _block_pose(_h.with(SHIELD_BASH, {"torso": Vector3(-22, -30, 2), "hips_pos": Vector3(0, -0.16, 0)}))],
+		[0.4, _stance()],
+	], false, true))
+
+	# Parada fallida: el escudo baja pesado y el torso cae, expuesto.
+	lib.add_animation("shield_parry_whiff", _h.make_clip([
+		[0.0, block],
+		[0.16, _stance(_h.with(SHIELD_TUCK, {
+			"hips_pos": Vector3(0, -0.16, 0), "hips": Vector3(0, 6, 0),
+			"torso": Vector3(-24, 10, 0), "neck": Vector3(18, -6, 0),
+			"hip_l": Vector3(30, 8, -6), "knee_l": Vector3(-44, 0, 0), "ankle_l": Vector3(12, 0, 0),
+			"hip_r": Vector3(-14, 8, 6), "knee_r": Vector3(-40, 0, 0), "ankle_r": Vector3(38, 0, 0),
+			"shoulder_r": Vector3(-26, -22, -12), "wrist_r": LIFTED_WRIST}))],
+		[0.4, _stance()],
+	], false, true))
+
+	# Contragolpe: desde el bloqueo, la estocada sale por el costado del escudo
+	# (extensión en riposte_hit_time = 0.15 s; la hoja barre entre 0.08 y 0.25).
+	var extended := _stance(_h.with(_h.with(DEEP_STRIDE, SHIELD_FORE), {
+		"hips_pos": Vector3(0, -0.18, 0), "hips": Vector3(0, 18, 0),
+		"torso": Vector3(-26, 34, -6), "neck": Vector3(20, -42, 4),
+		"shoulder_r": Vector3(98, -36, 6), "elbow_r": Vector3(0, 0, 0), "wrist_r": Vector3(-76, 0, 0),
+	}))
+	lib.add_animation("shield_riposte", _h.make_clip([
+		[0.0, block],
+		[0.08, _block_pose({"torso": Vector3(-10, -40, 4), "neck": Vector3(4, 46, -4),
+				"shoulder_r": Vector3(-24, 26, 28), "elbow_r": Vector3(96, 0, 0), "wrist_r": Vector3(-72, 0, 12)})],  # recoge la espada
+		[0.15, extended],  # estocada
+		[0.25, _h.with(extended, {"torso": Vector3(-28, 38, -7), "shoulder_r": Vector3(100, -38, 6)})],  # sostiene
+		[0.5, _stance()],
+	], false, false, [[0.08, "trail_on"], [0.15, "riposte"], [0.25, "trail_off"]]))

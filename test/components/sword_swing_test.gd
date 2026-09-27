@@ -3,7 +3,6 @@ extends GdUnitTestSuite
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const PLAYER_STATS: PlayerStats = preload("res://data/classes/warrior/warrior_stats.tres")
 const CONFIG: SwordSwingConfig = preload("res://data/classes/warrior/sword_swing_config.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
 ## Sweep time used by these tests: since the humanoid combo
 ## (docs/specs/humanoid-player-model.md) the basic attack no longer sweeps; the
 ## sweep is the Spin's dash slash, which passes its own arc and duration.
@@ -73,14 +72,3 @@ func test_ac92_the_sword_returns_to_the_rest_pose() -> void:
 	_swing.advance(CONFIG.recover_duration)
 	assert_vector(_pivot.position).is_equal_approx(rest_position, Vector3.ONE * 0.01)
 	assert_vector(_pivot.rotation).is_equal_approx(rest_rotation, Vector3.ONE * 0.01)
-
-
-func test_ac93_an_ability_takes_the_sword_and_cancels_the_sweep() -> void:
-	_player.basic_ability.equip(THRUST)
-	_sweep()
-	assert_bool(_player.basic_ability.try_cast()).is_true()
-	var animator: AnimationPlayer = _player.get_node("SwingPlayer") as AnimationPlayer
-	assert_str(animator.current_animation).is_equal("thrust")
-	_swing.advance(0.01)
-	assert_bool(_swing.is_swinging()).is_false()
-	assert_bool(animator.is_playing()).is_true()

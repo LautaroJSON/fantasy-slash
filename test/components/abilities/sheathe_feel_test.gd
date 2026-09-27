@@ -8,7 +8,7 @@ const SHEATHE: AbilityData = preload("res://data/abilities/sheathe/sheathe.tres"
 const CHARGE_UPGRADE: AbilityUpgradeData = preload("res://data/abilities/sheathe/upgrades/charge_speed.tres")
 const FEEDBACK: ChargeFeedbackConfig = preload("res://data/player/charge_feedback_config.tres")
 const INDICATOR_CONFIG: AbilityIndicatorConfig = preload("res://data/abilities/sheathe/sheathe_indicator_config.tres")
-const THRUST_INDICATOR_CONFIG: AbilityIndicatorConfig = preload("res://data/abilities/thrust/thrust_indicator_config.tres")
+const SHIELD_CHARGE_INDICATOR_CONFIG: AbilityIndicatorConfig = preload("res://data/abilities/shield_charge/shield_charge_indicator_config.tres")
 const STEP: float = 0.05
 const TOLERANCE: float = 0.0001
 const YAW_TOLERANCE: float = 0.01
@@ -242,5 +242,5 @@ func test_ac264_each_milestone_makes_the_body_tremble_and_it_returns_to_rest() -
 	assert_float(FEEDBACK.tremor_for(2, false)).is_greater(FEEDBACK.tremor_for(1, false))
 
 
-func test_ac266_the_thrust_outline_has_no_pulse() -> void:
-	assert_float(THRUST_INDICATOR_CONFIG.pulse_duration).is_equal(0.0)
+func test_ac266_the_shield_charge_outline_has_no_pulse() -> void:
+	assert_float(SHIELD_CHARGE_INDICATOR_CONFIG.pulse_duration).is_equal(0.0)

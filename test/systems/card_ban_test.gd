@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 
 const RULES: CardBanRules = preload("res://data/upgrades/card_ban_rules.tres")
 const CATALOG: UpgradeCatalog = preload("res://data/upgrades/upgrade_catalog.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 
 
 func test_ac67_ban_card_every_three_waves_until_the_cap() -> void:
@@ -17,7 +17,7 @@ func test_ac67_ban_card_every_three_waves_until_the_cap() -> void:
 
 
 func test_ac68_banned_cards_are_never_offered() -> void:
-	var pool: Array[UpgradeCard] = UpgradeOffer.build_pool(CATALOG, THRUST.upgrades)
+	var pool: Array[UpgradeCard] = UpgradeOffer.build_pool(CATALOG, SHIELD_CHARGE.upgrades)
 	var banned: Array[UpgradeCard] = []
 	for i: int in RULES.max_bans:
 		banned.append(pool[i])

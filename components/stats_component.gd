@@ -2,19 +2,32 @@ class_name StatsComponent
 extends Node
 ## Effective player stats: base values from PlayerStats plus the run's upgrades.
 ## Values are cached and only recalculated when an upgrade is added.
+## Global buffs (BuffData.global, e.g. Triumph) multiply MOVE_SPEED and DAMAGE
+## on read, on top of the cache (docs/specs/warrior-abilities-rework.md §4.6).
 
 signal stats_changed
 
 @export var base_stats: PlayerStats
 @export var rules: CombatRules
+## Optional: without it no buff reaches the stats.
+@export var buffs: BuffComponent
 
 var _upgrades: Array[UpgradeData] = []
 var _cache: PackedFloat64Array = PackedFloat64Array()
 
 
+func _ready() -> void:
+	if buffs != null:
+		buffs.changed.connect(stats_changed.emit)
+
+
 func get_stat(stat: PlayerStats.Stat) -> float:
 	if _cache.is_empty():
 		_recalculate()
+	if buffs != null and stat == PlayerStats.Stat.MOVE_SPEED:
+		return _cache[stat] * (1.0 + buffs.get_global_modifier(BuffModifier.Stat.MOVE_SPEED))
+	if buffs != null and stat == PlayerStats.Stat.DAMAGE:
+		return _cache[stat] * (1.0 + buffs.get_global_modifier(BuffModifier.Stat.DAMAGE))
 	return _cache[stat]
 
 

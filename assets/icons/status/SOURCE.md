@@ -18,6 +18,9 @@
 | `poison_bottle.svg` | Lorc | https://game-icons.net/1x1/lorc/poison-bottle.html | Veneno (`poison`, Aflicción) |
 | `snowflake.svg` | Lorc | https://game-icons.net/1x1/lorc/snowflake-1.html | Escarcha (`frost`, Aflicción) |
 | `acid_blob.svg` | Lorc | https://game-icons.net/1x1/lorc/acid-blob.html | Corrosión (`corrosion`, Aflicción) |
+| `knocked_out_stars.svg` | Delapouite | https://game-icons.net/1x1/delapouite/knocked-out-stars.html | Aturdido (`stun`) |
+| `crossed_swords.svg` | Lorc | https://game-icons.net/1x1/lorc/crossed-swords.html | Retado (`challenged`, Duelo de la Parada) |
+| `laurels.svg` | Lorc | https://game-icons.net/1x1/lorc/laurels.html | Triunfo (`triumph`, Duelo de la Parada) |
 
 ## Cómo agregar un ícono
 

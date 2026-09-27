@@ -10,7 +10,7 @@ const BAR_CONFIG: HealthBarConfig = preload("res://data/ui/enemy_health_bar_conf
 const NUMBER_CONFIG: DamageNumberConfig = preload("res://data/ui/damage_number_config.tres")
 const NUMBER_MATERIAL: StandardMaterial3D = preload("res://materials/damage_number_material.tres")
 const NUMBER_CRIT_MATERIAL: StandardMaterial3D = preload("res://materials/damage_number_crit_material.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const NO_CRIT_ROLL: float = 0.99
 ## Grunt capsule radius in enemy.tscn.
 const BASE_RADIUS: float = 0.4
@@ -85,11 +85,11 @@ func test_ac149_grunt_reach_is_unchanged() -> void:
 	assert_float(grunt.health.current_health).is_equal_approx(grunt.health.max_health, 0.0001)
 
 
-func test_ac149_thrust_reaches_a_big_body_beside_the_line() -> void:
-	_player.basic_ability.equip(THRUST)
-	var half_width: float = THRUST.hit_width / 2.0
-	var big: Enemy = _spawn(BIG_STATS, Vector3(half_width + 0.5, 0.0, -2.0))
-	var grunt: Enemy = _spawn(GRUNT_STATS, Vector3(-(half_width + 0.5), 0.0, -2.0))
+func test_ac149_the_shield_bash_reaches_a_big_body_beside_the_line() -> void:
+	_player.basic_ability.equip(SHIELD_CHARGE)
+	var half_width: float = SHIELD_CHARGE.hit_width / 2.0
+	var big: Enemy = _spawn(BIG_STATS, Vector3(half_width + 0.5, 0.0, -1.5))
+	var grunt: Enemy = _spawn(GRUNT_STATS, Vector3(-(half_width + 0.5), 0.0, -1.5))
 	assert_bool(_player.basic_ability.try_cast()).is_true()
 	_player.basic_ability.advance(_player.basic_ability.get_stat(AbilityData.Stat.CAST_DURATION))
 	assert_float(big.health.current_health).is_less(big.health.max_health)

@@ -126,7 +126,7 @@ func _slam(attack: LeapAttackData) -> void:
 	var target: Player = enemy.target
 	if target != null and not target.health.is_dead():
 		if attack.is_hit(enemy.global_position, enemy.get_facing(), target.global_position, enemy.get_target_padding()):
-			target.health.receive_hit(enemy.get_scaled_stats().damage * attack.damage_multiplier)
+			target.health.receive_hit_from(enemy.get_scaled_stats().damage * attack.damage_multiplier, enemy)
 	enemy.get_hands().play_strike(attack, attack.active_time)
 	enemy.get_telegraph().flash(true)
 	_phase = Phase.RECOVERY
@@ -162,3 +162,10 @@ func _target_floor_point() -> Vector3:
 ## The landing circle is not a sector.
 func get_telegraph_arcs() -> Array[float]:
 	return []
+
+
+## A stun cancels the attack in progress, interruptible or not, except in the
+## air (the jump lands on its own, as with a push).
+func stunned() -> void:
+	if is_attacking() and _phase != Phase.AIRBORNE:
+		_finish(false)

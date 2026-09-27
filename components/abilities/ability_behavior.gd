@@ -165,3 +165,17 @@ func get_dash_clip(_ability: AbilityComponent) -> StringName:
 ## changes.
 func extends_trail(_ability: AbilityComponent) -> bool:
 	return false
+
+
+## True while the weapon trail follows the blade during the cast. Abilities
+## that strike with something else, or sweep the blade only for part of the
+## cast, narrow it (docs/specs/warrior-abilities-rework.md §4.5) and call
+## AbilityComponent.notify_trail_changed() when it changes.
+func trails_while_casting(_ability: AbilityComponent) -> bool:
+	return true
+
+
+## Seconds the cast lasts from its start; AbilityComponent.set_cast_remaining()
+## may change it later (e.g. the Parry after a block).
+func cast_duration(ability: AbilityComponent) -> float:
+	return ability.get_stat(AbilityData.Stat.CAST_DURATION)

@@ -5,7 +5,8 @@ const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.tres")
 const BERSERKER: CharacterClassData = preload("res://data/classes/berserker/berserker.tres")
 const SAMURAI: CharacterClassData = preload("res://data/classes/samurai/samurai.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+## Seconds of the sweep that takes the pivot (AC603).
+const SWEEP_SECONDS: float = 0.3
 const CONFIG: PlayerAnimationConfig = preload("res://data/player/player_animation_config.tres")
 const HAND_TOLERANCE: float = 0.05
 ## Frame slack on top of the blend time, in milliseconds.
@@ -58,11 +59,12 @@ func test_ac603_the_weapon_stays_in_the_hand_during_a_strike() -> void:
 		assert_float(_distance_to_hand()).is_less_equal(HAND_TOLERANCE)
 
 
-func test_ac603_abilities_own_the_pivot_and_hand_it_back() -> void:
+## The Warrior abilities keep the weapon in the hand (warrior-abilities-rework.md,
+## AC847): the sweep of the SwordSwing is what still takes the pivot.
+func test_ac603_a_sweep_owns_the_pivot_and_hands_it_back() -> void:
 	_spawn_player(WARRIOR)
-	_player.basic_ability.equip(THRUST)
 	await _frames(20)
-	assert_bool(_player.basic_ability.try_cast()).is_true()
+	_player.sword_swing.play(_player.stats.get_stat(PlayerStats.Stat.ATTACK_ARC), SWEEP_SECONDS, 1.0)
 	await _frames(2)
 	assert_bool(_mount.is_hand_free()).is_false()
 	assert_bool(_mount.is_mounted()).is_false()

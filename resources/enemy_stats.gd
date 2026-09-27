@@ -42,6 +42,9 @@ enum Stat { DAMAGE, DEFENSE, MAX_HEALTH, ATTACK_INTERVAL, ATTACK_RANGE, MOVE_SPE
 ## Bosses: control effects (e.g. the freeze of Frost) reach it in their weaker
 ## "resisted" version (AfflictionData.resisted_debuff; docs/specs/frost-freeze.md).
 @export var resists_control: bool
+## Multiplies every stun it receives (docs/specs/warrior-abilities-rework.md):
+## 1 = full, bosses 0.3, 0 = immune.
+@export var stun_duration_scale: float = 1.0
 ## Fraction of every Affliction build-up it resists, in [0, AfflictionConfig.max_resistance]
 ## (docs/specs/affliction.md). 0 = none.
 @export var affliction_resistance: float

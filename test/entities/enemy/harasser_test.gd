@@ -9,7 +9,7 @@ const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const STATS: EnemyStats = preload("res://data/enemies/harasser_stats.tres")
 const CONFIG: HarasserConfig = preload("res://data/enemies/configs/harasser_config.tres")
 const LUNGE: LungeAttackData = preload("res://data/enemies/attacks/harasser_lunge.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const PHYSICS_FPS: float = 60.0
 
 var _registry: EnemyRegistry
@@ -108,6 +108,6 @@ func test_ac431_player_facing_and_attack_signal() -> void:
 	_player.attack_performed.connect(func() -> void: count[0] += 1)
 	assert_bool(_player.attack.try_attack_with_roll(0.99)).is_true()
 	assert_int(count[0]).is_equal(1)
-	_player.basic_ability.equip(THRUST)
+	_player.basic_ability.equip(SHIELD_CHARGE)
 	assert_bool(_player.basic_ability.try_cast()).is_true()
 	assert_int(count[0]).is_equal(2)

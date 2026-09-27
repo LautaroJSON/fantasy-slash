@@ -140,7 +140,7 @@ func _lunge(attack: LungeAttackData, delta: float) -> void:
 	var target: Player = enemy.target
 	if not _has_hit and attack.is_hit(enemy.global_position, _lunge_direction, target.global_position, enemy.get_target_padding()):
 		_has_hit = true
-		target.health.receive_hit(enemy.get_scaled_stats().damage * attack.damage_multiplier)
+		target.health.receive_hit_from(enemy.get_scaled_stats().damage * attack.damage_multiplier, enemy)
 	if _traveled >= _lunge_length - 0.001 or enemy.hit_wall():
 		_phase = Phase.RECOVERY
 		_phase_time = 0.0
@@ -190,3 +190,9 @@ func _offset_to_target() -> Vector3:
 ## The lunge is shown as a line, not a sector.
 func get_telegraph_arcs() -> Array[float]:
 	return []
+
+
+## A stun cancels the attack in progress, interruptible or not.
+func stunned() -> void:
+	if is_attacking():
+		_finish(false)

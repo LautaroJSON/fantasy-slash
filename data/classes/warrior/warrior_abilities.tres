@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" path="res://resources/ability_catalog.gd" id="1_script"]
 [ext_resource type="Script" path="res://resources/ability_data.gd" id="2_ability_script"]
-[ext_resource type="Resource" path="res://data/abilities/thrust/thrust.tres" id="3_thrust"]
-[ext_resource type="Resource" path="res://data/abilities/swift_strike/swift_strike.tres" id="4_swift_strike"]
+[ext_resource type="Resource" path="res://data/abilities/shield_charge/shield_charge.tres" id="3_shield_charge"]
+[ext_resource type="Resource" path="res://data/abilities/parry/parry.tres" id="4_parry"]
 
 [resource]
 script = ExtResource("1_script")
-abilities = Array[ExtResource("2_ability_script")]([ExtResource("3_thrust"), ExtResource("4_swift_strike")])
+abilities = Array[ExtResource("2_ability_script")]([ExtResource("3_shield_charge"), ExtResource("4_parry")])

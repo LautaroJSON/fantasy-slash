@@ -6,8 +6,8 @@ const SAMURAI: CharacterClassData = preload("res://data/classes/samurai/samurai.
 const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.tres")
 const SHEATHE: AbilityData = preload("res://data/abilities/sheathe/sheathe.tres")
 const NUKI: AbilityUniqueUpgradeData = preload("res://data/abilities/sheathe/unique/nuki.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
-const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
+const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
 const SPIN: AbilityData = preload("res://data/abilities/spin/spin.tres")
 const DISTANCE_TOLERANCE: float = 0.15
 
@@ -76,8 +76,8 @@ func _slash(ability: AbilityComponent) -> void:
 
 func test_ac355_only_sheathe_interrupts_the_dash() -> void:
 	assert_bool(SHEATHE.interrupts_dash).is_true()
-	assert_bool(THRUST.interrupts_dash).is_false()
-	assert_bool(SWIFT_STRIKE.interrupts_dash).is_false()
+	assert_bool(SHIELD_CHARGE.interrupts_dash).is_false()
+	assert_bool(PARRY.interrupts_dash).is_false()
 	assert_bool(SPIN.interrupts_dash).is_false()
 
 
@@ -121,8 +121,8 @@ func test_ac358_sheathe_on_cooldown_does_not_cut_the_dash() -> void:
 	assert_bool(ability.is_charging()).is_false()
 
 
-func test_ac359_the_warrior_thrust_still_waits_for_the_dash() -> void:
-	var ability: AbilityComponent = await _spawn(WARRIOR, THRUST)
+func test_ac359_the_warrior_shield_charge_still_waits_for_the_dash() -> void:
+	var ability: AbilityComponent = await _spawn(WARRIOR, SHIELD_CHARGE)
 	var start: Vector3 = _player.global_position
 	await _start_dash()
 	Input.action_press(&"ability_basic")
@@ -205,9 +205,13 @@ func test_ac365_with_nuki_the_dash_that_cuts_the_recovery_recharges_sheathe() ->
 	assert_bool(ability.is_on_cooldown()).is_false()
 
 
-func test_ac366_the_thrust_still_blocks_the_dash_while_cast() -> void:
-	var ability: AbilityComponent = await _spawn(WARRIOR, THRUST)
-	assert_bool(THRUST.dash_cancels_cast).is_false()
+## No ability of the game keeps the dash out any more (the thrust did): an
+## in-memory copy of the Shield Charge without dash_cancels_cast checks the rule
+## (warrior-abilities-rework.md §13).
+func test_ac366_an_ability_the_dash_cannot_cut_blocks_the_dash_while_cast() -> void:
+	var blocking: AbilityData = SHIELD_CHARGE.duplicate() as AbilityData
+	blocking.dash_cancels_cast = false
+	var ability: AbilityComponent = await _spawn(WARRIOR, blocking)
 	assert_bool(ability.try_cast()).is_true()
 	Input.action_press(&"dash")
 	await _physics_frames(2)

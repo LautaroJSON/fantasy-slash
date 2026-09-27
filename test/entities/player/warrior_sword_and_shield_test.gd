@@ -318,3 +318,24 @@ func test_ac755_the_old_sword_is_gone() -> void:
 		assert_bool(text.contains(old_name + "_") or text.contains(old_scene)).override_failure_message(path).is_false()
 	var constitution: String = FileAccess.get_file_as_string("res://docs/constitution.md")
 	assert_bool(constitution.contains("knight_sword.res") and constitution.contains("knight_shield.res")).is_true()
+
+
+# --- The Warrior abilities (warrior-abilities-rework.md)
+
+## AC848: AC751 in every sampled frame of the six ability clips (AC751 itself
+## samples every clip, and its dash and sprint frames already failed).
+func test_ac848_the_ability_clips_keep_the_shield_and_the_sword_out() -> void:
+	for clip_name: StringName in [&"shield_charge", &"shield_bash", &"shield_parry", &"shield_parry_success", &"shield_parry_whiff", &"shield_riposte"]:
+		assert_bool(_humanoid.anim.has_animation(clip_name)).override_failure_message(String(clip_name)).is_true()
+		for time: float in _clip_times(clip_name):
+			_pose(clip_name, time)
+			var hips: Vector3 = _point(_humanoid.get_joint("hips"))
+			var neck: Vector3 = _point(_humanoid.get_joint("neck"))
+			for marker: String in SHIELD_MARKERS:
+				var p: Vector3 = _marker(marker)
+				var label: String = "%s at %.2f s, %s" % [clip_name, time, marker]
+				assert_float(_segment_distance(p, hips, neck)).override_failure_message(label).is_greater(TORSO_RADIUS)
+				assert_float(p.y).override_failure_message(label).is_greater_equal(FLOOR_GAP)
+			assert_float(_marker("Center").z).override_failure_message("%s at %.2f s" % [clip_name, time]).is_less_equal(BEHIND_BACK)
+			var tip: Vector3 = _point(_sword().get_node("TrailTip") as Node3D)
+			assert_float(tip.y).override_failure_message("%s at %.2f s: sword tip" % [clip_name, time]).is_greater_equal(TIP_FLOOR_GAP)

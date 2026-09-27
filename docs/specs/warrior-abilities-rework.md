@@ -1,7 +1,7 @@
 # Feature: re-work de las habilidades del Guerrero (Carga de escudo y Parada)
 
-- **Estado:** Propuesta, revisión 2 (2026-09-27). ACs reservados: **AC801–AC850** (se usan AC801–AC849).
-- **Constitución:** `docs/constitution.md` v4.21.0 → **enmienda MINOR a 4.22.0** (Principios II, III y VII, ver §9), o la siguiente libre si otra spec cierra antes.
+- **Estado:** **Implementada** (2026-09-27). Revisión 2 aprobada por el responsable ("apruebo, implementá"). ACs reservados: **AC801–AC850** (se usan AC801–AC849).
+- **Constitución:** `docs/constitution.md` v4.21.0 → **enmienda MINOR a 4.22.0** (Principios II, III y VII, ver §9), **aplicada**.
 - **Pilar (Principio I):** **combate.**
   - **Carga de escudo** (ofensiva): una apertura que reposiciona. Llevarse enemigos contra una pared o contra otros premia leer el terreno. Si recibe un golpe de frente mientras avanza, el golpe final sale potenciado: cargar *contra* un ataque es una decisión con recompensa.
   - **Parada** (defensiva): una parada de toque. Levantar el escudo justo cuando llega un golpe telegrafiado lo anula. Fallar deja al Guerrero expuesto y con un enfriamiento largo. Las mejoras doradas convierten la parada en daño (Represalia, Contragolpe) o en impulso para la run (Duelo).
@@ -64,7 +64,7 @@
 
 *"Contundencia" y no "Conmoción del escudo", porque "Conmoción" ya es un buff del Giro.*
 
-**Cartas de stats** (`AbilityUpgradeData`): daño (+4, ×5), escalado (+5 %, ×4), enfriamiento (−0.75 s, ×4; piso 3 s) y distancia (+1 m, ×3; el tiempo del avance no cambia, así que va más rápido).
+**Cartas de stats** (`AbilityUpgradeData`): daño (+4, ×5), escalado (+5 %, ×4), enfriamiento (−1 s, ×4; piso 3 s; ver §13) y distancia (+1 m, ×3; el tiempo del avance no cambia, así que va más rápido).
 
 ### 3.2 Parada (BASIC, tecla E)
 
@@ -275,7 +275,7 @@ Estados: `WINDOW`, `SUCCESS`, `WHIFF`, `RIPOSTE`.
 | `data/debuffs/challenged.tres` | `DebuffData` | "Retado", `id = &"challenged"`, `effect = STATUS`, `duration = 6.0`, `max_stacks = 1`, `icon = crossed_swords.svg`, `icon_color = Color(0.85, 0.3, 0.6)` (magenta) |
 | `data/buffs/triumph.tres` | `BuffData` | "Triunfo", `max_stacks = 3`, `stack_duration = 8.0`, `global = true`, `expires_all_stacks = true`, `MOVE_SPEED` 0.10 y `DAMAGE` 0.10 por stack, `icon = laurels.svg`, `icon_color = Color(0.35, 0.6, 1.0)` (azul) |
 | `assets/icons/status/{knocked_out_stars,crossed_swords,laurels}.svg` | SVG | game-icons.net `delapouite/knocked-out-stars`, `lorc/crossed-swords` y `lorc/laurels`, CC BY 3.0, preparados como pide `status-icons.md` §2.3, con su fila en `SOURCE.md`. Si alguno no existe con ese nombre, se elige otro del sitio y se anota en §13 |
-| `materials/vfx/shield_dust_material.tres` | `StandardMaterial3D` | tierra `Color(0.62, 0.52, 0.4)`, unshaded, alpha ≤ 0.6 |
+| `materials/vfx/wind_dust_material.tres` y `shockwave_material.tres` (existentes) | `StandardMaterial3D` | polvo y anillo de la Carga con el tierra registrado (ver §13) |
 | `materials/vfx/block_spark_material.tres` | `StandardMaterial3D` | blanco, unshaded, aditivo, alpha ≤ 0.5 |
 | `data/enemies/{verdugo,titan,colmena}_stats.tres` | `EnemyStats` | `stun_duration_scale = 0.3` |
 | `data/classes/warrior/warrior_abilities.tres` | `AbilityCatalog` | `[shield_charge, parry]` |
@@ -452,15 +452,37 @@ Cada paso deja el proyecto abriendo y la suite sin fallas nuevas respecto de la 
 
 ## 13. Notas de implementación
 
-(Se completa al implementar: tests viejos adaptados y sus valores, íconos elegidos, desvíos aprobados.)
+**Desvíos menores respecto del texto aprobado:**
+
+1. **Carta de enfriamiento de la Carga: −1 s × 4** (no −0.75 s). Con −0.75 × 4 desde 7 s quedaba en 4 s y no llegaba al piso de 3 s; AC119 exige que el tope caiga justo en el piso (Principio III: no desperdiciar copias).
+2. **Materiales:** el polvo de la Carga usa `wind_dust_material.tres` y el anillo, `shockwave_material.tres` (el tierra registrado, ya existentes) en lugar de un `shield_dust_material.tres` nuevo. Las chispas usan un material nuevo, `materials/vfx/block_spark_material.tres` (blanco aditivo, alpha 0.5).
+3. **Recuperación de la Carga:** el golpe de escudo deja siempre `CAST_DURATION − travel_time` (0.3 s) de lanzamiento, aunque llegue antes por una pared o un boss (antes el resto del lanzamiento dependía de cuándo chocaba).
+4. **Arrastre:** los arrastrados se recalculan en cada paso (los que están en la franja). Uno que se adelanta frena por su fricción hasta que el escudo lo alcanza de nuevo, así no se aleja del jugador.
+5. **`shield_parry_success` dura 0.4 s** (no 0.15 s): el lanzamiento sigue terminando a los 0.15 s de la ventana y el resto del clip es la cola libre de `PlayerAnimator` (volver al reposo en 0.15 s se veía brusco).
+6. **Brazo de la espada en la Carga:** `CHARGE_BLADE` (la hoja adelante y a la derecha, alta). Con el brazo de reposo y el torso volcado, la punta tocaba el piso (AC848).
+7. **`AbilityComponent.advance()`:** si el behavior llama a `set_cast_remaining()` dentro de `channel()`, ese paso ya no se descuenta del nuevo resto.
+8. **Eventos de los clips:** nombres propios (`bash`, `raise`, `riposte`, `trail_on`, `trail_off`) que `_anim_event` ignora, para no disparar los eventos del combo.
+
+**Tests viejos adaptados** (lo que verifican no cambia):
+
+- Constantes `THRUST` → `SHIELD_CHARGE` y `SWIFT_STRIKE` → `PARRY` en 20 suites (§10). Valores que salen de los `.tres` nuevos: `ability_component_test` (golpe base 10.75 → 13.5, con mejoras 16.5 → 19.25, con +4 de DAÑO 10.95 → 13.9; enemigos a 1.5 m porque el rectángulo del golpe es de 2 m; AC50 con las distancias del golpe de escudo; AC52 con la Parada, que no mueve al jugador, y 40 cuadros de espera porque dura 0.75 s), `ability_run_test` (+5 → la carta de daño de la Carga), `affliction_loadout_test` AC865 (55 → 72.5: escala 1.5), `affliction_data_test` AC857 (escalas 1.5 y 2.0), `sandbox_run_test` (Lacerante → Contundencia: "(10 → 35)" → "(12 → 32)", "(2 %/s)" → "(2.0 s)", "Nv 3" → "Nv 2"), `unique_upgrade_run_test` (Reset → Contragolpe, Asesinato → Represalia: "(20 %)" → "(150 %)"), `boss_challenge_run_test` AC154/AC155 (tres cartas doradas en lugar de dos), `boss_body_test` AC149 (el golpe de escudo, enemigos a 1.5 m), `status_icons_test` AC908 (8 → 11 SVG).
+- Reescritos porque su mecanismo ya no lo usa ninguna habilidad: `weapon_mount_test` AC603 (un barrido del `SwordSwing` toma el pivote; las habilidades del Guerrero dejan la espada en la mano, AC847), `dash_cancel_test` AC366 (copia en memoria de la Carga con `dash_cancels_cast = false`), `hit_impact_abilities_test` AC938 (copia en memoria de la Parada sin `shows_hit_impact`), `upgrade_offer_test` AC54 (cada carta de la Carga mejora un stat distinto), `weapon_trail_test` AC216 (los casos de Estocada y Golpe veloz pasan a `warrior_abilities_trail_test.gd`).
+- Borrados con lo que verificaban: `thrust_indicator_test.gd`, `swift_strike_test.gd`, AC95–AC99 de `unique_upgrades_test` (Reset, Asesinato, Lacerante; AC105 pasa a las mejoras de la Parada), AC125 de `upgrade_caps_test` (tope del Golpe veloz) y AC93 de `sword_swing_test` (la Estocada tomaba la espada con el `SwingPlayer`).
+- `test/effects/readable_damage_numbers_test.gd` (de `readable-damage-numbers.md`, otra sesión en paralelo): su AC997 usaba la Estocada como habilidad sin impacto; ahora usa una copia en memoria de la Parada sin `shows_hit_impact`.
+
+**Tests nuevos:** `components/stun_test.gd` (AC804–AC811), `components/shield_guard_test.gd` (AC812–AC815), `components/abilities/shield_charge_test.gd` (AC816–AC828, AC846, AC849), `components/abilities/parry_test.gd` (AC829–AC838, AC846), `components/abilities/warrior_abilities_trail_test.gd` (AC840–AC842), `components/ability_strike_feel_test.gd` (AC839, AC843–AC845), `resources/warrior_abilities_test.gd` (AC801–AC803, AC847) y AC848 en `entities/player/warrior_sword_and_shield_test.gd`.
+
+**Íconos:** los tres propuestos existen en game-icons.net (`delapouite/knocked-out-stars`, `lorc/crossed-swords`, `lorc/laurels`).
+
+**Cierre (2026-09-27):** import sin errores; smoke test del menú y de la arena (`--quit-after 300`) sin errores; capturas de los seis clips revisadas (lateral y de tres cuartos). Suite completa: 1074 casos, 34 fallas, todas de la línea base de esta rama medida antes de empezar (33, no 15: `main` avanzó; Giro, Tajo aéreo, alcance y estela del arma, dash, oleadas, datos de clases y escudo del Guerrero), más `spin_golden_upgrades_test` AC294, que falló una vez en la corrida completa y pasa sola (2 de 2 en la copia base y en la de trabajo) y en la corrida de `components/abilities`: es intermitente y no toca código de esta spec. AC751 sigue fallando solo por los cuadros previos de `dash` y `sprint`; ninguno de los clips nuevos.
 
 ## 14. Checklist de review (constitución)
 
-- [ ] **Identidad (I):** combate (apertura con posicionamiento y absorción; parada de riesgo y recompensa).
-- [ ] **Arte (II):** primitivas y partículas; el blanco solo en chispas translúcidas y breves (enmienda); los SVG con `SOURCE.md`; materiales `.tres` compartidos.
-- [ ] **Datos (III):** tiempos, distancias, arcos, reducciones, hit lag, buffs y VFX en configs `.tres`; las únicas con `max_level` y valores por nivel; sin mutar Resources compartidos.
-- [ ] **GDScript (IV):** tipado estricto; `_physics_process` delgados.
-- [ ] **Performance (V):** pools de VFX creados al cargar; la vigilancia de choques recorre el registro sin allocations; los buffs globales se suman sin allocations.
-- [ ] **Input (VI):** solo `ability_basic` (toque), sin acciones nuevas.
-- [ ] **Combate (VII):** hit lag local sin `Engine.time_scale`; auto-apuntado al más cercano; estela solo mientras la hoja barre; los bosses se aturden menos y no cancelan su ataque.
-- [ ] **Calidad:** sin fallas nuevas respecto de la línea base; sin warnings de tipado nuevos.
+- [x] **Identidad (I):** combate (apertura con posicionamiento y absorción; parada de riesgo y recompensa).
+- [x] **Arte (II):** primitivas y partículas; el blanco solo en chispas translúcidas y breves (enmienda); los SVG con `SOURCE.md`; materiales `.tres` compartidos.
+- [x] **Datos (III):** tiempos, distancias, arcos, reducciones, hit lag, buffs y VFX en configs `.tres`; las únicas con `max_level` y valores por nivel; sin mutar Resources compartidos.
+- [x] **GDScript (IV):** tipado estricto; `_physics_process` delgados.
+- [x] **Performance (V):** pools de VFX creados al cargar; la vigilancia de choques recorre el registro sin allocations; los buffs globales se suman sin allocations.
+- [x] **Input (VI):** solo `ability_basic` (toque), sin acciones nuevas.
+- [x] **Combate (VII):** hit lag local sin `Engine.time_scale`; auto-apuntado al más cercano; estela solo mientras la hoja barre; los bosses se aturden menos y no cancelan su ataque.
+- [x] **Calidad:** sin fallas nuevas respecto de la línea base; sin warnings de tipado nuevos.

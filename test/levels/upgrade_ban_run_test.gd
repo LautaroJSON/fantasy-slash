@@ -3,7 +3,7 @@ extends GdUnitTestSuite
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
 const WAVE_CONFIG: WaveConfig = preload("res://data/waves/wave_config.tres")
 const PLAYER_STATS: PlayerStats = preload("res://data/classes/warrior/warrior_stats.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const RULES: CardBanRules = preload("res://data/upgrades/card_ban_rules.tres")
 const PICKER_CONFIG: UpgradePickerConfig = preload("res://data/ui/upgrade_picker_config.tres")
 const DAMAGE_UPGRADE: UpgradeData = preload("res://data/upgrades/damage.tres")
@@ -33,7 +33,7 @@ func before_test() -> void:
 	get_tree().paused = true
 	await get_tree().process_frame
 	var ability_picker: AbilityPicker = _arena.get_node("UI/AbilityPicker") as AbilityPicker
-	ability_picker.choose(THRUST)
+	ability_picker.choose(SHIELD_CHARGE)
 
 
 func after_test() -> void:

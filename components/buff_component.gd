@@ -3,7 +3,9 @@ extends Node
 ## Active stacking buffs of the player, kept as a list so several kinds can
 ## coexist. Adding a buff adds a stack (up to BuffData.max_stacks) and restarts
 ## its countdown; every time the countdown runs out one stack is lost and, if
-## any remain, the countdown starts again.
+## any remain, the countdown starts again (all of them at once with
+## BuffData.expires_all_stacks). Global buffs (BuffData.global) also count in
+## the player's stats: get_global_modifier() is read by StatsComponent.
 
 ## A buff was added, gained or lost a stack, expired or was cleared.
 signal changed
@@ -53,6 +55,9 @@ func advance(delta: float) -> void:
 	for i: int in range(_active.size() - 1, -1, -1):
 		var buff: ActiveBuff = _active[i]
 		buff.time_left -= delta
+		if buff.time_left <= 0.0 and buff.data.expires_all_stacks:
+			buff.stacks = 0
+			lost = true
 		while buff.time_left <= 0.0 and buff.stacks > 0:
 			buff.stacks -= 1
 			buff.time_left += buff.data.stack_duration
@@ -84,6 +89,16 @@ func get_modifier(id: StringName, stat: BuffModifier.Stat) -> float:
 	if buff == null:
 		return 0.0
 	return buff.data.get_modifier(stat, buff.stacks)
+
+
+## Total of `stat` over the active global buffs (0 when none), e.g. +0.2 of
+## DAMAGE with two stacks of Triumph.
+func get_global_modifier(stat: BuffModifier.Stat) -> float:
+	var total: float = 0.0
+	for buff: ActiveBuff in _active:
+		if buff.data.global:
+			total += buff.data.get_modifier(stat, buff.stacks)
+	return total
 
 
 ## Live list (no copy). Do not modify it.

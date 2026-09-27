@@ -187,6 +187,29 @@ func is_knocked_back() -> bool:
 	return not _knockback.is_zero_approx()
 
 
+## Stuns for `seconds` × stats.stun_duration_scale (docs/specs/warrior-abilities-rework.md):
+## it stands still (a push it had keeps sliding it). An enemy that does not
+## resist control also cancels the attack it was preparing; a boss's behavior
+## only pauses. Ignored when dead, inactive, rising or immune (scale 0).
+func stun(status: DebuffData, seconds: float) -> void:
+	var scaled: float = seconds * stats.stun_duration_scale
+	if scaled <= 0.0 or health.is_dead() or _spawn_left > 0.0 or process_mode == Node.PROCESS_MODE_DISABLED:
+		return
+	debuffs.apply(status, 1.0, scaled)
+	if not stats.resists_control:
+		_behavior.stunned()
+
+
+func is_stunned() -> bool:
+	return debuffs.is_stunned()
+
+
+## Speed of the current push (0 when not pushed); a pushed enemy that stops
+## against a wall or another enemy is what the Shield Charge stuns.
+func get_push_speed() -> float:
+	return _knockback.length()
+
+
 ## Current push velocity (read-only; decays with knockback_friction).
 func get_knockback_velocity() -> Vector3:
 	return _knockback

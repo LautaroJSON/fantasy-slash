@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="ParryConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/parry_config.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/strike_feel.gd" id="2_feel"]
+[ext_resource type="Resource" path="res://data/debuffs/challenged.tres" id="3_challenged"]
+[ext_resource type="Resource" path="res://data/buffs/triumph.tres" id="4_triumph"]
+
+[sub_resource type="Resource" id="Feel_block"]
+script = ExtResource("2_feel")
+shake_strength = 0.2
+
+[sub_resource type="Resource" id="Feel_riposte"]
+script = ExtResource("2_feel")
+hitlag = 0.12
+shake_strength = 0.5
+
+[resource]
+script = ExtResource("1_script")
+block_reduction = 1.0
+guard_arc_degrees = 120.0
+raise_time = 0.06
+success_cooldown = 1.5
+success_recovery = 0.15
+whiff_recovery = 0.4
+riposte_duration = 0.5
+riposte_hit_time = 0.15
+riposte_trail_start = 0.08
+riposte_trail_end = 0.25
+riposte_knockback_speed = 10.0
+challenged = ExtResource("3_challenged")
+triumph = ExtResource("4_triumph")
+block_feel = SubResource("Feel_block")
+riposte_feel = SubResource("Feel_riposte")
+block_spark_scale = 1.0
+parry_body_clip = &"shield_parry"
+success_body_clip = &"shield_parry_success"
+whiff_body_clip = &"shield_parry_whiff"
+riposte_body_clip = &"shield_riposte"

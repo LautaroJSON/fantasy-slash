@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://components/abilities/shield_charge_ability.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/abilities/shield_charge/shield_charge_config.tres" id="2_config"]
+[ext_resource type="Script" path="res://components/abilities/ability_rect_indicator.gd" id="3_indicator"]
+[ext_resource type="Resource" path="res://data/abilities/shield_charge/shield_charge_indicator_config.tres" id="4_indicator_config"]
+[ext_resource type="Material" path="res://materials/attack_indicator_material.tres" id="5_indicator_material"]
+[ext_resource type="Script" path="res://components/abilities/shield_bash_vfx.gd" id="6_bash_vfx"]
+[ext_resource type="Resource" path="res://data/abilities/shield_charge/shield_bash_vfx_config.tres" id="7_bash_vfx_config"]
+[ext_resource type="Material" path="res://materials/vfx/wind_dust_material.tres" id="8_dust_material"]
+[ext_resource type="Material" path="res://materials/vfx/shockwave_material.tres" id="9_ring_material"]
+[ext_resource type="Script" path="res://components/abilities/block_spark_vfx.gd" id="10_block_vfx"]
+[ext_resource type="Resource" path="res://data/abilities/parry/block_spark_config.tres" id="11_block_config"]
+[ext_resource type="Material" path="res://materials/vfx/block_spark_material.tres" id="12_spark_material"]
+
+[node name="ShieldChargeAbility" type="Node"]
+script = ExtResource("1_script")
+config = ExtResource("2_config")
+
+[node name="Indicator" type="Node3D" parent="."]
+top_level = true
+script = ExtResource("3_indicator")
+config = ExtResource("4_indicator_config")
+material = ExtResource("5_indicator_material")
+
+[node name="BashVfx" type="Node3D" parent="."]
+top_level = true
+script = ExtResource("6_bash_vfx")
+config = ExtResource("7_bash_vfx_config")
+dust_material = ExtResource("8_dust_material")
+ring_material = ExtResource("9_ring_material")
+
+[node name="BlockVfx" type="Node3D" parent="."]
+top_level = true
+script = ExtResource("10_block_vfx")
+config = ExtResource("11_block_config")
+spark_material = ExtResource("12_spark_material")

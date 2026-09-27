@@ -197,7 +197,7 @@ func _update_slam(slam: HandSlamMoveData, delta: float) -> void:
 				var target: Player = enemy.target
 				enemy.get_telegraph().flash(true)
 				if slam.is_hit(_impact_point, target.global_position):
-					target.health.receive_hit(enemy.get_scaled_stats().damage * slam.attack.damage_multiplier)
+					target.health.receive_hit_from(enemy.get_scaled_stats().damage * slam.attack.damage_multiplier, enemy)
 				_other_stage = Stage2.REST
 				_resting_hand = _index(_move_hand_left)
 		Stage2.REST:
@@ -230,7 +230,7 @@ func _update_sweep(sweep: SweepMoveData, delta: float) -> void:
 			var target: Player = enemy.target
 			if not _has_hit and sweep.is_hit(enemy.global_position, enemy.get_facing(), target.global_position, enemy.get_target_padding()):
 				_has_hit = true
-				target.health.receive_hit(enemy.get_scaled_stats().damage * sweep.attack.damage_multiplier)
+				target.health.receive_hit_from(enemy.get_scaled_stats().damage * sweep.attack.damage_multiplier, enemy)
 			if _time >= sweep.attack.active_time:
 				_time -= sweep.attack.active_time
 				_other_stage = Stage2.RECOVERY

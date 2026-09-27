@@ -5,7 +5,7 @@ const TestWorld := preload("res://test/helpers/test_world.gd")
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const SAMURAI: CharacterClassData = preload("res://data/classes/samurai/samurai.tres")
 const SHEATHE: AbilityData = preload("res://data/abilities/sheathe/sheathe.tres")
-const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
+const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
 const SLOT_CONFIG: AbilitySlotViewConfig = preload("res://data/ui/ability_slot_view_config.tres")
 const STEPS: int = 48
 const HALF: float = 10.0
@@ -84,7 +84,7 @@ func test_ac347_square_sector_reaches_the_corners() -> void:
 
 
 func test_ac348_ability_clock_replaces_the_cooldown_ring() -> void:
-	_player.basic_ability.equip(SWIFT_STRIKE)
+	_player.basic_ability.equip(PARRY)
 	var slot: AbilitySlotView = _make_slot()
 	slot.advance(0.0)
 	assert_float(slot.get_clock_fraction()).is_equal(0.0)

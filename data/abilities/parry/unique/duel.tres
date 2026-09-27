@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityUniqueUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_unique_upgrade_data.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/debuffs/challenged.tres" id="2_challenged"]
+[ext_resource type="Resource" path="res://data/buffs/triumph.tres" id="3_triumph"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"duel"
+max_level = 1
+debuff = ExtResource("2_challenged")
+buff = ExtResource("3_triumph")
+title = "Duelo"
+description = "Quien golpea tu Parada queda Retado 6 s.
+Si muere Retado, ganás un stack de Triunfo:
++10 % de velocidad y +10 % de daño por stack
+(máx. 3, 8 s; cada muerte reinicia el tiempo)"

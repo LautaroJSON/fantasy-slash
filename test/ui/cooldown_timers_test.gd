@@ -7,7 +7,7 @@ const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const SAMURAI: CharacterClassData = preload("res://data/classes/samurai/samurai.tres")
 const SHEATHE: AbilityData = preload("res://data/abilities/sheathe/sheathe.tres")
-const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
+const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
 const TEXT_CONFIG: CooldownTextConfig = preload("res://data/ui/cooldown_text_config.tres")
 const SLOT_CONFIG: AbilitySlotViewConfig = preload("res://data/ui/ability_slot_view_config.tres")
 const StatusOverlayProbe := preload("res://test/helpers/status_overlay_probe.gd")
@@ -70,7 +70,7 @@ func test_ac317_format_rounds_up_with_tenths_below_ten_seconds() -> void:
 
 
 func test_ac318_slot_shows_remaining_seconds_instead_of_the_key() -> void:
-	_player.basic_ability.equip(SWIFT_STRIKE)
+	_player.basic_ability.equip(PARRY)
 	var slot: AbilitySlotView = _make_slot()
 	slot.advance(0.0)
 	assert_str(slot.get_time_text()).is_equal("")
@@ -90,7 +90,7 @@ func test_ac318_slot_shows_remaining_seconds_instead_of_the_key() -> void:
 
 
 func test_ac319_slot_pulses_when_the_cooldown_ends() -> void:
-	_player.basic_ability.equip(SWIFT_STRIKE)
+	_player.basic_ability.equip(PARRY)
 	var slot: AbilitySlotView = _make_slot()
 	slot.advance(0.0)
 	assert_bool(slot.is_pulsing()).is_false()

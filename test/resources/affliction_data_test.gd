@@ -85,8 +85,8 @@ func test_ac857_every_source_has_an_affliction_scale() -> void:
 		"res://data/classes/berserker/berserker_combo.tres": 2.3,
 		"res://data/classes/samurai/samurai_combo.tres": 0.8,
 		"res://data/classes/berserker/air_slash_config.tres": 2.3,
-		"res://data/abilities/thrust/thrust.tres": 1.0,
-		"res://data/abilities/swift_strike/swift_strike.tres": 1.0,
+		"res://data/abilities/shield_charge/shield_charge.tres": 1.5,
+		"res://data/abilities/parry/parry.tres": 2.0,
 		"res://data/abilities/spin/spin.tres": 0.4,
 		"res://data/abilities/sheathe/sheathe.tres": 2.0,
 	}

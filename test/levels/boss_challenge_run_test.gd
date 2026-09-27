@@ -2,9 +2,10 @@ extends GdUnitTestSuite
 
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
 const WAVE_CONFIG: WaveConfig = preload("res://data/waves/wave_config.tres")
-const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
-const RESET: AbilityUniqueUpgradeData = preload("res://data/abilities/swift_strike/unique/reset.tres")
-const EXECUTE: AbilityUniqueUpgradeData = preload("res://data/abilities/swift_strike/unique/execute.tres")
+const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
+const RIPOSTE: AbilityUniqueUpgradeData = preload("res://data/abilities/parry/unique/riposte.tres")
+const RETRIBUTION: AbilityUniqueUpgradeData = preload("res://data/abilities/parry/unique/retribution.tres")
+const DUEL: AbilityUniqueUpgradeData = preload("res://data/abilities/parry/unique/duel.tres")
 const DAMAGE_UPGRADE: UpgradeData = preload("res://data/upgrades/damage.tres")
 const TITAN: BossChallengeData = preload("res://data/enemies/boss_challenges/titan.tres")
 const COLMENA: BossChallengeData = preload("res://data/enemies/boss_challenges/colmena.tres")
@@ -37,7 +38,7 @@ func before_test() -> void:
 	get_tree().paused = true
 	await get_tree().process_frame
 	var ability_picker: AbilityPicker = _arena.get_node("UI/AbilityPicker") as AbilityPicker
-	ability_picker.choose(SWIFT_STRIKE)
+	ability_picker.choose(PARRY)
 
 
 func after_test() -> void:
@@ -135,14 +136,16 @@ func test_ac154_clearing_a_boss_offers_every_golden_card() -> void:
 	_kill_all_active()
 	var offered: Array[UpgradeCard] = _picker.get_offered()
 	assert_int(offered.size()).is_equal(WAVE_CONFIG.cards_per_offer)
-	assert_bool(offered.has(EXECUTE)).is_true()
-	assert_bool(offered.has(RESET)).is_true()
-	assert_int(_count_unique(offered)).is_equal(2)
+	assert_bool(offered.has(RETRIBUTION)).is_true()
+	assert_bool(offered.has(RIPOSTE)).is_true()
+	assert_bool(offered.has(DUEL)).is_true()
+	assert_int(_count_unique(offered)).is_equal(PARRY.unique_upgrades.size())
 
 
 func test_ac155_boss_offer_is_normal_without_golden_cards_left() -> void:
-	_run_state.ban(EXECUTE)
-	_player.apply_upgrade(RESET)
+	_run_state.ban(RETRIBUTION)
+	_player.apply_upgrade(RIPOSTE)
+	_player.apply_upgrade(DUEL)
 	_force_boss(TITAN)
 	_kill_all_active()
 	var offered: Array[UpgradeCard] = _picker.get_offered()
@@ -264,7 +267,7 @@ func test_ac538_clearing_minions_then_the_colmena_ends_the_wave() -> void:
 	boss.health.receive_hit(LETHAL_HIT)
 	assert_int(_registry.alive_count()).is_equal(0)
 	var offered: Array[UpgradeCard] = _picker.get_offered()
-	assert_bool(offered.has(EXECUTE)).is_true()
+	assert_bool(offered.has(RETRIBUTION)).is_true()
 
 
 func test_ac539_the_colmena_dying_takes_its_minions() -> void:

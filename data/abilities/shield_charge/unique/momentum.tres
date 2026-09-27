@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AbilityUniqueUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_unique_upgrade_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"momentum"
+max_level = 1
+level_values = Array[float]([0.5])
+title = "Impulso"
+description = "Si el golpe de escudo alcanza a 3 o más enemigos,
+el enfriamiento que queda se reduce a la mitad"

@@ -5,7 +5,7 @@ const WAVE_CONFIG: WaveConfig = preload("res://data/waves/wave_config.tres")
 const PLAYER_STATS: PlayerStats = preload("res://data/classes/warrior/warrior_stats.tres")
 const DAMAGE_UPGRADE: UpgradeData = preload("res://data/upgrades/damage.tres")
 const HEALTH_UPGRADE: UpgradeData = preload("res://data/upgrades/max_health.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const RAGE: RageConfig = preload("res://data/enemies/rage/rage_config.tres")
 const PACE: EnemyPaceConfig = preload("res://data/enemies/enemy_pace_config.tres")
 const LETHAL_HIT: float = 100000.0
@@ -33,7 +33,7 @@ func before_test() -> void:
 	get_tree().paused = true
 	await get_tree().process_frame
 	var ability_picker: AbilityPicker = _arena.get_node("UI/AbilityPicker") as AbilityPicker
-	ability_picker.choose(THRUST)
+	ability_picker.choose(SHIELD_CHARGE)
 
 
 func after_test() -> void:

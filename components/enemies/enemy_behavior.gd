@@ -55,3 +55,9 @@ func get_telegraph_arcs() -> Array[float]:
 ## True from the start of a windup to the end of its recovery.
 func is_attacking() -> bool:
 	return false
+
+
+## The enemy was stunned (Enemy.stun; only enemies that do not resist control):
+## cancel the attack in progress so a stun always stops the hit it was preparing.
+func stunned() -> void:
+	pass

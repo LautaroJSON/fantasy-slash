@@ -8,7 +8,7 @@ const SHEATHE: AbilityData = preload("res://data/abilities/sheathe/sheathe.tres"
 const SHEATHE_CONFIG: SheatheConfig = preload("res://data/abilities/sheathe/sheathe_config.tres")
 const DAMAGE_UPGRADE: AbilityUpgradeData = preload("res://data/abilities/sheathe/upgrades/damage.tres")
 const CHARGE_UPGRADE: AbilityUpgradeData = preload("res://data/abilities/sheathe/upgrades/charge_speed.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const SPIN: AbilityData = preload("res://data/abilities/spin/spin.tres")
 const ENEMY_HEALTH: float = 40.0
 const STEP: float = 0.05
@@ -357,7 +357,7 @@ func test_ac252_damage_and_charge_speed_upgrades() -> void:
 
 func test_ac253_press_cast_abilities_still_cast_on_the_press() -> void:
 	_ability.set_physics_process(false)
-	_ability.equip(THRUST)
+	_ability.equip(SHIELD_CHARGE)
 	assert_bool(_ability.try_cast()).is_true()
 	assert_bool(_ability.is_charging()).is_false()
 	assert_bool(_ability.is_casting()).is_true()

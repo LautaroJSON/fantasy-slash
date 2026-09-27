@@ -238,7 +238,7 @@ func _try_hit(attack: EnemyAttackData, multiplier: float) -> void:
 	if _has_hit or not attack.is_hit(enemy.global_position, enemy.get_facing(), target.global_position, enemy.get_target_padding()):
 		return
 	_has_hit = true
-	target.health.receive_hit(enemy.get_scaled_stats().damage * multiplier)
+	target.health.receive_hit_from(enemy.get_scaled_stats().damage * multiplier, enemy)
 
 
 # --- Shockwave ---------------------------------------------------------------
@@ -300,7 +300,7 @@ func _update_rings(delta: float) -> void:
 			continue
 		if _wave.is_hit(_wave_center, _ring_radius[i], target.global_position):
 			_ring_hit[i] = true
-			target.health.receive_hit(enemy.get_scaled_stats().damage * _wave.attack.damage_multiplier)
+			target.health.receive_hit_from(enemy.get_scaled_stats().damage * _wave.attack.damage_multiplier, enemy)
 
 
 func _pose_ring(index: int) -> void:
@@ -350,7 +350,7 @@ func _hold(delta: float) -> void:
 		return
 	var target: Player = enemy.target
 	target.end_hold()
-	target.health.receive_hit(enemy.get_scaled_stats().damage * grab.slam_multiplier)
+	target.health.receive_hit_from(enemy.get_scaled_stats().damage * grab.slam_multiplier, enemy)
 	_begin_recovery(_scaled(grab.attack.recovery_time))
 
 

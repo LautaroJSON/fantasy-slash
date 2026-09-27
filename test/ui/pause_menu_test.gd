@@ -3,7 +3,7 @@ extends GdUnitTestSuite
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
 const DISPLAY_TABLE: StatDisplayTable = preload("res://data/ui/stat_display_table.tres")
 const DAMAGE_UPGRADE: UpgradeData = preload("res://data/upgrades/damage.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const LETHAL_HIT: float = 100000.0
 const LEFT_COLUMN: Array[PlayerStats.Stat] = [
 	PlayerStats.Stat.DAMAGE, PlayerStats.Stat.CRIT_CHANCE, PlayerStats.Stat.CRIT_DAMAGE,
@@ -39,7 +39,7 @@ func before_test() -> void:
 	await get_tree().process_frame
 	# The run starts once the ability is chosen.
 	var ability_picker: AbilityPicker = _arena.get_node("UI/AbilityPicker") as AbilityPicker
-	ability_picker.choose(THRUST)
+	ability_picker.choose(SHIELD_CHARGE)
 
 
 func after_test() -> void:

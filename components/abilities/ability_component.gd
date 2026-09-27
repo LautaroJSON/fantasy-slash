@@ -19,6 +19,10 @@ signal empowered_changed(active: bool)
 ## Emitted when is_trailing() may have changed outside the cast (e.g. the
 ## Spin's dash slash starts or ends).
 signal trail_changed
+## A strike of the ability landed (docs/specs/warrior-abilities-rework.md §4.4):
+## HitstopComponent pauses the clip, freezes `enemies` and shakes the camera.
+## `enemies` is the behavior's buffer (read it, do not keep it); empty = only the shake.
+signal struck(feel: StrikeFeel, enemies: Array[Enemy])
 
 ## Float tolerance when comparing charge times (the steps add up only
 ## approximately). Structural, not a design value.
@@ -52,6 +56,8 @@ const TIME_EPSILON: float = 0.0001
 @export var hitstop: HitstopConfig
 ## Lets abilities pause the player's dash clip on impact (e.g. the Spin's dash slash).
 @export var animator: PlayerAnimator
+## Lets abilities raise the player's frontal block (e.g. the Parry).
+@export var guard: ShieldGuard
 
 var _data: AbilityData = null
 var _behavior: AbilityBehavior = null
@@ -69,6 +75,8 @@ var _released_charge_ratio: float = 0.0
 ## Milestones already reached by the current charge.
 var _milestones_reached: int = 0
 var _full_charge_reached: bool = false
+## set_cast_remaining() ran during this step: the step is not subtracted again.
+var _cast_rewritten: bool = false
 
 
 func _physics_process(delta: float) -> void:
@@ -340,10 +348,10 @@ func get_dash_clip() -> StringName:
 func is_trailing() -> bool:
 	if _behavior == null:
 		return false
-	return is_casting() or _behavior.extends_trail(self)
+	return (is_casting() and _behavior.trails_while_casting(self)) or _behavior.extends_trail(self)
 
 
-## Behaviors call it when extends_trail() changes.
+## Behaviors call it when extends_trail() or trails_while_casting() changes.
 func notify_trail_changed() -> void:
 	trail_changed.emit()
 
@@ -405,6 +413,20 @@ func report_hit(enemy: Enemy, applied: float, is_crit: bool = false) -> void:
 	enemy_hit.emit(enemy, applied, is_crit)
 
 
+## Called by behaviors once per strike, after its report_hit() calls.
+func report_strike(feel: StrikeFeel, enemies: Array[Enemy]) -> void:
+	struck.emit(feel, enemies)
+
+
+## Seconds left of the running cast from now on (e.g. the Parry shortens it
+## after a block or lengthens it for its riposte). Nothing when not casting.
+func set_cast_remaining(seconds: float) -> void:
+	if not is_casting():
+		return
+	_cast_left = maxf(seconds, 0.0)
+	_cast_rewritten = true
+
+
 func _start_charge() -> void:
 	_charging = true
 	_charge_elapsed = 0.0
@@ -417,7 +439,7 @@ func _start_charge() -> void:
 func _start_cast() -> void:
 	_cooldown_total = get_stat(AbilityData.Stat.COOLDOWN)
 	_cooldown_left = _cooldown_total
-	_cast_left = get_stat(AbilityData.Stat.CAST_DURATION)
+	_cast_left = _behavior.cast_duration(self)
 	_behavior.begin(self)
 	cast_started.emit()
 
@@ -449,8 +471,10 @@ func _reach_milestones() -> void:
 func _advance_cast(delta: float) -> void:
 	if not is_casting():
 		return
+	_cast_rewritten = false
 	_behavior.channel(self, minf(delta, _cast_left))
-	_cast_left -= delta
+	if not _cast_rewritten:
+		_cast_left -= delta
 	if _cast_left <= 0.0:
 		_cast_left = 0.0
 		_behavior.release(self)

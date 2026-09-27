@@ -8,6 +8,9 @@ signal died
 signal damaged(amount: float)
 
 @export var rules: CombatRules
+## Frontal block of the owner (docs/specs/warrior-abilities-rework.md); optional:
+## only the player has one.
+@export var guard: ShieldGuard
 
 var max_health: float = 0.0
 var defense: float = 0.0
@@ -45,6 +48,18 @@ func receive_hit(raw: float) -> float:
 		return 0.0
 	var mitigated: float = DamageMath.mitigate(raw, get_effective_defense(), rules.min_damage_after_defense)
 	return _apply_damage(mitigated * (1.0 - damage_reduction))
+
+
+## A hit of an enemy on the owner: the guard, when raised and facing the
+## attacker, absorbs its share first. A hit absorbed whole removes nothing
+## and emits no `damaged` (no flicker, no hit clip). Returns the damage applied.
+func receive_hit_from(raw: float, attacker: Enemy) -> float:
+	if is_invulnerable or _is_dead:
+		return 0.0
+	var left: float = raw if guard == null else guard.absorb(raw, attacker)
+	if left <= 0.0:
+		return 0.0
+	return receive_hit(left)
 
 
 ## Damage that ignores defense (e.g. bleeding). Returns the damage applied.

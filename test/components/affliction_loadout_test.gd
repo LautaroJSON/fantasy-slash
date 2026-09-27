@@ -7,7 +7,7 @@ const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.tres")
 const BERSERKER: CharacterClassData = preload("res://data/classes/berserker/berserker.tres")
 const SAMURAI: CharacterClassData = preload("res://data/classes/samurai/samurai.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const VERDUGO: EnemyStats = preload("res://data/enemies/verdugo_stats.tres")
 const POISON_BASIC: AfflictionUpgradeData = preload("res://data/afflictions/cards/poison_basic_attack.tres")
 const POISON_ABILITY: AfflictionUpgradeData = preload("res://data/afflictions/cards/poison_ability.tres")
@@ -96,7 +96,7 @@ func test_ac864_each_card_only_takes_its_source() -> void:
 
 func test_ac865_one_affliction_two_sources_one_bar() -> void:
 	_spawn_player(WARRIOR)
-	_player.basic_ability.equip(THRUST)
+	_player.basic_ability.equip(SHIELD_CHARGE)
 	var enemy: Enemy = _spawn_enemy(Vector3.ZERO)
 	_player.apply_upgrade(POISON_BASIC)
 	_player.apply_upgrade(POISON_ABILITY)
@@ -104,7 +104,8 @@ func test_ac865_one_affliction_two_sources_one_bar() -> void:
 	_combo_hit(enemy)
 	assert_float(enemy.afflictions.get_buildup(0)).is_equal_approx(20.0, 0.001)
 	_ability_hit(enemy)
-	assert_float(enemy.afflictions.get_buildup(0)).is_equal_approx(55.0, 0.001)
+	# 20 + 35 x the Shield Charge affliction_scale 1.5 (the thrust had 1.0: 55).
+	assert_float(enemy.afflictions.get_buildup(0)).is_equal_approx(72.5, 0.001)
 
 
 func test_ac866_a_hit_fills_only_the_bars_of_its_source() -> void:

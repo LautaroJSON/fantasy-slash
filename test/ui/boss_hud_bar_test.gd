@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 ## boss-titan: the Titán is the single boss of reference (the Coloso is gone; AC498).
 const TITAN: BossChallengeData = preload("res://data/enemies/boss_challenges/titan.tres")
 const COLMENA: BossChallengeData = preload("res://data/enemies/boss_challenges/colmena.tres")
@@ -33,7 +33,7 @@ func before_test() -> void:
 	get_tree().paused = true
 	await get_tree().process_frame
 	var ability_picker: AbilityPicker = _arena.get_node("UI/AbilityPicker") as AbilityPicker
-	ability_picker.choose(THRUST)
+	ability_picker.choose(SHIELD_CHARGE)
 
 
 func after_test() -> void:

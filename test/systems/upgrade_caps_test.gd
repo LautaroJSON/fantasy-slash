@@ -3,8 +3,8 @@ extends GdUnitTestSuite
 const CATALOG: UpgradeCatalog = preload("res://data/upgrades/upgrade_catalog.tres")
 const PLAYER_STATS: PlayerStats = preload("res://data/classes/warrior/warrior_stats.tres")
 const RULES: CombatRules = preload("res://data/combat/combat_rules.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
-const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
+const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
 const DAMAGE_UPGRADE: UpgradeData = preload("res://data/upgrades/damage.tres")
 const EPSILON: float = 0.0001
@@ -23,13 +23,13 @@ func _floor_of(ability: AbilityData, stat: AbilityData.Stat) -> float:
 func test_ac119_every_stat_card_declares_a_cap() -> void:
 	for upgrade: UpgradeData in CATALOG.upgrades:
 		assert_int(upgrade.max_stacks).override_failure_message(upgrade.title).is_greater(0)
-	for ability: AbilityData in [THRUST, SWIFT_STRIKE]:
+	for ability: AbilityData in [SHIELD_CHARGE, PARRY]:
 		for upgrade: AbilityUpgradeData in ability.upgrades:
 			assert_int(upgrade.max_stacks).override_failure_message(upgrade.title).is_greater(0)
 
 
 func test_ac119_ability_speed_and_cooldown_caps_land_exactly_on_the_floor() -> void:
-	for ability: AbilityData in [THRUST, SWIFT_STRIKE]:
+	for ability: AbilityData in [SHIELD_CHARGE, PARRY]:
 		for upgrade: AbilityUpgradeData in ability.upgrades:
 			if upgrade.amount >= 0.0:
 				continue
@@ -56,7 +56,7 @@ func test_ac120_a_capped_card_leaves_the_pool_and_is_not_applied_again() -> void
 	add_child(arena)
 	get_tree().paused = true
 	await get_tree().process_frame
-	(arena.get_node("UI/AbilityPicker") as AbilityPicker).choose(THRUST)
+	(arena.get_node("UI/AbilityPicker") as AbilityPicker).choose(SHIELD_CHARGE)
 	var player: Player = arena.get_node("Player") as Player
 	var wave_manager: WaveManager = arena.get_node("WaveManager") as WaveManager
 	for i: int in DAMAGE_UPGRADE.max_stacks:
@@ -68,13 +68,6 @@ func test_ac120_a_capped_card_leaves_the_pool_and_is_not_applied_again() -> void
 		_capped_value(PLAYER_STATS.damage, DAMAGE_UPGRADE.amount, DAMAGE_UPGRADE.max_stacks), EPSILON)
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-
-
-func test_ac125_swift_strike_speed_cap_reaches_the_floor() -> void:
-	var speed: AbilityUpgradeData = SWIFT_STRIKE.upgrades[AbilityData.Stat.CAST_DURATION]
-	var capped: float = _capped_value(SWIFT_STRIKE.cast_duration, speed.amount, speed.max_stacks)
-	assert_float(capped).is_equal_approx(0.12, EPSILON)
-	assert_float(capped).is_equal_approx(SWIFT_STRIKE.min_cast_duration, EPSILON)
 
 
 func _card_for(stat: PlayerStats.Stat) -> UpgradeData:

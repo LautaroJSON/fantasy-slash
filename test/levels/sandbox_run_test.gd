@@ -4,8 +4,8 @@ const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
 const WAVE_CONFIG: WaveConfig = preload("res://data/waves/wave_config.tres")
 const RULES: CombatRules = preload("res://data/combat/combat_rules.tres")
 const PLAYER_STATS: PlayerStats = preload("res://data/classes/warrior/warrior_stats.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
-const LACERATING: AbilityUniqueUpgradeData = preload("res://data/abilities/thrust/unique/lacerating.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
+const CONCUSSIVE: AbilityUniqueUpgradeData = preload("res://data/abilities/shield_charge/unique/concussive.tres")
 const DAMAGE_UPGRADE: UpgradeData = preload("res://data/upgrades/damage.tres")
 const CRIT_UPGRADE: UpgradeData = preload("res://data/upgrades/crit_chance.tres")
 const LETHAL_HIT: float = 100000.0
@@ -36,7 +36,7 @@ func before_test() -> void:
 	get_tree().paused = true
 	await get_tree().process_frame
 	var ability_picker: AbilityPicker = _arena.get_node("UI/AbilityPicker") as AbilityPicker
-	ability_picker.choose(THRUST)
+	ability_picker.choose(SHIELD_CHARGE)
 
 
 func after_test() -> void:
@@ -91,27 +91,27 @@ func test_ac113_plus_and_minus_change_the_stats() -> void:
 
 func test_ac114_unique_upgrades_stop_at_their_max_level() -> void:
 	_pause.open()
-	for i: int in LACERATING.max_level:
-		_panel.add(LACERATING)
-	assert_str(_panel.get_count_text(LACERATING)).is_equal("%d/%d" % [LACERATING.max_level, LACERATING.max_level])
-	assert_bool(_panel.is_plus_enabled(LACERATING)).is_false()
-	_panel.add(LACERATING)
-	assert_int(_player.basic_ability.get_unique_level(LACERATING.id)).is_equal(LACERATING.max_level)
-	_panel.remove(LACERATING)
-	assert_int(_player.basic_ability.get_unique_level(LACERATING.id)).is_equal(LACERATING.max_level - 1)
-	assert_bool(_panel.is_plus_enabled(LACERATING)).is_true()
+	for i: int in CONCUSSIVE.max_level:
+		_panel.add(CONCUSSIVE)
+	assert_str(_panel.get_count_text(CONCUSSIVE)).is_equal("%d/%d" % [CONCUSSIVE.max_level, CONCUSSIVE.max_level])
+	assert_bool(_panel.is_plus_enabled(CONCUSSIVE)).is_false()
+	_panel.add(CONCUSSIVE)
+	assert_int(_player.basic_ability.get_unique_level(CONCUSSIVE.id)).is_equal(CONCUSSIVE.max_level)
+	_panel.remove(CONCUSSIVE)
+	assert_int(_player.basic_ability.get_unique_level(CONCUSSIVE.id)).is_equal(CONCUSSIVE.max_level - 1)
+	assert_bool(_panel.is_plus_enabled(CONCUSSIVE)).is_true()
 
 
 func test_ac115_reset_returns_to_the_base_build() -> void:
 	_pause.open()
 	_panel.add(DAMAGE_UPGRADE)
-	_panel.add(THRUST.upgrades[0])
-	_panel.add(LACERATING)
+	_panel.add(SHIELD_CHARGE.upgrades[0])
+	_panel.add(CONCUSSIVE)
 	_panel.reset_all()
 	assert_int(_player.stats.get_upgrades().size()).is_equal(0)
 	assert_int(_player.basic_ability.get_upgrades().size()).is_equal(0)
-	assert_int(_player.basic_ability.get_unique_level(LACERATING.id)).is_equal(0)
-	assert_float(_player.basic_ability.get_stat(AbilityData.Stat.BASE_DAMAGE)).is_equal_approx(THRUST.base_damage, 0.0001)
+	assert_int(_player.basic_ability.get_unique_level(CONCUSSIVE.id)).is_equal(0)
+	assert_float(_player.basic_ability.get_stat(AbilityData.Stat.BASE_DAMAGE)).is_equal_approx(SHIELD_CHARGE.base_damage, 0.0001)
 	assert_str(_pause.get_value_text(PlayerStats.Stat.DAMAGE)).is_equal("15.0")
 
 
@@ -128,21 +128,21 @@ func test_ac121_stat_cards_stop_at_their_cap() -> void:
 
 func test_ac122_rows_show_base_and_current_values() -> void:
 	_pause.open()
-	var thrust_damage: AbilityUpgradeData = THRUST.upgrades[AbilityData.Stat.BASE_DAMAGE]
-	assert_str(_panel.get_value_text(thrust_damage)).is_equal("(10 → 10)")
+	var charge_damage: AbilityUpgradeData = SHIELD_CHARGE.upgrades[AbilityData.Stat.BASE_DAMAGE]
+	assert_str(_panel.get_value_text(charge_damage)).is_equal("(12 → 12)")
 	for i: int in 5:
-		_panel.add(thrust_damage)
+		_panel.add(charge_damage)
 		_panel.add(CRIT_UPGRADE)
-	assert_str(_panel.get_value_text(thrust_damage)).is_equal("(10 → 35)")
+	assert_str(_panel.get_value_text(charge_damage)).is_equal("(12 → 32)")
 	assert_str(_panel.get_value_text(CRIT_UPGRADE)).is_equal("(5 % → 30 %)")
 
 
 func test_ac123_unique_rows_show_their_effect() -> void:
 	_pause.open()
-	assert_str(_panel.get_value_text(LACERATING)).is_equal("(—)")
-	_panel.add(LACERATING)
-	_panel.add(LACERATING)
-	assert_str(_panel.get_value_text(LACERATING)).is_equal("(2 %/s)")
+	assert_str(_panel.get_value_text(CONCUSSIVE)).is_equal("(—)")
+	_panel.add(CONCUSSIVE)
+	_panel.add(CONCUSSIVE)
+	assert_str(_panel.get_value_text(CONCUSSIVE)).is_equal("(2.0 s)")
 
 
 func test_ac124_name_tooltip_summarises_the_card() -> void:
@@ -150,7 +150,7 @@ func test_ac124_name_tooltip_summarises_the_card() -> void:
 	var tooltip: String = _panel.get_name_tooltip(DAMAGE_UPGRADE)
 	assert_str(tooltip).contains(DAMAGE_UPGRADE.description)
 	assert_str(tooltip).contains(str(DAMAGE_UPGRADE.max_stacks))
-	assert_str(_panel.get_name_tooltip(LACERATING)).contains("Nv 3")
+	assert_str(_panel.get_name_tooltip(CONCUSSIVE)).contains("Nv 2")
 
 
 ## Replaces AC116 (the HUD label): the mode is shown in the pause menu.

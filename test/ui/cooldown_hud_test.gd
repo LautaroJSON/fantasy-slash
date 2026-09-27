@@ -9,7 +9,7 @@ const BOSS_BAR_CONFIG: BossBarConfig = preload("res://data/ui/boss_bar_config.tr
 const TITAN: BossChallengeData = preload("res://data/enemies/boss_challenges/titan.tres")
 const CONCUSSION: BuffData = preload("res://data/buffs/concussion.tres")
 const WEAKEN: DebuffData = preload("res://data/debuffs/weaken.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const BLEED: DebuffData = preload("res://data/debuffs/bleed.tres")
 const LETHAL_HIT: float = 100000.0
 const TOLERANCE: float = 0.0001
@@ -66,7 +66,7 @@ func test_ac322_ac906_buff_shows_stacks_and_clock_without_time() -> void:
 ## Picks an ability (starts the run), clears wave 1 and forces the Titán at wave 4 (AC499).
 func _start_titan() -> void:
 	var ability_picker: AbilityPicker = _arena.get_node("UI/AbilityPicker") as AbilityPicker
-	ability_picker.choose(THRUST)
+	ability_picker.choose(SHIELD_CHARGE)
 	var registry: EnemyRegistry = _arena.get_node("EnemyRegistry") as EnemyRegistry
 	var run_state: RunState = _arena.get_node("RunState") as RunState
 	var wave_manager: WaveManager = _arena.get_node("WaveManager") as WaveManager

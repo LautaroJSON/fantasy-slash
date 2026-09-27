@@ -3,7 +3,7 @@ extends GdUnitTestSuite
 ## offers, cap, Rage, boss HUD rows, status icon, pause and violet cards.
 
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const TITAN: BossChallengeData = preload("res://data/enemies/boss_challenges/titan.tres")
 const AFFLICTION_CATALOG: AfflictionCatalog = preload("res://data/afflictions/affliction_catalog.tres")
 const BUILDUP_CARD: UpgradeData = preload("res://data/upgrades/affliction_buildup.tres")
@@ -36,7 +36,7 @@ func before_test() -> void:
 	get_tree().paused = true
 	await get_tree().process_frame
 	var ability_picker: AbilityPicker = _arena.get_node("UI/AbilityPicker") as AbilityPicker
-	ability_picker.choose(THRUST)
+	ability_picker.choose(SHIELD_CHARGE)
 
 
 func after_test() -> void:

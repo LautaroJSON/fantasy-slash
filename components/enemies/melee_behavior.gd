@@ -178,7 +178,7 @@ func _begin_recovery() -> void:
 func _try_hit(target: Player) -> void:
 	if not _has_hit and _attack.is_hit(enemy.global_position, enemy.get_facing(), target.global_position, enemy.get_target_padding()):
 		_has_hit = true
-		target.health.receive_hit(enemy.get_scaled_stats().damage * _attack.damage_multiplier)
+		target.health.receive_hit_from(enemy.get_scaled_stats().damage * _attack.damage_multiplier, enemy)
 	if _phase_time >= _attack.active_time:
 		_phase_time -= _attack.active_time
 		_begin_recovery()
@@ -198,3 +198,9 @@ func _end_attack(completed: bool) -> void:
 	if completed:
 		_cooldown_left = enemy.get_scaled_stats().attack_interval
 		_attack_index += 1
+
+
+## A stun cancels the attack in progress, interruptible or not.
+func stunned() -> void:
+	if is_attacking():
+		_end_attack(false)

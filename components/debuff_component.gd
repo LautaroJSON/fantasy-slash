@@ -11,6 +11,7 @@ extends Node
 ## DamageScaling.FLAT), ignoring defense.
 ## ARMOR_REDUCTION: the health ignores strength of its defense.
 ## SLOW: the owner acts at get_speed_scale() (1 - the strongest slow).
+## STUN: get_speed_scale() is 0 while it lasts (the owner stands still).
 ## STAT_BOOST: a buff whose stats the owner applies; only listed here.
 ## Permanent statuses never expire and do not keep the component processing.
 
@@ -31,6 +32,9 @@ class ActiveDebuff:
 	var tick_left: float
 	## Seconds left (ARMOR_REDUCTION; damage debuffs expire by ticks).
 	var time_left: float
+	## Seconds it was applied with: DebuffData.duration, or the one passed to
+	## apply() (e.g. a stun); the clock of its icon is relative to it.
+	var duration: float
 
 
 @export var health: HealthComponent
@@ -53,19 +57,29 @@ func _physics_process(delta: float) -> void:
 	advance(delta)
 
 
-func apply(data: DebuffData, potency: float) -> void:
+## `duration` > 0 replaces DebuffData.duration for a timed status (e.g. a stun
+## whose length comes from whoever applies it); re-applying one keeps the
+## longer of what was left and the new duration.
+func apply(data: DebuffData, potency: float, duration: float = 0.0) -> void:
 	var existing: ActiveDebuff = _find(data.id)
 	if existing != null:
+		var left: float = existing.time_left
+		if duration > 0.0:
+			existing.duration = duration
 		_refresh(existing, potency)
+		if duration > 0.0 and _is_timed(existing):
+			existing.time_left = maxf(left, duration)
+			existing.duration = maxf(existing.duration, existing.time_left)
 		_emit_changed()
 		return
 	var debuff := ActiveDebuff.new()
 	debuff.data = data
 	debuff.potency = potency
 	debuff.stacks = 1
+	debuff.duration = duration if duration > 0.0 else data.duration
 	debuff.ticks_left = _tick_count(data)
 	debuff.tick_left = data.tick_interval
-	debuff.time_left = data.duration
+	debuff.time_left = debuff.duration
 	_active.append(debuff)
 	set_physics_process(_has_expiring())
 	_on_list_changed()
@@ -151,9 +165,9 @@ static func get_remaining(debuff: ActiveDebuff) -> float:
 
 ## Remaining time over the full duration, in [0, 1] (the HUD cooldown clock).
 static func get_remaining_ratio(debuff: ActiveDebuff) -> float:
-	if debuff.data.duration <= 0.0:
+	if debuff.duration <= 0.0:
 		return 0.0
-	return clampf(get_remaining(debuff) / debuff.data.duration, 0.0, 1.0)
+	return clampf(get_remaining(debuff) / debuff.duration, 0.0, 1.0)
 
 
 ## Fraction of defense ignored by the active ARMOR_REDUCTION debuffs, in [0, 1].
@@ -169,6 +183,14 @@ func get_defense_reduction() -> float:
 ## active SLOW, in [0, 1].
 func get_speed_scale() -> float:
 	return _speed_scale
+
+
+## Whether a STUN is active (the owner stands still: get_speed_scale() is 0).
+func is_stunned() -> bool:
+	for debuff: ActiveDebuff in _active:
+		if debuff.data.effect == DebuffData.Effect.STUN:
+			return true
+	return false
 
 
 ## potency x stack multiplier (the stack count, or DebuffData.stack_multipliers)
@@ -196,7 +218,7 @@ func _refresh(debuff: ActiveDebuff, potency: float) -> void:
 ## Full duration again for the running instance (the tick phase is kept).
 func _restart_instance(debuff: ActiveDebuff) -> void:
 	debuff.ticks_left = _tick_count(debuff.data)
-	debuff.time_left = debuff.data.duration
+	debuff.time_left = debuff.duration
 
 
 ## A stackable status that ran out starts its next queued instance. Returns
@@ -267,6 +289,8 @@ func _write_derived() -> void:
 	for debuff: ActiveDebuff in _active:
 		if debuff.data.effect == DebuffData.Effect.SLOW:
 			slow = maxf(slow, get_strength(debuff))
+		elif debuff.data.effect == DebuffData.Effect.STUN:
+			slow = 1.0
 	_speed_scale = clampf(1.0 - slow, 0.0, 1.0)
 
 

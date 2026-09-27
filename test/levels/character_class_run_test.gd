@@ -3,8 +3,8 @@ extends GdUnitTestSuite
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
 const PLAYER_STATS: PlayerStats = preload("res://data/classes/warrior/warrior_stats.tres")
 const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.tres")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
-const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
+const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
 const DAMAGE_UPGRADE: UpgradeData = preload("res://data/upgrades/damage.tres")
 ## Offsets that make the test class clearly different from the warrior.
 const TEST_DAMAGE_OFFSET: float = 7.0
@@ -39,7 +39,7 @@ func _make_test_class() -> CharacterClassData:
 	stats.damage = PLAYER_STATS.damage + TEST_DAMAGE_OFFSET
 	stats.max_health = PLAYER_STATS.max_health + TEST_HEALTH_OFFSET
 	var pool := AbilityCatalog.new()
-	pool.abilities = [THRUST] as Array[AbilityData]
+	pool.abilities = [SHIELD_CHARGE] as Array[AbilityData]
 	var test_class := CharacterClassData.new()
 	test_class.base_stats = stats
 	test_class.abilities = pool
@@ -53,7 +53,7 @@ func test_ac180_without_a_chosen_class_the_player_is_a_warrior() -> void:
 	assert_object(player.get_character_class()).is_same(WARRIOR)
 	assert_object(player.stats.base_stats).is_same(PLAYER_STATS)
 	assert_float(player.stats.get_stat(PlayerStats.Stat.DAMAGE)).is_equal(PLAYER_STATS.damage)
-	assert_array(_ability_picker().get_offered()).contains_exactly_in_any_order([THRUST, SWIFT_STRIKE])
+	assert_array(_ability_picker().get_offered()).contains_exactly_in_any_order([SHIELD_CHARGE, PARRY])
 
 
 func test_ac181_the_chosen_class_sets_the_stats_and_the_ability_pool() -> void:
@@ -66,14 +66,14 @@ func test_ac181_the_chosen_class_sets_the_stats_and_the_ability_pool() -> void:
 	assert_float(player.stats.get_stat(PlayerStats.Stat.MAX_HEALTH)).is_equal(test_class.base_stats.max_health)
 	assert_float(player.health.max_health).is_equal(test_class.base_stats.max_health)
 	assert_float(player.health.current_health).is_equal(test_class.base_stats.max_health)
-	assert_array(_ability_picker().get_offered()).is_equal([THRUST])
+	assert_array(_ability_picker().get_offered()).is_equal([SHIELD_CHARGE])
 
 
 func test_ac182_player_upgrades_add_on_top_of_the_class_stats() -> void:
 	var test_class: CharacterClassData = _make_test_class()
 	Session.character_class = test_class
 	await _load_arena()
-	_ability_picker().choose(THRUST)
+	_ability_picker().choose(SHIELD_CHARGE)
 	var player: Player = _player()
 	player.apply_upgrade(DAMAGE_UPGRADE)
 	var expected: float = test_class.base_stats.damage + DAMAGE_UPGRADE.amount

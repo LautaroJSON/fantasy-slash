@@ -53,3 +53,4 @@ ignores_attack_tokens = true
 resists_hitlag = true
 affliction_resistance = 0.5
 resists_control = true
+stun_duration_scale = 0.3

@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/ability_upgrade_data.gd" id="2_upgrade_script"]
+[ext_resource type="PackedScene" path="res://components/abilities/shield_charge_ability.tscn" id="3_behavior"]
+[ext_resource type="Resource" path="res://data/abilities/shield_charge/upgrades/damage.tres" id="4_damage"]
+[ext_resource type="Resource" path="res://data/abilities/shield_charge/upgrades/scaling.tres" id="5_scaling"]
+[ext_resource type="Resource" path="res://data/abilities/shield_charge/upgrades/cooldown.tres" id="6_cooldown"]
+[ext_resource type="Resource" path="res://data/abilities/shield_charge/upgrades/range.tres" id="7_range"]
+[ext_resource type="Script" path="res://resources/ability_unique_upgrade_data.gd" id="8_unique_script"]
+[ext_resource type="Resource" path="res://data/abilities/shield_charge/unique/hammer_anvil.tres" id="9_hammer_anvil"]
+[ext_resource type="Resource" path="res://data/abilities/shield_charge/unique/momentum.tres" id="10_momentum"]
+[ext_resource type="Resource" path="res://data/abilities/shield_charge/unique/concussive.tres" id="11_concussive"]
+
+[resource]
+script = ExtResource("1_script")
+title = "Carga de escudo"
+description = "Cargás 5 m con el escudo adelante, arrastrando
+a los enemigos, y los golpeás con el escudo:
+12 de daño + 10 % de tu daño.
+Mientras cargás, el escudo para el 50 % del daño de frente.
+Si para un golpe, el golpe final hace el doble y aturde.
+Los empujados que chocan contra una pared u otro enemigo quedan aturdidos 1 s.
+Enfriamiento: 7 s"
+slot = 0
+behavior = ExtResource("3_behavior")
+base_damage = 12.0
+attack_scaling = 0.1
+cooldown = 7.0
+hit_range = 5.0
+hit_width = 1.8
+cast_duration = 0.7
+min_cooldown = 3.0
+min_cast_duration = 0.7
+dash_cancels_cast = true
+shows_hit_impact = true
+upgrades = Array[ExtResource("2_upgrade_script")]([ExtResource("4_damage"), ExtResource("5_scaling"), ExtResource("6_cooldown"), ExtResource("7_range")])
+unique_upgrades = Array[ExtResource("8_unique_script")]([ExtResource("9_hammer_anvil"), ExtResource("10_momentum"), ExtResource("11_concussive")])
+affliction_scale = 1.5

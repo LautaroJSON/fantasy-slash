@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 ## docs/specs/gamepad-support.md: HUD prompts follow the last input device.
 
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
-const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
+const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 
 var _arena: Node3D
 var _player: Player
@@ -20,7 +20,7 @@ func before_test() -> void:
 	_basic_slot = hud.get_node("%BasicSlot") as AbilitySlotView
 	_ultimate_slot = hud.get_node("%UltimateSlot") as AbilitySlotView
 	await get_tree().process_frame
-	(_arena.get_node("UI/AbilityPicker") as AbilityPicker).choose(THRUST)
+	(_arena.get_node("UI/AbilityPicker") as AbilityPicker).choose(SHIELD_CHARGE)
 
 
 func after_test() -> void:

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="DebuffData" format=3]
+
+[ext_resource type="Script" path="res://resources/debuff_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/icons/status/knocked_out_stars.svg" id="2_glyph"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"stun"
+effect = 5
+duration = 1.0
+max_stacks = 1
+icon = ExtResource("2_glyph")
+icon_color = Color(1, 0.95, 0.55, 1)

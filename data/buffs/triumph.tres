@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="BuffData" format=3]
+
+[ext_resource type="Script" path="res://resources/buff_data.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/buff_modifier.gd" id="2_modifier"]
+[ext_resource type="Texture2D" path="res://assets/icons/status/laurels.svg" id="3_glyph"]
+
+[sub_resource type="Resource" id="Modifier_move_speed"]
+script = ExtResource("2_modifier")
+per_stack = 0.1
+
+[sub_resource type="Resource" id="Modifier_damage"]
+script = ExtResource("2_modifier")
+stat = 3
+per_stack = 0.1
+
+[resource]
+script = ExtResource("1_script")
+id = &"triumph"
+title = "Triunfo"
+max_stacks = 3
+stack_duration = 8.0
+icon_color = Color(0.35, 0.6, 1, 1)
+icon = ExtResource("3_glyph")
+modifiers = Array[ExtResource("2_modifier")]([SubResource("Modifier_move_speed"), SubResource("Modifier_damage")])
+global = true
+expires_all_stacks = true

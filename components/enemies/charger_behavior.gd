@@ -132,7 +132,7 @@ func _try_hit(attack: ChargeAttackData) -> void:
 		return
 	if attack.is_hit(enemy.global_position, _charge_direction, target.global_position, enemy.get_target_padding()):
 		_has_hit = true
-		target.health.receive_hit(enemy.get_scaled_stats().damage * attack.damage_multiplier)
+		target.health.receive_hit_from(enemy.get_scaled_stats().damage * attack.damage_multiplier, enemy)
 
 
 func _begin_recovery(duration: float, attack: ChargeAttackData) -> void:
@@ -165,3 +165,9 @@ func _offset_to_target() -> Vector3:
 ## The charge is shown as a line, not a sector.
 func get_telegraph_arcs() -> Array[float]:
 	return []
+
+
+## A stun cancels the attack in progress, interruptible or not.
+func stunned() -> void:
+	if is_attacking():
+		_finish(false)

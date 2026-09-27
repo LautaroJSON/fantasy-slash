@@ -10,7 +10,7 @@ const SAMURAI: CharacterClassData = preload("res://data/classes/samurai/samurai.
 const BERSERKER: CharacterClassData = preload("res://data/classes/berserker/berserker.tres")
 const SHEATHE: AbilityData = preload("res://data/abilities/sheathe/sheathe.tres")
 const SPIN: AbilityData = preload("res://data/abilities/spin/spin.tres")
-const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
+const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
 const STEP: float = 0.05
 const TOLERANCE: float = 0.0001
 
@@ -92,10 +92,14 @@ func test_ac938_the_spin_dash_slash_hit_shows_the_impact() -> void:
 	assert_int(_host.get_active_count()).is_equal(1)
 
 
+## Every ability of the game now shows the impact (Golpe veloz did not): an
+## in-memory copy of the Parry without the flag checks the rule
+## (warrior-abilities-rework.md §13).
 func test_ac938_an_ability_without_the_flag_shows_nothing() -> void:
 	await _make_player(SAMURAI)
-	assert_bool(SWIFT_STRIKE.shows_hit_impact).is_false()
-	_ability.equip(SWIFT_STRIKE)
+	var without_flag: AbilityData = PARRY.duplicate() as AbilityData
+	without_flag.shows_hit_impact = false
+	_ability.equip(without_flag)
 	var enemy: Enemy = _spawn_enemy(_ahead(2.0))
 	_ability.report_hit(enemy, 1.0, false)
 	assert_int(_host.get_active_count()).is_equal(0)

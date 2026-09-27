@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AbilityUniqueUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_unique_upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/value_format.gd" id="2_format"]
+
+[sub_resource type="Resource" id="Format_seconds"]
+script = ExtResource("2_format")
+format = "%.1f s"
+multiplier = 1.0
+
+[resource]
+script = ExtResource("1_script")
+id = &"concussive"
+max_level = 2
+level_values = Array[float]([1.5, 2.0])
+level_descriptions = Array[String](["Los aturdimientos de la Carga duran 1.5 s", "Los aturdimientos de la Carga duran 2 s"])
+value_format = SubResource("Format_seconds")
+title = "Contundencia"
+description = "Los aturdimientos de la Carga duran 1.5 s"

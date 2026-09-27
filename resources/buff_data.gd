@@ -17,6 +17,11 @@ extends Resource
 @export var icon: Texture2D
 ## Effects of each stack.
 @export var modifiers: Array[BuffModifier]
+## Its MOVE_SPEED and DAMAGE modifiers apply to the player's stats at all
+## times (StatsComponent). Otherwise only whoever grants it reads them.
+@export var global: bool
+## When stack_duration runs out every stack is lost at once, not one by one.
+@export var expires_all_stacks: bool
 
 
 ## Pure: total of `stat` for `stacks` stacks (0 when the buff has no such modifier).

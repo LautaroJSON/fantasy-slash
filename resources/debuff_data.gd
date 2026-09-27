@@ -19,6 +19,9 @@ enum Effect {
 	## (docs/specs/affliction.md). Keep new effects after this one: .tres files
 	## store the integer.
 	SLOW,
+	## Stands still and does not act (speed scale 0); whoever applies it passes
+	## the duration (Enemy.stun; docs/specs/warrior-abilities-rework.md).
+	STUN,
 }
 
 ## What re-applying does while the status is active.

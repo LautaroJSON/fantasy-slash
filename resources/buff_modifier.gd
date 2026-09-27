@@ -10,6 +10,8 @@ enum Stat {
 	ABILITY_SPEED,
 	## Crit chance added.
 	CRIT_CHANCE,
+	## Fraction added to the player's DAMAGE (global buffs only; docs/specs/warrior-abilities-rework.md).
+	DAMAGE,
 }
 
 @export var stat: Stat
