@@ -2,6 +2,7 @@ extends GdUnitTestSuite
 
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
+const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.tres")
 const BERSERKER: CharacterClassData = preload("res://data/classes/berserker/berserker.tres")
 const CATALOG: UpgradeCatalog = preload("res://data/upgrades/upgrade_catalog.tres")
@@ -45,8 +46,9 @@ func _hit_with_roll(roll: float) -> float:
 	enemy.activate(Vector3(0.0, 0.0, -1.5), null)
 	enemy.health.defense = 0.0
 	var before: float = enemy.health.current_health
-	player.attack.advance_cooldown(10.0)
-	assert_bool(player.attack.try_attack_with_roll(roll)).is_true()
+	ComboDriver.drive_by_hand(player)
+	ComboDriver.use_unit_combo(player)
+	assert_bool(ComboDriver.strike(player, roll)).is_true()
 	var dealt: float = before - enemy.health.current_health
 	enemy.deactivate()
 	return dealt

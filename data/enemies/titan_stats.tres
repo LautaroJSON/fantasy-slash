@@ -49,3 +49,4 @@ behavior = ExtResource("3_behavior")
 hands_config = ExtResource("4_hands")
 behavior_config = ExtResource("5_config")
 ignores_attack_tokens = true
+resists_hitlag = true

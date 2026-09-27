@@ -1,7 +1,6 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://entities/player/player.gd" id="1_script"]
-[ext_resource type="Material" path="res://materials/player_material.tres" id="2_body_material"]
 [ext_resource type="Script" path="res://components/stats_component.gd" id="4_stats"]
 [ext_resource type="Script" path="res://components/health_component.gd" id="5_health"]
 [ext_resource type="Script" path="res://components/movement_component.gd" id="6_movement"]
@@ -31,13 +30,15 @@
 [ext_resource type="Resource" path="res://data/classes/berserker/air_slash_wind_cut_config.tres" id="31_air_slash_wind_cut_config"]
 [ext_resource type="Material" path="res://materials/vfx/wind_cut_additive_material.tres" id="32_glow_material"]
 [ext_resource type="Material" path="res://materials/vfx/wind_dust_material.tres" id="33_dust_material"]
+[ext_resource type="PackedScene" path="res://entities/player/humanoid.tscn" id="34_humanoid"]
+[ext_resource type="Script" path="res://components/player_animator.gd" id="35_animator"]
+[ext_resource type="Resource" path="res://data/player/player_animation_config.tres" id="36_animation_config"]
+[ext_resource type="Script" path="res://components/weapon_mount.gd" id="37_weapon_mount"]
+[ext_resource type="Script" path="res://components/hitstop_component.gd" id="38_hitstop"]
+[ext_resource type="Resource" path="res://data/player/hitstop_config.tres" id="39_hitstop_config"]
+[ext_resource type="Resource" path="res://data/player/attack_combo_config.tres" id="40_combo"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
-radius = 0.4
-height = 1.8
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
-material = ExtResource("2_body_material")
 radius = 0.4
 height = 1.8
 
@@ -202,9 +203,7 @@ shape = SubResource("CapsuleShape3D_body")
 
 [node name="Visual" type="Node3D" parent="."]
 
-[node name="Body" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-mesh = SubResource("CapsuleMesh_body")
+[node name="Humanoid" parent="Visual" instance=ExtResource("34_humanoid")]
 
 [node name="SwordPivot" type="Node3D" parent="Visual"]
 transform = Transform3D(1, 0, 0, 0, 0.62161, -0.78333, 0, 0.78333, 0.62161, 0.45, 1.3, 0)
@@ -242,14 +241,26 @@ script = ExtResource("20_sword_swing")
 pivot = NodePath("../Visual/SwordPivot")
 animator = NodePath("../SwingPlayer")
 
-[node name="AttackComponent" type="Node" parent="." node_paths=PackedStringArray("visual", "stats", "health", "sword_swing", "movement")]
+[node name="AttackComponent" type="Node" parent="." node_paths=PackedStringArray("visual", "stats", "health", "movement", "humanoid", "animator", "camera")]
 script = ExtResource("7_attack")
 visual = NodePath("../Visual")
 stats = NodePath("../StatsComponent")
 health = NodePath("../HealthComponent")
-sword_swing = NodePath("../SwordSwing")
 movement = NodePath("../MovementComponent")
 tuning = ExtResource("10_tuning")
+combo = ExtResource("40_combo")
+humanoid = NodePath("../Visual/Humanoid")
+animator = NodePath("../PlayerAnimator")
+camera = NodePath("../CameraRig")
+
+[node name="PlayerAnimator" type="Node" parent="." node_paths=PackedStringArray("player", "humanoid", "attack", "dash", "health")]
+script = ExtResource("35_animator")
+player = NodePath("..")
+humanoid = NodePath("../Visual/Humanoid")
+attack = NodePath("../AttackComponent")
+dash = NodePath("../DashComponent")
+health = NodePath("../HealthComponent")
+config = ExtResource("36_animation_config")
 
 [node name="BuffComponent" type="Node" parent="."]
 script = ExtResource("25_buffs")
@@ -307,10 +318,11 @@ config = ExtResource("31_air_slash_wind_cut_config")
 glow_material = ExtResource("32_glow_material")
 dust_material = ExtResource("33_dust_material")
 
-[node name="WeaponTrail" type="MeshInstance3D" parent="." node_paths=PackedStringArray("sword_swing", "abilities")]
+[node name="WeaponTrail" type="MeshInstance3D" parent="." node_paths=PackedStringArray("sword_swing", "attack", "abilities")]
 top_level = true
 script = ExtResource("14_trail")
 sword_swing = NodePath("../SwordSwing")
+attack = NodePath("../AttackComponent")
 abilities = [NodePath("../BasicAbility"), NodePath("../UltimateAbility")]
 config = ExtResource("15_trail_config")
 material = ExtResource("16_trail_material")
@@ -326,9 +338,27 @@ config = ExtResource("19_hit_feedback_config")
 script = ExtResource("23_charge_feedback")
 abilities = [NodePath("../BasicAbility"), NodePath("../UltimateAbility")]
 camera = NodePath("../CameraRig")
-body = NodePath("../Visual/Body")
+body = NodePath("../Visual/Humanoid")
 config = ExtResource("24_charge_feedback_config")
 
 [node name="CameraRig" parent="." node_paths=PackedStringArray("target") instance=ExtResource("11_camera")]
 target = NodePath("..")
 config = ExtResource("12_camera_config")
+
+[node name="WeaponMount" type="Node" parent="." node_paths=PackedStringArray("player", "pivot", "humanoid", "sword_swing", "swing_player")]
+process_priority = 1
+script = ExtResource("37_weapon_mount")
+player = NodePath("..")
+pivot = NodePath("../Visual/SwordPivot")
+humanoid = NodePath("../Visual/Humanoid")
+sword_swing = NodePath("../SwordSwing")
+swing_player = NodePath("../SwingPlayer")
+config = ExtResource("36_animation_config")
+
+[node name="Hitstop" type="Node" parent="." node_paths=PackedStringArray("attack", "health", "camera", "humanoid")]
+script = ExtResource("38_hitstop")
+attack = NodePath("../AttackComponent")
+health = NodePath("../HealthComponent")
+camera = NodePath("../CameraRig")
+humanoid = NodePath("../Visual/Humanoid")
+config = ExtResource("39_hitstop_config")

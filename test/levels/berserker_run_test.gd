@@ -11,6 +11,8 @@ const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swi
 const HOPLITE_SWORD_MODEL: Mesh = preload("res://assets/models/weapons/hoplite_sword/hoplite_sword.obj")
 const FALCHION_MODEL: Mesh = preload("res://assets/models/weapons/falchion/falchion.obj")
 const STAT_FORMATS: AbilityStatFormats = preload("res://data/ui/ability_stat_formats.tres")
+const ComboDriver := preload("res://test/helpers/combo_driver.gd")
+const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const NO_CRIT_ROLL: float = 0.99
 const POSE_TOLERANCE: Vector3 = Vector3(0.01, 0.01, 0.01)
 
@@ -77,20 +79,19 @@ func test_ac186_the_weapon_starts_at_the_class_rest_pose() -> void:
 	assert_vector(_pivot(warrior).rotation).is_equal_approx(Vector3(0.9, 0.0, 0.0), POSE_TOLERANCE)
 
 
-func test_ac187_slower_sweep_that_returns_to_the_shoulder() -> void:
+func test_ac187_slower_strikes() -> void:
+	# Adapted (humanoid-player-model.md): the basic attack is the combo, played
+	# at half speed by the berserker (0.6 / 1.2); the sweep no longer exists.
 	var player: Player = _spawn_player(BERSERKER)
-	var interval: float = 1.0 / BERSERKER.base_stats.attack_speed
-	player.attack.advance_cooldown(10.0)
+	ComboDriver.drive_by_hand(player)
 	assert_bool(player.attack.try_attack_with_roll(NO_CRIT_ROLL)).is_true()
-	assert_bool(player.sword_swing.is_swinging()).is_true()
-	player.attack.advance_cooldown(interval - 0.02)
+	# attack_1 lasts 0.45 s at speed 1, so 0.9 s for the berserker.
+	ComboDriver.humanoid_of(player).anim.advance(0.8)
+	player.attack.advance(0.8)
+	assert_bool(player.attack.is_attacking()).is_true()
 	assert_bool(player.attack.try_attack_with_roll(NO_CRIT_ROLL)).is_false()
-	player.attack.advance_cooldown(0.04)
+	ComboDriver.finish(player)
 	assert_bool(player.attack.try_attack_with_roll(NO_CRIT_ROLL)).is_true()
-	player.sword_swing.advance(interval)
-	player.sword_swing.advance(BERSERKER.weapon.swing.recover_duration)
-	assert_vector(_pivot(player).position).is_equal_approx(BERSERKER.weapon.rest_position, POSE_TOLERANCE)
-	assert_vector(_pivot(player).rotation).is_equal_approx(BERSERKER.weapon.rest_rotation, POSE_TOLERANCE)
 
 
 func test_ac221_heavy_sweep_stats() -> void:
@@ -101,15 +102,26 @@ func test_ac221_heavy_sweep_stats() -> void:
 	assert_float(berserker.damage).is_equal_approx(25.0, 0.0001)
 
 
-func test_ac222_the_sweep_crosses_the_wider_arc() -> void:
+func test_ac222_the_strike_covers_the_wider_arc() -> void:
+	# Adapted (humanoid-player-model.md): the sweep is gone; the 150° arc is
+	# checked on the strike's hitbox. The nearest enemy is straight ahead
+	# (auto-aim) and the other one 70° to its side.
 	var player: Player = _spawn_player(BERSERKER)
-	var half_arc: float = deg_to_rad(BERSERKER.base_stats.attack_arc_degrees) / 2.0
-	player.attack.advance_cooldown(10.0)
-	assert_bool(player.attack.try_attack_with_roll(NO_CRIT_ROLL)).is_true()
-	var start_side: float = player.sword_swing.get_last_start_side()
-	assert_float(player.sword_swing.get_sweep_yaw()).is_equal_approx(start_side * half_arc, 0.001)
-	player.sword_swing.advance(BERSERKER.weapon.swing.swing_duration)
-	assert_float(player.sword_swing.get_sweep_yaw()).is_equal_approx(-start_side * half_arc, 0.001)
+	ComboDriver.drive_by_hand(player)
+	var ahead: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.2))
+	var side_angle: float = deg_to_rad(70.0)
+	var side: Enemy = _spawn_enemy(Vector3(sin(side_angle), 0.0, -cos(side_angle)) * 2.0)
+	assert_bool(ComboDriver.strike(player, NO_CRIT_ROLL)).is_true()
+	assert_float(ahead.health.current_health).is_less(ahead.health.max_health)
+	assert_float(side.health.current_health).is_less(side.health.max_health)
+
+
+func _spawn_enemy(at: Vector3) -> Enemy:
+	var enemy: Enemy = auto_free(ENEMY_SCENE.instantiate())
+	enemy.registry = _registry
+	add_child(enemy)
+	enemy.activate(at, null)
+	return enemy
 
 
 func test_ac193_the_berserker_run_offers_only_spin_cards() -> void:

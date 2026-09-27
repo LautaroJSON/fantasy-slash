@@ -36,6 +36,9 @@ enum Stat { DAMAGE, DEFENSE, MAX_HEALTH, ATTACK_INTERVAL, ATTACK_RANGE, MOVE_SPE
 @export var behavior_config: Resource
 ## Bosses: attacks without asking the AttackCoordinator for a token.
 @export var ignores_attack_tokens: bool
+## Hit lag (docs/specs/bdo-combat-feel.md): true = a player hit only shakes
+## its body; its behavior keeps running (bosses).
+@export var resists_hitlag: bool
 
 
 func get_stat(stat: Stat) -> float:

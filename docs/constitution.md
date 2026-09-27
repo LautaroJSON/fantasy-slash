@@ -28,6 +28,7 @@ El juego es un **hack and slash roguelike en tercera persona para PC, jugado con
 - Mallas primitivas: `CapsuleMesh`, `BoxMesh` (y, si hace falta, otras `PrimitiveMesh` nativas como `SphereMesh`, `CylinderMesh`, `PlaneMesh`).
 - **Mallas procedurales solo para VFX** (desde 3.1.0): efectos visuales que siguen una trayectoria (p. ej. la estela del arma) pueden construirse con `ImmediateMesh` desde buffers preasignados (Principio V), con material `.tres` compartido y sin texturas. No se usan para entidades ni escenario.
 - **Mallas planas procedurales para avisos enemigos** (desde 4.5.0): los avisos de ataque enemigo en el piso pueden usar sectores circulares construidos como `ArrayMesh` **una vez al cargar** (cuando el pool crea el enemigo), con material `.tres` compartido y sin texturas. Círculos y franjas siguen siendo primitivas (`CylinderMesh`, `BoxMesh`).
+- **Personaje procedural** (desde 4.9.0): el cuerpo del jugador puede ser `LowPolyHumanoid`, un asset de script que vive en `assets/models/characters/low_poly_humanoid/` con su `SOURCE.md`. Construye sus mallas (`ArrayMesh` de normales planas) y su `AnimationPlayer` **una vez**, en `_ready`, y se usa solo vía su escena adaptadora (`entities/player/humanoid.tscn`), con materiales `.tres` compartidos. Sus poses y tiempos de animación son datos del asset (como los keyframes de un `.glb`); los valores de gameplay que dependen de ellos viven en Resources.
 - **Partículas y luces breves solo para VFX** (desde 3.4.0): `CPUParticles3D` con mallas primitivas y material `.tres` compartido, sin texturas, con sus parámetros en un Resource; y `OmniLight3D` que se enciende y apaga en décimas de segundo. No se usan para entidades ni escenario.
 - Materiales: `StandardMaterial3D` con color plano (`albedo_color`). Excepción (desde 3.2.0): el material de un modelo importado puede usar como `albedo_texture` una textura que viva en la carpeta de ese asset.
 - **Assets importados permitidos** (desde 3.0.0), en formatos que Godot importa de forma nativa: modelos `.obj` para mallas estáticas y **`.glb`/`.gltf` como formato preferido** cuando hay jerarquía o animación (`.fbx`/`.blend` se convierten a glTF antes de entrar al repo), y **texturas de imagen** (`.png`) de un modelo importado (desde 3.2.0). A futuro, también audio. Reglas obligatorias:
@@ -41,7 +42,7 @@ El juego es un **hack and slash roguelike en tercera persona para PC, jugado con
 - **Convención de color obligatoria:**
   | Elemento | Malla base | Color (`albedo_color`) |
   |---|---|---|
-  | Jugador (cuerpo) | `CapsuleMesh` | **Blanco**: `Color(1, 1, 1)` |
+  | Jugador (cuerpo: torso, cabeza, manos y pies flotantes, una sola silueta) | Humanoide low-poly (`LowPolyHumanoid`) | **Blanco**: `Color(1, 1, 1)` |
   | Arma del jugador (espada del Guerrero) | Modelo `hoplite_sword.obj` | Colores de sus materiales en `materials/weapons/` (no reservados) |
   | Arma del jugador (mandoble del Berserker) | Modelo `falchion.obj` | Colores de sus materiales en `materials/weapons/` (no reservados) |
   | Arma del jugador (katana del Samurái, con funda) | Modelo `katana.glb` (mallas derivadas) | Textura de paleta de su material en `materials/weapons/` (no reservada) |
@@ -54,7 +55,7 @@ El juego es un **hack and slash roguelike en tercera persona para PC, jugado con
   | Números de daño flotantes (crítico) | `TextMesh` | **Ámbar**: `Color(1, 0.55, 0.1)` |
   | Nivel de enemigo (junto a su barra de vida) | `TextMesh` | **Blanco**: `Color(1, 1, 1)` |
   | Tiempo restante y stacks de debuff (sobre su ícono, en el enemigo) | `TextMesh` | **Blanco**: `Color(1, 1, 1)` |
-- Los colores de esta tabla quedan **reservados** para los elementos listados (salvo las armas, que se distinguen por su silueta). Ningún otro elemento (escenario, props, proyectiles, otra UI 3D) puede usarlos, para que jugador, arma y enemigos se identifiquen siempre de un vistazo. El blanco se comparte únicamente entre el cuerpo del jugador, los textos flotantes (números de daño, nivel de enemigo, tiempo restante y stacks de debuff), la estela del arma, el corte de viento de Envainar y el corte del dash del Giro, que no se confunden: uno es una cápsula opaca, otros son texto, y la estela y los cortes son franjas translúcidas que se desvanecen en décimas de segundo. El gris se comparte solo entre el cuerpo del enemigo y sus manos, que forman una misma silueta.
+- Los colores de esta tabla quedan **reservados** para los elementos listados (salvo las armas, que se distinguen por su silueta). Ningún otro elemento (escenario, props, proyectiles, otra UI 3D) puede usarlos, para que jugador, arma y enemigos se identifiquen siempre de un vistazo. El blanco se comparte únicamente entre el cuerpo del jugador, los textos flotantes (números de daño, nivel de enemigo, tiempo restante y stacks de debuff), la estela del arma, el corte de viento de Envainar y el corte del dash del Giro, que no se confunden: uno es un cuerpo opaco, otros son texto, y la estela y los cortes son franjas translúcidas que se desvanecen en décimas de segundo. El gris se comparte solo entre el cuerpo del enemigo y sus manos, que forman una misma silueta.
 - Colores **no reservados** en uso, a modo de registro: celeste pálido para los indicadores de área y las cartas de mejora de habilidad, rojo para la carta de bloqueo, dorado para las cartas de mejora única (y, desde 4.0.1, el brillo de la katana y el marco del HUD con "Envainar: mejorado"), rojo oscuro para el ícono de sangrado, violeta `Color(0.55, 0.35, 0.8)` para el ícono de Debilitar, verde lima `Color(0.55, 0.85, 0.25)` para el ícono de Conmoción en el HUD, tierra `Color(0.62, 0.52, 0.4)` para el polvo del corte de viento y para el anillo de la onda de choque de los bosses (`TorusMesh` plano, unshaded, alpha ≤ 0.6), y rojo `Color(0.9, 0.1, 0.1)` para el ícono de Rage y su aura (cápsula unshaded translúcida, alpha ≤ 0.3, más grande que el cuerpo gris del enemigo), negro translúcido `Color(0.05, 0.05, 0.05)` (alpha ≤ 0.7, unshaded) para el agujero de aparición de los enemigos (`CylinderMesh` plano sobre el piso), rojo anaranjado `Color(1.0, 0.3, 0.1)` (unshaded, alpha ≤ 0.5, destello hasta 0.8) para los avisos de ataque enemigo en el piso, y miel `Color(0.95, 0.78, 0.25)` para el aura de escudo de la Colmena (cápsula unshaded translúcida, alpha ≤ 0.3, más grande que el cuerpo) y su ícono "Escudo".
 - Los detalles que comunican gameplay (el frente del personaje, una hitbox visible en debug) también son primitivas.
 - Los materiales se definen como recursos `.tres` compartidos (p. ej. `materials/player_material.tres`, `materials/weapons/spartan_iron_material.tres`, `materials/enemy_material.tres`), no como sub-recursos duplicados en cada escena.
@@ -145,6 +146,18 @@ Cada frame se diseña para escalar con la cantidad de enemigos en pantalla, que 
 
 **Rationale:** el combate de un hack and slash se juega cómodo con mando. Mantener todo en el InputMap y los prompts en datos hace que sumar el mando no duplique la lógica de juego.
 
+### VII. Sensación del combate
+
+El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (desde 4.10.0, ver `bdo-combat-feel.md`).
+
+- **Compromiso:** un golpe del ataque básico no permite moverse libremente ni saltar hasta su *cancel point* (la apertura de su ventana de combo). En la recuperación, el movimiento se limita a un desplazamiento lento sin girar (o la corta, según datos). El dash corta el golpe en cualquier momento.
+- **Estocada:** los golpes desplazan al jugador con una distancia de datos atada al tiempo del clip (root motion por datos), que se frena ante un enemigo delante.
+- **Hit lag local:** el impacto se comunica pausando el clip del atacante y congelando y sacudiendo a los golpeados, con duración por golpe. **Prohibido modificar `Engine.time_scale`** como feedback de impacto. Los bosses solo tiemblan, para que el combo no los congele en cadena.
+- **Apuntado:** por defecto, el golpe apunta al enemigo más cercano y lo sigue durante la anticipación. La cámara solo mira, y el input de movimiento no desvía el golpe salvo que los datos lo indiquen.
+- Todos estos valores viven en `AttackComboConfig`, `AttackComboStep` y `HitstopConfig` (Principio III).
+
+**Rationale:** en un hack and slash, el peso de cada golpe hace que pelear sea una decisión: golpear al aire tiene costo, y encadenar o cortar el combo es expresivo. Un hit lag local mantiene el resto del mundo vivo y legible.
+
 ---
 
 ## Technology Stack
@@ -174,6 +187,7 @@ Cada frame se diseña para escalar con la cantidad de enemigos en pantalla, que 
    - [ ] **GDScript (IV):** nombres según convención. Todas las firmas y variables miembro tipadas. `_ready` / `_process` / `_physics_process` delgados y delegando en métodos con nombre.
    - [ ] **Performance (V):** sin allocations ni búsquedas de nodos por frame. Las entidades frecuentes usan pool. Capas y máscaras de colisión mínimas y explícitas.
    - [ ] **Input (VI):** solo acciones del InputMap, con bindings de teclado/mouse y de mando. Pantallas nuevas navegables con mando. Prompts desde datos.
+   - [ ] **Combate (VII):** golpes comprometidos con cancel point; sin `Engine.time_scale` para feedback de impacto; auto-apuntado al enemigo más cercano salvo que los datos indiquen otra cosa.
    - [ ] **Calidad:** el proyecto abre sin errores ni warnings de tipado nuevos. Los tests de los criterios de aceptación de la spec están en verde y la suite completa sigue en verde.
 4. **Cierre:** la spec se marca como *Implementada* y cualquier violación justificada (ver *Governance*) queda registrada en ella.
 
@@ -191,6 +205,10 @@ Cada frame se diseña para escalar con la cantidad de enemigos en pantalla, que 
 - Cada spec declara la versión de la constitución contra la que fue aprobada.
 
 ### Historial
+
+- **4.10.0** (2026-09-26): se agrega el Principio VII, *Sensación del combate*: golpes comprometidos con cancel point, estocada por datos, hit lag local (prohibido `Engine.time_scale` como feedback de impacto) y auto-apuntado al enemigo más cercano; se suma al checklist de review (ver `bdo-combat-feel.md`).
+
+- **4.9.0** (2026-09-26): Principio II: se permite un personaje procedural (`LowPolyHumanoid`, mallas y animaciones construidas una vez al cargar, escena adaptadora y materiales `.tres`) como cuerpo del jugador; la fila del jugador en la tabla de colores pasa a ese humanoide, sigue en blanco (ver `humanoid-player-model.md`).
 
 - **4.8.0** (2026-09-26): Principio II: el corte de viento de la tabla de colores también es el VFX del impacto del Tajo aéreo del Berserker (mismo efecto y colores; ver `berserker-air-slash.md`).
 
@@ -247,4 +265,4 @@ Cada frame se diseña para escalar con la cantidad de enemigos en pantalla, que 
 
 ---
 
-**Version**: 4.8.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-26
+**Version**: 4.9.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-26

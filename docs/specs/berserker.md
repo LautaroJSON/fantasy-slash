@@ -59,7 +59,7 @@
 - **AC184** `class_catalog.tres` ofrece Guerrero y Berserker. El Berserker tiene más `DAMAGE`, más `MAX_HEALTH` y menos `ATTACK_SPEED` que el Guerrero, y su pool es solo el Giro.
 - **AC185** Cada clase instancia su arma bajo `SwordPivot`: el Guerrero la espada negra y el Berserker el mandoble. Todas sus mallas son `BoxMesh` con el material compartido de su color. Hay una sola arma por jugador.
 - **AC186** Al arrancar, el pivot está en la pose de reposo de la clase. En el Berserker es la pose del hombro, distinta a la del Guerrero.
-- **AC187** El ataque básico del Berserker barre el arco y vuelve a la pose del hombro. Su cadencia es `1 / 0.8` s.
+- **AC187** El ataque básico del Berserker barre el arco y vuelve a la pose del hombro. Su cadencia es `1 / 0.8` s. *(Adaptado en `humanoid-player-model.md`: los golpes del Berserker suenan a la mitad de velocidad.)*
 - **AC188** Giro: con los valores base golpea 3 veces a un enemigo dentro de 2.5 m (en t ≈ 1, 2 y 3 s), cada golpe por `8 + 0.15 × DAMAGE`. Un enemigo a más de `2.5 m + padding` no recibe daño.
 - **AC189** El `Visual` completa una vuelta por `TICK_INTERVAL`. Al terminar, el mandoble vuelve al reposo.
 - **AC190** Los enemigos golpeados reciben un empuje que los aleja del jugador, con el `knockback_speed` del Giro.

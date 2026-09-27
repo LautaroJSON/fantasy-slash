@@ -2,6 +2,7 @@ extends GdUnitTestSuite
 
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
+const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const CONFIG: DamageNumberConfig = preload("res://data/ui/damage_number_config.tres")
 const MATERIAL: StandardMaterial3D = preload("res://materials/damage_number_material.tres")
 const CRIT_MATERIAL: StandardMaterial3D = preload("res://materials/damage_number_crit_material.tres")
@@ -19,6 +20,10 @@ func before_test() -> void:
 	_player = auto_free(PLAYER_SCENE.instantiate())
 	_player.enemy_registry = _registry
 	add_child(_player)
+	# Strikes land at the humanoid clip's hit window: the tests drive it by
+	# hand, and a unit combo keeps one strike = one old swing.
+	ComboDriver.drive_by_hand(_player)
+	ComboDriver.use_unit_combo(_player)
 	_pool = auto_free(DamageNumberPool.new())
 	_pool.player = _player
 	_pool.config = CONFIG
@@ -37,7 +42,7 @@ func _spawn_enemy(at: Vector3) -> Enemy:
 
 func test_ac32_normal_hit_shows_a_plain_number_above_the_enemy() -> void:
 	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
-	_player.attack.try_attack_with_roll(NO_CRIT_ROLL)
+	ComboDriver.strike(_player, NO_CRIT_ROLL)
 	assert_int(_pool.active_count()).is_equal(1)
 	var number: DamageNumber = _pool.get_last_spawned()
 	assert_str(number.get_text()).is_equal("15")
@@ -49,7 +54,7 @@ func test_ac32_normal_hit_shows_a_plain_number_above_the_enemy() -> void:
 
 func test_ac33_critical_hit_shows_a_bigger_number() -> void:
 	_spawn_enemy(Vector3(0.0, 0.0, -1.5))
-	_player.attack.try_attack_with_roll(CRIT_ROLL)
+	ComboDriver.strike(_player, CRIT_ROLL)
 	var number: DamageNumber = _pool.get_last_spawned()
 	assert_str(number.get_text()).is_equal("30" + CONFIG.crit_suffix)
 	assert_bool(number.is_crit()).is_true()

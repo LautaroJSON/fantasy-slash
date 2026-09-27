@@ -3,6 +3,7 @@ extends GdUnitTestSuite
 const TestWorld := preload("res://test/helpers/test_world.gd")
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
+const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 
 var _registry: EnemyRegistry
 var _player: Player
@@ -103,8 +104,9 @@ func test_ac36_player_hit_pushes_the_enemy_back() -> void:
 	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
 	await _physics_frames(2)
 	var start: float = _flat_distance_to_player(enemy)
-	var attack: AttackComponent = _player.get_node("AttackComponent") as AttackComponent
-	assert_bool(attack.try_attack_with_roll(0.99)).is_true()
+	ComboDriver.drive_by_hand(_player)
+	ComboDriver.use_unit_combo(_player)
+	assert_bool(ComboDriver.strike(_player, 0.99)).is_true()
 	var farthest: float = start
 	for i: int in 30:
 		await get_tree().physics_frame

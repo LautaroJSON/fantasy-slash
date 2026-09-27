@@ -43,10 +43,10 @@ Las mejoras de velocidad tienen tope (`max_stacks`), así que no hace falta un p
 
 ## 5. Criterios de aceptación
 
-- **AC224** Sin mejoras, el barrido del Guerrero dura 0.25 s y el del Berserker 0.35 s (cruza el arco en ese tiempo y no antes).
-- **AC225** Con +100 % de velocidad de ataque sobre la base, el barrido y la recuperación duran la mitad.
-- **AC226** El barrido nunca dura más que el intervalo entre ataques.
-- **AC227** El bloqueo de giro del auto-aim dura lo mismo que el barrido escalado.
+- **AC224** Sin mejoras, el barrido del Guerrero dura 0.25 s y el del Berserker 0.35 s (cruza el arco en ese tiempo y no antes). *(Reemplazado por `humanoid-player-model.md`: el ataque básico ya no barre; lo cubren AC600 y AC601.)*
+- **AC225** Con +100 % de velocidad de ataque sobre la base, el barrido y la recuperación duran la mitad. *(Reemplazado por AC600 de `humanoid-player-model.md`.)*
+- **AC226** El barrido nunca dura más que el intervalo entre ataques. *(Reemplazado por `humanoid-player-model.md`: sin barrido ni intervalo, la cadencia la marca el combo.)*
+- **AC227** El bloqueo de giro del auto-aim dura lo mismo que el barrido escalado. *(Adaptado en `humanoid-player-model.md`: el bloqueo dura todo el golpe del combo.)*
 - **AC228** Regresión: AC89–AC92, AC187 y AC222 leen la duración de `SwordSwingConfig`; suite completa en verde.
 
 ## 6. Plan de implementación

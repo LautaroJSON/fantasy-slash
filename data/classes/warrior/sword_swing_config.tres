@@ -6,7 +6,6 @@
 script = ExtResource("1_script")
 pivot_height = 1.1
 hilt_offset = 0.35
-swing_duration = 0.25
 blade_tilt = -0.15
 sweep_ease = 0.4
 recover_duration = 0.12

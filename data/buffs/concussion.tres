@@ -5,12 +5,12 @@
 
 [sub_resource type="Resource" id="Modifier_move_speed"]
 script = ExtResource("2_modifier")
-per_stack = 0.12
+per_stack = 0.15
 
 [sub_resource type="Resource" id="Modifier_ability_speed"]
 script = ExtResource("2_modifier")
 stat = 1
-per_stack = 0.05
+per_stack = 0.1
 
 [sub_resource type="Resource" id="Modifier_crit_chance"]
 script = ExtResource("2_modifier")

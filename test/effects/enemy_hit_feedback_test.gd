@@ -2,6 +2,7 @@ extends GdUnitTestSuite
 
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
+const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const BAR_CONFIG: HealthBarConfig = preload("res://data/ui/enemy_health_bar_config.tres")
 const BLEED: DebuffData = preload("res://data/debuffs/bleed.tres")
 const NO_CRIT_ROLL: float = 0.99
@@ -20,6 +21,10 @@ func before_test() -> void:
 	_player = auto_free(PLAYER_SCENE.instantiate())
 	_player.enemy_registry = _registry
 	add_child(_player)
+	# Strikes land at the humanoid clip's hit window: the tests drive it by
+	# hand, and a unit combo keeps one strike = one old swing.
+	ComboDriver.drive_by_hand(_player)
+	ComboDriver.use_unit_combo(_player)
 	_feedback = auto_free(EnemyHitFeedback.new())
 	_feedback.player = _player
 	add_child(_feedback)
@@ -46,7 +51,7 @@ func test_ac141_should_shake_on_crit_or_a_third_of_max_health() -> void:
 func test_ac142_crit_shakes_the_bar_then_it_settles_at_rest() -> void:
 	# Level 10 (112 HP) so the 22.5 crit is far below a third of max health.
 	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5), 10)
-	_player.attack.try_attack_with_roll(CRIT_ROLL)
+	ComboDriver.strike(_player, CRIT_ROLL)
 	var bar: EnemyHealthBar = enemy.health_bar
 	assert_bool(bar.is_shaking()).is_true()
 	bar.advance_shake(PEAK_DELTA_FACTOR / BAR_CONFIG.shake_frequency)
@@ -59,13 +64,13 @@ func test_ac142_crit_shakes_the_bar_then_it_settles_at_rest() -> void:
 func test_ac142_heavy_normal_hit_shakes_the_bar() -> void:
 	# Level 1 (40 HP): a 15 normal hit is above a third of max health.
 	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5), 1)
-	_player.attack.try_attack_with_roll(NO_CRIT_ROLL)
+	ComboDriver.strike(_player, NO_CRIT_ROLL)
 	assert_bool(enemy.health_bar.is_shaking()).is_true()
 
 
 func test_ac143_small_normal_hit_does_not_shake() -> void:
 	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5), 10)
-	_player.attack.try_attack_with_roll(NO_CRIT_ROLL)
+	ComboDriver.strike(_player, NO_CRIT_ROLL)
 	assert_float(enemy.health.current_health).is_less(enemy.health.max_health)
 	assert_bool(enemy.health_bar.is_shaking()).is_false()
 
@@ -81,7 +86,7 @@ func test_ac143_bleed_tick_does_not_shake_even_when_heavy() -> void:
 
 func test_ac144_reset_stops_the_shake() -> void:
 	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5), 10)
-	_player.attack.try_attack_with_roll(CRIT_ROLL)
+	ComboDriver.strike(_player, CRIT_ROLL)
 	var bar: EnemyHealthBar = enemy.health_bar
 	bar.advance_shake(PEAK_DELTA_FACTOR / BAR_CONFIG.shake_frequency)
 	enemy.activate(Vector3(3.0, 0.0, -8.0), _player, 1)

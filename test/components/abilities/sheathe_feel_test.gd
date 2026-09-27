@@ -222,7 +222,7 @@ func test_ac263_each_milestone_pulses_the_outline() -> void:
 
 func test_ac264_each_milestone_makes_the_body_tremble_and_it_returns_to_rest() -> void:
 	var feedback: ChargeFeedbackComponent = _player.get_node("ChargeFeedback") as ChargeFeedbackComponent
-	var body: Node3D = _player.get_node("Visual/Body") as Node3D
+	var body: Node3D = _player.get_node("Visual/Humanoid") as Node3D
 	var rest: Vector3 = body.position
 	feedback.set_process(false)
 	_equip_by_hand()

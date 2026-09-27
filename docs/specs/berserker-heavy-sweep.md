@@ -33,7 +33,7 @@ La guarda sigue en z = −0.15. Se mantiene la regla de `weapon-reach.md`: 2.6 +
 - **AC205 y AC214 (actualizados)** Punta del mandoble y `TrailTip` en z ≈ −2.21.
 - **AC211** Punta + radio = rango para el Berserker con los valores nuevos.
 - **AC221** El Berserker tiene `attack_range` 3.0, arco 150°, `attack_speed` 0.7 y daño 25. Sigue con más daño y menos cadencia que el Guerrero (AC184).
-- **AC222** El barrido cruza los 150°: arranca en ±75° y termina del lado opuesto.
+- **AC222** El barrido cruza los 150°: arranca en ±75° y termina del lado opuesto. *(Adaptado en `humanoid-player-model.md`: el arco de 150° se verifica en el hitbox del golpe.)*
 - **AC223** Regresión: suite completa en verde; el Guerrero sin cambios.
 
 ## 4. Fuera de alcance

@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://assets/models/characters/low_poly_humanoid/low_poly_humanoid.gd" id="1_script"]
+[ext_resource type="Material" path="res://materials/player_material.tres" id="2_body_material"]
+
+[node name="Humanoid" type="Node3D"]
+transform = Transform3D(1.3333, 0, 0, 0, 1.3333, 0, 0, 0, 1.3333, 0, 0, 0)
+script = ExtResource("1_script")
+has_sword = false
+body_material = ExtResource("2_body_material")
+use_hitbox = false

@@ -4,6 +4,7 @@ const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const SPIN_SCENE: PackedScene = preload("res://components/abilities/spin_ability.tscn")
 const CONFIG: WeaponTrailConfig = preload("res://data/player/weapon_trail_config.tres")
 const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.tres")
+const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
 const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
 const SPIN: AbilityData = preload("res://data/abilities/spin/spin.tres")
@@ -31,8 +32,14 @@ func after_test() -> void:
 
 
 func _start_basic_attack() -> void:
-	_player.attack.advance_cooldown(10.0)
+	ComboDriver.drive_by_hand(_player)
 	assert_bool(_player.attack.try_attack_with_roll(NO_CRIT_ROLL)).is_true()
+
+
+## The strike clip moves the hand, and the hand carries the weapon.
+func _advance_strike(delta: float) -> void:
+	ComboDriver.humanoid_of(_player).anim.advance(delta)
+	(_player.get_node("WeaponMount") as WeaponMount).update(delta)
 
 
 func _blade_tip() -> Node3D:
@@ -53,14 +60,14 @@ func _assert_emits_during_cast(ability: AbilityData) -> void:
 	assert_bool(_trail.is_emitting()).is_false()
 
 
-func test_ac215_basic_attack_lights_the_trail_until_the_sweep_ends() -> void:
+func test_ac215_basic_attack_lights_the_trail_until_the_strike_ends() -> void:
 	assert_bool(_trail.is_emitting()).is_false()
 	_start_basic_attack()
 	assert_bool(_trail.is_emitting()).is_true()
 	_trail.advance(FRAME)
 	_trail.advance(FRAME)
 	assert_int(_trail.get_sample_count()).is_equal(2)
-	_player.sword_swing.advance(10.0)
+	ComboDriver.finish(_player)
 	assert_bool(_trail.is_emitting()).is_false()
 	_trail.advance(CONFIG.lifetime)
 	assert_int(_trail.get_sample_count()).is_equal(0)
@@ -82,7 +89,7 @@ func test_ac216_trail_emits_for_the_whole_spin() -> void:
 func test_ac217_the_newest_sample_is_at_the_blade_tip() -> void:
 	_start_basic_attack()
 	for i: int in 5:
-		_player.sword_swing.advance(FRAME)
+		_advance_strike(FRAME)
 		_trail.advance(FRAME)
 		assert_vector(_trail.get_sample_tip(0)).is_equal_approx(_blade_tip().global_position, POSITION_TOLERANCE)
 	assert_vector(_trail.get_sample_tip(0)).is_not_equal(_trail.get_sample_tip(4))
@@ -102,3 +109,13 @@ func test_ac219_ground_arc_and_spin_wind_trail_are_gone() -> void:
 	assert_bool(_player.has_node("AttackIndicator")).is_false()
 	var spin: Node = auto_free(SPIN_SCENE.instantiate())
 	assert_bool(spin.has_node("WindTrail")).is_false()
+
+
+func test_ac604_the_trail_keeps_emitting_across_chained_strikes() -> void:
+	_start_basic_attack()
+	ComboDriver.advance_until(_player, func() -> bool: return _player.attack.get_state() == AttackComponent.ComboState.CHAIN_OPEN)
+	assert_bool(_trail.is_emitting()).is_true()
+	assert_bool(_player.attack.try_attack_with_roll(NO_CRIT_ROLL)).is_true()
+	assert_bool(_trail.is_emitting()).is_true()
+	ComboDriver.finish(_player)
+	assert_bool(_trail.is_emitting()).is_false()

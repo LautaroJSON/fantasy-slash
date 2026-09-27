@@ -195,6 +195,11 @@ func test_ac52_player_stands_still_and_cannot_attack_while_casting() -> void:
 	assert_bool(_player.dash.is_dashing()).is_false()
 	await _physics_frames(30)
 	assert_bool(_player.is_casting()).is_false()
+	# Each tap is one strike (humanoid-player-model.md): tap again after the cast.
+	Input.action_release(&"attack")
+	await _physics_frames(1)
+	Input.action_press(&"attack")
+	await _physics_frames(30)
 	assert_int(swings[0]).is_greater(0)
 
 

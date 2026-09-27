@@ -39,6 +39,7 @@ const WEAPON_TRAIL_TIP: NodePath = ^"TrailTip"
 @onready var _camera: ThirdPersonCamera = $CameraRig
 @onready var _weapon_trail: WeaponTrail = $WeaponTrail
 @onready var _visual: Node3D = $Visual
+@onready var _weapon_mount: WeaponMount = $WeaponMount
 
 ## Scabbard of the class weapon, or null when the weapon has none.
 var _sheath: Node3D = null
@@ -57,10 +58,14 @@ func _ready() -> void:
 	_setup_health()
 	stats.stats_changed.connect(_on_stats_changed)
 	health.died.connect(_on_health_died)
-	attack.attacked.connect(_on_attacked)
+	attack.step_started.connect(_on_attack_step_started)
 	air_slash.struck.connect(_on_attacked)
 	basic_ability.cast_started.connect(attack_performed.emit)
 	ultimate_ability.cast_started.connect(attack_performed.emit)
+	basic_ability.cast_started.connect(attack.cancel)
+	ultimate_ability.cast_started.connect(attack.cancel)
+	basic_ability.charge_started.connect(attack.cancel)
+	ultimate_ability.charge_started.connect(attack.cancel)
 
 
 func _physics_process(delta: float) -> void:
@@ -82,6 +87,7 @@ func _physics_process(delta: float) -> void:
 func begin_hold(duration: float) -> void:
 	_hold_left = duration
 	dash.cancel()
+	attack.cancel()
 	basic_ability.cancel_charge()
 	ultimate_ability.cancel_charge()
 	basic_ability.cancel_cast()
@@ -224,9 +230,14 @@ func _release_charge_if_key_up(ability: AbilityComponent, action: StringName) ->
 		ability.release_charge()
 
 
+## A committed strike ignores the jump; in its recovery the jump cuts it
+## (docs/specs/bdo-combat-feel.md).
 func _handle_jump() -> void:
-	if _input_guard.is_just_pressed(ACTION_JUMP) and not is_casting():
-		_movement.jump()
+	if not _input_guard.is_just_pressed(ACTION_JUMP) or is_casting() or attack.is_committed():
+		return
+	if attack.is_attacking():
+		attack.cancel()
+	_movement.jump()
 
 
 ## Dashes towards the movement input, or forward when there is none. Charging
@@ -236,6 +247,7 @@ func _handle_jump() -> void:
 func _handle_dash() -> void:
 	if _input_guard.is_just_pressed(ACTION_DASH) and _can_dash():
 		if dash.try_dash(_camera.to_world_direction(_read_move_input())):
+			attack.cancel()
 			basic_ability.cut_cast_by_dash()
 			ultimate_ability.cut_cast_by_dash()
 			basic_ability.notify_dash()
@@ -254,6 +266,8 @@ func _dash_allowed_by(ability: AbilityComponent) -> bool:
 
 ## While dashing, the dash owns the body's motion. While casting, the ability
 ## moves the player if it controls motion; otherwise the player stands still.
+## A committed strike moves the body with its lunge; in its recovery, moving
+## strafes or cuts it (docs/specs/bdo-combat-feel.md).
 func _handle_movement(delta: float) -> void:
 	if dash.is_dashing():
 		dash.move_body(delta)
@@ -261,7 +275,36 @@ func _handle_movement(delta: float) -> void:
 	if is_casting():
 		_move_while_casting(delta)
 		return
-	_movement.move(_camera.to_world_direction(_read_move_input()), delta)
+	var move_input: Vector2 = _read_move_input()
+	var wish_direction: Vector3 = _camera.to_world_direction(move_input)
+	if attack.is_committed():
+		attack.move_body(delta, wish_direction)
+		return
+	if attack.is_attacking():
+		_move_in_recovery(move_input, wish_direction, delta)
+		return
+	_movement.move(wish_direction, delta)
+
+
+## STRAFE: slides slowly without turning (the facing is locked) and the strike
+## goes on. CANCEL: enough input cuts the strike and moves normally.
+func _move_in_recovery(move_input: Vector2, wish_direction: Vector3, delta: float) -> void:
+	if attack.combo.recovery_move == AttackComboConfig.RecoveryMove.STRAFE:
+		_movement.move(wish_direction, delta, attack.combo.recovery_strafe_factor)
+		return
+	if not _cancels_recovery(move_input):
+		_movement.move(Vector3.ZERO, delta)
+		return
+	attack.cancel()
+	_movement.move(wish_direction, delta)
+
+
+## CANCEL: enough movement input cuts a strike's recovery, unless an attack tap (this
+## frame or buffered) chains the next strike.
+func _cancels_recovery(move_input: Vector2) -> bool:
+	if move_input.length() <= attack.combo.move_cancel_threshold:
+		return false
+	return not attack.has_buffered_attack() and not _input_guard.is_just_pressed(ACTION_ATTACK)
 
 
 ## Air slash (docs/specs/berserker-air-slash.md): in the air, the attack button
@@ -273,14 +316,15 @@ func _handle_air_slash() -> void:
 		return
 	if air_slash.is_active() or is_on_floor() or is_casting() or dash.is_dashing():
 		return
-	if _input_guard.is_pressed(ACTION_ATTACK):
-		air_slash.try_start()
+	if _input_guard.is_pressed(ACTION_ATTACK) and air_slash.try_start():
+		attack.cancel()
 
 
-## Holding the attack button repeats the swing at the attack-speed cadence.
+## Each tap is one strike of the combo (docs/specs/humanoid-player-model.md):
+## holding the button does not repeat it.
 func _handle_attack() -> void:
-	if _input_guard.is_pressed(ACTION_ATTACK) and not is_casting():
-		attack.try_attack()
+	if _input_guard.is_just_pressed(ACTION_ATTACK) and not is_casting():
+		attack.request_attack()
 
 
 func _move_while_casting(delta: float) -> void:
@@ -306,13 +350,15 @@ func _apply_character_class() -> void:
 	air_slash.setup(character_class.air_slash)
 
 
-## The class weapon is fixed: placed once on the pivot, at its rest pose, with
+## The class weapon is fixed: placed once on the pivot, held in the humanoid's
+## hand (WeaponMount) and at its rest pose after abilities, with
 ## the weapon trail following its blade markers.
 func _equip_weapon(weapon: WeaponData) -> void:
 	var model: Node3D = weapon.model.instantiate() as Node3D
 	_weapon_pivot.add_child(model)
 	sword_swing.setup(weapon)
 	_weapon_trail.attach(model.get_node(WEAPON_TRAIL_BASE) as Node3D, model.get_node(WEAPON_TRAIL_TIP) as Node3D)
+	_weapon_mount.setup(weapon)
 	_equip_sheath(weapon)
 
 
@@ -341,4 +387,8 @@ func _on_health_died() -> void:
 
 
 func _on_attacked(_hit_count: int, _total_damage: float, _was_crit: bool) -> void:
+	attack_performed.emit()
+
+
+func _on_attack_step_started(_step_index: int) -> void:
 	attack_performed.emit()

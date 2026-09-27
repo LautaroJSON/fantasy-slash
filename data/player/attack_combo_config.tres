@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="AttackComboConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/attack_combo_config.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/attack_combo_step.gd" id="2_step"]
+
+[sub_resource type="Resource" id="Step_attack_1"]
+script = ExtResource("2_step")
+animation = &"attack_1"
+damage_multiplier = 0.35
+knockback_multiplier = 0.5
+lunge_distance = 0.5
+lunge_end = 0.12
+hitlag = 0.06
+shake_strength = 0.2
+
+[sub_resource type="Resource" id="Step_attack_2"]
+script = ExtResource("2_step")
+animation = &"attack_2"
+damage_multiplier = 0.35
+knockback_multiplier = 0.5
+lunge_distance = 0.5
+lunge_start = 0.02
+lunge_end = 0.14
+hitlag = 0.06
+shake_strength = 0.2
+
+[sub_resource type="Resource" id="Step_attack_3"]
+script = ExtResource("2_step")
+animation = &"attack_3"
+damage_multiplier = 0.62
+knockback_multiplier = 1.5
+lunge_distance = 1.0
+lunge_start = 0.2
+lunge_end = 0.34
+hitlag = 0.12
+shake_strength = 0.35
+
+[resource]
+script = ExtResource("1_script")
+steps = Array[ExtResource("2_step")]([SubResource("Step_attack_1"), SubResource("Step_attack_2"), SubResource("Step_attack_3")])
+reference_attack_speed = 1.2
+input_buffer = 0.15
+windup_turn_speed = 360.0
+assist_half_angle = 30.0
+assist_range = 5.0
+recovery_move = 1
+recovery_strafe_factor = 0.3
+move_cancel_threshold = 0.3
+lunge_stop_distance = 1.2
+lunge_stop_half_arc = 60.0

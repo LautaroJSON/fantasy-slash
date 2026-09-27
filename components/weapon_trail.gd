@@ -2,12 +2,14 @@ class_name WeaponTrail
 extends MeshInstance3D
 ## White translucent ribbon that follows the weapon's blade (between the
 ## weapon's TrailBase and TrailTip markers) while it attacks: during the basic
-## attack sweep and while any ability is cast. Each sample fades out over
-## `lifetime`. Procedural VFX mesh (Principle II, 3.1.0) rebuilt from a ring
-## buffer allocated once (Principle V). Must be top_level with an identity
-## transform: samples are stored in world space.
+## attack combo strikes, the weapon sweeps and while any ability is cast. Each
+## sample fades out over `lifetime`. Procedural VFX mesh (Principle II, 3.1.0)
+## rebuilt from a ring buffer allocated once (Principle V). Must be top_level
+## with an identity transform: samples are stored in world space.
 
 @export var sword_swing: SwordSwing
+## Basic attack combo: the trail emits during each strike. Optional.
+@export var attack: AttackComponent
 @export var abilities: Array[AbilityComponent] = []
 @export var config: WeaponTrailConfig
 @export var material: StandardMaterial3D
@@ -81,12 +83,15 @@ func _create_buffers() -> void:
 func _connect_sources() -> void:
 	sword_swing.swing_started.connect(_refresh_emitting)
 	sword_swing.swing_ended.connect(_refresh_emitting)
+	if attack != null:
+		attack.step_started.connect(_refresh_emitting.unbind(1))
+		attack.step_ended.connect(_refresh_emitting)
 	for ability: AbilityComponent in abilities:
 		ability.cast_started.connect(_refresh_emitting)
 		ability.cast_released.connect(_refresh_emitting)
 
 
-## Emits while the weapon sweeps or any ability is being cast.
+## Emits during a combo strike, while the weapon sweeps or any ability is being cast.
 func _refresh_emitting() -> void:
 	_emitting = _base != null and _is_weapon_attacking()
 	if _emitting:
@@ -95,7 +100,7 @@ func _refresh_emitting() -> void:
 
 
 func _is_weapon_attacking() -> bool:
-	if sword_swing.is_swinging():
+	if sword_swing.is_swinging() or (attack != null and attack.is_attacking()):
 		return true
 	for ability: AbilityComponent in abilities:
 		if ability.is_casting():

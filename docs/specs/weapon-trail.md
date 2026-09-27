@@ -59,9 +59,9 @@ Player
 ## 6. Criterios de aceptación
 
 - **AC214** Cada escena de arma tiene `TrailBase` y `TrailTip`, y `TrailTip` está en la punta del modelo (±0.05).
-- **AC215** Un ataque básico enciende la estela. Al terminar el barrido deja de emitir y, pasado `lifetime`, queda sin muestras.
+- **AC215** Un ataque básico enciende la estela. Al terminar el barrido deja de emitir y, pasado `lifetime`, queda sin muestras. *(Adaptado en `humanoid-player-model.md`: "barrido" pasa a "golpe del combo".)*
 - **AC216** La estela emite durante todo el casteo de la Estocada, el Golpe Veloz y el Giro, y se apaga al terminar.
-- **AC217** Durante un barrido, la última muestra coincide con la posición global de `TrailTip`.
+- **AC217** Durante un barrido, la última muestra coincide con la posición global de `TrailTip`. *(Adaptado en `humanoid-player-model.md`: la muestra sigue a la punta mientras el golpe mueve la mano.)*
 - **AC218** La muestra más nueva tiene alpha `head_alpha`, las más viejas menos, y nunca hay más de `max_samples`.
 - **AC219** El jugador ya no tiene `AttackIndicator` y el Giro ya no tiene `WindTrail`.
 - **AC220** Regresión: suite completa en verde.

@@ -30,9 +30,9 @@
 
 ## 4. Criterios de aceptación
 
-- **AC89** El barrido arranca en `±ATTACK_ARC/2` y termina en `∓ATTACK_ARC/2` (±1°), con la hoja horizontal (`blade_tilt`).
+- **AC89** El barrido arranca en `±ATTACK_ARC/2` y termina en `∓ATTACK_ARC/2` (±1°), con la hoja horizontal (`blade_tilt`). *(Desde `humanoid-player-model.md` el barrido es el corte del dash del Giro; el test llama a `SwordSwing.play()` directo.)*
 - **AC90** Los golpes consecutivos alternan el lado de inicio.
-- **AC91** Con +30° de Arco, el barrido cubre 150°.
+- **AC91** Con +30° de Arco, el barrido cubre 150°. *(Ídem: el arco lo pasa quien llama.)*
 - **AC92** Después del barrido y la recuperación, la espada vuelve a la pose de reposo (±0.01).
 - **AC93** Una habilidad lanzada durante el barrido lo cancela y reproduce su animación.
 - **AC94** Regresión: la suite completa en verde.

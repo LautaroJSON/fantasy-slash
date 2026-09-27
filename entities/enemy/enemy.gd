@@ -46,6 +46,14 @@ var _spawn_marker_grow: float = 0.0
 ## Rest heights of Body and Hands (set once by _apply_body_scale).
 var _body_rest_y: float = 0.0
 var _hands_rest_y: float = 0.0
+## Rest X of Body and Hands, the axis the hit lag shakes (set once by _apply_body_scale).
+var _body_rest_x: float = 0.0
+var _hands_rest_x: float = 0.0
+## Hit lag (docs/specs/bdo-combat-feel.md): seconds left frozen, and the shake.
+var _hitlag_left: float = 0.0
+var _hitlag_shake: ShakeState = ShakeState.new()
+var _hitlag_amplitude: float = 0.0
+var _hitlag_frequency: float = 0.0
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var debuffs: DebuffComponent = $DebuffComponent
@@ -79,6 +87,8 @@ func _physics_process(delta: float) -> void:
 	if _spawn_left > 0.0:
 		_advance_spawn_in(delta)
 		return
+	if _advance_hitlag(delta):
+		return
 	_update_behaviour(delta)
 
 
@@ -93,6 +103,7 @@ func activate(at: Vector3, new_target: Player, new_level: int = 1) -> void:
 	_behavior.reset()
 	_hands.reset()
 	_end_spawn_in()
+	_end_hitlag()
 	_telegraph.clear()
 	for ring: MeshInstance3D in _shockwaves:
 		ring.visible = false
@@ -148,6 +159,7 @@ func deactivate() -> void:
 	if registry != null:
 		registry.unregister(self)
 	debuffs.clear()
+	_end_hitlag()
 	visible = false
 	process_mode = Node.PROCESS_MODE_DISABLED
 	_collision.set_deferred(&"disabled", true)
@@ -379,6 +391,8 @@ func _apply_body_scale() -> void:
 	_hands.scale = Vector3.ONE * body_scale
 	_body_rest_y = _body.position.y
 	_hands_rest_y = _hands.position.y
+	_body_rest_x = _body.position.x
+	_hands_rest_x = _hands.position.x
 	_collision.scale = Vector3.ONE * body_scale
 	_collision.position.y *= body_scale
 	var capsule: CapsuleShape3D = _collision.shape as CapsuleShape3D
@@ -432,3 +446,42 @@ func _on_died() -> void:
 func notify_hit(applied: float, is_crit: bool) -> void:
 	health_bar.notify_hit(applied, is_crit)
 	hit_notified.emit(applied, is_crit)
+
+
+## Hit lag of a player strike (docs/specs/bdo-combat-feel.md): for `duration`
+## seconds the body shakes sideways and, unless stats.resists_hitlag, the
+## enemy freezes (behavior and push paused; a push already given starts after).
+## Restarts, never adds up. Ignored while rising from the floor.
+func apply_hitlag(duration: float, config: HitstopConfig) -> void:
+	if duration <= 0.0 or _spawn_left > 0.0:
+		return
+	_hitlag_left = duration
+	_hitlag_amplitude = config.enemy_shake_amplitude
+	_hitlag_frequency = config.enemy_shake_frequency
+	_hitlag_shake.start(duration)
+
+
+func is_in_hitlag() -> bool:
+	return _hitlag_left > 0.0
+
+
+## Advances the hit lag; true when the enemy is frozen this frame.
+func _advance_hitlag(delta: float) -> bool:
+	if not is_in_hitlag():
+		return false
+	_hitlag_left -= delta
+	_set_hitlag_offset(_hitlag_shake.advance(delta, _hitlag_frequency) * _hitlag_amplitude)
+	if _hitlag_left <= 0.0:
+		_end_hitlag()
+	return not stats.resists_hitlag
+
+
+func _end_hitlag() -> void:
+	_hitlag_left = 0.0
+	_hitlag_shake.stop()
+	_set_hitlag_offset(0.0)
+
+
+func _set_hitlag_offset(offset: float) -> void:
+	_body.position.x = _body_rest_x + offset
+	_hands.position.x = _hands_rest_x + offset

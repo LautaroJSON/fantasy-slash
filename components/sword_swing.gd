@@ -123,6 +123,11 @@ func is_swinging() -> bool:
 	return _phase == Phase.SWING
 
 
+## True while sweeping or blending back to rest: the sweep owns the pivot.
+func is_active() -> bool:
+	return _phase != Phase.IDLE
+
+
 ## Current yaw of the blade relative to the player's facing, in radians.
 func get_sweep_yaw() -> float:
 	return pivot.rotation.y

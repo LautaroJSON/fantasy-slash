@@ -2,6 +2,7 @@ extends GdUnitTestSuite
 
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
+const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const GRUNT_STATS: EnemyStats = preload("res://data/enemies/grunt_stats.tres")
 ## boss-titan: the Titán is the big body of reference (the Coloso is gone).
 const BIG_STATS: EnemyStats = preload("res://data/enemies/titan_stats.tres")
@@ -24,6 +25,10 @@ func before_test() -> void:
 	_player = auto_free(PLAYER_SCENE.instantiate())
 	_player.enemy_registry = _registry
 	add_child(_player)
+	# Strikes land at the humanoid clip's hit window: the tests drive it by
+	# hand, and a unit combo keeps one strike = one old swing.
+	ComboDriver.drive_by_hand(_player)
+	ComboDriver.use_unit_combo(_player)
 
 
 func _spawn(stats: EnemyStats, at: Vector3) -> Enemy:
@@ -69,14 +74,14 @@ func test_ac148_shake_settles_at_the_raised_rest_position() -> void:
 
 func test_ac149_basic_attack_reaches_a_big_body() -> void:
 	var big: Enemy = _spawn(BIG_STATS, Vector3(0.0, 0.0, -2.5))
-	assert_bool(_player.attack.try_attack_with_roll(NO_CRIT_ROLL)).is_true()
+	assert_bool(ComboDriver.strike(_player, NO_CRIT_ROLL)).is_true()
 	assert_float(big.health.current_health).is_less(big.health.max_health)
 
 
 func test_ac149_grunt_reach_is_unchanged() -> void:
 	var just_out_of_reach: float = _player.stats.get_stat(PlayerStats.Stat.ATTACK_RANGE) + 0.1
 	var grunt: Enemy = _spawn(GRUNT_STATS, Vector3(0.0, 0.0, -just_out_of_reach))
-	assert_bool(_player.attack.try_attack_with_roll(NO_CRIT_ROLL)).is_true()
+	assert_bool(ComboDriver.strike(_player, NO_CRIT_ROLL)).is_true()
 	assert_float(grunt.health.current_health).is_equal_approx(grunt.health.max_health, 0.0001)
 
 
@@ -99,6 +104,6 @@ func test_ac150_damage_numbers_appear_above_a_big_body() -> void:
 	numbers.crit_material = NUMBER_CRIT_MATERIAL
 	add_child(numbers)
 	var big: Enemy = _spawn(BIG_STATS, Vector3(0.0, 0.0, -2.5))
-	_player.attack.try_attack_with_roll(NO_CRIT_ROLL)
+	ComboDriver.strike(_player, NO_CRIT_ROLL)
 	var number: DamageNumber = numbers.get_last_spawned()
 	assert_float(number.global_position.y).is_equal_approx(big.global_position.y + NUMBER_CONFIG.spawn_height * BIG_STATS.body_scale, 0.001)

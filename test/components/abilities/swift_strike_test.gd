@@ -111,6 +111,11 @@ func test_ac78_no_invulnerability_and_no_other_actions_while_sprinting() -> void
 	assert_bool(_player.dash.is_dashing()).is_false()
 	assert_int(swings[0]).is_equal(0)
 	await _physics_frames(SPRINT_FRAMES)
+	# Each tap is one strike (humanoid-player-model.md): tap again after the cast.
+	Input.action_release(&"attack")
+	await _physics_frames(1)
+	Input.action_press(&"attack")
+	await _physics_frames(30)
 	assert_int(swings[0]).is_greater(0)
 
 

@@ -38,6 +38,13 @@ func hold(delta: float) -> void:
 	body.move_and_slide()
 
 
+## Sets the horizontal velocity as given (e.g. a strike's lunge); gravity
+## still applies and the visual does not turn.
+func drive(horizontal: Vector3, delta: float) -> void:
+	body.velocity = Vector3(horizontal.x, _next_vertical(body.velocity.y, delta, body.is_on_floor()), horizontal.z)
+	body.move_and_slide()
+
+
 ## Only from the floor; no double jump.
 func jump() -> void:
 	if body.is_on_floor():

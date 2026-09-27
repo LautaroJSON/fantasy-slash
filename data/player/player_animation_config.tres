@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="PlayerAnimationConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/player_animation_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+run_speed_threshold = 0.5
+weapon_mount_blend = 0.1
