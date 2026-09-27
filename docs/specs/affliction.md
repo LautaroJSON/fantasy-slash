@@ -1,9 +1,9 @@
 # Feature: Aflicción (barra de acumulación en los enemigos)
 
-- **Estado:** Propuesta (2026-09-27). Pendiente de aprobación y de las decisiones de §3. ACs reservados: **AC851–AC900** (se usan AC851–AC888).
-- **Constitución:** `docs/constitution.md` v4.15.0 → **enmienda MINOR a 4.16.0** (Principios II y III, ver §9). Si el re-work del Guerrero enmienda antes, el número se corre al cerrar.
+- **Estado:** Propuesta (2026-09-27), revisada para construirse sobre `status-icons.md`. Pendiente de aprobación y de las decisiones de §3. ACs reservados: **AC851–AC900** (se usan AC851–AC891).
+- **Constitución:** `docs/constitution.md` v4.16.0 (con la enmienda de `status-icons.md` aplicada) → **enmienda MINOR a 4.17.0** (Principios II y III, ver §9). Si el re-work del Guerrero enmienda antes, el número se corre al cerrar.
 - **Pilar (Principio I):** **progresión** y **combate.** Progresión: cada tipo de Aflicción es una carta que define una build (Veneno para bosses, Estallido para hordas, Escarcha para controlar) y el tope de tipos obliga a elegir. Combate: la barra debajo de la vida muestra cuánto falta para disparar el efecto, así que el jugador decide si terminar la barra de un enemigo o cambiar de objetivo; con Escarcha, el golpe que llena la barra desacelera las preparaciones enemigas.
-- **Dependencias:** `enemy-rage.md` (lista de estados, `STAT_BOOST`), `spin-golden-upgrades.md` (Debilitar, `ARMOR_REDUCTION`), `unique-ability-upgrades.md` (Lacerante, `bleed`), `upgrade-caps.md`, `debuff-stacks-display.md`, `cooldown-timers.md`, `boss-hud-bar.md`, `stats-rework.md` (catálogo de cartas), `enemy-level-pace.md`. **En paralelo:** `warrior-abilities-rework.md` (AC801–AC850, otra sesión), ver §8.
+- **Dependencias:** `enemy-rage.md` (lista de estados, `STAT_BOOST`), `spin-golden-upgrades.md` (Debilitar, `ARMOR_REDUCTION`), `unique-ability-upgrades.md` (Lacerante, `bleed`), `upgrade-caps.md`, `debuff-stacks-display.md`, `cooldown-timers.md`, `boss-hud-bar.md`, `stats-rework.md` (catálogo de cartas), `enemy-level-pace.md`. **Requiere implementada:** `status-icons.md` (AC901–AC930, aprobada): íconos `StatusIconView`, `DebuffData.icon`/`icon_color`/`is_beneficial`, `DebuffComponent.revision` y `EnemyStatusOverlay`. Esta spec **no toca** los íconos: solo agrega estados que ellos muestran. **En paralelo:** `warrior-abilities-rework.md` (AC801–AC850, otra sesión), ver §8.
 
 ## 1. Nombre
 
@@ -20,12 +20,12 @@
 
 | Pieza | Qué hay hoy | Uso en esta spec |
 |---|---|---|
-| `DebuffData` (`resources/debuff_data.gd`) | `id`, `effect` (`DAMAGE_OVER_TIME`, `ARMOR_REDUCTION`, `STAT_BOOST`, `STATUS`), `duration`, `tick_interval`, `max_stacks`, `permanent`, `icon_material`. La fuerza (`potency`) la pasa quien lo aplica. | **Se reutiliza tal cual** para el efecto de cada tipo. Se agrega **un** valor al enum: `SLOW` (ver §4.6). El aturdimiento del re-work sería otro valor (`STUN`) y un `.tres`. |
+| `DebuffData` (`resources/debuff_data.gd`) | `id`, `effect` (`DAMAGE_OVER_TIME`, `ARMOR_REDUCTION`, `STAT_BOOST`, `STATUS`), `duration`, `tick_interval`, `max_stacks`, `permanent`; con `status-icons.md`: `icon` (SVG), `icon_color`, `is_beneficial` (sin `icon_material`). La fuerza (`potency`) la pasa quien lo aplica. | **Se reutiliza tal cual** para el efecto de cada tipo. Se agrega **un** valor al enum: `SLOW` (ver §4.6). El aturdimiento del re-work sería otro valor (`STUN`) y un `.tres`. |
 | `DebuffComponent` | Lista de estados por entidad, `apply(data, potency)` refresca y suma stacks, ticks con `ticked`, `get_defense_reduction()`. | **Se reutiliza**: el disparo de una Aflicción es `enemy.debuffs.apply(type.debuff, potency)`. Se agrega `get_speed_scale()` para `SLOW`. |
 | `data/debuffs/` | `bleed` (DoT, 5 s, tick 1 s), `weaken` (armadura, 4 s, 3 stacks), `rage`, `shield`. | No se tocan. Se agregan `poison`, `frost` y `corrosion` (ids propios para no compartir stacks con Lacerante ni con Debilitar). |
-| `DebuffIconRow` + `debuff_icon_config` | Fila de íconos arriba de la barra, con segundos y stacks. | **Se reutiliza sin cambios:** los estados de las Aflicciones aparecen ahí con su ícono (mismo material que su barra). |
-| `EnemyHealthBar` + `health_bar_config` | Barra 3D (`QuadMesh` fondo/estela/relleno), oculta hasta el primer golpe, mira a la cámara, sacudida en golpes fuertes; los bosses la suprimen. | Las barras de Aflicción son un nodo hijo (`AfflictionBars`), como `DebuffIcons`: heredan visibilidad, orientación, escala y sacudida. |
-| `BossHealthBar` + `boss_bar_config` | Barra del HUD para bosses (`ColorRect`), íconos de estado con reloj. | Se agregan las barras de Aflicción debajo de `BarFrame` (`ColorRect`, color del material de cada tipo, como los íconos). |
+| Íconos de estado (`status-icons.md`) | `StatusIconView` / `StatusIconRow` (fondo, glifo SVG teñido, reloj, marco rojo o verde, stacks). En enemigos comunes, la capa 2D `EnemyStatusOverlay` del HUD dibuja la fila **arriba** de la barra de vida (se ve aunque la barra esté oculta) y reescribe una fila solo cuando cambia `DebuffComponent.revision`. En bosses, la `StatusIconRow` de `BossHealthBar`. Reemplaza a `DebuffIconRow` (se borra). | **Se reutiliza sin cambios.** Los estados que disparan las Aflicciones (`poison`, `frost`, `corrosion`) son `DebuffData` comunes: `apply()` sube la `revision` y el overlay (o la barra del boss) muestra el ícono solo. Cada estado nuevo trae su SVG en `assets/icons/status/` con su crédito en `SOURCE.md` (lo exigen AC905 y AC908). |
+| `EnemyHealthBar` + `health_bar_config` | Barra 3D (`QuadMesh` fondo/estela/relleno), oculta hasta el primer golpe, mira a la cámara, sacudida en golpes fuertes; los bosses la suprimen. Sin `DebuffIcons` tras `status-icons.md`. | Las barras de Aflicción son un nodo hijo (`AfflictionBars`), **debajo** de la barra de vida: heredan visibilidad, orientación, escala y sacudida. No se cruzan con la fila de íconos del overlay, que va arriba (`row_offset_px`). |
+| `BossHealthBar` + `boss_bar_config` | Barra del HUD para bosses (`ColorRect`); tras `status-icons.md`, su fila de estados es una `StatusIconRow` (28 px, 8 casillas). | Se agrega un nodo propio (`AfflictionBars`) debajo de `BarFrame`, sin tocar la `StatusIconRow`. |
 | `AttackComponent.enemy_hit` | Señal por enemigo golpeado por el combo (`_hit_enemy`), con el daño aplicado. | Fuente "ataque básico". |
 | `AirSlashComponent.enemy_hit` | Tajo aéreo del Berserker. | Fuente "ataque básico" (es el ataque del aire). |
 | `AbilityComponent.report_hit()` → `enemy_hit` | Lo llaman los behaviors (Estocada, Giro, Envainar, Golpe veloz) por cada enemigo dañado. | Fuente "habilidad", sin tocar los behaviors. |
@@ -48,7 +48,7 @@ Cada una lleva mi recomendación, que es lo que describe el resto de la spec.
 8. **Tope de tipos por run.** Propuesta: **2** (`AfflictionConfig.max_types`). Con 4 tipos y 2 barras bajo la vida la lectura sigue limpia; 3 ya tapa al enemigo en grupos.
 9. **Fuentes.** Propuesta: la carta declara sus fuentes (`sources`: básico y/o habilidades). Las 4 cartas iniciales usan **ambas** ("Tus golpes acumulan…"). Queda preparado para que una mejora única de habilidad otorgue un tipo solo para esa habilidad, pero **no se hace en esta spec** (se decide en otra).
 10. **Dónde se ofrecen.** Propuesta: cartas **normales** (no doradas), en su propio catálogo, con un color de carta nuevo (turquesa, ver §9). Se pueden banear.
-11. **Colores de las barras** (no reservados, ver §9): Veneno verde, Estallido azul eléctrico, Escarcha cian, Corrosión violeta (el de Debilitar, que ya es "armadura rota"). Se evitan los reservados (blanco, gris, ámbar) y los que se confunden en combate (rojo de Rage, rojo anaranjado de los avisos, miel, amarillo de estamina).
+11. **Colores** (no reservados, ver §9): Veneno verde oscuro `Color(0.25, 0.6, 0.2)` (no el verde `Color(0.3, 0.8, 0.35)` del marco de buff de `status-icons.md`, para que un veneno no se lea como buff), Estallido azul eléctrico, Escarcha cian, Corrosión violeta (el de Debilitar, que ya es "armadura rota"; el glifo distinto los separa). Se evitan los reservados (blanco, gris, ámbar) y los que se confunden en combate (rojo de Rage, rojo anaranjado de los avisos, miel, amarillo de estamina, rojo del marco de debuff). El color de cada tipo es a la vez el de su barra y el `icon_color` de su estado, así barra e ícono se asocian de un vistazo.
 
 ## 4. Diseño
 
@@ -56,7 +56,7 @@ Cada una lleva mi recomendación, que es lo que describe el resto de la spec.
 
 1. El jugador consigue una carta "Veneno" tras una oleada: "Tus golpes acumulan Aflicción: Veneno. Al llenarse, envenena: 1 % de vida por segundo durante 6 s".
 2. Desde entonces, cada enemigo muestra una barra verde fina debajo de su barra de vida (vacía). Cada golpe la llena en proporción al daño.
-3. Al llenarse: la barra destella (`flash_duration`), se vacía y se aplica el estado (aparece el ícono de Veneno arriba de la barra, con sus segundos). La barra vuelve a cargarse desde 0 con los golpes siguientes, aunque el veneno siga activo (un disparo nuevo lo refresca).
+3. Al llenarse: la barra destella (`flash_duration`), se vacía y se aplica el estado: el ícono de Veneno aparece en la fila de estados del enemigo (`EnemyStatusOverlay`, arriba de la barra de vida), con su reloj, como cualquier estado. La barra vuelve a cargarse desde 0 con los golpes siguientes, aunque el veneno siga activo (un disparo nuevo lo refresca).
 4. Con dos tipos, hay dos barras apiladas; cada golpe carga las dos.
 5. Estallido no deja estado: al llenarse, hace daño en área alrededor del enemigo (números de daño normales). Ese daño **no** carga Aflicciones (sin reacciones en cadena).
 6. Los ticks de veneno tampoco cargan (no son golpes).
@@ -72,6 +72,16 @@ Cada una lleva mi recomendación, que es lo que describe el resto de la spec.
 
 Futuro, **no en esta spec**: **Aturdimiento** = un `AfflictionData` más con un `DebuffData` de efecto `STUN` que agregue el re-work del Guerrero (§8). No requiere código en esta mecánica.
 
+**Íconos de los estados nuevos** (SVG de game-icons.net, CC BY 3.0, preparados como indica `status-icons.md` §2.3: sin el path de fondo, en `assets/icons/status/`, con crédito en su `SOURCE.md`). El nombre exacto se confirma al bajarlos del repo `game-icons/icons`:
+
+| Estado | Archivo | Origen propuesto | `icon_color` | `is_beneficial` |
+|---|---|---|---|---|
+| `poison` | `poison_bottle.svg` | lorc/poison-bottle | `Color(0.25, 0.6, 0.2)` | `false` |
+| `frost` | `snowflake.svg` | lorc/snowflake-1 | `Color(0.45, 0.9, 0.95)` | `false` |
+| `corrosion` | `acid_blob.svg` | lorc/acid-blob | `Color(0.55, 0.35, 0.8)` | `false` |
+
+Estallido no deja estado, así que no tiene ícono.
+
 ### 4.3 Estructura de nodos
 
 ```
@@ -81,11 +91,14 @@ Player (player.tscn)
 Enemy (enemy.tscn)
 ├── AfflictionComponent                     ← nuevo: una barra de carga por tipo del jugador
 └── HealthBar (EnemyHealthBar)
-    ├── DebuffIcons (DebuffIconRow)         (sin cambios)
+    ├── Background / Trail / Fill / LevelLabel   (sin cambios)
     └── AfflictionBars (AfflictionBarRow)   ← nuevo: filas Background + Fill (QuadMesh), creadas en _ready
 
-HUD › BossBarStack › BossHealthBar
-    └── AfflictionBars (VBoxContainer)      ← nuevo: filas ColorRect creadas en setup()
+Hud
+├── EnemyStatusOverlay                      (status-icons.md; sin cambios: muestra poison/frost/corrosion)
+└── BossBarStack › BossHealthBar
+    ├── DebuffIcons (StatusIconRow)         (status-icons.md; sin cambios)
+    └── AfflictionBars (VBoxContainer)      ← nuevo: filas ColorRect creadas en setup(), debajo de BarFrame
 ```
 
 - Los slots (barras) de enemigos y del HUD se crean **una vez** (`AfflictionConfig.max_types`), nunca en runtime (Principio V).
@@ -99,7 +112,7 @@ HUD › BossBarStack › BossHealthBar
 |---|---|---|
 | `id` | `StringName` | Identidad estructural. |
 | `title` | `String` | "Veneno" (carta y pausa). |
-| `bar_material` | `StandardMaterial3D` | Relleno de su barra 3D; el HUD usa su `albedo_color`. También es el `icon_material` de su `DebuffData`. |
+| `bar_material` | `StandardMaterial3D` | Relleno de su barra 3D; el HUD usa su `albedo_color`. Es el mismo color que el `icon_color` de su `DebuffData` (AC854). |
 | `buildup_multiplier` | `float` | Carga por punto de daño (1.0 = estándar). |
 | `debuff` | `DebuffData` | Estado que aplica al llenarse (nulo para Estallido). |
 | `burst_radius` | `float` | Radio del daño en área (0 = sin estallido). |
@@ -151,7 +164,9 @@ Cálculo puro: `has_burst() -> bool` (`burst_radius > 0`).
 
 **`DebuffData`:** `Effect.SLOW` (al final del enum = 4). `potency` = fracción de velocidad que se pierde. Con varios `SLOW` activos manda el más fuerte.
 
-**Nuevos `.tres` de estado:** `data/debuffs/poison.tres`, `frost.tres`, `corrosion.tres` (ver §4.2), con `icon_material` = `bar_material` de su tipo.
+**Nuevos `.tres` de estado:** `data/debuffs/poison.tres`, `frost.tres`, `corrosion.tres` (ver §4.2), con los campos de `status-icons.md`: `icon` (su SVG), `icon_color` (= `albedo_color` del `bar_material` de su tipo) e `is_beneficial = false`. No se agrega ningún material de ícono.
+
+**Íconos nuevos:** `assets/icons/status/poison_bottle.svg`, `snowflake.svg`, `acid_blob.svg` y sus `.import`; `assets/icons/status/SOURCE.md` suma una fila por archivo (autor, URL, CC BY 3.0).
 
 **Materiales nuevos** (`materials/afflictions/`): `poison_material.tres`, `burst_material.tres`, `frost_material.tres`, `corrosion_material.tres` (unshaded, opacos), `affliction_flash_material.tres`.
 
@@ -220,9 +235,9 @@ func clear() -> void                                 # pool (activate/deactivate
 
 **Barra (enemigo).** `add_buildup` suma la carga, reinicia el temporizador de vaciado y, si llega al umbral: carga a 0, empieza el destello, multiplica la resistencia por `(1 + resistance_step)` hasta `resistance_cap`, emite `triggered` y devuelve `true`. El sobrante de carga se descarta. Un enemigo muerto o invulnerable (el golpe aplicó 0) no carga. `advance()` descuenta el destello y, pasado `decay_delay`, resta `decay_rate × umbral × delta`; solo procesa mientras alguna barra tiene carga o destello (`set_physics_process`).
 
-**Vista 3D (`AfflictionBarRow`).** Crea `max_types` filas en `_ready` debajo de la barra de vida (`-(size.y/2 + bar_gap + i × (bar_height + bar_gap))`). Muestra tantas filas como tipos tenga el jugador (`loadout.changed` → `refresh`), con `material_override = type.bar_material` (o `flash_material` mientras destella). El relleno es un segmento anclado a la izquierda como el de vida. Se redibuja con `afflictions.changed`. Al ser hija de `HealthBar`, hereda visibilidad (oculta hasta el primer golpe, suprimida en bosses), orientación y sacudida.
+**Vista 3D (`AfflictionBarRow`).** Crea `max_types` filas en `_ready` debajo de la barra de vida (`-(size.y/2 + bar_gap + i × (bar_height + bar_gap))`). Muestra tantas filas como tipos tenga el jugador (`loadout.changed` → `refresh`), con `material_override = type.bar_material` (o `flash_material` mientras destella). El relleno es un segmento anclado a la izquierda como el de vida. Se redibuja con `afflictions.changed`. Al ser hija de `HealthBar`, hereda visibilidad (oculta hasta el primer golpe, suprimida en bosses), orientación y sacudida. Van en 3D y no en el `EnemyStatusOverlay` porque pertenecen a la barra de vida (su ancho, su sacudida y su visibilidad) y solo tienen sentido después del primer golpe; el overlay queda solo para íconos.
 
-**Vista HUD (`BossHealthBar`).** En `setup()` crea `max_types` filas `ColorRect` (fondo + relleno) debajo de `BarFrame`; `track()` se conecta a `enemy.afflictions.changed` y al `changed` del loadout; el color es `bar_material.albedo_color` (como los íconos, Principio II).
+**Vista HUD (`BossHealthBar`).** En `setup()` crea `max_types` filas `ColorRect` (fondo + relleno) debajo de `BarFrame`; `track()` se conecta a `enemy.afflictions.changed` y al `changed` del loadout; el color es `bar_material.albedo_color`. No toca la `StatusIconRow` de la barra ni sus getters.
 
 **Lentitud (`SLOW`).** `Enemy._update_behaviour(delta)` pasa `delta × debuffs.get_speed_scale()` al behavior (preparaciones, ataques e intervalos se estiran) y `move_towards`, `walk` y `move_with_velocity` multiplican la velocidad horizontal por la misma escala. El empuje, la gravedad y el hit lag no se escalan. Un `STUN` del re-work puede enchufarse en este mismo punto (escala 0 y cancelar el ataque en curso) sin cambiar la Aflicción.
 
@@ -230,13 +245,13 @@ func clear() -> void                                 # pool (activate/deactivate
 
 **Pausa.** `PauseMenu` agrega una sección debajo de los stats: `"Aflicciones 1/2"` y una línea por tipo (`"Veneno nv. 2"`); sin tipos, `"Aflicciones 0/2"` sin líneas. El sandbox lista las cartas de Aflicción como las demás (vía el pool).
 
-## 5. Criterios de aceptación (AC851–AC888)
+## 5. Criterios de aceptación (AC851–AC891)
 
 **Datos**
 - **AC851** Existen `AfflictionData`, `AfflictionUpgradeData`, `AfflictionCatalog` y `AfflictionConfig` con los campos de §4.4, y `affliction_config.tres` con `max_types = 2`, factores 1.0, `decay_delay = 4.0`, `decay_rate = 0.15`, `resistance_cap = 2.0`.
 - **AC852** `affliction_catalog.tres` tiene las 4 cartas (Veneno, Estallido, Escarcha, Corrosión), cada una con `max_level = 3`, `sources = 3`, 3 `level_values` y 3 `level_descriptions`, con los valores de §4.2.
 - **AC853** Todo `data/enemies/*_stats.tres` tiene `affliction_threshold_ratio > 0` (0.5 comunes, 0.4 Escudero, 0.12 bosses) y los bosses `affliction_resistance_step = 0.25`.
-- **AC854** `poison.tres`, `frost.tres` y `corrosion.tres` tienen el efecto, la duración y el tick de §4.2, y su `icon_material` es el `bar_material` de su tipo.
+- **AC854** `poison.tres`, `frost.tres` y `corrosion.tres` tienen el efecto, la duración y el tick de §4.2, `is_beneficial = false`, un `icon` de `assets/icons/status/` y un `icon_color` igual al `albedo_color` del `bar_material` de su tipo (y cumplen AC905 de `status-icons.md`).
 - **AC855** Ningún script nuevo tiene literales de diseño: todo número sale de los Resources de §4.4 (review, Principio III).
 
 **Carga y disparo**
@@ -276,9 +291,14 @@ func clear() -> void                                 # pool (activate/deactivate
 - **AC883** Mientras destella, la fila usa `flash_material` y se ve llena; después vuelve a su material y a 0.
 - **AC884** Las filas se ocultan y se muestran con la barra de vida, y en los bosses (barra suprimida) no se ven en 3D.
 - **AC885** La barra del boss en el HUD muestra las filas con el color del tipo (`albedo_color`) y su relleno sigue la carga.
-- **AC886** El ícono del estado disparado aparece en la fila de íconos del enemigo (sin cambios en `DebuffIconRow`).
+- **AC886** Al disparar Veneno sobre un enemigo común, su fila del `EnemyStatusOverlay` muestra el ícono de `poison.tres` (glifo, color, marco de debuff y reloj en 1) en el siguiente `update_rows()`, sin cambios en `StatusIconView`, `StatusIconRow` ni `EnemyStatusOverlay`.
 - **AC887** La pausa muestra "Aflicciones 1/2" y "Veneno nv. 2" tras tomar Veneno dos veces.
 - **AC888** Las cartas de Aflicción usan el color turquesa de `UpgradePickerConfig` y muestran la descripción del nivel siguiente.
+
+**Sobre `status-icons.md`**
+- **AC889** `assets/icons/status/SOURCE.md` lista `poison_bottle.svg`, `snowflake.svg` y `acid_blob.svg` con autor, URL de origen y CC BY 3.0 (AC908 sigue en verde), y ninguno contiene el path de fondo `M0 0h512v512H0z`.
+- **AC890** Boss con Escarcha disparada: la `StatusIconRow` de su `BossHealthBar` muestra el ícono de `frost.tres` y, debajo de `BarFrame`, las filas de Aflicción siguen la carga; la cantidad de casillas de la `StatusIconRow` no cambia (8).
+- **AC891** Esta spec no modifica `StatusIconView`, `StatusIconRow`, `EnemyStatusOverlay`, `StatusIconConfig`, `EnemyStatusOverlayConfig` ni los `DebuffData` existentes (review del diff). Con 5 estados o más en un enemigo común, el desborde "+" de AC918 funciona igual con los estados de Aflicción.
 
 ## 6. Tests
 
@@ -287,8 +307,8 @@ func clear() -> void                                 # pool (activate/deactivate
 - `test/components/affliction_loadout_test.gd`: AC858–AC859, AC862–AC863, AC868–AC870, AC874–AC876, AC879 (jugador y enemigos de test, `combo_driver.gd` para el combo).
 - `test/components/status_effects_test.gd` (ampliado) y `test/entities/enemy_test.gd` (ampliado): AC871–AC873.
 - `test/systems/wave_manager_test.gd` y `upgrade_offer_test.gd` (ampliados): AC875, AC877–AC878.
-- `test/components/affliction_bar_row_test.gd`, `test/ui/boss_health_bar_test.gd`, `test/ui/pause_menu_test.gd`, `test/ui/upgrade_picker_test.gd`: AC880–AC888.
-- AC855: review.
+- `test/components/affliction_bar_row_test.gd`, `test/ui/boss_health_bar_test.gd`, `test/ui/pause_menu_test.gd`, `test/ui/upgrade_picker_test.gd`: AC880–AC888 y AC890. `test/ui/enemy_status_overlay_test.gd` (ampliado con un enemigo envenenado): AC886. `test/resources/status_icon_assets_test.gd` (el de AC905/AC908, que ya recorre `data/debuffs/`): AC889.
+- AC855 y AC891: review.
 - Tests viejos con valores fijos que cambien (p. ej. cantidad de cartas del pool en `upgrade_offer_test` / `wave_manager_test`, o el orden del enum `Effect`) se adaptan sin cambiar lo que verifican y se anotan en §11.
 
 ## 7. Riesgos
@@ -298,6 +318,8 @@ func clear() -> void                                 # pool (activate/deactivate
 3. **Legibilidad con muchos enemigos:** dos filas finas por enemigo. Si molesta, `bar_height` es dato.
 4. **Carga del Giro:** golpea muchas veces por segundo; por daño aplicado, carga lo mismo que su DPS, sin trato especial.
 5. **Enum `Effect`:** ver §8.
+6. **Íconos en enemigos comunes:** con dos Aflicciones con estado más Debilitar, Sangrado y Rage, un enemigo puede pasar de 5 estados. El "+" de `status-icons.md` (AC918) lo resuelve sin cambios; si molesta en la práctica, se discute en esa spec, no acá.
+7. **Orden de implementación:** esta spec se implementa **después** de `status-icons.md` (sus pasos 1–7). Si se implementara antes, los `.tres` nuevos necesitarían `icon_material` y luego migrarse; no se hace.
 
 ## 8. Coordinación con el re-work del Guerrero
 
@@ -305,30 +327,33 @@ func clear() -> void                                 # pool (activate/deactivate
 - **`DebuffData.Effect`:** esta spec agrega `SLOW = 4` **al final**. Si el re-work agrega `STUN`, va después (`= 5`). Si se mergea al revés, al resolver el conflicto se revisan los `effect =` de los `.tres` nuevos (Godot guarda el entero).
 - **Aturdimiento como tipo:** con `STUN` existente, es un `AfflictionData` (`stun.tres` como `debuff`) y una carta, sin código en esta mecánica. La escala de `Enemy._update_behaviour` (§4.6) es el punto de enganche.
 - **Golpes nuevos del Guerrero:** si pasan por `AbilityComponent.report_hit()`, cargan Aflicciones sin cambios.
-- **Constitución:** los dos pueden enmendar; el número de versión se asigna al cerrar, en el orden en que se mergeen.
+- **Constitución:** `status-icons.md` toma la 4.16.0; esta spec, la siguiente MINOR (4.17.0). Si el re-work también enmienda, el número se asigna al cerrar, en el orden en que se mergeen.
+- **Íconos (`status-icons.md`):** esta spec no toca su código ni sus configs; solo suma tres `DebuffData` con `icon`, `icon_color` e `is_beneficial`, tres SVG y sus filas en `SOURCE.md`. Un `stun.tres` del re-work seguiría la misma regla.
 
-## 9. Enmienda de la constitución (MINOR 4.15.0 → 4.16.0)
+## 9. Enmienda de la constitución (MINOR 4.16.0 → 4.17.0)
 
 **Principio III**, nueva viñeta tras "Estados de entidades":
 
-> - **Aflicciones** (desde 4.16.0): una barra de acumulación por enemigo y por tipo que se llena con el daño de los golpes del jugador y, al llenarse, se vacía y dispara un efecto (un estado o un daño en área). Cada tipo es un Resource de datos (`AfflictionData`) y se consigue con una carta con niveles (`AfflictionUpgradeData`, `max_level` y valores por nivel en el `.tres`). El tope de tipos por run, el vaciado y la resistencia de los enemigos son datos (`AfflictionConfig`, `EnemyStats`). Agregar un tipo es un `.tres` nuevo, no código nuevo.
+> - **Aflicciones** (desde 4.17.0): una barra de acumulación por enemigo y por tipo que se llena con el daño de los golpes del jugador y, al llenarse, se vacía y dispara un efecto (un estado o un daño en área). Cada tipo es un Resource de datos (`AfflictionData`) y se consigue con una carta con niveles (`AfflictionUpgradeData`, `max_level` y valores por nivel en el `.tres`). El tope de tipos por run, el vaciado y la resistencia de los enemigos son datos (`AfflictionConfig`, `EnemyStats`). Agregar un tipo es un `.tres` nuevo, no código nuevo.
 
 **Principio III**, viñeta "Estados de entidades": el efecto de un estado incluye **lentitud** (`SLOW`: la entidad se mueve y actúa más lento).
 
-**Principio II**, colores no reservados (registro): verde veneno `Color(0.3, 0.8, 0.35)`, azul eléctrico `Color(0.3, 0.5, 1.0)`, cian escarcha `Color(0.45, 0.9, 0.95)` y el violeta de Debilitar `Color(0.55, 0.35, 0.8)` para Corrosión, en las barras de Aflicción (`QuadMesh` unshaded bajo la barra de vida) y sus íconos; su destello `Color(0.85, 1.0, 0.9)` (unshaded, no es el blanco reservado); y turquesa `Color(0.15, 0.55, 0.55)` para las cartas de Aflicción.
+**Principio II**, colores no reservados (registro): verde veneno `Color(0.25, 0.6, 0.2)`, azul eléctrico `Color(0.3, 0.5, 1.0)`, cian escarcha `Color(0.45, 0.9, 0.95)` y el violeta de Debilitar `Color(0.55, 0.35, 0.8)` para Corrosión, en las barras de Aflicción (`QuadMesh` unshaded bajo la barra de vida y `ColorRect` en la barra del boss) y como `icon_color` de sus estados (íconos SVG según 4.16.0); su destello `Color(0.85, 1.0, 0.9)` (unshaded, no es el blanco reservado); y turquesa `Color(0.15, 0.55, 0.55)` para las cartas de Aflicción.
 
-**Historial:** `4.16.0 (fecha de cierre): Principio III: Aflicciones (barra de acumulación por tipo, cartas con niveles, tope por run) y el efecto de estado SLOW. Principio II: colores no reservados de las barras y cartas de Aflicción (ver affliction.md).`
+**Historial:** `4.17.0 (fecha de cierre): Principio III: Aflicciones (barra de acumulación por tipo, cartas con niveles, tope por run) y el efecto de estado SLOW. Principio II: colores no reservados de las barras y cartas de Aflicción (ver affliction.md).`
 
 ## 10. Plan
 
 Cada paso deja el proyecto abriendo y la suite en verde.
 
-1. **Datos base:** `AfflictionData`, `AfflictionUpgradeData`, `AfflictionCatalog`, `AfflictionConfig`; materiales; `affliction_config.tres`; los 4 tipos y sus cartas; `poison`/`frost`/`corrosion.tres`; campos nuevos de `EnemyStats` en todos los `*_stats.tres`. Tests AC851–AC854.
+0. **Requisito:** `status-icons.md` implementada (sus pasos 1–7: `StatusIconView`, `DebuffData.icon`/`icon_color`/`is_beneficial`, `revision`, `EnemyStatusOverlay`, sin `DebuffIconRow` ni `icon_material`).
+
+1. **Datos base:** `AfflictionData`, `AfflictionUpgradeData`, `AfflictionCatalog`, `AfflictionConfig`; materiales; `affliction_config.tres`; los 4 tipos y sus cartas; `poison`/`frost`/`corrosion.tres` con `icon`, `icon_color` e `is_beneficial`; los tres SVG (bajados y sin fondo, con `sed`), sus `.import` desde la copia del scratchpad y sus filas en `assets/icons/status/SOURCE.md`; campos nuevos de `EnemyStats` en todos los `*_stats.tres`. Tests AC851–AC854 y AC889.
 2. **`SLOW`:** enum, `DebuffComponent.get_speed_scale()`, escala en `Enemy`. Tests AC871–AC873.
 3. **`AfflictionComponent`** en `enemy.tscn`, con `setup`/`clear` en `activate`/`deactivate`. Tests AC856–AC857, AC860–AC861, AC864–AC867.
 4. **`AfflictionLoadout`** en `player.tscn` (conexiones, disparos, Estallido, `burst_hit` en `DamageNumberPool`) y enrutado en `Player`. Tests AC858–AC859, AC862–AC863, AC868–AC870, AC874, AC879.
 5. **Oferta:** catálogo en `WaveManager`/`UpgradeOffer`, tope, color de carta en `UpgradePicker`. Tests AC875–AC878, AC888.
-6. **Vistas:** `AfflictionBarRow` en `enemy_health_bar.tscn`/`enemy.tscn`, filas en `BossHealthBar`, sección en la pausa. Tests AC880–AC887.
+6. **Vistas:** `AfflictionBarRow` en `enemy_health_bar.tscn`/`enemy.tscn`, filas en `BossHealthBar`, sección en la pausa. Los íconos de los estados los muestra `status-icons.md` sin cambios. Tests AC880–AC887, AC890 y AC891.
 7. **Cierre:** enmienda de la constitución, `CLAUDE.md` ("Dónde se ajusta cada cosa": Aflicciones; próximo AC libre), suite completa, smoke test (`arena.tscn`) y captura con dos tipos, checklist §12 y estado **Implementada**.
 
 ## 11. Notas de implementación
@@ -338,7 +363,7 @@ Cada paso deja el proyecto abriendo y la suite en verde.
 ## 12. Checklist de review (constitución)
 
 - [ ] **Identidad (I):** progresión (cartas de tipo con tope) y combate (barra legible, efectos que cambian la pelea).
-- [ ] **Arte (II):** filas `QuadMesh` / `ColorRect`, materiales `.tres` compartidos, colores registrados, sin reservados.
+- [ ] **Arte (II):** filas `QuadMesh` / `ColorRect`, materiales `.tres` compartidos, colores registrados, sin reservados. Los íconos nuevos son SVG de `assets/icons/status/` con crédito en `SOURCE.md`, según 4.16.0 (`status-icons.md`).
 - [ ] **Datos (III):** todo número en `AfflictionConfig`, `AfflictionData`, cartas y `EnemyStats`; cartas con `max_level` y valores por nivel; ningún Resource mutado (el nivel y las cargas viven en nodos).
 - [ ] **GDScript (IV):** tipado estricto, callbacks delgados.
 - [ ] **Performance (V):** filas creadas una vez; sin allocations por golpe ni por frame; el Estallido recorre el registry sin crear arrays; `AfflictionComponent` no procesa sin carga.
