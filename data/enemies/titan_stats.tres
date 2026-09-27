@@ -51,3 +51,4 @@ hands_config = ExtResource("4_hands")
 behavior_config = ExtResource("5_config")
 ignores_attack_tokens = true
 resists_hitlag = true
+affliction_resistance = 0.5

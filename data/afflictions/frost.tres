@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AfflictionData" format=3]
+
+[ext_resource type="Script" path="res://resources/affliction_data.gd" id="1_script"]
+[ext_resource type="Material" path="res://materials/afflictions/frost_material.tres" id="2_bar"]
+[ext_resource type="Resource" path="res://data/debuffs/frost.tres" id="3_debuff"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"frost"
+title = "Escarcha"
+bar_material = ExtResource("2_bar")
+debuff = ExtResource("3_debuff")
+effect_value = 0.4
+effect_scaling = 0
+burst_radius = 0.0

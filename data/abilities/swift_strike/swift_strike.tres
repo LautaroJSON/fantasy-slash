@@ -32,3 +32,4 @@ min_cooldown = 1.5
 min_cast_duration = 0.12
 upgrades = Array[ExtResource("2_upgrade_script")]([ExtResource("4_damage"), ExtResource("5_scaling"), ExtResource("6_cooldown"), ExtResource("7_range"), ExtResource("8_width"), ExtResource("9_sprint_speed")])
 unique_upgrades = Array[ExtResource("10_unique_script")]([ExtResource("11_reset"), ExtResource("12_execute")])
+affliction_scale = 1.0

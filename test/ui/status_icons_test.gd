@@ -157,7 +157,8 @@ func test_ac908_source_md_credits_every_svg() -> void:
 		var line: String = _line_with(source, "`" + file + "`")
 		assert_str(line).override_failure_message(file + " is not listed").is_not_empty()
 		assert_str(line).contains("https://game-icons.net/")
-	assert_int(svgs).is_equal(5)
+	# 5 from status-icons.md + 3 from affliction.md (poison, frost, corrosion).
+	assert_int(svgs).is_equal(8)
 
 
 func test_ac913_revision_bumps_with_every_change() -> void:

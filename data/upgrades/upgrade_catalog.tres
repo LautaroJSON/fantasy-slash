@@ -12,7 +12,8 @@
 [ext_resource type="Resource" path="res://data/upgrades/lifesteal.tres" id="10_lifesteal"]
 [ext_resource type="Resource" path="res://data/upgrades/damage_bonus.tres" id="11_damage_bonus"]
 [ext_resource type="Resource" path="res://data/upgrades/move_speed.tres" id="12_move_speed"]
+[ext_resource type="Resource" path="res://data/upgrades/affliction_buildup.tres" id="13_affliction_buildup"]
 
 [resource]
 script = ExtResource("1_script")
-upgrades = Array[ExtResource("2_upgrade_data")]([ExtResource("3_damage"), ExtResource("4_defense"), ExtResource("5_max_health"), ExtResource("6_crit_chance"), ExtResource("7_crit_damage"), ExtResource("8_attack_speed"), ExtResource("9_attack_range"), ExtResource("10_lifesteal"), ExtResource("11_damage_bonus"), ExtResource("12_move_speed")])
+upgrades = Array[ExtResource("2_upgrade_data")]([ExtResource("3_damage"), ExtResource("4_defense"), ExtResource("5_max_health"), ExtResource("6_crit_chance"), ExtResource("7_crit_damage"), ExtResource("8_attack_speed"), ExtResource("9_attack_range"), ExtResource("10_lifesteal"), ExtResource("11_damage_bonus"), ExtResource("12_move_speed"), ExtResource("13_affliction_buildup")])

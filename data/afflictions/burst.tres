@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AfflictionData" format=3]
+
+[ext_resource type="Script" path="res://resources/affliction_data.gd" id="1_script"]
+[ext_resource type="Material" path="res://materials/afflictions/burst_material.tres" id="2_bar"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"burst"
+title = "Estallido"
+bar_material = ExtResource("2_bar")
+effect_value = 1.5
+effect_scaling = 1
+burst_radius = 2.5

@@ -1,6 +1,6 @@
 # Feature: Aflicción (acumulación de estados en los enemigos)
 
-- **Estado:** Propuesta (2026-09-27), segunda versión con las decisiones del responsable (§3). ACs reservados: **AC851–AC900** (se usan AC851–AC896).
+- **Estado:** Aprobada (2026-09-27), con las decisiones del responsable (§3) y los supuestos confirmados. En implementación. ACs reservados: **AC851–AC900** (se usan AC851–AC896).
 - **Constitución:** `docs/constitution.md` v4.16.0 (con la enmienda de `status-icons.md` aplicada) → **enmienda MINOR a 4.17.0** (Principios II y III, ver §9).
 - **Pilar (Principio I):** **progresión** y **combate.**
   - Progresión: cada carta violeta suma una Aflicción a una fuente (básicos o habilidad) y el tope de 3 tipos obliga a armar la build. El stat "Acumulación de Aflicción" las potencia a todas.
@@ -38,9 +38,9 @@
    - **Acumulable:** cada stack es una instancia completa que espera su turno. No sube el daño, alarga el efecto. "Veneno 10/s durante 5 s" con 3 stacks = 15 s de veneno a 10/s.
    - **Mejorable:** una sola instancia. Reaplicarla reinicia la duración y sube la fuerza (3 % → 6 %), hasta su tope.
    - **De una sola aplicación:** `max_stacks = 1`; reaplicarla solo reinicia la duración.
-   - Siempre: si la barra se vuelve a llenar, se reinicia el tiempo del estado y, si puede, suma un stack. *(Supuesto a confirmar para el acumulable: un stack nuevo se encola sin reiniciar la instancia en curso; si ya está en el tope, reinicia la instancia en curso. §4.7.)*
+   - Siempre: si la barra se vuelve a llenar, se reinicia el tiempo del estado y, si puede, suma un stack. *(Confirmado: en el acumulable, un stack nuevo se encola sin reiniciar la instancia en curso; con el tope lleno, reaplicarlo reinicia el timer de la instancia en curso. §4.7.)*
 7. **Rage:** es un buff que ganan los enemigos; no interactúa con las Aflicciones.
-8. **Tope: 3 tipos** por run (`AfflictionConfig.max_types`). Tener el mismo tipo en básicos y en habilidad **no ocupa dos lugares**: es una sola barra que se carga desde las dos fuentes. *(Supuesto a confirmar: el tope cuenta tipos distintos, no cartas.)*
+8. **Tope: 3 tipos** por run (`AfflictionConfig.max_types`). Tener el mismo tipo en básicos y en habilidad **no ocupa dos lugares**: es una sola barra que se carga desde las dos fuentes. *(Confirmado: 1 estado = 1 barra, que se puede llenar por varios medios (hoy básicos y habilidad; a futuro ataque cargado o ultimate). El tope cuenta tipos, no cartas.)*
 9. **Fuentes:** ataque básico y habilidad (E). Las cartas para la ultimate llegan cuando exista.
 10. **Cartas globales** (cualquier clase), **violetas** (tier nuevo), todas iguales sin importar el tipo. El stat "Acumulación de Aflicción" se ofrece **siempre**, aunque no se tenga ninguna Aflicción.
 11. **MVP:** Veneno, Estallido, Escarcha y Corrosión. Sangrado como Aflicción queda para una mejora rara futura (sigue en % de vida). El aturdimiento lo crea el re-work del Guerrero; una Aflicción que aturda queda para el futuro (§8).
@@ -181,7 +181,7 @@ Cálculos puros: `has_burst()`, `potency_for(player_damage: float) -> float`.
 
 **`EnemyStats.affliction_resistance`**: 0 en los comunes (se omite), 0.25 en el Escudero, 0.5 en Verdugo, Titán y Colmena. `write_scaled()` la copia sin crecer.
 
-**Stat y carta:** `PlayerStats.Stat.AFFLICTION_BUILDUP` (base 0 en las tres clases, fila "Acumulación de Aflicción" en `stat_display_table.tres`, formato `+%d %%`). Carta `data/upgrades/affliction_buildup.tres` (`amount = 0.1`, `max_stacks = 5`) en `upgrade_catalog.tres` (pasa a 11 cartas). Es una carta de stat común (no violeta).
+**Stat y carta:** `PlayerStats.Stat.AFFLICTION_BUILDUP` (base 0 en las tres clases, fila "Acumulación de Aflicción" en `stat_display_table.tres`, formato `+%d %%`). Carta `data/upgrades/affliction_buildup.tres` (`amount = 0.1`, `max_stacks = 5`) en `upgrade_catalog.tres` (pasa a 11 cartas). Es una carta de stat común (no violeta; confirmado).
 
 **Materiales nuevos** (`materials/afflictions/`, unshaded, opacos): `poison_material.tres`, `burst_material.tres`, `frost_material.tres`, `corrosion_material.tres`, `affliction_flash_material.tres` (`Color(0.85, 1.0, 0.9)`).
 

@@ -61,6 +61,9 @@ enum Stat {
 @export var upgrades: Array[AbilityUpgradeData]
 ## Unique upgrades that change how this ability works; offered only while equipped.
 @export var unique_upgrades: Array[AbilityUniqueUpgradeData]
+## Scale of the Affliction build-up of each of its hits (docs/specs/affliction.md):
+## lower for abilities that hit the same enemy many times.
+@export var affliction_scale: float
 
 
 func get_base(stat: Stat) -> float:

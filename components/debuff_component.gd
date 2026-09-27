@@ -1,10 +1,16 @@
 class_name DebuffComponent
 extends Node
 ## Active status effects of an entity (debuffs and buffs), kept as a list so several kinds
-## can coexist. Re-applying a debuff with the same id refreshes it (full
-## duration, stronger potency) and adds a stack up to DebuffData.max_stacks.
-## DAMAGE_OVER_TIME: each tick removes potency x max health, ignoring defense.
-## ARMOR_REDUCTION: the health ignores stacks x potency of its defense.
+## can coexist. Re-applying a debuff with the same id keeps the stronger
+## potency and follows its StackMode (docs/specs/affliction.md):
+## INTENSITY adds a stack up to DebuffData.max_stacks and restarts the duration;
+## QUEUE queues a stack (each one a full instance that starts when the previous
+## one ends) or, with the queue full, restarts the running instance.
+## Strength = potency x stacks for INTENSITY, potency for QUEUE.
+## DAMAGE_OVER_TIME: each tick removes strength x max health (or strength with
+## DamageScaling.FLAT), ignoring defense.
+## ARMOR_REDUCTION: the health ignores strength of its defense.
+## SLOW: the owner acts at get_speed_scale() (1 - the strongest slow).
 ## STAT_BOOST: a buff whose stats the owner applies; only listed here.
 ## Permanent statuses never expire and do not keep the component processing.
 
@@ -16,7 +22,8 @@ signal changed
 
 class ActiveDebuff:
 	var data: DebuffData
-	## Fraction of max health removed per tick, or of defense ignored per stack.
+	## Fraction of max health (or health points, FLAT) removed per tick,
+	## fraction of defense ignored or of speed lost, per stack.
 	var potency: float
 	var stacks: int
 	var ticks_left: int
@@ -33,6 +40,8 @@ var _active: Array[ActiveDebuff] = []
 ## Bumped every time `changed` is emitted, so per-frame readers (the enemy
 ## status overlay) can tell the list changed without connecting to the signal.
 var revision: int = 0
+## Cached 1 - strongest SLOW, rewritten whenever the list or a strength changes.
+var _speed_scale: float = 1.0
 
 
 func _ready() -> void:
@@ -88,7 +97,9 @@ func advance(delta: float) -> void:
 		var expired: bool = _advance_timed(debuff, delta) if _is_timed(debuff) else _advance_ticks(debuff, delta)
 		if _active.is_empty():
 			return
-		if expired:
+		if expired and _start_queued_instance(debuff):
+			_emit_changed()
+		elif expired:
 			_active.remove_at(i)
 			removed = true
 	if removed:
@@ -149,16 +160,52 @@ func get_defense_reduction() -> float:
 	var total: float = 0.0
 	for debuff: ActiveDebuff in _active:
 		if debuff.data.effect == DebuffData.Effect.ARMOR_REDUCTION:
-			total += debuff.potency * debuff.stacks
+			total += get_strength(debuff)
 	return minf(total, 1.0)
 
 
+## Fraction of its normal speed the owner moves and acts at: 1 - the strongest
+## active SLOW, in [0, 1].
+func get_speed_scale() -> float:
+	return _speed_scale
+
+
+## potency x stacks for upgradable (INTENSITY) statuses; potency for stackable
+## (QUEUE) ones, whose stacks only lengthen the effect.
+static func get_strength(debuff: ActiveDebuff) -> float:
+	if debuff.data.stacks_intensity():
+		return debuff.potency * debuff.stacks
+	return debuff.potency
+
+
 func _refresh(debuff: ActiveDebuff, potency: float) -> void:
-	debuff.stacks = mini(debuff.stacks + 1, debuff.data.get_stack_cap())
+	debuff.potency = maxf(debuff.potency, potency)
+	var cap: int = debuff.data.get_stack_cap()
+	if debuff.data.stacks_intensity():
+		debuff.stacks = mini(debuff.stacks + 1, cap)
+		_restart_instance(debuff)
+	elif debuff.stacks < cap:
+		debuff.stacks += 1
+	else:
+		_restart_instance(debuff)
+	_write_derived()
+
+
+## Full duration again for the running instance (the tick phase is kept).
+func _restart_instance(debuff: ActiveDebuff) -> void:
 	debuff.ticks_left = _tick_count(debuff.data)
 	debuff.time_left = debuff.data.duration
-	debuff.potency = maxf(debuff.potency, potency)
-	_write_defense_reduction()
+
+
+## A stackable status that ran out starts its next queued instance. Returns
+## false when nothing was queued (the status ends).
+func _start_queued_instance(debuff: ActiveDebuff) -> bool:
+	if debuff.data.stacks_intensity() or debuff.stacks <= 1:
+		return false
+	debuff.stacks -= 1
+	debuff.tick_left = debuff.data.tick_interval
+	_restart_instance(debuff)
+	return true
 
 
 ## Returns true when the debuff ran out.
@@ -183,9 +230,16 @@ func _advance_timed(debuff: ActiveDebuff, delta: float) -> bool:
 func _tick(debuff: ActiveDebuff) -> void:
 	if health.is_dead() or health.is_invulnerable:
 		return
-	var amount: float = minf(debuff.potency * health.max_health, health.current_health)
+	var amount: float = minf(_tick_damage(debuff), health.current_health)
 	ticked.emit(target, amount)
 	health.receive_true_damage(amount)
+
+
+func _tick_damage(debuff: ActiveDebuff) -> float:
+	var strength: float = get_strength(debuff)
+	if debuff.data.damage_scaling == DebuffData.DamageScaling.FLAT:
+		return strength
+	return strength * health.max_health
 
 
 func _on_list_shrunk() -> void:
@@ -195,7 +249,7 @@ func _on_list_shrunk() -> void:
 
 
 func _on_list_changed() -> void:
-	_write_defense_reduction()
+	_write_derived()
 	_emit_changed()
 
 
@@ -204,8 +258,14 @@ func _emit_changed() -> void:
 	changed.emit()
 
 
-func _write_defense_reduction() -> void:
+## Values other nodes read every frame: the health's defense reduction and the speed scale.
+func _write_derived() -> void:
 	health.defense_reduction = get_defense_reduction()
+	var slow: float = 0.0
+	for debuff: ActiveDebuff in _active:
+		if debuff.data.effect == DebuffData.Effect.SLOW:
+			slow = maxf(slow, get_strength(debuff))
+	_speed_scale = clampf(1.0 - slow, 0.0, 1.0)
 
 
 func _find(id: StringName) -> ActiveDebuff:
