@@ -15,7 +15,7 @@ Hack and slash roguelike en tercera persona (Godot 4.7, GDScript, PC con teclado
 5. Al cerrar: suite completa en verde, smoke test, checklist de review de la constitución en la spec y estado **Implementada**. Si un test viejo tenía valores fijos, adaptalo sin cambiar lo que verifica y anotalo en la spec.
 6. Respondé en **español**. Código, identificadores y comentarios en **inglés**.
 
-**Próximo criterio de aceptación libre: AC801.** (AC639–AC660 y AC678–AC682 reservados por `class-combat-identity.md`; AC661–AC670 por `sheath-socket-hand-grip.md`; AC671–AC677 por `sheath-in-left-hand.md`; AC694–AC697 por `katana-sheath-shape.md`; AC721–AC730 por `sheathe-release-animation.md`; AC731–AC736 por `samurai-rest-guard.md`; AC737–AC742 por `samurai-run.md`; AC743–AC756 por `warrior-sword-and-shield.md`.) Actualizá este número al cerrar cada spec.
+**Próximo criterio de aceptación libre: AC801.** (AC639–AC660 y AC678–AC682 reservados por `class-combat-identity.md`; AC661–AC670 por `sheath-socket-hand-grip.md`; AC671–AC677 por `sheath-in-left-hand.md`; AC694–AC697 por `katana-sheath-shape.md`; AC721–AC730 por `sheathe-release-animation.md`; AC731–AC736 por `samurai-rest-guard.md`; AC737–AC742 por `samurai-run.md`; AC743–AC756 por `warrior-sword-and-shield.md`; AC861–AC880 por `spin-visual-rework.md`.) Actualizá este número al cerrar cada spec.
 
 ## Mapa del proyecto
 
