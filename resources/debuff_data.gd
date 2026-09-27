@@ -51,6 +51,9 @@ enum DamageScaling {
 @export var max_stacks: int
 @export var stack_mode: StackMode
 @export var damage_scaling: DamageScaling
+## Upgradable (INTENSITY) statuses: strength multiplier for 1, 2, 3… stacks
+## (e.g. [1, 3, 6]). Empty = the stack count (docs/specs/affliction-bleed.md).
+@export var stack_multipliers: Array[float]
 ## Never expires with time; only clear() (the entity's reset) removes it.
 ## Its icon has no clock.
 @export var permanent: bool
@@ -73,3 +76,11 @@ func get_stack_cap() -> int:
 ## Whether its strength grows with the stack count (upgradable statuses).
 func stacks_intensity() -> bool:
 	return stack_mode == StackMode.INTENSITY
+
+
+## Strength multiplier of an upgradable status with `stacks` stacks: its
+## stack_multipliers entry (the last one past the table), or `stacks`.
+func stack_multiplier(stacks: int) -> float:
+	if stack_multipliers.is_empty():
+		return stacks
+	return stack_multipliers[clampi(stacks, 1, stack_multipliers.size()) - 1]

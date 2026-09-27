@@ -1,7 +1,7 @@
 # Feature: re-work visual del Giro
 
-- **Estado:** **Implementada** (2026-09-27). `spin_visual_rework_test` 18/18 en verde. La suite completa no suma fallas nuevas: las que quedan ya fallaban antes (§11). Smoke test del menú y de la arena sin errores ni warnings nuevos. Capturas con Forward+ revisadas. ACs **AC961–AC977** (AC978–AC980 sin usar), reservados en `CLAUDE.md`. Se dejan libres AC801–AC960 para `warrior-abilities-rework.md`, que se escribe en paralelo en otra sesión.
-- **Constitución:** `docs/constitution.md` v4.19.x. Enmienda **MINOR** a 4.20.0 aprobada con esta spec (§7).
+- **Estado:** **Implementada** (2026-09-27). `spin_visual_rework_test` 18/18 en verde. La suite completa no suma fallas nuevas: las que quedan ya fallaban antes (§11). Smoke test del menú y de la arena sin errores ni warnings nuevos. Capturas con Forward+ revisadas. ACs **AC971–AC987** (AC988–AC990 sin usar), reservados en `CLAUDE.md`. Renumerados al integrar con `main`: se habían reservado AC861–AC880, que se superponía con `affliction.md` (AC851–AC900), y después AC961–AC980, que se superponía con `affliction-bleed.md` (AC961–AC970).
+- **Constitución:** `docs/constitution.md` v4.19.1. Enmienda **MINOR** a 4.20.0 aprobada con esta spec (§7).
 - **Pilar (Principio I):** **combate.** El Giro es la habilidad del Berserker, pero hoy no se lee:
   - el cuerpo gira quieto en `idle`;
   - el mandoble flota lejos de la mano;
@@ -208,45 +208,45 @@ AbilityRectIndicator
 ## 6. Criterios de aceptación
 
 **Cuerpo y arma**
-- **AC961** El perfil del Berserker tiene `spin` (loop) y `spin_dash_slash` (sin loop). En todo cuadro de `spin`, `left_grip` es 1.
-- **AC962** Mientras se castea el Giro, el humanoide reproduce `spin` y `Player.is_weapon_in_hand_cast()` es verdadero. Con `weapon_mount_blend` cumplido, el pivot del arma coincide con `WeaponMount.get_hand_pose()` (tolerancia 1 mm).
-- **AC963** Durante el Giro, `SwordSwing` no está activo y `SpinConfig` no tiene `blade_position`, `blade_rotation`, `dash_slash_arc_degrees` ni `dash_slash_sweep_duration`.
-- **AC964** En `spin`, muestreado cada 0.05 s:
+- **AC971** El perfil del Berserker tiene `spin` (loop) y `spin_dash_slash` (sin loop). En todo cuadro de `spin`, `left_grip` es 1.
+- **AC972** Mientras se castea el Giro, el humanoide reproduce `spin` y `Player.is_weapon_in_hand_cast()` es verdadero. Con `weapon_mount_blend` cumplido, el pivot del arma coincide con `WeaponMount.get_hand_pose()` (tolerancia 1 mm).
+- **AC973** Durante el Giro, `SwordSwing` no está activo y `SpinConfig` no tiene `blade_position`, `blade_rotation`, `dash_slash_arc_degrees` ni `dash_slash_sweep_duration`.
+- **AC974** En `spin`, muestreado cada 0.05 s:
   - la hoja (base y punta del mandoble) queda entre 0.6 m y 1.4 m de altura;
   - apunta hacia afuera: la punta está más lejos del eje del cuerpo que la mano;
   - no atraviesa el torso (mismo criterio que AC751).
-- **AC965** Al terminar el Giro sin dash, la locomoción entra con `attack_exit_blend`. Sin moverse, el cuerpo termina en `idle`.
+- **AC975** Al terminar el Giro sin dash, la locomoción entra con `attack_exit_blend`. Sin moverse, el cuerpo termina en `idle`.
 
 **Corte del Giro**
-- **AC966** Si un dash corta el Giro, el humanoide reproduce `spin_dash_slash` estirado a la duración del dash, y el arma sigue la mano. Sin el Giro, el dash reproduce `DashData.clip` como hoy.
-- **AC967** El último cuadro de `spin_dash_slash` es el primero de `sprint` (misma comparación que AC786).
-- **AC968** La estela se enciende durante el Giro y durante el Corte del Giro, y se apaga cuando termina el corte.
+- **AC976** Si un dash corta el Giro, el humanoide reproduce `spin_dash_slash` estirado a la duración del dash, y el arma sigue la mano. Sin el Giro, el dash reproduce `DashData.clip` como hoy.
+- **AC977** El último cuadro de `spin_dash_slash` es el primero de `sprint` (misma comparación que AC786).
+- **AC978** La estela se enciende durante el Giro y durante el Corte del Giro, y se apaga cuando termina el corte.
 
 **Área, pulso y polvo**
-- **AC969** El disco del área está oculto en reposo.
+- **AC979** El disco del área está oculto en reposo.
   - Al empezar el Giro se muestra blanco, con radio `HIT_RANGE` y opacidad `area_alpha` (≤ 0.3).
   - Sigue al jugador y se desvanece al terminar en `area_fade_out`.
   - Con la mejora de radio, el disco toma el nuevo `HIT_RANGE`.
-- **AC970** Cada vuelta completada lanza exactamente un pulso, con o sin enemigos. La opacidad del pulso nunca supera 0.5. Un Giro de 4 s con `TICK_INTERVAL` 0.8 pulsa 5 veces.
-- **AC971** El polvo emite solo mientras se castea el Giro.
+- **AC980** Cada vuelta completada lanza exactamente un pulso, con o sin enemigos. La opacidad del pulso nunca supera 0.5. Un Giro de 4 s con `TICK_INTERVAL` 0.8 pulsa 5 veces.
+- **AC981** El polvo emite solo mientras se castea el Giro.
 
 **Feedback de impacto**
-- **AC972** Una vuelta que golpea sacude la cámara con `turn_shake`, y cada enemigo golpeado recibe `apply_hitlag(turn_hitlag, …)`. Una vuelta que no golpea no sacude la cámara.
-- **AC973** Durante las vueltas, el clip del jugador y la rotación del `Visual` no se pausan. Las vueltas y el daño siguen los tiempos de AC196/AC197.
-- **AC974** En el Corte del Giro:
+- **AC982** Una vuelta que golpea sacude la cámara con `turn_shake`, y cada enemigo golpeado recibe `apply_hitlag(turn_hitlag, …)`. Una vuelta que no golpea no sacude la cámara.
+- **AC983** Durante las vueltas, el clip del jugador y la rotación del `Visual` no se pausan. Las vueltas y el daño siguen los tiempos de AC196/AC197.
+- **AC984** En el Corte del Giro:
   - cada enemigo cortado recibe `apply_hitlag(dash_slash_hitlag, …)` y la cámara se sacude con `dash_slash_shake`;
   - el clip del jugador se pausa `dash_slash_hitlag` una sola vez, al primer corte (con 3 enemigos cortados, la pausa total sigue siendo `dash_slash_hitlag`).
-- **AC975** La pausa del Corte del Giro no cambia el dash: misma distancia, duración e invulnerabilidad que un dash sin pausa. El clip termina en su último cuadro cuando termina el dash (tolerancia de un cuadro de física).
+- **AC985** La pausa del Corte del Giro no cambia el dash: misma distancia, duración e invulnerabilidad que un dash sin pausa. El clip termina en su último cuadro cuando termina el dash (tolerancia de un cuadro de física).
 
 **Indicadores y texto**
-- **AC976** `attack_indicator_material.tres` es blanco `Color(1, 1, 1)`, unshaded y translúcido. `AbilityRectIndicator` tiene un solo relleno que cubre largo × ancho. Las transparencias de Envainar y del Tajo aéreo son las de §2.6: opacidad en reposo ≤ 0.3 y destello ≤ 0.5.
-- **AC977** La descripción de `spin.tres` es la de §2.7, y sus números coinciden con los datos: `cast_duration`, `tick_interval`, `attack_scaling`, `hit_range` y el enfriamiento efectivo (`max(cooldown, min_cooldown)`).
+- **AC986** `attack_indicator_material.tres` es blanco `Color(1, 1, 1)`, unshaded y translúcido. `AbilityRectIndicator` tiene un solo relleno que cubre largo × ancho. Las transparencias de Envainar y del Tajo aéreo son las de §2.6: opacidad en reposo ≤ 0.3 y destello ≤ 0.5.
+- **AC987** La descripción de `spin.tres` es la de §2.7, y sus números coinciden con los datos: `cast_duration`, `tick_interval`, `attack_scaling`, `hit_range` y el enfriamiento efectivo (`max(cooldown, min_cooldown)`).
 
 **Regresión**
-- **AC978** Los tests del Giro y de los indicadores siguen en verde: `spin_test`, `spin_dash_slash_test`, `spin_golden_upgrades_test`, `spin_tornado_test`, `weapon_trail_test`, `player_animator_test`, `thrust_indicator_test`, `sheathe_feel_test`, `air_slash_test`. Los tests que verificaban `blade_position`, el barrido de `SwordSwing`, los segmentos del contorno o transparencias fijas se adaptan, sin cambiar lo que verifican.
-- **AC979** La suite completa en verde, y el smoke test del menú y de la arena sin errores ni warnings.
+- **AC988** Los tests del Giro y de los indicadores siguen en verde: `spin_test`, `spin_dash_slash_test`, `spin_golden_upgrades_test`, `spin_tornado_test`, `weapon_trail_test`, `player_animator_test`, `thrust_indicator_test`, `sheathe_feel_test`, `air_slash_test`. Los tests que verificaban `blade_position`, el barrido de `SwordSwing`, los segmentos del contorno o transparencias fijas se adaptan, sin cambiar lo que verifican.
+- **AC989** La suite completa en verde, y el smoke test del menú y de la arena sin errores ni warnings.
 
-AC980 queda de reserva para ajustes que salgan de las capturas.
+AC990 queda de reserva para ajustes que salgan de las capturas.
 
 ## 7. Enmienda de la constitución (MINOR → 4.20.0)
 
@@ -280,26 +280,26 @@ Otros cambios del Principio II:
 2. **Indicadores:**
    - `AbilityRectIndicator` con un solo relleno;
    - adaptar `thrust_indicator_test`, `sheathe_feel_test` y `air_slash_test`.
-   - Tests AC976–AC977.
+   - Tests AC986–AC987.
 3. **Clips:**
    - `spin` y `spin_dash_slash` en `berserker_profile.gd`;
-   - hoja de capturas (humanoide aislado, 4 ángulos, cada 0.05 s) para ajustar brazos y hoja hasta cumplir AC964 y AC967.
+   - hoja de capturas (humanoide aislado, 4 ángulos, cada 0.05 s) para ajustar brazos y hoja hasta cumplir AC974 y AC977.
 4. **Arma en la mano:**
    - `get_body_clip` y `holds_weapon_in_hand` en `SpinAbility`;
    - sacar `SwordSwing` de `begin`, `release` y `cancel_cast`;
    - mezcla de salida de clips en loop en `PlayerAnimator`.
-   - Tests AC961–AC965 y adaptar `spin_test`.
+   - Tests AC971–AC975 y adaptar `spin_test`.
 5. **Corte del Giro:**
    - `get_dash_clip` en `AbilityBehavior`, `AbilityComponent` y `Player`, y `PlayerAnimator._play_dash`;
    - `extends_trail`/`trail_changed` y `WeaponTrail`;
    - sacar `sword_swing.play` del corte.
-   - Tests AC966–AC968 y adaptar `spin_dash_slash_test` y `weapon_trail_test`.
-6. **Vórtice:** `SpinVortexVfx` (área, pulso y polvo) en `spin_ability.tscn`, conectado desde `SpinAbility`. Tests AC969–AC971.
+   - Tests AC976–AC978 y adaptar `spin_dash_slash_test` y `weapon_trail_test`.
+6. **Vórtice:** `SpinVortexVfx` (área, pulso y polvo) en `spin_ability.tscn`, conectado desde `SpinAbility`. Tests AC979–AC981.
 7. **Feedback de impacto:**
    - `camera`, `hitstop` y `animator` en `AbilityComponent` y `player.tscn`, y la asignación del `HitstopConfig` de la clase en `Player`;
    - sacudida y `apply_hitlag` en las vueltas y en el corte;
    - `PlayerAnimator.hold_dash_clip`.
-   - Tests AC972–AC975.
+   - Tests AC982–AC985.
 8. **Cierre:**
    - suite completa, import y smoke test del menú y de la arena;
    - capturas del Giro en la arena;
@@ -340,7 +340,7 @@ Las capturas se hicieron con Forward+ sobre Vulkan por software (lavapipe, bajo 
   - `arena_waves_test`, `berserker_run_test`, `boss_challenge_run_test` (3), `samurai_run_test` y `upgrade_ban_run_test`.
 
   Corregirlas (los tests o los datos) es una decisión de balance del responsable.
-- **AC978/AC979:** se cumplen como "sin fallas nuevas respecto de la base". La premisa de la spec (suites en verde antes del cambio) no era cierta.
+- **AC988/AC989:** se cumplen como "sin fallas nuevas respecto de la base". La premisa de la spec (suites en verde antes del cambio) no era cierta.
 
 **Tests adaptados** (sin cambiar lo que verifican):
 - `spin_dash_slash_test` AC567 y AC573: el barrido lo dibuja el clip `spin_dash_slash`, no `SwordSwing` con arco y duración.
@@ -348,7 +348,7 @@ Las capturas se hicieron con Forward+ sobre Vulkan por software (lavapipe, bajo 
 
 **Diferencias con el diseño:**
 - `SpinVortexVfx.follow(visual)` no recibe la punta de la hoja. El polvo sale de `dust_offset` (datos) en el espacio del jugador, y el vórtice sigue al `Visual` solo desde `begin()` hasta `finish()`.
-- Se sumó la señal `pulsed`, para contar los pulsos en AC970.
+- Se sumó la señal `pulsed`, para contar los pulsos en AC980.
 - La pose del brazo derecho del giro (`SPIN_ARM`) salió de buscar la mano en (0.45, 1.0, −0.3) m y la hoja en (0.95, 0, −0.3), en el espacio del `Visual`.
 - `spin_dash_slash` reutiliza `_sweep_front_cross()` (extraída del golpe 1, mismos valores) y `_sweep_left_hold()`.
 
@@ -366,6 +366,6 @@ Las capturas se hicieron con Forward+ sobre Vulkan por software (lavapipe, bajo 
 - [x] **VI:** sin input nuevo.
 - [x] **VII:**
   - las vueltas no pausan al jugador (enmienda 4.20.0);
-  - el Corte pausa solo su clip, una vez, y el dash conserva su recorrido, su duración y su invulnerabilidad (AC975);
+  - el Corte pausa solo su clip, una vez, y el dash conserva su recorrido, su duración y su invulnerabilidad (AC985);
   - no se toca `Engine.time_scale`.
-- [x] **Calidad:** el proyecto importa sin errores nuevos. AC961–AC977 en verde y ninguna falla nueva en la suite completa (ver arriba).
+- [x] **Calidad:** el proyecto importa sin errores nuevos. AC971–AC987 en verde y ninguna falla nueva en la suite completa (ver arriba).

@@ -10,6 +10,7 @@ const NO_CRIT_ROLL: float = 0.99
 const CRIT_ROLL: float = 0.0
 const POISON: DebuffData = preload("res://data/debuffs/poison.tres")
 const BLEED: DebuffData = preload("res://data/debuffs/bleed.tres")
+const BLEEDING: DebuffData = preload("res://data/debuffs/bleeding.tres")
 const BURST: AfflictionData = preload("res://data/afflictions/burst.tres")
 const FROST_TYPE: AfflictionData = preload("res://data/afflictions/frost.tres")
 const CORROSION_TYPE: AfflictionData = preload("res://data/afflictions/corrosion.tres")
@@ -274,3 +275,15 @@ func test_ac955_names_reuse_the_pool() -> void:
 		_player.afflictions.triggered.emit(enemy, FROST_TYPE if i % 2 == 0 else CORROSION_TYPE)
 	assert_int(_pool.get_child_count()).is_equal(children)
 	assert_int(_pool.active_count()).is_equal(CONFIG.pool_size)
+
+
+## docs/specs/affliction-bleed.md
+func test_ac965_bleeding_ticks_are_crimson_and_italic() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	enemy.health.setup(1000.0, 0.0)
+	enemy.debuffs.apply(BLEEDING, 0.01)
+	enemy.debuffs.advance(1.0)
+	var number: DamageNumber = _pool.get_last_spawned()
+	assert_object(number.material_override).is_same(BLEEDING.damage_number_material)
+	assert_str(number.get_text()).is_equal("10")
+	assert_bool(number.is_over_time()).is_true()

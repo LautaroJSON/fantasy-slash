@@ -171,11 +171,12 @@ func get_speed_scale() -> float:
 	return _speed_scale
 
 
-## potency x stacks for upgradable (INTENSITY) statuses; potency for stackable
-## (QUEUE) ones, whose stacks only lengthen the effect.
+## potency x stack multiplier (the stack count, or DebuffData.stack_multipliers)
+## for upgradable (INTENSITY) statuses; potency for stackable (QUEUE) ones,
+## whose stacks only lengthen the effect.
 static func get_strength(debuff: ActiveDebuff) -> float:
 	if debuff.data.stacks_intensity():
-		return debuff.potency * debuff.stacks
+		return debuff.potency * debuff.data.stack_multiplier(debuff.stacks)
 	return debuff.potency
 
 
