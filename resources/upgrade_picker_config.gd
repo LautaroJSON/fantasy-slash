@@ -20,6 +20,12 @@ extends Resource
 @export var unique_card_hover_color: Color
 ## Text of unique ability upgrade cards.
 @export var unique_card_font_color: Color
+## Background of the violet Affliction cards (docs/specs/affliction.md).
+@export var affliction_card_color: Color
+## Background of Affliction cards under the mouse.
+@export var affliction_card_hover_color: Color
+## Text of Affliction cards.
+@export var affliction_card_font_color: Color
 ## Frame drawn around the card that has the focus (gamepad and keyboard navigation).
 @export var focus_border_color: Color
 ## Width of the focus frame, in pixels.

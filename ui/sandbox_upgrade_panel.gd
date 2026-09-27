@@ -74,11 +74,16 @@ func value_text(card: UpgradeCard) -> String:
 		return _player_stat_text(card as UpgradeData)
 	if card is AbilityUpgradeData:
 		return _ability_stat_text(card as AbilityUpgradeData)
+	if card is AfflictionUpgradeData:
+		return _affliction_text(card as AfflictionUpgradeData)
 	return _unique_text(card as AbilityUniqueUpgradeData)
 
 
 ## Short summary shown on hover: what one pick gives and the cap.
 func tooltip_text(card: UpgradeCard) -> String:
+	var affliction: AfflictionUpgradeData = card as AfflictionUpgradeData
+	if affliction != null:
+		return _affliction_tooltip(affliction)
 	var unique: AbilityUniqueUpgradeData = card as AbilityUniqueUpgradeData
 	if unique == null:
 		return "%s por mejora\nMáximo: %d" % [card.description, _player.max_count(card)]
@@ -134,6 +139,21 @@ func _unique_text(card: AbilityUniqueUpgradeData) -> String:
 	return "(%s)" % card.value_format.format_value(card.get_value(level))
 
 
+## Build-up per hit of the current level (docs/specs/affliction.md).
+func _affliction_text(card: AfflictionUpgradeData) -> String:
+	var level: int = _player.count_upgrade(card)
+	if level == 0:
+		return "(—)"
+	return "(%s)" % card.value_format.format_value(card.get_value(level))
+
+
+func _affliction_tooltip(card: AfflictionUpgradeData) -> String:
+	var lines: PackedStringArray = PackedStringArray()
+	for level: int in range(1, card.max_level + 1):
+		lines.append("Nv %d: %s" % [level, card.get_description(level).replace("\n", " ")])
+	return "\n".join(lines)
+
+
 func _changed() -> void:
 	refresh()
 	upgrades_changed.emit()
@@ -180,9 +200,12 @@ func _make_button(text: String, action: Callable) -> Button:
 	return button
 
 
-## Same color code as the cards: light blue for ability stats, gold for unique.
+## Same color code as the cards: light blue for ability stats, gold for unique,
+## violet for Afflictions.
 func _tint(label: Label, card: UpgradeCard) -> void:
 	if card is AbilityUpgradeData:
 		label.add_theme_color_override(&"font_color", config.ability_card_color)
 	elif card is AbilityUniqueUpgradeData:
 		label.add_theme_color_override(&"font_color", config.unique_card_color)
+	elif card is AfflictionUpgradeData:
+		label.add_theme_color_override(&"font_color", config.affliction_card_color)

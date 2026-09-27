@@ -18,6 +18,7 @@ const CORROSION_BASIC: AfflictionUpgradeData = preload("res://data/afflictions/c
 const POISON_STATUS: DebuffData = preload("res://data/debuffs/poison.tres")
 const FROST_STATUS: DebuffData = preload("res://data/debuffs/frost.tres")
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
+const StatusOverlayProbe := preload("res://test/helpers/status_overlay_probe.gd")
 const NO_CRIT_ROLL: float = 0.99
 
 var _registry: EnemyRegistry
@@ -233,3 +234,23 @@ func test_ac896_classes_trigger_after_similar_combos() -> void:
 		var enemy: Enemy = _spawn_enemy(Vector3.ZERO)
 		_player.apply_upgrade(POISON_BASIC)
 		assert_int(_hits_to_trigger(enemy, POISON_STATUS)).override_failure_message(character_class.resource_path).is_equal(expected[character_class])
+
+
+func test_ac889_the_triggered_status_shows_in_the_overlay() -> void:
+	_spawn_player(WARRIOR)
+	var enemy: Enemy = _spawn_enemy(Vector3.ZERO)
+	_player.apply_upgrade(POISON_BASIC)
+	var probe: StatusOverlayProbe = auto_free(StatusOverlayProbe.new())
+	add_child(probe)
+	probe.watch(enemy)
+	for hit: int in 5:
+		_combo_hit(enemy)
+	var row: StatusIconRow = probe.row()
+	assert_int(row.get_visible_icon_count()).is_equal(1)
+	assert_object(row.icon(0).get_glyph_texture()).is_same(POISON_STATUS.icon)
+	assert_object(row.icon(0).get_border_color()).is_equal(StatusOverlayProbe.CONFIG.status_icon.debuff_border_color)
+	assert_float(row.icon(0).get_clock().get_fraction()).is_equal_approx(1.0, 0.0001)
+	assert_str(row.icon(0).get_stack_text()).is_equal("1")
+	for hit: int in 10:
+		_combo_hit(enemy)
+	assert_str(probe.row().icon(0).get_stack_text()).is_equal("3")

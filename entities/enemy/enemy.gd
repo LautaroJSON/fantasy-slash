@@ -62,6 +62,7 @@ var _speed_scale: float = 1.0
 @onready var debuffs: DebuffComponent = $DebuffComponent
 @onready var afflictions: AfflictionComponent = $AfflictionComponent
 @onready var health_bar: EnemyHealthBar = $HealthBar
+@onready var affliction_bars: AfflictionBarRow = $HealthBar/AfflictionBars
 @onready var _collision: CollisionShape3D = $CollisionShape3D
 @onready var _body: MeshInstance3D = $Body
 @onready var _hands: EnemyHands = $Hands
@@ -119,6 +120,7 @@ func activate(at: Vector3, new_target: Player, new_level: int = 1) -> void:
 	health.setup(_scaled.max_health, _scaled.defense)
 	debuffs.clear()
 	afflictions.setup(_scaled)
+	affliction_bars.bind(null if target == null else target.afflictions)
 	health_bar.reset()
 	health_bar.set_level(level)
 	visible = true

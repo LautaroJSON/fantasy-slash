@@ -4,6 +4,9 @@ const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
 const WAVE_CONFIG: WaveConfig = preload("res://data/waves/wave_config.tres")
 const PLAYER_STATS: PlayerStats = preload("res://data/classes/warrior/warrior_stats.tres")
 const CATALOG: UpgradeCatalog = preload("res://data/upgrades/upgrade_catalog.tres")
+## Violet cards, also in the pool (docs/specs/affliction.md).
+const AFFLICTION_CATALOG: AfflictionCatalog = preload("res://data/afflictions/affliction_catalog.tres")
+
 const THRUST: AbilityData = preload("res://data/abilities/thrust/thrust.tres")
 const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
 const PICKER_CONFIG: UpgradePickerConfig = preload("res://data/ui/upgrade_picker_config.tres")
@@ -75,7 +78,7 @@ func test_ac53_choosing_the_thrust_equips_it_and_starts_wave_one() -> void:
 func test_ac54_card_pool_holds_player_and_equipped_ability_upgrades() -> void:
 	_ability_picker.choose(THRUST)
 	var pool: Array[UpgradeCard] = _wave_manager.get_card_pool()
-	assert_int(pool.size()).is_equal(CATALOG.upgrades.size() + THRUST.upgrades.size() + THRUST.unique_upgrades.size())
+	assert_int(pool.size()).is_equal(CATALOG.upgrades.size() + THRUST.upgrades.size() + THRUST.unique_upgrades.size() + AFFLICTION_CATALOG.cards.size())
 	for upgrade: AbilityUpgradeData in THRUST.upgrades:
 		assert_bool(pool.has(upgrade)).is_true()
 
@@ -84,7 +87,7 @@ func test_ac80_choosing_swift_strike_pools_only_its_upgrades() -> void:
 	_ability_picker.choose(SWIFT_STRIKE)
 	assert_object(_player.basic_ability.get_data()).is_same(SWIFT_STRIKE)
 	var pool: Array[UpgradeCard] = _wave_manager.get_card_pool()
-	assert_int(pool.size()).is_equal(CATALOG.upgrades.size() + SWIFT_STRIKE.upgrades.size() + SWIFT_STRIKE.unique_upgrades.size())
+	assert_int(pool.size()).is_equal(CATALOG.upgrades.size() + SWIFT_STRIKE.upgrades.size() + SWIFT_STRIKE.unique_upgrades.size() + AFFLICTION_CATALOG.cards.size())
 	for upgrade: AbilityUpgradeData in SWIFT_STRIKE.upgrades:
 		assert_bool(pool.has(upgrade)).is_true()
 	for upgrade: AbilityUpgradeData in THRUST.upgrades:

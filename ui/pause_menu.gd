@@ -1,9 +1,9 @@
 class_name PauseMenu
 extends Control
 ## Pause modal: game mode (top-left corner), the upgradeable player stats (two
-## columns and a block below, laid out by StatDisplayTable), current
-## wave and kills. In sandbox it also shows the upgrade panel to add or remove
-## any upgrade freely.
+## columns and a block below, laid out by StatDisplayTable), current wave,
+## kills and the held Afflictions. In sandbox it also shows the upgrade panel
+## to add or remove any upgrade freely.
 ## Toggled with the `pause` action; ignored while choosing an upgrade, a ban or
 ## the ability, and on Game Over. "Menú principal" leaves the run.
 ## "Reanudar" takes the focus when it opens (gamepad); `ui_cancel` resumes too.
@@ -31,6 +31,7 @@ var _value_labels: Dictionary[int, Label] = {}
 @onready var _name_template: Label = %NameTemplate
 @onready var _value_template: Label = %ValueTemplate
 @onready var _run_label: Label = %RunLabel
+@onready var _afflictions_label: Label = %AfflictionsLabel
 @onready var _mode_label: Label = %ModeLabel
 @onready var _resume_button: Button = %ResumeButton
 @onready var _menu_button: Button = %MainMenuButton
@@ -100,6 +101,10 @@ func get_mode_text() -> String:
 	return _mode_label.text
 
 
+func get_afflictions_text() -> String:
+	return _afflictions_label.text
+
+
 func get_sandbox_panel() -> SandboxUpgradePanel:
 	return _sandbox_panel
 
@@ -148,8 +153,21 @@ func _refresh() -> void:
 	_refresh_group(display_table.bottom_rows)
 	_run_label.text = "Oleada %d · %d enemigos eliminados" % [run_state.wave, run_state.kills]
 	_mode_label.text = "Modo de juego: %s" % Session.get_mode_name()
+	_afflictions_label.text = _afflictions_text()
 
 
 func _refresh_group(rows: Array[StatDisplay]) -> void:
 	for row: StatDisplay in rows:
 		_value_labels[row.stat].text = row.format_value(player.stats.get_stat(row.stat))
+
+
+## "Aflicciones 2/3" and one line per card: Affliction, source and level
+## (docs/specs/affliction.md).
+func _afflictions_text() -> String:
+	var loadout: AfflictionLoadout = player.afflictions
+	var config: AfflictionConfig = loadout.config
+	var lines: PackedStringArray = PackedStringArray([config.pause_title_format % [loadout.get_type_count(), config.max_types]])
+	for i: int in loadout.get_card_count():
+		var card: AfflictionUpgradeData = loadout.get_card(i)
+		lines.append(config.pause_entry_format % [card.affliction.title, config.source_names[card.source], loadout.get_card_level(i)])
+	return "\n".join(lines)

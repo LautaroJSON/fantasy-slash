@@ -10,6 +10,7 @@ var _enemy: Enemy = null
 var _trail_state: HealthTrail = HealthTrail.new()
 var _shake: ShakeState = ShakeState.new()
 var _debuff_row: StatusIconRow
+var _affliction_rows: AfflictionHudRows
 
 @onready var _title: Label = $TitleLabel
 @onready var _frame: Control = $BarFrame
@@ -37,6 +38,7 @@ func setup(config: BossBarConfig) -> void:
 	_fill.color = config.fill_color
 	_health_label.size = config.bar_size
 	_create_debuff_row()
+	_create_affliction_rows()
 	release()
 
 
@@ -52,6 +54,7 @@ func track(enemy: Enemy) -> void:
 	_apply_ratios()
 	_update_health_text(enemy.health.current_health, enemy.health.max_health)
 	_refresh_debuffs()
+	_affliction_rows.bind(enemy.afflictions, null if enemy.target == null else enemy.target.afflictions)
 	show()
 	set_process(true)
 
@@ -63,6 +66,7 @@ func release() -> void:
 		_enemy.debuffs.changed.disconnect(_refresh_debuffs)
 		_enemy.hit_notified.disconnect(_on_hit_notified)
 		_enemy = null
+	_affliction_rows.unbind()
 	_shake.stop()
 	_bar.position.x = 0.0
 	hide()
@@ -174,3 +178,14 @@ func _update_debuff_times() -> void:
 	var active: Array[DebuffComponent.ActiveDebuff] = _enemy.debuffs.get_active()
 	for i: int in mini(active.size(), _debuff_row.get_visible_icon_count()):
 		_debuff_row.icon(i).update_debuff_time(active[i])
+
+
+func get_affliction_rows() -> AfflictionHudRows:
+	return _affliction_rows
+
+
+## Affliction rows right under the bar, above the status icons (docs/specs/affliction.md).
+func _create_affliction_rows() -> void:
+	_affliction_rows = AfflictionHudRows.create(_config.affliction_config, _config.bar_size.x)
+	add_child(_affliction_rows)
+	move_child(_affliction_rows, _frame.get_index() + 1)

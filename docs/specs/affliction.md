@@ -1,6 +1,6 @@
 # Feature: Aflicción (acumulación de estados en los enemigos)
 
-- **Estado:** Aprobada (2026-09-27), con las decisiones del responsable (§3) y los supuestos confirmados. En implementación. ACs reservados: **AC851–AC900** (se usan AC851–AC896).
+- **Estado:** **Implementada** (2026-09-27). Aprobada con las decisiones del responsable (§3) y los supuestos confirmados. ACs: AC851–AC896 (reservados AC851–AC900; AC897–AC900 quedan libres). Tests: solo los de esta spec y los que tocan (a pedido del responsable); ver §6 y §11. Constitución enmendada a 4.17.0 (aplicada).
 - **Constitución:** `docs/constitution.md` v4.16.0 (con la enmienda de `status-icons.md` aplicada) → **enmienda MINOR a 4.17.0** (Principios II y III, ver §9).
 - **Pilar (Principio I):** **progresión** y **combate.**
   - Progresión: cada carta violeta suma una Aflicción a una fuente (básicos o habilidad) y el tope de 3 tipos obliga a armar la build. El stat "Acumulación de Aflicción" las potencia a todas.
@@ -323,16 +323,17 @@ func clear() -> void
 
 ## 6. Tests
 
-- `test/resources/affliction_data_test.gd`: AC851–AC859.
-- `test/components/affliction_component_test.gd`: AC861, AC863, AC869–AC870, AC886.
-- `test/components/affliction_loadout_test.gd`: AC862, AC864–AC868, AC871, AC875, AC877–AC879, AC882, AC896 (con `combo_driver.gd`).
-- `test/components/status_effects_test.gd` (ampliado): AC872–AC874, AC876.
-- `test/systems/upgrade_offer_test.gd` y `wave_manager_test.gd` (ampliados): AC878, AC880–AC881.
-- `test/components/affliction_bar_row_test.gd`, `test/ui/boss_health_bar_test.gd`, `test/ui/pause_menu_test.gd`, `test/ui/upgrade_picker_test.gd`, `test/ui/enemy_status_overlay_test.gd`: AC883–AC891.
-- El test de assets de `status-icons.md` (AC905/AC908): AC892.
-- `test/levels/arena_test.gd`: AC895.
-- AC860, AC893, AC894: review.
-- Tests viejos que cambian (se adaptan sin cambiar lo que verifican y se anotan en §11): cantidad de cartas del catálogo (10 → 11), filas de la tabla de stats de la pausa, tamaño del pool en `upgrade_offer_test`/`wave_manager_test`.
+Todos en verde (50 tests de esta spec):
+
+- `test/components/affliction_status_test.gd` (archivo propio en vez de ampliar `status_effects_test.gd`): AC856, AC871–AC874, AC876, AC894.
+- `test/resources/affliction_data_test.gd`: AC851–AC855, AC857–AC859, AC892.
+- `test/components/affliction_component_test.gd`: AC861, AC863, AC869, AC870, AC886 (vaciado y destello), resistencia por tipo.
+- `test/components/affliction_loadout_test.gd`: AC862 (5 golpes reales del combo con `combo_driver.gd`), AC864–AC868, AC871, AC875, AC877–AC879, AC882, AC889, AC896.
+- `test/components/affliction_bar_row_test.gd`: AC883–AC887.
+- `test/levels/affliction_run_test.gd` (arena): AC878 (pool), AC880, AC881, AC888, AC890, AC891, AC895.
+- AC860, AC893: review del diff (ningún literal de diseño en los scripts nuevos; `StatusIconView`, `StatusIconRow`, `EnemyStatusOverlay` y sus configs sin cambios).
+
+Suites existentes que tocan el código cambiado, corridas en verde: `test/entities/enemy/`, `test/ui/`, `test/systems/`, `test/effects/`, `status_effects_test`, `stats_component_test`, `dash_component_test`, `unique_upgrades_test`, `thrust_indicator_test`, `ability_run_test`, `sandbox_run_test`, `unique_upgrade_run_test` y `pause_menu_test` (en total 326 tests). Los únicos rojos (ver §11) también fallan en `main` sin esta spec.
 
 ## 7. Riesgos
 
@@ -378,15 +379,29 @@ Cada paso deja el proyecto abriendo y la suite en verde.
 
 ## 11. Notas de implementación
 
-(Se completa al implementar: tests viejos adaptados, desvíos aprobados.)
+- **Tests viejos adaptados** (sin cambiar lo que verifican):
+  - `status_icons_test.gd` AC908: 5 → 8 SVG en `assets/icons/status/` (se suman `poison_bottle`, `snowflake` y `acid_blob`).
+  - `stats_rework_test.gd` AC232 y `upgrade_offer_test.gd` AC21: el catálogo pasa de 10 a 11 cartas ("Acumulación de Aflicción").
+  - `ability_run_test.gd` AC54 y AC80: el pool suma las 8 cartas violetas.
+  - `pause_menu_test.gd` AC233: la columna derecha suma la fila "Acumulación de Aflicción".
+- **Rojos que ya estaban en `main`** (misma cuenta de fallos con y sin esta spec; no se tocan): `spin_golden_upgrades_test` AC288, `air_slash_test` AC578, `arena_waves_test` AC269, `boss_challenge_run_test` AC146, `berserker_run_test` AC221 y `upgrade_ban_run_test` AC71.
+- **Desvíos menores de §4** (sin cambio de comportamiento):
+  - Las cartas violetas se suman al pool en `WaveManager._on_ability_chosen` (`affliction_catalog`), no dentro de `UpgradeOffer.build_pool`, para no cambiar su firma (la usan varios tests).
+  - `AfflictionConfig.hud_background_color`: fondo de las filas del boss en el HUD (el 3D usa `background_material`).
+  - Las filas del boss son un nodo propio, `AfflictionHudRows` (`ui/affliction_hud_rows.gd`), que `BossHealthBar` crea en `setup()` justo debajo de `BarFrame`.
+  - `BossBarConfig.affliction_config` enlaza la config de las filas.
+  - `Enemy.affliction_bars` (la `AfflictionBarRow`) se enlaza al loadout del jugador en `activate()`.
+- **Lentitud:** el comportamiento recibe `delta × escala`; `walk`, `move_with_velocity` y `stand_still` escalan la velocidad horizontal y aplican la gravedad con el delta real. Con escala 0 (futuro aturdimiento) el enemigo se queda quieto.
+- **Íconos:** se bajaron de `game-icons/icons` con el procedimiento del `SOURCE.md` (sin fondo y con `width`/`height` 64); los nombres propuestos existían.
+- **Entorno:** los tests corrieron con Godot 4.7.2 para Linux y la carpeta `bin/` de GdUnit4 6.2.0 copiada solo en la copia del scratchpad (el `.gitignore` excluye `bin/`). No se hizo captura visual (el contenedor no tiene pantalla); queda pendiente verla en el editor.
 
 ## 12. Checklist de review (constitución)
 
-- [ ] **Identidad (I):** progresión (cartas violetas, stat, tope de 3) y combate (barras legibles, efectos que cambian la pelea).
-- [ ] **Arte (II):** filas `QuadMesh`/`ColorRect`, materiales `.tres` compartidos, colores registrados; íconos SVG en `assets/icons/status/` con crédito, según 4.16.0.
-- [ ] **Datos (III):** todo número en `AfflictionConfig`, `AfflictionData`, cartas, escalas y `EnemyStats`; stat mejorable con carta; cartas con `max_level` y valores por nivel; ningún Resource mutado.
-- [ ] **GDScript (IV):** tipado estricto, callbacks delgados.
-- [ ] **Performance (V):** filas creadas una vez; sin allocations por golpe ni por frame; el Estallido recorre el registry sin crear arrays; `AfflictionComponent` no procesa sin carga.
-- [ ] **Input (VI):** sin acciones nuevas; la pausa sigue navegable con mando.
-- [ ] **Combate (VII):** el Estallido no causa hit lag; nada toca `Engine.time_scale`.
-- [ ] **Calidad:** proyecto sin errores ni warnings nuevos, ACs y suite completa en verde.
+- [x] **Identidad (I):** progresión (8 cartas violetas, stat con carta, tope de 3) y combate (barras legibles, efectos que cambian la pelea).
+- [x] **Arte (II):** filas `QuadMesh`/`ColorRect`, materiales `.tres` compartidos en `materials/afflictions/`, colores registrados en 4.17.0; íconos SVG en `assets/icons/status/` con crédito.
+- [x] **Datos (III):** todo número en `AfflictionConfig`, `AfflictionData`, cartas, escalas y `EnemyStats`; stat mejorable con carta (`max_stacks = 5`); cartas con `max_level = 3` y valores por nivel; ningún Resource mutado (niveles y cargas viven en nodos).
+- [x] **GDScript (IV):** tipado estricto, callbacks delgados (`_physics_process` solo llama `advance`).
+- [x] **Performance (V):** filas creadas una vez; sin allocations por frame; el Estallido reúne sus blancos en un buffer miembro antes de dañarlos; `AfflictionComponent` no procesa sin carga ni destello.
+- [x] **Input (VI):** sin acciones nuevas; la pausa y las cartas se usan igual con mando.
+- [x] **Combate (VII):** el Estallido no causa hit lag ni robo de vida; nada toca `Engine.time_scale`.
+- [x] **Calidad:** import y arena sin errores ni warnings nuevos (solo los "invalid UID" que también da `main`); tests de la spec y de las suites tocadas en verde, salvo los rojos previos de §11.

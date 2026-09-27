@@ -103,6 +103,11 @@ theme_override_constants/h_separation = 32
 theme_override_constants/v_separation = 4
 columns = 2
 
+[node name="AfflictionsLabel" type="Label" parent="Center/Panel/Margin/Layout/Columns/StatsBlock"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+
 [node name="SandboxPanel" parent="Center/Panel/Margin/Layout/Columns" instance=ExtResource("3_sandbox_panel")]
 unique_name_in_owner = true
 visible = false
