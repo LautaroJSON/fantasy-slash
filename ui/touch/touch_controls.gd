@@ -58,7 +58,7 @@ func _input(event: InputEvent) -> void:
 
 func _process(_delta: float) -> void:
 	_follow_tree_pause()
-	_update_dash_cooldown()
+	update_dash_cooldown()
 
 
 func _notification(what: int) -> void:
@@ -252,7 +252,8 @@ func _refresh_visibility() -> void:
 	visible = _active and not _was_paused
 
 
-func _update_dash_cooldown() -> void:
+## Called by _process and by tests.
+func update_dash_cooldown() -> void:
 	if _player == null or not visible:
 		return
 	_dash.set_cooldown(_player.dash.get_cooldown_ratio(), _player.dash.get_cooldown_remaining())
