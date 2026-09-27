@@ -47,6 +47,27 @@ const GUARD_THICKNESS_MAX: float = 0.035
 const SAMURAI_ATTACK_RANGE: float = 2.3
 const KATANA_HILT_OFFSET: float = 0.35
 const TRAIL_BASE_GAP: float = 0.05
+<<<<<<< HEAD
+=======
+## AC694: sheath thickness range, the band where it is measured (weapon z), and
+## how much its neck rings stand out of the body, in meters.
+const SHEATH_THICKNESS_MIN: float = 0.021
+const SHEATH_THICKNESS_MAX: float = 0.023
+const SHEATH_BODY_FROM_Z: float = -1.15
+const SHEATH_BODY_TO_Z: float = -0.60
+const SHEATH_RING_FROM_Z: float = -0.53
+const SHEATH_RING_TO_Z: float = -0.29
+const SHEATH_RING_OUT: float = 0.0081
+const SHEATH_WIDTH_TOLERANCE: float = 0.001
+## AC695: end of the sheath, radius of its corners, sharpest turn of its end
+## outline and width tolerance at the end.
+const SHEATH_END_Z: float = -1.282
+const SHEATH_END_TOLERANCE: float = 0.002
+const SHEATH_CORNER_RADIUS: float = 0.015
+const SHEATH_CORNER_TOLERANCE: float = 0.003
+const SHEATH_MAX_TURN_DEGREES: float = 45.0
+const SHEATH_END_WIDTH_TOLERANCE: float = 0.002
+>>>>>>> origin/claude/eloquent-albattani-qapzro
 
 
 func _model_of(scene: PackedScene) -> MeshInstance3D:
@@ -213,3 +234,99 @@ func test_ac688_the_derived_katana_meshes_keep_the_source_topology_and_are_repro
 		_assert_same_mesh(KatanaBuilder.build(part[0]), mesh)
 	var source_md: String = FileAccess.get_file_as_string(KATANA_ASSET_DIR + "SOURCE.md")
 	assert_str(source_md).contains("build_katana_meshes.gd")
+<<<<<<< HEAD
+=======
+
+
+# --- Katana sheath shape (docs/specs/katana-sheath-shape.md)
+
+## Saved sheath vertices in the weapon space, with their source vertices of the
+## glb (same order: the generator keeps the vertices of the bone in order).
+func _sheath_vertices() -> Array[PackedVector3Array]:
+	var model: MeshInstance3D = _model_of(KATANA_SHEATH_SCENE)
+	var saved: PackedVector3Array = []
+	for p: Vector3 in model.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array:
+		saved.append(model.transform * p)
+	var arrays: Array = KatanaBuilder.source_arrays()
+	var positions: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+	var per_vertex: int = bones.size() / positions.size()
+	var source: PackedVector3Array = []
+	for i: int in positions.size():
+		if KatanaBuilder.main_bone(bones, weights, i, per_vertex) == KatanaBuilder.SHEATH_BONE:
+			source.append(model.transform * positions[i])
+	return [saved, source]
+
+
+func test_ac694_the_sheath_is_twice_as_thick_and_as_wide() -> void:
+	var vertices: Array[PackedVector3Array] = _sheath_vertices()
+	var saved: PackedVector3Array = vertices[0]
+	var source: PackedVector3Array = vertices[1]
+	assert_int(saved.size()).is_equal(source.size())
+	var body_half: float = 0.0
+	var ring_half: float = 0.0
+	var end_start: float = 0.055 - 1.1 * KatanaBuilder.SHEATH_END_REGION_Y
+	for i: int in saved.size():
+		var p: Vector3 = saved[i]
+		if p.z >= SHEATH_BODY_FROM_Z and p.z <= SHEATH_BODY_TO_Z:
+			body_half = maxf(body_half, absf(p.y))
+		if p.z >= SHEATH_RING_FROM_Z and p.z <= SHEATH_RING_TO_Z:
+			ring_half = maxf(ring_half, absf(p.y))
+		# Same width: X does not move outside the end.
+		if source[i].z > end_start:
+			assert_float(p.x).is_equal_approx(source[i].x, SHEATH_WIDTH_TOLERANCE)
+	assert_float(body_half * 2.0).is_between(SHEATH_THICKNESS_MIN, SHEATH_THICKNESS_MAX)
+	assert_float(ring_half - body_half).is_equal_approx(SHEATH_RING_OUT, SHEATH_WIDTH_TOLERANCE)
+
+
+## Distinct outline points (weapon X, Z) of the sheath end, from its outer edge
+## to its inner edge, framed by the last station of each edge before the end.
+func _sheath_end_outline() -> PackedVector2Array:
+	var saved: PackedVector3Array = _sheath_vertices()[0]
+	var end_start: float = 0.055 - 1.1 * KatanaBuilder.SHEATH_END_REGION_Y
+	var points: Array[Vector2] = []
+	for p: Vector3 in saved:
+		var q := Vector2(p.x, p.z)
+		if points.all(func(o: Vector2) -> bool: return o.distance_to(q) > 0.0001):
+			points.append(q)
+	var end: Array = points.filter(func(q: Vector2) -> bool: return q.y < end_start)
+	end.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x > b.x)
+	var body: Array = points.filter(func(q: Vector2) -> bool: return q.y >= end_start)
+	body.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.y < b.y)
+	var station: Array[Vector2] = [body[0], body[1]]
+	station.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x > b.x)
+	var outline: PackedVector2Array = [station[0]]
+	outline.append_array(PackedVector2Array(end))
+	outline.append(station[1])
+	return outline
+
+
+## Center of the circle through three points.
+func _circumcenter(a: Vector2, b: Vector2, c: Vector2) -> Vector2:
+	var d: float = 2.0 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y))
+	var ux: float = (a.length_squared() * (b.y - c.y) + b.length_squared() * (c.y - a.y) + c.length_squared() * (a.y - b.y)) / d
+	var uy: float = (a.length_squared() * (c.x - b.x) + b.length_squared() * (a.x - c.x) + c.length_squared() * (b.x - a.x)) / d
+	return Vector2(ux, uy)
+
+
+func test_ac695_the_sheath_end_has_rounded_corners() -> void:
+	var outline: PackedVector2Array = _sheath_end_outline()
+	var end: PackedVector2Array = outline.slice(1, outline.size() - 1)
+	var tip: float = INF
+	for q: Vector2 in end:
+		tip = minf(tip, q.y)
+	assert_float(tip).is_equal_approx(SHEATH_END_Z, SHEATH_END_TOLERANCE)
+	# Each half of the end outline is a corner arc.
+	var half: int = end.size() / 2
+	for corner: PackedVector2Array in [end.slice(0, half), end.slice(half)]:
+		var center: Vector2 = _circumcenter(corner[0], corner[corner.size() / 2], corner[corner.size() - 1])
+		for q: Vector2 in corner:
+			assert_float(q.distance_to(center)).is_equal_approx(SHEATH_CORNER_RADIUS, SHEATH_CORNER_TOLERANCE)
+	for i: int in range(1, outline.size() - 1):
+		var turn: float = rad_to_deg((outline[i] - outline[i - 1]).angle_to(outline[i + 1] - outline[i]))
+		assert_float(absf(turn)).override_failure_message("turn of %.1f° at %s" % [turn, outline[i]]).is_less_equal(SHEATH_MAX_TURN_DEGREES)
+	# The width where the arcs end is the width of the sheath before its end.
+	var station_width: float = outline[0].x - outline[outline.size() - 1].x
+	assert_float(end[0].x - end[end.size() - 1].x).is_equal_approx(station_width, SHEATH_END_WIDTH_TOLERANCE)
+>>>>>>> origin/claude/eloquent-albattani-qapzro
