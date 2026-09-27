@@ -15,7 +15,7 @@ Hack and slash roguelike en tercera persona (Godot 4.7, GDScript, PC con teclado
 5. Al cerrar: suite completa en verde, smoke test, checklist de review de la constitución en la spec y estado **Implementada**. Si un test viejo tenía valores fijos, adaptalo sin cambiar lo que verifica y anotalo en la spec.
 6. Respondé en **español**. Código, identificadores y comentarios en **inglés**.
 
-**Próximo criterio de aceptación libre: AC698.** (AC639–AC660 y AC678–AC682 reservados por `class-combat-identity.md`; AC661–AC670 por `sheath-socket-hand-grip.md`; AC671–AC677 por `sheath-in-left-hand.md`; AC694–AC697 por `katana-sheath-shape.md`.) Actualizá este número al cerrar cada spec.
+**Próximo criterio de aceptación libre: AC728.** (AC698–AC727 reservados por `mobile-touch-controls.md`; AC639–AC660 y AC678–AC682 reservados por `class-combat-identity.md`; AC661–AC670 por `sheath-socket-hand-grip.md`; AC671–AC677 por `sheath-in-left-hand.md`; AC694–AC697 por `katana-sheath-shape.md`.) Actualizá este número al cerrar cada spec.
 
 ## Mapa del proyecto
 
