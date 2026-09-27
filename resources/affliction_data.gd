@@ -40,6 +40,14 @@ func has_burst() -> bool:
 	return burst_radius > 0.0
 
 
+## Material of its floating name: its own, or its status' damage number material
+## (docs/specs/affliction-name-popup.md §7).
+func text_material() -> StandardMaterial3D:
+	if damage_number_material != null or debuff == null:
+		return damage_number_material
+	return debuff.damage_number_material
+
+
 ## Whether triggering it deals damage (a burst or damage-over-time ticks); the
 ## others show their name instead of a number.
 func deals_damage() -> bool:

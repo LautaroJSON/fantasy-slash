@@ -261,11 +261,15 @@ func test_ac952_corrosion_shows_its_name_in_its_color() -> void:
 	assert_object(text.material_override).is_same(CORROSION_TYPE.damage_number_material)
 
 
-func test_ac953_damaging_afflictions_show_no_name() -> void:
+## affliction-name-popup.md §7: AC991 replaces AC953 (every Affliction says its name).
+func test_ac991_damaging_afflictions_say_their_name_too() -> void:
 	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
 	_player.afflictions.triggered.emit(enemy, POISON_TYPE)
+	assert_str(_pool.get_last_spawned().get_text()).is_equal("Veneno")
+	assert_object(_pool.get_last_spawned().material_override).is_same(POISON_TYPE.debuff.damage_number_material)
 	_player.afflictions.triggered.emit(enemy, BURST)
-	assert_int(_pool.active_count()).is_equal(0)
+	assert_str(_pool.get_last_spawned().get_text()).is_equal("Estallido")
+	assert_object(_pool.get_last_spawned().material_override).is_same(BURST.damage_number_material)
 
 
 func test_ac955_names_reuse_the_pool() -> void:

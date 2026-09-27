@@ -86,11 +86,10 @@ func _on_affliction_burst_hit(enemy: Enemy, applied: float, type: AfflictionData
 	spawn(applied, false, enemy.global_position + _spawn_offset(enemy), type.damage_number_material)
 
 
-## An Affliction without damage shows its name in its color instead of a
-## number (docs/specs/affliction-name-popup.md).
+## Every Affliction says its name in its color each time its bar fills
+## (docs/specs/affliction-name-popup.md §7).
 func _on_affliction_triggered(enemy: Enemy, type: AfflictionData) -> void:
-	if not type.deals_damage():
-		spawn_text(type.title, enemy.global_position + _spawn_offset(enemy), type.damage_number_material)
+	spawn_text(type.title, enemy.global_position + _spawn_offset(enemy), type.text_material())
 
 
 ## Italic, and in the status color when it has one (e.g. poison).

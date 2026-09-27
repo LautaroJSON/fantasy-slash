@@ -43,9 +43,9 @@ Principio II, tabla de colores: la fila "Números de daño de Aflicción (Veneno
 - **Tests:** `damage_number_pool_test.gd` (AC951–AC953, AC955) y `affliction_data_test.gd` (AC954), en verde junto con `test/effects/`, las suites de Aflicción y `boss_body_test` (81 tests). Sin tests viejos adaptados.
 - `DamageNumber` separa el arranque (`_start`) del estilo (`_show_normal(text, …)`), así `show_damage` y `show_text` comparten el aspecto de un número normal.
 
-## 7. Revisión: todas las Aflicciones dicen su nombre (propuesta, 2026-09-27)
+## 7. Revisión: todas las Aflicciones dicen su nombre (2026-09-27)
 
-- **Estado:** Propuesta. ACs reservados: **AC991–AC995** (se usan AC991–AC993). Constitución 4.20.1 → **enmienda PATCH a 4.20.2** (redacción de la fila de textos flotantes de Aflicción).
+- **Estado:** **Implementada** (2026-09-27). ACs: AC991–AC993 (reservados AC991–AC995). Constitución enmendada a 4.20.2 (aplicada). Sin tests nuevos a pedido del responsable; se adaptó el test de AC953 a AC991 (Veneno y Estallido dicen su nombre) y `damage_number_pool_test` y `affliction_loadout_test` quedan en verde. Constitución 4.20.1 → **enmienda PATCH a 4.20.2** (redacción de la fila de textos flotantes de Aflicción).
 - **Pedido del responsable:** cualquier Aflicción dice su nombre al aplicarse, reaplicarse o refrescarse, no solo las que no hacen daño.
 - **Diseño:** cada vez que se llena una barra (primera aplicación, reaplicación o refresco del estado), sale el nombre de la Aflicción sobre el enemigo, en el color de su barra, con el estilo de un número normal. Se quita el filtro `deals_damage()` del pool (la función queda, sin uso en el pool).
   - **Veneno y Sangrado:** el nombre al llenarse la barra, y después sus ticks como hasta ahora (números de color en cursiva).
