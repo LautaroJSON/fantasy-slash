@@ -27,6 +27,7 @@ func _ready() -> void:
 	player.basic_ability.enemy_hit.connect(_on_enemy_hit)
 	player.ultimate_ability.enemy_hit.connect(_on_enemy_hit)
 	player.air_slash.enemy_hit.connect(_on_enemy_hit)
+	player.afflictions.burst_hit.connect(_on_affliction_burst_hit)
 	if registry != null:
 		registry.enemy_debuff_ticked.connect(_on_enemy_debuff_ticked)
 
@@ -67,6 +68,11 @@ func _on_number_finished(number: DamageNumber) -> void:
 
 func _on_enemy_hit(enemy: Enemy, applied: float, is_crit: bool) -> void:
 	spawn(applied, is_crit, enemy.global_position + _spawn_offset(enemy))
+
+
+## Area damage of an Affliction burst (docs/specs/affliction.md): never critical.
+func _on_affliction_burst_hit(enemy: Enemy, applied: float) -> void:
+	_on_enemy_hit(enemy, applied, false)
 
 
 func _on_enemy_debuff_ticked(enemy: Enemy, amount: float) -> void:

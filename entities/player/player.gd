@@ -45,6 +45,7 @@ const WEAPON_OFF_HAND: NodePath = ^"OffHand"
 @onready var air_slash: AirSlashComponent = $AirSlash
 @onready var stamina: StaminaComponent = $StaminaComponent
 @onready var sprint: SprintComponent = $SprintComponent
+@onready var afflictions: AfflictionLoadout = $Afflictions
 @onready var _weapon_pivot: Node3D = $Visual/SwordPivot
 @onready var _movement: MovementComponent = $MovementComponent
 @onready var _camera: ThirdPersonCamera = $CameraRig
@@ -74,6 +75,7 @@ func _ready() -> void:
 	basic_ability.registry = enemy_registry
 	ultimate_ability.registry = enemy_registry
 	air_slash.registry = enemy_registry
+	afflictions.registry = enemy_registry
 	_apply_character_class()
 	_setup_health()
 	stamina.refill()
@@ -203,6 +205,8 @@ func apply_upgrade(card: UpgradeCard) -> void:
 		return
 	if card is UpgradeData:
 		stats.add_upgrade(card as UpgradeData)
+	elif card is AfflictionUpgradeData:
+		afflictions.apply_card(card as AfflictionUpgradeData)
 	elif basic_ability.owns_upgrade(card):
 		basic_ability.apply_card(card)
 	elif ultimate_ability.owns_upgrade(card):
@@ -213,6 +217,8 @@ func apply_upgrade(card: UpgradeCard) -> void:
 func remove_upgrade(card: UpgradeCard) -> void:
 	if card is UpgradeData:
 		stats.remove_upgrade(card as UpgradeData)
+	elif card is AfflictionUpgradeData:
+		afflictions.remove_card(card as AfflictionUpgradeData)
 	elif basic_ability.owns_upgrade(card):
 		basic_ability.remove_card(card)
 	elif ultimate_ability.owns_upgrade(card):
@@ -223,22 +229,30 @@ func remove_upgrade(card: UpgradeCard) -> void:
 func count_upgrade(card: UpgradeCard) -> int:
 	if card is UpgradeData:
 		return stats.count_upgrade(card as UpgradeData)
+	if card is AfflictionUpgradeData:
+		return afflictions.count_card(card as AfflictionUpgradeData)
 	if basic_ability.owns_upgrade(card):
 		return basic_ability.count_card(card)
 	return ultimate_ability.count_card(card)
 
 
 ## Highest count a card can reach: max_stacks for stat cards, max_level for
-## unique upgrades.
+## unique and Affliction upgrades.
 func max_count(card: UpgradeCard) -> int:
 	if card is UpgradeData:
 		return (card as UpgradeData).max_stacks
 	if card is AbilityUpgradeData:
 		return (card as AbilityUpgradeData).max_stacks
+	if card is AfflictionUpgradeData:
+		return (card as AfflictionUpgradeData).max_level
 	return (card as AbilityUniqueUpgradeData).max_level
 
 
+## An Affliction card is also maxed when its Affliction is new and the run
+## already holds AfflictionConfig.max_types (docs/specs/affliction.md).
 func is_maxed(card: UpgradeCard) -> bool:
+	if card is AfflictionUpgradeData:
+		return afflictions.is_card_maxed(card as AfflictionUpgradeData)
 	return count_upgrade(card) >= max_count(card)
 
 
@@ -253,6 +267,7 @@ func reset_upgrades() -> void:
 	basic_ability.clear_upgrades()
 	ultimate_ability.clear_upgrades()
 	buffs.clear()
+	afflictions.clear()
 
 
 ## Level a unique upgrade card would grant if chosen now (1 when not taken yet).

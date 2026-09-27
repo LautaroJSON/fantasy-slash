@@ -20,6 +20,8 @@
 [ext_resource type="Material" path="res://materials/vfx/wind_dust_material.tres" id="20_dust_material"]
 [ext_resource type="Material" path="res://materials/vfx/shield_aura_material.tres" id="21_shield_aura_material"]
 [ext_resource type="Resource" path="res://data/debuffs/shield.tres" id="22_shield"]
+[ext_resource type="Script" path="res://components/affliction_component.gd" id="23_afflictions"]
+[ext_resource type="Resource" path="res://data/combat/affliction_config.tres" id="24_affliction_config"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -98,6 +100,10 @@ rules = ExtResource("5_rules")
 script = ExtResource("7_debuffs")
 health = NodePath("../HealthComponent")
 target = NodePath("..")
+
+[node name="AfflictionComponent" type="Node" parent="."]
+script = ExtResource("23_afflictions")
+config = ExtResource("24_affliction_config")
 
 [node name="HealthBar" parent="." node_paths=PackedStringArray("health") instance=ExtResource("6_health_bar")]
 health = NodePath("../HealthComponent")

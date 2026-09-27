@@ -60,6 +60,7 @@ var _speed_scale: float = 1.0
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var debuffs: DebuffComponent = $DebuffComponent
+@onready var afflictions: AfflictionComponent = $AfflictionComponent
 @onready var health_bar: EnemyHealthBar = $HealthBar
 @onready var _collision: CollisionShape3D = $CollisionShape3D
 @onready var _body: MeshInstance3D = $Body
@@ -117,6 +118,7 @@ func activate(at: Vector3, new_target: Player, new_level: int = 1) -> void:
 	stats.write_scaled(level, _scaled)
 	health.setup(_scaled.max_health, _scaled.defense)
 	debuffs.clear()
+	afflictions.setup(_scaled)
 	health_bar.reset()
 	health_bar.set_level(level)
 	visible = true
@@ -163,6 +165,7 @@ func deactivate() -> void:
 	if registry != null:
 		registry.unregister(self)
 	debuffs.clear()
+	afflictions.clear()
 	_end_hitlag()
 	visible = false
 	process_mode = Node.PROCESS_MODE_DISABLED
