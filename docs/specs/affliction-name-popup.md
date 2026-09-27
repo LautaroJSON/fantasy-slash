@@ -42,3 +42,25 @@ Principio II, tabla de colores: la fila "Números de daño de Aflicción (Veneno
 
 - **Tests:** `damage_number_pool_test.gd` (AC951–AC953, AC955) y `affliction_data_test.gd` (AC954), en verde junto con `test/effects/`, las suites de Aflicción y `boss_body_test` (81 tests). Sin tests viejos adaptados.
 - `DamageNumber` separa el arranque (`_start`) del estilo (`_show_normal(text, …)`), así `show_damage` y `show_text` comparten el aspecto de un número normal.
+
+## 7. Revisión: todas las Aflicciones dicen su nombre (propuesta, 2026-09-27)
+
+- **Estado:** Propuesta. ACs reservados: **AC991–AC995** (se usan AC991–AC993). Constitución 4.20.1 → **enmienda PATCH a 4.20.2** (redacción de la fila de textos flotantes de Aflicción).
+- **Pedido del responsable:** cualquier Aflicción dice su nombre al aplicarse, reaplicarse o refrescarse, no solo las que no hacen daño.
+- **Diseño:** cada vez que se llena una barra (primera aplicación, reaplicación o refresco del estado), sale el nombre de la Aflicción sobre el enemigo, en el color de su barra, con el estilo de un número normal. Se quita el filtro `deals_damage()` del pool (la función queda, sin uso en el pool).
+  - **Veneno y Sangrado:** el nombre al llenarse la barra, y después sus ticks como hasta ahora (números de color en cursiva).
+  - **Estallido:** el nombre sobre el enemigo que llenó la barra, y además los números de daño naranjas en cada enemigo alcanzado.
+  - **Escarcha y Corrosión:** sin cambios (ya decían su nombre).
+- **Color del nombre:** Veneno y Sangrado usan el material de número de su estado (`DebuffData.damage_number_material`, mismo color que la barra). Estallido, Escarcha y Corrosión usan el de su `AfflictionData`. Se agrega `AfflictionData.text_material() -> StandardMaterial3D` (puro): el propio o, si no tiene, el de su estado.
+- **Enmienda (PATCH 4.20.2):** la fila de la tabla de colores pasa a "Textos flotantes de Aflicción: su nombre al aplicarse y los números de daño de las que hacen daño".
+
+### Criterios de aceptación (AC991–AC993)
+
+- **AC991** Al dispararse Veneno, Sangrado o Estallido aparece su nombre ("Veneno", "Sangrado", "Estallido") sobre el enemigo que llenó la barra, en el color de su barra, sin "!" ni cursiva. Reemplaza a AC953.
+- **AC992** Cada disparo siguiente (reaplicación o refresco) vuelve a mostrar el nombre.
+- **AC993** Los ticks de Veneno y Sangrado y los números del Estallido siguen como antes (AC933, AC934, AC965).
+
+### Plan
+
+1. `text_material()` y quitar el filtro del pool. Tests AC991–AC993, adaptar AC953.
+2. Cierre: enmienda 4.20.2, `CLAUDE.md` (próximo AC libre), tests de la spec y de las suites tocadas, estado **Implementada**.
