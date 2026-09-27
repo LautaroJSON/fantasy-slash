@@ -12,6 +12,10 @@ const KATANA_BLADE_MODEL: Mesh = preload("res://assets/models/weapons/katana/kat
 const KATANA_SHEATH_MODEL: Mesh = preload("res://assets/models/weapons/katana/katana_sheath.res")
 const KATANA_MATERIAL: StandardMaterial3D = preload("res://materials/weapons/katana_material.tres")
 const KATANA_ASSET_DIR: String = "res://assets/models/weapons/katana/"
+const KatanaBuilder := preload("res://assets/models/weapons/katana/tools/build_katana_meshes.gd")
+const SAMURAI_STATS: PlayerStats = preload("res://data/classes/samurai/samurai_stats.tres")
+const KATANA_SWING: SwordSwingConfig = preload("res://data/classes/samurai/katana_swing_config.tres")
+const KatanaParts := preload("res://test/helpers/katana_parts.gd")
 const HOPLITE_MATERIALS: Array[Material] = [
 	preload("res://materials/weapons/hoplite_iron_material.tres"),
 	preload("res://materials/weapons/hoplite_handle_material.tres"),
@@ -31,6 +35,18 @@ const SWORD_TIP_Z: float = -1.47
 const GREATSWORD_TIP_Z: float = -2.21
 const KATANA_TIP_Z: float = -1.27
 const TIP_TOLERANCE: float = 0.05
+## AC683: handle length and least section, guard diameter and greatest
+## thickness, in meters.
+const HANDLE_LENGTH_MIN: float = 0.29
+const HANDLE_LENGTH_MAX: float = 0.33
+const HANDLE_SECTION_MIN: float = 0.045
+const GUARD_DIAMETER_MIN: float = 0.16
+const GUARD_DIAMETER_MAX: float = 0.185
+const GUARD_THICKNESS_MAX: float = 0.035
+## AC686: attack reach kept, and farthest the trail base may be from the guard.
+const SAMURAI_ATTACK_RANGE: float = 2.3
+const KATANA_HILT_OFFSET: float = 0.35
+const TRAIL_BASE_GAP: float = 0.05
 
 
 func _model_of(scene: PackedScene) -> MeshInstance3D:
@@ -122,3 +138,78 @@ func test_ac237_the_katana_tip_and_trail_markers() -> void:
 	var bounds: AABB = mesh_instance.transform * mesh_instance.mesh.get_aabb()
 	assert_float(bounds.position.z).is_equal_approx(KATANA_TIP_Z, TIP_TOLERANCE)
 	_assert_trail_markers(KATANA_SCENE)
+
+
+# --- Katana proportions (docs/specs/katana-hand-proportions.md)
+
+func test_ac683_the_katana_handle_and_guard_match_the_hand() -> void:
+	var model: MeshInstance3D = _model_of(KATANA_SCENE)
+	var guard: AABB = KatanaParts.bounds(KatanaParts.guard_points(model))
+	var handle: AABB = KatanaParts.bounds(KatanaParts.handle_points(model))
+	# From the back face of the guard to the pommel end.
+	var handle_length: float = handle.end.z - guard.end.z
+	assert_float(handle_length).is_between(HANDLE_LENGTH_MIN, HANDLE_LENGTH_MAX)
+	assert_float(handle.size.x).is_greater_equal(HANDLE_SECTION_MIN)
+	assert_float(guard.size.x).is_between(GUARD_DIAMETER_MIN, GUARD_DIAMETER_MAX)
+	assert_float(guard.size.y).is_between(GUARD_DIAMETER_MIN, GUARD_DIAMETER_MAX)
+	assert_float(guard.size.z).is_less_equal(GUARD_THICKNESS_MAX)
+	var bounds: AABB = model.transform * model.mesh.get_aabb()
+	assert_float(bounds.position.z).is_equal_approx(KATANA_TIP_Z, TIP_TOLERANCE)
+
+
+func test_ac686_the_katana_keeps_its_reach_and_the_trail_starts_at_the_guard() -> void:
+	assert_float(SAMURAI_STATS.attack_range).is_equal_approx(SAMURAI_ATTACK_RANGE, 0.0001)
+	assert_float(KATANA_SWING.hilt_offset).is_equal_approx(KATANA_HILT_OFFSET, 0.0001)
+	var weapon: Node3D = auto_free(KATANA_SCENE.instantiate())
+	var guard: AABB = KatanaParts.bounds(KatanaParts.guard_points(weapon.get_node("Model") as MeshInstance3D))
+	var base: float = (weapon.get_node("TrailBase") as Node3D).position.z
+	# In front of the guard (toward the tip, -Z), close to its front face.
+	assert_float(base).is_less(guard.position.z)
+	assert_float(guard.position.z - base).is_less_equal(TRAIL_BASE_GAP)
+	_assert_trail_markers(KATANA_SCENE)
+
+
+## Source vertices of one bone of katana.glb, in their original order.
+func _source_part(bone: int) -> Dictionary:
+	var arrays: Array = KatanaBuilder.source_arrays()
+	var positions: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
+	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+	var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+	var per_vertex: int = bones.size() / positions.size()
+	var part_uvs: PackedVector2Array = []
+	var in_part: Array[bool] = []
+	for i: int in positions.size():
+		in_part.append(KatanaBuilder.main_bone(bones, weights, i, per_vertex) == bone)
+		if in_part[i]:
+			part_uvs.append(uvs[i])
+	var index_count: int = 0
+	for t: int in indices.size() / 3:
+		if in_part[indices[t * 3]] and in_part[indices[t * 3 + 1]] and in_part[indices[t * 3 + 2]]:
+			index_count += 3
+	return {"uvs": part_uvs, "index_count": index_count}
+
+
+func _assert_same_mesh(built: ArrayMesh, saved: Mesh) -> void:
+	var a: Array = built.surface_get_arrays(0)
+	var b: Array = saved.surface_get_arrays(0)
+	assert_array(b[Mesh.ARRAY_INDEX]).is_equal(a[Mesh.ARRAY_INDEX])
+	var pa: PackedVector3Array = a[Mesh.ARRAY_VERTEX]
+	var pb: PackedVector3Array = b[Mesh.ARRAY_VERTEX]
+	assert_int(pb.size()).is_equal(pa.size())
+	for i: int in pa.size():
+		assert_vector(pb[i]).is_equal_approx(pa[i], Vector3.ONE * 0.00001)
+
+
+func test_ac688_the_derived_katana_meshes_keep_the_source_topology_and_are_reproducible() -> void:
+	var parts: Array = [[KatanaBuilder.BLADE_BONE, KATANA_BLADE_MODEL], [KatanaBuilder.SHEATH_BONE, KATANA_SHEATH_MODEL]]
+	for part: Array in parts:
+		var source: Dictionary = _source_part(part[0])
+		var mesh: Mesh = part[1]
+		var arrays: Array = mesh.surface_get_arrays(0)
+		assert_array(arrays[Mesh.ARRAY_TEX_UV]).is_equal(source["uvs"])
+		assert_int((arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size()).is_equal(source["index_count"])
+		_assert_same_mesh(KatanaBuilder.build(part[0]), mesh)
+	var source_md: String = FileAccess.get_file_as_string(KATANA_ASSET_DIR + "SOURCE.md")
+	assert_str(source_md).contains("build_katana_meshes.gd")

@@ -1,6 +1,6 @@
 # Feature: proporciones de la katana acordes a la mano
 
-- **Estado:** Aprobada, en implementación (2026-09-27).
+- **Estado:** Implementada (2026-09-27).
 - **Constitución:** `docs/constitution.md` v4.10.1 → **enmienda MINOR 4.11.0** (ver §8).
 - **Pilar (Principio I):** **combate.** La silueta del arma es parte de la lectura del Samurái. Hoy la mano del humanoide (una gema de ~21 cm) tapa el mango entero y la tsuba, así que la katana parece salir del puño sin guarda. Con un mango y una tsuba a la escala de la mano, se lee como katana en la guardia, en cada corte y en la carga de Envainar.
 - **Dependencias:** `samurai.md` (malla derivada `katana_blade.res`, AC237), `weapon-reach.md` (regla de AC211), `sheath-in-left-hand.md` (AC671–AC677: funda en la mano izquierda), `sheath-socket-hand-grip.md` (`Hilt`, AC675).
@@ -105,9 +105,9 @@ Cada paso deja el proyecto andando.
 6. **Tests:** AC683–AC686 y AC688 en `weapon_model_test.gd` y `sheath_grip_test.gd`. Corro solo las suites de AC688.
 7. **Cierre:** notas y checklist en esta spec, `SOURCE.md` de la katana y mapa de `CLAUDE.md` ("Funda del arma" y "Largo visual del arma").
 
-## 6. Tests adaptados (se anotan al cerrar)
+## 6. Tests adaptados
 
-- Ninguno cambia lo que verifica. Si algún test de `sheath_grip_test` tiene fijo el `Grip` en −0.03 o el `Hilt` en +0.10, se adapta a los nuevos valores y se anota acá.
+- Ninguno: ningún test tenía fijos el `Grip`, el `Hilt`, el `TrailBase` ni `sheath_position`.
 
 ## 7. Riesgos
 
@@ -128,13 +128,57 @@ Es MINOR porque agrega un permiso nuevo, como las enmiendas 4.5.0 y 4.9.0.
 
 ## 9. Notas de implementación
 
-*(Se completa al implementar.)*
+- **Medido antes de generar:** la gema de la mano derecha mide `h` = **0.1067 m** de medio largo sobre el eje del arma (su caja va de z = −0.160 a +0.053) y su centro está en z = −0.0533, como decía §1. Con eso, el generador ubica la tsuba y el pomo con `NEW_GUARD_BACK_Y` = 0.20455 y `NEW_POMMEL_Y` = −0.07091.
+- **Medidas finales** (espacio de `katana.tscn`):
+
+  | Parte | Spec (§2.1) | Resultado |
+  |---|---|---|
+  | Mango | ~31 cm, ~5 × 4.4 cm | **30.3 cm** (de −0.170 a +0.133), **5.0 × 4.3 cm** |
+  | Tsuba | Ø ~17.4 cm, ~3 cm de espesor, de −0.178 a −0.206 | **Ø 16.6 × 17.4 cm**, **1.65 cm** de espesor, de **−0.170 a −0.187** |
+  | Pomo detrás del puño | ~8 cm | **8.0 cm** |
+  | Hoja | punta en −1.27 | punta en **−1.267** (1.14 → 1.08 m) |
+  | Funda | boca en la tsuba, punta igual | boca en **−0.187**, punta en **−1.270** |
+
+  - **Tsuba y funda algo más atrás que en §2.1:** el `h` medido (0.107) es menor que el estimado (0.115).
+  - **Tsuba más fina que lo estimado:** en §1 se midió en franjas de 1 cm y se sobreestimó; la franja real del glb es de 1.2 mm × 1.1 = 1.3 cm, y ×1.25 da 1.65 cm. Igual está dentro de AC683 (≤ 3.5 cm).
+  - **Sección del mango:** AC683 mide el ancho (5.0 cm ≥ 4.5). El espesor es 4.3 cm, que es ×1.5 de los 2.9 cm originales.
+- **Marcadores y datos** (con el mismo criterio que §2.3/§2.4, recalculado con las medidas finales):
+  - `TrailBase` en z = **−0.20** (1.35 cm delante de la tsuba; §2.3 estimaba −0.22);
+  - `Hilt` en z = **−0.0533**;
+  - `Grip` de la funda en z = **−0.3032** (cara delantera de la tsuba − 1 cm − `h`; §2.4 estimaba −0.331);
+  - `sheath_position` = **(0, −0.0533, −0.3032)**, con la misma `sheath_rotation`.
+- **Primer cuadro de `sheathe_slash`:** posición (−0.5067, 0.4411, −0.0342), rotación (0.2803, −1.8888, 0.3483).
+  - El cuadro anterior ya estaba desactualizado antes de este cambio (AC675 fallaba en `main`: 3.3 cm y 78°), porque `class-combat-identity` cambió la pose de `sheathe_charge`. Con este valor, AC675 vuelve a pasar.
+  - Envainada, la hoja apunta a la derecha del jugador (+X, la carga es en *hanmi*). Se dejó el ángulo Y tal como sale (−1.889 → 0.7 en el segundo cuadro), así que el desenvaine barre por delante del cuerpo, de derecha a izquierda (*nukitsuke*), y no por detrás.
+- **Generador:**
+  - pasó a funciones estáticas (`source_arrays()`, `build(bone)`, `new_guard_front_y()`, `main_bone()`), para que los tests reconstruyan las mallas en memoria sin guardar;
+  - libera la escena del glb (antes dejaba leaks al salir);
+  - dos corridas dan archivos idénticos.
+- **Capturas** (Xvfb + OpenGL, antes y después): katana suelta desde arriba, primer plano del mango, guardia, primer golpe en `hit_start`, carga de Envainar y vista alta.
+  - Tsuba y pomo se ven a los dos lados del puño en la guardia y en el golpe.
+  - En la carga el orden es mano izquierda, tsuba, mano derecha, pomo.
+  - El mango delante de la cadera no atraviesa el muslo en las capturas (riesgo de §7). La tsuba de 17 cm no corta el torso en los cuadros revisados.
+- **Tests nuevos:**
+  - `weapon_model_test`: AC683, AC686 y AC688;
+  - `sheath_grip_test`: AC684 y AC685;
+  - helper `test/helpers/katana_parts.gd`, que separa tsuba y mango usando las constantes del generador.
+- **Resultado de las suites de AC688:** `weapon_model_test` (12), `sheath_grip_test` (15), `sheathe_test` (18) y `class_combat_identity_test` en verde, salvo los fallos previos de abajo. AC675 vuelve a pasar.
+- **Fallos previos, ajenos a este cambio** (reproducidos en `main`, con los mismos valores):
+  - **AC653** del Samurái en `sheathe_charge`: la hoja atraviesa el torso durante la carga. Ya registrado en `class-combat-identity.md` §9.
+  - **AC670:** alcance de los tobillos y subida de la funda en la pose de carga. Antes no se veía porque la suite cortaba en AC675.
+  - **AC211** (`weapon_reach_test`): `attack_range` del Samurái 2.3 contra ~2.0 por la regla. Es el mismo cambio de stats fuera de spec registrado con AC236. Este cambio no toca la punta ni el `attack_range`, así que AC686 se cumple en lo que depende de él (valores sin cambios, punta en el mismo lugar); la regla de AC211 sigue fallando igual que antes.
+- **Suite completa:** 689 casos, comparados uno a uno con `main` en las mismas condiciones. Este cambio arregla AC675 y deja a la vista AC670 (previo, ver arriba). No agrega ningún fallo.
+  - AC684 y AC685 se corrieron aparte, en una copia de la suite sin AC670 (GdUnit corta la suite en el primer fallo): 14/14 en verde.
+  - `attack_component_test` AC9 y AC601 y `boss_challenge_run_test` AC152 fallaron una vez solo de este lado. Corridos aislados dos veces en las dos copias: AC9 falla y pasa igual en `main` (enemigo liberado durante la estocada, `attack_component.gd:358`), y AC601 y AC152 pasan en las dos. Son intermitentes y ajenos a la katana.
+  - Los demás fallos son los mismos que en `main`: AC188, AC211, AC221, AC236, AC285/AC298, AC288, AC298, AC363, AC578, AC619, AC620 y AC653.
+- **Smoke test:** escena principal, arena y arena con el Samurái (`--quit-after 300`), sin errores ni warnings, salvo los de UID inválido que produce cualquier copia limpia porque los `.uid` están en el `.gitignore`.
+- **Entorno:** los tests se corrieron en Linux con Godot 4.7.2 y el `addons/gdUnit4/bin/` de gdUnit4 v6.2.0 (esa carpeta la ignora el `bin/` del `.gitignore`, así que no está en el repo).
 
 ### Checklist de la constitución
 
-- [ ] Principio I: pilar de combate (la silueta del Samurái).
-- [ ] Principio II: la malla derivada sigue en la carpeta del asset, con `SOURCE.md` y su generador (4.11.0); mismo material de paleta; sin colores nuevos.
-- [ ] Principio III: el alcance sigue en datos (`attack_range`, `hilt_offset`) y el modelo se alinea con ellos.
-- [ ] Principio IV: el generador con tipado estricto, en inglés.
-- [ ] Principio V: sin cambios en runtime (solo mallas precalculadas).
-- [ ] Principios VI y VII: sin cambios.
+- [x] Principio I: pilar de combate (la silueta del Samurái).
+- [x] Principio II: la malla derivada sigue en la carpeta del asset, con `SOURCE.md` y su generador (4.11.0); mismo material de paleta; sin colores nuevos.
+- [x] Principio III: el alcance sigue en datos (`attack_range`, `hilt_offset`) y el modelo se alinea con ellos.
+- [x] Principio IV: el generador con tipado estricto, en inglés.
+- [x] Principio V: sin cambios en runtime (solo mallas precalculadas).
+- [x] Principios VI y VII: sin cambios.
