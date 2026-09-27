@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="SprintConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/sprint_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+double_tap_window = 0.3
+stamina_to_start_sprint = 20.0
+stamina_regen_delay = 1.0

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="DashDustConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/dash_dust_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+amount = 10
+lifetime = 0.35
+speed_min = 1.0
+speed_max = 2.5
+spread_degrees = 90.0
+size = 0.12
+burst_on_end = true

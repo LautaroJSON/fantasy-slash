@@ -155,7 +155,8 @@ func test_ac260_after_the_release_walking_turns_the_player_again() -> void:
 	await _physics_frames(2)
 	var yaw: float = _visual.rotation.y
 	Input.action_release(&"ability_basic")
-	await _physics_frames(30)
+	# Adapted (sheathe-release-animation.md): wait out the whole release cast.
+	await _physics_frames(ceili(SHEATHE.cast_duration * Engine.physics_ticks_per_second) + 5)
 	assert_bool(_ability.is_casting()).is_false()
 	Input.action_press(&"move_left")
 	await _physics_frames(30)

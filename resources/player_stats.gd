@@ -19,6 +19,10 @@ enum Stat {
 	DASH_COOLDOWN,
 	ATTACK_ARC,
 	DASH_SPEED,
+	STAMINA_MAX,
+	STAMINA_REGEN,
+	SPRINT_STAMINA_COST,
+	SPRINT_SPEED_FACTOR,
 }
 
 @export var damage: float
@@ -49,6 +53,14 @@ enum Stat {
 @export var attack_arc_degrees: float
 ## Dash speed in m/s. The dash lasts dash_distance / dash_speed.
 @export var dash_speed: float
+## Stamina of a full bar (docs/specs/sprint-stamina.md).
+@export var stamina_max: float
+## Stamina regained per second once the regen delay has passed.
+@export var stamina_regen: float
+## Stamina spent per second of sprinting.
+@export var sprint_stamina_cost: float
+## Sprint top speed as a multiple of move_speed.
+@export var sprint_speed_factor: float
 
 
 func get_base(stat: Stat) -> float:
@@ -83,4 +95,12 @@ func get_base(stat: Stat) -> float:
 			return attack_arc_degrees
 		Stat.DASH_SPEED:
 			return dash_speed
+		Stat.STAMINA_MAX:
+			return stamina_max
+		Stat.STAMINA_REGEN:
+			return stamina_regen
+		Stat.SPRINT_STAMINA_COST:
+			return sprint_stamina_cost
+		Stat.SPRINT_SPEED_FACTOR:
+			return sprint_speed_factor
 	return 0.0

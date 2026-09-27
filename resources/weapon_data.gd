@@ -28,3 +28,13 @@ extends Resource
 @export var grip_position: Vector3
 ## Pivot rotation relative to the right hand, in radians.
 @export var grip_rotation: Vector3
+## Optional shield (docs/specs/warrior-sword-and-shield.md). It hangs from a
+## socket on a humanoid joint, like the scabbard, so each clip's arm sets its
+## angle. Visual only: no collision. Null when the class carries none.
+@export var shield: PackedScene
+## Humanoid joint the shield socket hangs from (e.g. &"wrist_l").
+@export var shield_joint: StringName
+## Socket position relative to `shield_joint`, in meters.
+@export var shield_position: Vector3
+## Socket rotation relative to `shield_joint`, in radians.
+@export var shield_rotation: Vector3

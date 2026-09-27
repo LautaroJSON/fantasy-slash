@@ -1,20 +1,21 @@
 @tool
 extends HumanoidProfile
 ## Samurái (katana con funda): calma y precisión (docs/specs/class-combat-identity.md
-## §3.3 revisada, sheath-socket-hand-grip.md). Firme y erguido, de costado al
-## enemigo (hombro izquierdo adelante) con la cabeza al frente; la mano
+## §3.3 revisada, sheath-socket-hand-grip.md, samurai-rest-guard.md). En reposo,
+## erguido, relajado y de frente, con la cabeza al frente; la mano
 ## izquierda **nunca** suelta la funda (la funda cuelga de la muñeca izquierda,
 ## sheath-in-left-hand.md: el brazo izquierdo de cada pose la orienta) y la
-## derecha lleva la katana a la altura de la cintura. Cortes a una mano con
+## derecha lleva la katana baja, adelante y a la derecha. Cortes a una mano con
 ## recorrido largo, tomados de los ocho cortes clásicos: horizontal, diagonal
 ## ascendente, vertical y un remate doble (diagonal ascendente y kesa; attack_4 encadena solo con attack_5).
 ## `sheathe_charge`: la pose de carga de Envainar (battōjutsu, la derecha sobre
 ## el mango).
 ## Los tiempos de los eventos coinciden con data/classes/samurai/samurai_combo.tres.
 
-## Katana en la mano derecha a la altura de la cintura, la punta adelante y abajo.
-const WAIST_BLADE := {
-	"shoulder_r": Vector3(30, 32, 10), "elbow_r": Vector3(62, 0, 0), "wrist_r": Vector3(-118, 0, 0),
+## Katana en la mano derecha, el brazo colgando junto a la cadera: la hoja baja
+## en diagonal adelante y a la derecha, la punta cerca del piso (samurai-rest-guard.md).
+const LOW_BLADE := {
+	"shoulder_r": Vector3(-2, 47, 9), "elbow_r": Vector3(56, 0, 0), "wrist_r": Vector3(-143, 53, -14),
 }
 
 ## La funda en la mano izquierda, en la cadera izquierda con la punta atrás y
@@ -24,7 +25,30 @@ const WAIST_BLADE := {
 ## de la funda). Los brazos son invisibles: vale cualquier pose que deje bien
 ## la mano y la funda.
 const LEFT_SHEATH_ARM := {
-	"shoulder_l": Vector3(-34, 0, 14), "elbow_l": Vector3(87, 0, 0), "wrist_l": Vector3(-28, -41, 22),
+	"shoulder_l": Vector3(-47, -1, 19), "elbow_l": Vector3(82, 0, 0), "wrist_l": Vector3(-13, -33, -20),
+}
+
+## Brazos de la carrera por pose (samurai-run.md): la mano derecha a la
+## derecha y atrás con la hoja baja arrastrándose detrás, y la funda firme en
+## la cadera mientras el torso contragira. Calculados para la mano y la
+## dirección de la hoja y de la funda.
+const RUN_ARMS := {
+	"contact_1": {
+		"shoulder_r": Vector3(-31, 15, 32), "elbow_r": Vector3(8, 0, 0), "wrist_r": Vector3(-124, -7, 11),
+		"shoulder_l": Vector3(-46, 0, 19), "elbow_l": Vector3(81, 0, 0), "wrist_l": Vector3(-7, -28, -19),
+	},
+	"pass_1": {
+		"shoulder_r": Vector3(-36, 12, 35), "elbow_r": Vector3(28, 0, 0), "wrist_r": Vector3(-140, -9, 7),
+		"shoulder_l": Vector3(-40, 0, 17), "elbow_l": Vector3(74, 0, 0), "wrist_l": Vector3(-7, -28, -19),
+	},
+	"contact_-1": {
+		"shoulder_r": Vector3(-35, 12, 29), "elbow_r": Vector3(10, 0, 0), "wrist_r": Vector3(-123, -5, 25),
+		"shoulder_l": Vector3(-44, 0, 19), "elbow_l": Vector3(82, 0, 0), "wrist_l": Vector3(-9, -32, -19),
+	},
+	"pass_-1": {
+		"shoulder_r": Vector3(-37, 11, 34), "elbow_r": Vector3(30, 0, 0), "wrist_r": Vector3(-141, -7, 18),
+		"shoulder_l": Vector3(-40, 0, 17), "elbow_l": Vector3(74, 0, 0), "wrist_l": Vector3(-7, -28, -19),
+	},
 }
 
 var _h: LowPolyHumanoid
@@ -35,9 +59,12 @@ func build(humanoid: LowPolyHumanoid) -> AnimationLibrary:
 	var lib := AnimationLibrary.new()
 	_add_idle(lib)
 	_add_run(lib)
+	_add_sprint(lib)
+	_add_dash(lib)
 	_add_jump(lib)
 	_add_hit(lib)
 	_add_sheathe_charge(lib)
+	_add_sheathe_release(lib)
 	_add_attacks(lib)
 	return lib
 
@@ -63,55 +90,54 @@ func _stride(depth: float) -> Dictionary:
 
 # ---------------------------------------------------------------- GUARDIA
 
-## Guardia de costado, firme y erguida: pierna y hombro izquierdos adelante,
-## torso girado -40°, pecho arriba, la cabeza mirando al frente.
+## Guardia de reposo (samurai-rest-guard.md): erguida, relajada y de frente, la
+## cabeza al frente, los pies a la par y casi juntos con las puntas apenas
+## abiertas; la katana baja adelante a la derecha y la funda atrás y abajo.
 func _stance(over := {}) -> Dictionary:
 	return _h.with(_h.pose(_h.with({
 		"hips_pos": Vector3(0, -0.03, 0),
-		"hips": Vector3(0, -20, 0),
-		"torso": Vector3(3, -20, 0), "neck": Vector3(-3, 40, 0),
-		"hip_l": Vector3(18, 20, -6), "knee_l": Vector3(-24, 0, 0), "ankle_l": Vector3(6, 0, 0),
-		"hip_r": Vector3(-8, 20, 8), "knee_r": Vector3(-18, 0, 0), "ankle_r": Vector3(26, 0, 0),
-	}, WAIST_BLADE)), over)
+		"hips": Vector3(0, 0, 0),
+		"torso": Vector3(1, 0, 0), "neck": Vector3(-1, 0, 0),
+		"hip_l": Vector3(6, 12, -3), "knee_l": Vector3(-12, 0, 0), "ankle_l": Vector3(6, 0, 0),
+		"hip_r": Vector3(6, -12, 3), "knee_r": Vector3(-12, 0, 0), "ankle_r": Vector3(6, 0, 0),
+	}, LOW_BLADE)), over)
 
 
 func _add_idle(lib: AnimationLibrary) -> void:
 	# Respiración casi imperceptible (3 s): el pecho sube apenas.
 	lib.add_animation("idle", _clip([
 		[0.0, _stance()],
-		[1.5, _stance({"hips_pos": Vector3(0, -0.04, 0), "torso": Vector3(4, -21, 0)})],
+		[1.5, _stance({"hips_pos": Vector3(0, -0.04, 0), "torso": Vector3(2, 0, 0)})],
 		[3.0, _stance()],
 	], true, true))
 
 
 # ---------------------------------------------------------------- CARRERA
 
-## Deslizado y bajo: poco rebote, la mano izquierda no suelta la funda y la
-## katana va atrás, cerca de la cadera.
+## Carrera (samurai-run.md): casi erguida, los pasos casi en línea y poco
+## rebote; el brazo derecho estirado al costado y hacia atrás con la katana
+## baja arrastrándose detrás a la derecha, y la izquierda firme en la funda.
 func _run_contact(m: int) -> Dictionary:
 	var f := "r" if m == 1 else "l"
 	var b := "l" if m == 1 else "r"
-	return _h.pose({
-		"hips_pos": Vector3(0, -0.09, 0),
-		"hips": Vector3(0, 8 * m, 0),
-		"torso": Vector3(-15, -14 * m, 0), "neck": Vector3(12, 6 * m, 0),
-		"hip_" + f: Vector3(42, 0, 0), "knee_" + f: Vector3(-25, 0, 0), "ankle_" + f: Vector3(-5, 0, 0),
-		"hip_" + b: Vector3(-30, 0, 0), "knee_" + b: Vector3(-55, 0, 0), "ankle_" + b: Vector3(25, 0, 0),
-		"shoulder_r": Vector3(-26 if m == 1 else -12, 0, 14), "elbow_r": Vector3(40, 0, 0),
-		"wrist_r": Vector3(-30, 180, 0),
-	})
+	return _h.pose(_h.with({
+		"hips_pos": Vector3(0, -0.06, 0),
+		"hips": Vector3(0, 6 * m, 0),
+		"torso": Vector3(-6, -8 * m, 0), "neck": Vector3(4, 2 * m, 0),
+		"hip_" + f: Vector3(40, 0, _h.side_z(f, -4)), "knee_" + f: Vector3(-22, 0, 0), "ankle_" + f: Vector3(-6, 0, 0),
+		"hip_" + b: Vector3(-28, 0, _h.side_z(b, -4)), "knee_" + b: Vector3(-50, 0, 0), "ankle_" + b: Vector3(24, 0, 0),
+	}, RUN_ARMS["contact_%d" % m]))
 
 
 func _run_pass(m: int) -> Dictionary:
 	var f := "r" if m == 1 else "l"
 	var b := "l" if m == 1 else "r"
-	return _h.pose({
-		"hips_pos": Vector3(0, -0.06, 0),
-		"torso": Vector3(-14, 0, 0), "neck": Vector3(11, 0, 0),
-		"hip_" + f: Vector3(8, 0, 0), "knee_" + f: Vector3(-30, 0, 0), "ankle_" + f: Vector3(15, 0, 0),
-		"hip_" + b: Vector3(35, 0, 0), "knee_" + b: Vector3(-95, 0, 0), "ankle_" + b: Vector3(30, 0, 0),
-		"shoulder_r": Vector3(-19, 0, 14), "elbow_r": Vector3(40, 0, 0), "wrist_r": Vector3(-30, 180, 0),
-	})
+	return _h.pose(_h.with({
+		"hips_pos": Vector3(0, -0.03, 0),
+		"torso": Vector3(-5, 0, 0), "neck": Vector3(3, 0, 0),
+		"hip_" + f: Vector3(6, 0, _h.side_z(f, -4)), "knee_" + f: Vector3(-24, 0, 0), "ankle_" + f: Vector3(14, 0, 0),
+		"hip_" + b: Vector3(32, 0, _h.side_z(b, -4)), "knee_" + b: Vector3(-85, 0, 0), "ankle_" + b: Vector3(30, 0, 0),
+	}, RUN_ARMS["pass_%d" % m]))
 
 
 func _add_run(lib: AnimationLibrary) -> void:
@@ -121,12 +147,115 @@ func _add_run(lib: AnimationLibrary) -> void:
 		[0.56, _run_contact(1)],
 	], true, true))
 
-	# Frena corto, casi sin derrape, y vuelve enseguida a la guardia de costado.
+	# Arranque (samurai-run.md): desde la guardia, el primer paso empuja con el
+	# cuerpo inclinado y la katana barre desde adelante-abajo por el costado
+	# derecho hasta arrastrarse detrás; termina en el primer cuadro de run.
+	lib.add_animation("run_start", _clip([
+		[0.0, _stance()],
+		[0.08, _h.with(_run_contact(1), {
+			"hips_pos": Vector3(0, -0.08, 0), "torso": Vector3(-12, -4, 0), "neck": Vector3(9, 2, 0),
+			"shoulder_r": Vector3(-34, 11, 33), "elbow_r": Vector3(58, 0, 0), "wrist_r": Vector3(-123, -6, 17)})],
+		[0.2, _run_contact(1)],
+	], false, true))
+
+	# Frena corto, casi sin derrape, y vuelve enseguida a la guardia.
 	lib.add_animation("run_stop", _clip([
 		[0.0, _run_contact(1)],
-		[0.08, _stance({"hips_pos": Vector3(0, -0.1, 0), "torso": Vector3(-6, -20, 0),
-				"hip_l": Vector3(34, 20, -6), "knee_l": Vector3(-46, 0, 0), "ankle_l": Vector3(12, 0, 0)})],
+		[0.08, _stance({"hips_pos": Vector3(0, -0.1, 0), "torso": Vector3(-6, 0, 0),
+				"hip_l": Vector3(34, 12, -3), "knee_l": Vector3(-46, 0, 0), "ankle_l": Vector3(12, 0, 0)})],
 		[0.3, _stance()],
+	], false, true))
+
+
+# ---------------------------------------------------------------- SPRINT
+
+## Carrera a fondo (docs/specs/sprint-stamina.md): el torso bajo y volcado,
+## zancadas largas casi en línea con la rodilla alta, la katana más atrás y
+## más horizontal, arrastrándose detrás a la derecha, y la izquierda firme en
+## la funda. Los brazos parten de los de la carrera (RUN_ARMS).
+func _sprint_contact(m: int) -> Dictionary:
+	var f := "r" if m == 1 else "l"
+	var b := "l" if m == 1 else "r"
+	var arms: Dictionary = RUN_ARMS["contact_%d" % m]
+	var shoulder: Vector3 = arms["shoulder_r"]
+	return _h.pose(_h.with(_h.with({
+		"hips_pos": Vector3(0, -0.12, 0),
+		"hips": Vector3(0, 8 * m, 0),
+		"torso": Vector3(-26, -10 * m, 0), "neck": Vector3(22, 3 * m, 0),
+		"hip_" + f: Vector3(60, 0, _h.side_z(f, -4)), "knee_" + f: Vector3(-30, 0, 0), "ankle_" + f: Vector3(-6, 0, 0),
+		"hip_" + b: Vector3(-40, 0, _h.side_z(b, -4)), "knee_" + b: Vector3(-60, 0, 0), "ankle_" + b: Vector3(30, 0, 0),
+	}, arms), {"shoulder_r": Vector3(shoulder.x - 18, shoulder.y, shoulder.z)}))
+
+
+func _sprint_pass(m: int) -> Dictionary:
+	var f := "r" if m == 1 else "l"
+	var b := "l" if m == 1 else "r"
+	var arms: Dictionary = RUN_ARMS["pass_%d" % m]
+	var shoulder: Vector3 = arms["shoulder_r"]
+	return _h.pose(_h.with(_h.with({
+		"hips_pos": Vector3(0, -0.04, 0),
+		"torso": Vector3(-24, 0, 0), "neck": Vector3(20, 0, 0),
+		"hip_" + f: Vector3(4, 0, _h.side_z(f, -4)), "knee_" + f: Vector3(-26, 0, 0), "ankle_" + f: Vector3(16, 0, 0),
+		"hip_" + b: Vector3(50, 0, _h.side_z(b, -4)), "knee_" + b: Vector3(-120, 0, 0), "ankle_" + b: Vector3(34, 0, 0),
+	}, arms), {"shoulder_r": Vector3(shoulder.x - 18, shoulder.y, shoulder.z)}))
+
+
+func _add_sprint(lib: AnimationLibrary) -> void:
+	lib.add_animation("sprint", _clip([
+		[0.0, _sprint_contact(1)], [0.1, _sprint_pass(1)],
+		[0.2, _sprint_contact(-1)], [0.3, _sprint_pass(-1)],
+		[0.4, _sprint_contact(1)],
+	], true, true))
+
+	# Arranque: se agacha de golpe y sale disparado, la katana barre por el
+	# costado derecho hasta quedar atrás; termina en el primer cuadro de sprint.
+	lib.add_animation("sprint_start", _clip([
+		[0.0, _stance()],
+		[0.08, _h.with(_sprint_contact(1), {
+			"hips_pos": Vector3(0, -0.2, 0), "torso": Vector3(-36, -4, 0), "neck": Vector3(28, 2, 0),
+			"hip_l": Vector3(-48, 0, 4), "knee_l": Vector3(-12, 0, 0), "ankle_l": Vector3(42, 0, 0),
+			"shoulder_r": Vector3(-34, 11, 33), "elbow_r": Vector3(58, 0, 0), "wrist_r": Vector3(-123, -6, 17)})],
+		[0.2, _sprint_contact(1)],
+	], false, true))
+
+	# Frenada de costado: gira la cadera, derrapa con la pierna izquierda
+	# estirada y el peso atrás, y vuelve a la guardia.
+	lib.add_animation("sprint_stop", _clip([
+		[0.0, _sprint_contact(-1)],
+		[0.12, _stance({
+			"hips_pos": Vector3(0, -0.2, 0), "hips": Vector3(0, 28, 0),
+			"torso": Vector3(8, -10, 0), "neck": Vector3(-4, -18, 0),
+			"hip_l": Vector3(46, -28, -10), "knee_l": Vector3(-6, 0, 0), "ankle_l": Vector3(-20, 0, 0),
+			"hip_r": Vector3(-10, -28, 10), "knee_r": Vector3(-72, 0, 0), "ankle_r": Vector3(50, 0, 0)})],
+		[0.24, _stance({
+			"hips_pos": Vector3(0, -0.12, 0), "hips": Vector3(0, 14, 0),
+			"torso": Vector3(2, -6, 0), "neck": Vector3(-1, -8, 0),
+			"hip_l": Vector3(26, -2, -6), "knee_l": Vector3(-20, 0, 0), "ankle_l": Vector3(-4, 0, 0),
+			"hip_r": Vector3(0, -2, 6), "knee_r": Vector3(-40, 0, 0), "ankle_r": Vector3(30, 0, 0)})],
+		[0.42, _stance()],
+	], false, true))
+
+
+# ---------------------------------------------------------------- DASH
+
+## Dash (docs/specs/dash-feel.md): impulso, estirado y el primer cuadro de
+## sprint, en las fracciones 0, 0.35 y 1 (la regla de conexión). La katana y la
+## funda siguen los brazos del sprint en todo el clip. Samurái: sale disparado
+## desde muy abajo y se desliza con la pierna delantera larga.
+func _add_dash(lib: AnimationLibrary) -> void:
+	var run_in := _sprint_contact(1)
+	lib.add_animation("dash", _clip([
+		[0.0, _h.with(run_in, {
+			"hips_pos": Vector3(0, -0.24, 0), "hips": Vector3(0, 4, 0),
+			"torso": Vector3(-42, -6, 0), "neck": Vector3(34, 2, 0),
+			"hip_l": Vector3(44, 0, 4), "knee_l": Vector3(-70, 0, 0), "ankle_l": Vector3(24, 0, 0),
+			"hip_r": Vector3(-50, 0, -4), "knee_r": Vector3(-12, 0, 0), "ankle_r": Vector3(44, 0, 0)})],
+		[0.084, _h.with(run_in, {
+			"hips_pos": Vector3(0, -0.18, 0), "hips": Vector3(0, 10, 0),
+			"torso": Vector3(-36, -12, 0), "neck": Vector3(28, 4, 0),
+			"hip_r": Vector3(78, 0, -4), "knee_r": Vector3(-14, 0, 0), "ankle_r": Vector3(-16, 0, 0),
+			"hip_l": Vector3(-52, 0, 4), "knee_l": Vector3(-62, 0, 0), "ankle_l": Vector3(34, 0, 0)})],
+		[0.24, run_in],
 	], false, true))
 
 
@@ -136,14 +265,14 @@ func _add_jump(lib: AnimationLibrary) -> void:
 	# Salto liviano: piernas recogidas limpias, la mano sigue en la funda.
 	lib.add_animation("jump_start", _clip([
 		[0.0, _stance()],
-		[0.07, _h.crouch(_h.with(WAIST_BLADE, {"hips_pos": Vector3(0, -0.16, 0), "wrist_r": Vector3(-95, 0, 0)}))],
-		[0.16, _h.pose(_h.with(WAIST_BLADE, {
+		[0.07, _h.crouch(_h.with(LOW_BLADE, {"hips_pos": Vector3(0, -0.16, 0), "wrist_r": Vector3(-95, 0, 0)}))],
+		[0.16, _h.pose(_h.with(LOW_BLADE, {
 			"hips_pos": Vector3(0, 0.04, 0), "torso": Vector3(-6, 0, 0),
 			"hip_l": Vector3(-5, 0, 0), "ankle_l": Vector3(-35, 0, 0),
 			"hip_r": Vector3(12, 0, 0), "knee_r": Vector3(-30, 0, 0), "ankle_r": Vector3(-20, 0, 0)}))],
 	]))
 
-	var air := _h.with(WAIST_BLADE, {
+	var air := _h.with(LOW_BLADE, {
 		"torso": Vector3(-8, 0, 0),
 		"hip_r": Vector3(75, 0, 0), "knee_r": Vector3(-120, 0, 0), "ankle_r": Vector3(25, 0, 0),
 		"hip_l": Vector3(60, 0, 0), "knee_l": Vector3(-115, 0, 0), "ankle_l": Vector3(25, 0, 0),
@@ -155,7 +284,7 @@ func _add_jump(lib: AnimationLibrary) -> void:
 	], true, true))
 
 	# Aterriza sin ruido: poca flexión.
-	var land := _h.crouch(_h.with(WAIST_BLADE, {"hips_pos": Vector3(0, -0.14, 0), "wrist_r": Vector3(-95, 0, 0)}))
+	var land := _h.crouch(_h.with(LOW_BLADE, {"hips_pos": Vector3(0, -0.14, 0), "wrist_r": Vector3(-95, 0, 0)}))
 	lib.add_animation("jump_land", _clip([
 		[0.0, land], [0.04, land], [0.22, _stance()],
 	]))
@@ -183,22 +312,84 @@ func _add_hit(lib: AnimationLibrary) -> void:
 ## al frente. La izquierda sostiene la funda junto a la tsuba y la derecha
 ## cruza hasta el mango. La cadera se corre en el plano horizontal para que el
 ## cuerpo quede centrado sobre el jugador.
-func _add_sheathe_charge(lib: AnimationLibrary) -> void:
-	var ready := _h.pose({
+func _charge_pose() -> Dictionary:
+	return _h.pose({
 		"hips_pos": Vector3(-0.04, -0.44, 0.12), "hips": Vector3(0, -35, 0),
-		"torso": Vector3(-45, 55, -15), "neck": Vector3(45, -22, 0),
-"hip_l": Vector3(-21, 52, -25), "knee_l": Vector3(-65, 0, 0), "ankle_l": Vector3(7, 67, 88),
-"hip_r": Vector3(81, 35, 0), "knee_r": Vector3(-44, 0, 0), "ankle_r": Vector3(-37, 0, 0),
+		"torso": Vector3(-5, 130, -15), "neck": Vector3(10, -100, -8),
+		"hip_l": Vector3(-21, 52, -25), "knee_l": Vector3(-65, 0, 0), "ankle_l": Vector3(7, 67, 88),
+		"hip_r": Vector3(81, 35, 0), "knee_r": Vector3(-44, 0, 0), "ankle_r": Vector3(-37, 0, 0),
 		"shoulder_r": Vector3(50, 45, 0), "elbow_r": Vector3(50, 0, 0),
 		# La funda en la mano izquierda: wrist_l X más negativo sube la punta, Y la abre.
-		"shoulder_l": Vector3(-34, 0, 14), "elbow_l": Vector3(87, 0, 0), "wrist_l": Vector3(-28, 50, -22),
+		"shoulder_l": Vector3(-34, 0, 14), "elbow_l": Vector3(87, 0, 0), "wrist_l": Vector3(-28, -40, -22),
 		"right_grip": 1.0,
 	})
+
+
+## La pose de carga está en _charge_pose(), compartida con el primer cuadro del
+## suelte (sheathe_release), así no hay salto al soltar.
+func _add_sheathe_charge(lib: AnimationLibrary) -> void:
+	var ready := _charge_pose()
+	# "torso": Vector3(-46, 55, -15)})
 	lib.add_animation("sheathe_charge", _clip([
 		[0.0, ready],
-		[1.0, _h.with(ready, {"hips_pos": Vector3(-0.04, -0.45, 0.12), "torso": Vector3(-46, 55, -15)})],
+		[1.0, _h.with(ready, {"hips_pos": Vector3(-0.04, -0.45, 0.12)})],
 		[2.0, ready],
 	], true, true))
+
+
+## Suelte de Envainar (docs/specs/sheathe-release-animation.md): desde la pose
+## de carga, desenvaina hacia la derecha y arriba (nukitsuke), sigue con la hoja
+## por encima y detrás de la cabeza con el cuerpo volcado (zanshin), se
+## incorpora y sacude la hoja hacia abajo a la derecha (chiburi), y vuelve a la
+## guardia. La katana va en la mano derecha (el recorrido lo da el brazo) y la
+## funda en la izquierda, que la tira hacia atrás al desenvainar (saya-biki).
+## Curva cúbica (fluida). Los primeros 0.5 s son el casteo que compromete
+## (sheathe.tres: cast_duration); la vuelta, el chiburi y la guardia son una
+## recuperación libre que se corta al moverse o actuar (§10 de la spec).
+func _add_sheathe_release(lib: AnimationLibrary) -> void:
+	var draw := _h.pose({  # 0.1: el brazo estirado arriba a la derecha
+		"hips_pos": Vector3(0, -0.36, 0.08), "hips": Vector3(0, -35, 0),
+		"torso": Vector3(-35, 5, 0), "neck": Vector3(30, 10, 0),
+		"hip_l": Vector3(-21, 52, -25), "knee_l": Vector3(-65, 0, 0), "ankle_l": Vector3(7, 67, 88),
+		"hip_r": Vector3(81, 35, 0), "knee_r": Vector3(-44, 0, 0), "ankle_r": Vector3(-37, 0, 0),
+		"shoulder_r": Vector3(165, 57, 8), "elbow_r": Vector3(22, 0, 0), "wrist_r": Vector3(-82, -23, -12),
+		"shoulder_l": Vector3(-50, 11, 15), "elbow_l": Vector3(59, 0, 0), "wrist_l": Vector3(-2, -8, -22),
+	})
+	var follow := _h.pose({  # 0.2: la hoja detrás de la cabeza, el cuerpo volcado
+		"hips_pos": Vector3(0, -0.40, 0.1), "hips": Vector3(0, -35, 0),
+		"torso": Vector3(-55, -10, 0), "neck": Vector3(35, 20, 0),
+		"hip_l": Vector3(-21, 52, -25), "knee_l": Vector3(-65, 0, 0), "ankle_l": Vector3(7, 67, 88),
+		"hip_r": Vector3(81, 35, 0), "knee_r": Vector3(-44, 0, 0), "ankle_r": Vector3(-37, 0, 0),
+		"shoulder_r": Vector3(254, 34, -52), "elbow_r": Vector3(17, 0, 0), "wrist_r": Vector3(-43, -66, -8),
+		"shoulder_l": Vector3(-31, 19, 8), "elbow_l": Vector3(10, 0, 0), "wrist_l": Vector3(33, 1, -6),
+	})
+	var rise := _stance({  # 0.58: incorporado, la hoja alzada al costado derecho
+		"hips_pos": Vector3(0, -0.08, 0), "hips": Vector3(0, -10, 0), "torso": Vector3(-8, 15, 0), "neck": Vector3(6, 0, 0),
+		"shoulder_r": Vector3(60, -27, 50), "elbow_r": Vector3(128, 0, 0), "wrist_r": Vector3(-131, 25, 12),
+	})
+	var chiburi := _stance({  # 0.66: la sacudida, la hoja abajo y adelante a la derecha
+		"hips_pos": Vector3(0, -0.1, 0), "hips": Vector3(0, -10, 0), "torso": Vector3(-12, 20, 0), "neck": Vector3(8, -5, 0),
+		"shoulder_r": Vector3(25, -3, 44), "elbow_r": Vector3(75, 0, 0), "wrist_r": Vector3(-131, -14, 10),
+	})
+	lib.add_animation("sheathe_release", _clip([
+		[0.0, _charge_pose()],
+		[0.03, _h.with(_charge_pose(), {  # tira del mango a lo largo de la funda
+			"right_grip": 0.0, "hips_pos": Vector3(-0.02, -0.4, 0.1), "torso": Vector3(-15, 70, -8),
+			"shoulder_r": Vector3(59, 92, -2), "elbow_r": Vector3(3, 0, 0), "wrist_r": Vector3(27, 119, -2)})],
+		[0.06, _h.with(draw, {  # la mano cruza por delante del pecho, no por la cabeza
+			"shoulder_r": Vector3(130, 113, 46), "elbow_r": Vector3(0, 0, 0), "wrist_r": Vector3(-20, -7, 0)})],
+		[0.1, draw],
+		[0.2, follow],
+		[0.26, follow],  # sostén: la curva cúbica no se pasa del seguimiento
+		[0.4, _h.with(follow, {"torso": Vector3(-56, -10, 0)})],
+		[0.5, _h.with(rise, {  # vuelve por el costado derecho, no por encima de la cabeza
+			"hips_pos": Vector3(0, -0.2, 0.05), "torso": Vector3(-30, 0, 0),
+			"shoulder_r": Vector3(122, -64, 57), "elbow_r": Vector3(69, 0, 0), "wrist_r": Vector3(-122, 32, -2)})],
+		[0.58, rise],
+		[0.66, chiburi],
+		[0.72, chiburi],  # sostén: la hoja no baja más allá del chiburi
+		[0.9, _stance()],
+	], false, true))
 
 
 # ---------------------------------------------------------------- COMBO

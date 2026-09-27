@@ -412,11 +412,14 @@ func test_ac653_the_weapon_never_goes_through_the_body() -> void:
 		var library: AnimationLibrary = _library(character_class)
 		for clip_name: StringName in library.get_animation_list():
 			var clip: Animation = library.get_animation(clip_name)
-			# The charge crouch holds the katana in its sheath (sheath-socket-hand-grip.md).
-			mount.hold_in_sheath(clip_name == SHEATHE_CONFIG.charge_body_clip)
 			humanoid.anim.play(clip_name)
 			var time: float = 0.0
 			while time <= clip.length:
+				# The charge crouch holds the katana in its sheath
+				# (sheath-socket-hand-grip.md), and so does the frame of the
+				# release (sheathe-release-animation.md: then it goes to the hand).
+				var sheathed: bool = clip_name == SHEATHE_CONFIG.charge_body_clip or (clip_name == SHEATHE_CONFIG.release_body_clip and is_zero_approx(time))
+				mount.hold_in_sheath(sheathed)
 				humanoid.anim.seek(time, true)
 				mount.update(1.0)
 				var inside: String = _blade_hits_body(humanoid, trail_base.global_position, trail_tip.global_position)
@@ -515,13 +518,15 @@ func _yaw_from_front(joint: Node3D) -> float:
 	return rad_to_deg(angle_difference(atan2(-front.x, -front.z), atan2(-forward.x, -forward.z)))
 
 
-func test_ac660_the_samurai_stands_side_on_looking_ahead() -> void:
+## Rewritten (docs/specs/samurai-rest-guard.md, AC735): the rest guard faces
+## forward like the reference, no longer side-on.
+func test_ac660_the_samurai_rests_facing_forward_looking_ahead() -> void:
 	_spawn_player(SAMURAI)
 	ComboDriver.drive_by_hand(_player)
 	var humanoid: LowPolyHumanoid = _humanoid()
 	humanoid.anim.play(&"idle")
 	humanoid.anim.seek(0.0, true)
-	assert_float(absf(_yaw_from_front(humanoid.get_joint("torso")))).is_greater_equal(30.0)
+	assert_float(absf(_yaw_from_front(humanoid.get_joint("torso")))).is_less_equal(10.0)
 	assert_float(absf(_yaw_from_front(humanoid.get_joint("neck")))).is_less_equal(10.0)
 
 

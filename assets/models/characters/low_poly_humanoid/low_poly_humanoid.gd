@@ -30,7 +30,6 @@ enum Hand { LEFT, RIGHT }
 
 ## Perfiles disponibles: id -> script (extends HumanoidProfile).
 const PROFILES: Dictionary[StringName, Script] = {
-	&"legacy": preload("res://assets/models/characters/low_poly_humanoid/profiles/legacy_profile.gd"),
 	&"warrior": preload("res://assets/models/characters/low_poly_humanoid/profiles/warrior_profile.gd"),
 	&"samurai": preload("res://assets/models/characters/low_poly_humanoid/profiles/samurai_profile.gd"),
 	&"berserker": preload("res://assets/models/characters/low_poly_humanoid/profiles/berserker_profile.gd"),
@@ -77,6 +76,8 @@ static var _libraries: Dictionary[StringName, AnimationLibrary] = {}
 static var _build_counts: Dictionary[StringName, int] = {}
 ## Malla visible de cada mano (Hand), su transform local de reposo y su objetivo.
 var _hand_meshes: Array[MeshInstance3D] = [null, null]
+## Visible body meshes (torso, head, hands, feet), for VFX copies (dash-feel.md).
+var _body_meshes: Array[MeshInstance3D] = []
 var _hand_rest: Array[Transform3D] = [Transform3D.IDENTITY, Transform3D.IDENTITY]
 var _hand_targets: Array[Node3D] = [null, null]
 var _demo_attack: int = 0
@@ -127,6 +128,11 @@ func clear_hand_target(hand: Hand) -> void:
 ## después de que el AnimationPlayer aplicó el cuadro (p. ej. el arma).
 func refresh_hand_targets() -> void:
 	_apply_hand_targets()
+
+
+## Visible body meshes (torso, head, hands, feet), built once.
+func get_body_meshes() -> Array[MeshInstance3D]:
+	return _body_meshes
 
 
 func get_hand_mesh(hand: Hand) -> MeshInstance3D:
@@ -219,6 +225,7 @@ func _build(rebuild_libraries := false) -> void:
 			remove_child(c)
 			c.free()
 	_j.clear()
+	_body_meshes.clear()
 
 	var body: Material = body_material if body_material else _mat(body_color)
 	var dark: Material = accent_material if accent_material else _mat(accent_color)
@@ -233,10 +240,10 @@ func _build(rebuild_libraries := false) -> void:
 	var hips := _joint(rig, "hips", HIPS_REST)
 
 	var torso := _joint(hips, "torso", Vector3(0, 0.05, 0))
-	_mesh(torso, _torso(), Vector3.ZERO, body)
+	_body_meshes.append(_mesh(torso, _torso(), Vector3.ZERO, body))
 
 	var neck := _joint(torso, "neck", Vector3(0, 0.4, 0))
-	_mesh(neck, _gem(0.2), Vector3(0, 0.21, 0), body)  # cabeza
+	_body_meshes.append(_mesh(neck, _gem(0.2), Vector3(0, 0.21, 0), body))  # cabeza
 
 	for side: int in [-1, 1]:
 		var s := "r" if side == 1 else "l"
@@ -246,12 +253,13 @@ func _build(rebuild_libraries := false) -> void:
 		var hand_mesh := _mesh(wr, _gem(0.08), Vector3(0, -0.04, 0), body)  # mano flotante
 		var hand_index: int = Hand.RIGHT if side == 1 else Hand.LEFT
 		_hand_meshes[hand_index] = hand_mesh
+		_body_meshes.append(hand_mesh)
 		_hand_rest[hand_index] = hand_mesh.transform
 
 		var hp := _joint(hips, "hip_" + s, Vector3(0.09 * side, -0.02, 0))
 		var kn := _joint(hp, "knee_" + s, Vector3(0, -0.22, 0))
 		var an := _joint(kn, "ankle_" + s, Vector3(0, -0.2, 0))
-		_mesh(an, _foot(), Vector3.ZERO, body)  # pie flotante
+		_body_meshes.append(_mesh(an, _foot(), Vector3.ZERO, body))  # pie flotante
 
 	# Espada en la mano derecha (la hoja apunta hacia -Z = adelante con el brazo colgando)
 	var hand: Node3D = _j["wrist_r"]

@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://components/dash/vfx/dash_afterimage_vfx.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/player/dash/dash_afterimage_config.tres" id="2_config"]
+[ext_resource type="Material" path="res://materials/vfx/dash_afterimage_material.tres" id="3_material"]
+
+[node name="DashAfterimageVfx" type="Node3D"]
+script = ExtResource("1_script")
+config = ExtResource("2_config")
+material = ExtResource("3_material")

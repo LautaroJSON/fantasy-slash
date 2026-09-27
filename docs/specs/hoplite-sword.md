@@ -1,5 +1,7 @@
 # Feature: Espada hoplita para el Guerrero
 
+> **Reemplazada** por `warrior-sword-and-shield.md` (2026-09-27): el Guerrero usa la espada y el escudo de caballero; la hoplita se borró.
+
 - **Estado:** Implementada (2026-09-25, 287 tests GdUnit4 en verde; import y smoke test headless sin errores ni warnings; render de control de las tres armas)
 - **Constitución:** `docs/constitution.md` v3.0.1 (PATCH aprobada con esta spec: fila de la espada del Guerrero en la tabla de colores)
 - **Pilares (Principio I):**

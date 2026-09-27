@@ -326,11 +326,14 @@ func test_ac250_the_katana_rests_in_its_sheath_while_charging_and_returns_after(
 	assert_float(pivot.global_basis.get_rotation_quaternion().angle_to(sheathed.basis.get_rotation_quaternion())).is_less(0.01)
 	_ability.release_charge()
 	assert_bool(mount.is_holding_in_sheath()).is_false()
+	# Adapted (docs/specs/sheathe-release-animation.md): no sheathe_slash on the
+	# SwingPlayer; the katana returns to the hand, which draws the cut.
 	var animator: AnimationPlayer = _player.get_node("SwingPlayer") as AnimationPlayer
-	assert_str(animator.current_animation).is_equal("sheathe_slash")
-	animator.advance(animator.current_animation_length)
-	assert_vector(pivot.position).is_equal_approx(SAMURAI.weapon.rest_position, Vector3.ONE * 0.01)
-	assert_vector(pivot.rotation).is_equal_approx(SAMURAI.weapon.rest_rotation, Vector3.ONE * 0.01)
+	assert_bool(animator.is_playing()).is_false()
+	mount.update(1.0)
+	var in_hand: Transform3D = mount.get_hand_pose()
+	assert_vector(pivot.global_position).is_equal_approx(in_hand.origin, Vector3.ONE * 0.001)
+	assert_float(pivot.global_basis.get_rotation_quaternion().angle_to(in_hand.basis.get_rotation_quaternion())).is_less(0.01)
 
 
 func test_ac252_damage_and_charge_speed_upgrades() -> void:

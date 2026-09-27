@@ -144,3 +144,10 @@ func hit_damage(ability: AbilityComponent) -> float:
 ## (docs/specs/sheath-socket-hand-grip.md §2.7).
 func get_body_clip(_ability: AbilityComponent) -> StringName:
 	return &""
+
+
+## True while this ability's cast leaves the weapon in the humanoid's hand
+## (WeaponMount keeps following the hand), so the body clip draws the cut.
+## E.g. Sheathe's release (docs/specs/sheathe-release-animation.md).
+func holds_weapon_in_hand(_ability: AbilityComponent) -> bool:
+	return false

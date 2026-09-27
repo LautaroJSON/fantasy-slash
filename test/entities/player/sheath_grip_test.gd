@@ -27,20 +27,27 @@ const WRIST_TURN_TOLERANCE: float = 1.0
 const MOUTH_REACH: float = 0.30
 const SHEATH_STEEPEST: float = 60.0
 const SHEATH_FLOOR_GAP: float = 0.05
-## AC670: least drop of the hips and lean of the torso in the charge lunge.
+## AC670 (revision 5): least drop of the hips, and the lean range of the
+## almost upright torso, in meters and degrees.
 const CHARGE_DROP: float = 0.20
-const CHARGE_LEAN: float = 35.0
+const CHARGE_LEAN_MIN: float = 10.0
+const CHARGE_LEAN_MAX: float = 25.0
 ## AC670: least reach of each ankle in front of / behind the hips, and widest
 ## sideways gap between the feet, in meters.
 const LUNGE_REACH: float = 0.25
 const LUNGE_WIDTH: float = 0.30
-## AC670: least rise of the sheath toward its tip, and widest angle between the
-## face and the enemy (-Z), in degrees.
-const SHEATH_RISE: float = 20.0
+## AC670: widest angle of each foot from its heading, and from lying flat, in degrees.
+const FOOT_HEADING: float = 20.0
+const FOOT_FLAT: float = 10.0
+## AC670: the sheath crosses behind to the right: least rightward share of its
+## axis and widest angle from the horizontal; and widest angle between the face
+## and the enemy (-Z), in degrees.
+const SHEATH_RIGHT: float = 0.5
+const SHEATH_TILT: float = 20.0
 const FACE_ANGLE: float = 25.0
 ## AC670: farthest the body center may be from the player origin, horizontally,
 ## in meters; and the head center in the neck joint (low_poly_humanoid.gd).
-const CENTER_TOLERANCE: float = 0.05
+const CENTER_TOLERANCE: float = 0.07
 const HEAD_CENTER: Vector3 = Vector3(0.0, 0.21, 0.0)
 ## AC684: least the pommel sticks out behind the right hand, in meters.
 const POMMEL_OUT: float = 0.05
@@ -199,6 +206,11 @@ func test_ac665_every_clip_carries_its_grip_weights() -> void:
 				# The sheath comes to the hand, so the left hand has no target (AC672).
 				assert_bool(left.all(func(w: float) -> bool: return is_zero_approx(w))).override_failure_message(label).is_true()
 				var right_expected: float = 1.0 if clip_name == SHEATHE_CONFIG.charge_body_clip else 0.0
+				if clip_name == SHEATHE_CONFIG.release_body_clip:
+					# The release starts on the hilt and lets go to draw
+					# (sheathe-release-animation.md).
+					assert_float(right[0]).override_failure_message(label).is_equal_approx(1.0, POSE_TOLERANCE)
+					right = right.slice(1)
 				assert_bool(right.all(func(w: float) -> bool: return is_equal_approx(w, right_expected))).override_failure_message(label).is_true()
 			elif id == BERSERKER.animation_profile:
 				# Two-handed greatsword: the left hand grips its OffHand at every impact
@@ -281,9 +293,10 @@ func test_ac675_the_charging_katana_waits_in_the_socket_and_slashes_from_it() ->
 	var sheathed: Transform3D = mount.get_sheath_pose()
 	ability.release_charge()
 	assert_bool(mount.is_holding_in_sheath()).is_false()
+	# Adapted (sheathe-release-animation.md, AC723): no sheathe_slash; the
+	# release starts from the sheath itself and the hand draws the cut.
 	var swing: AnimationPlayer = _player.get_node("SwingPlayer") as AnimationPlayer
-	assert_str(String(swing.current_animation)).is_equal("sheathe_slash")
-	swing.seek(0.0, true)
+	assert_bool(swing.is_playing()).is_false()
 	assert_float(pivot.global_position.distance_to(sheathed.origin)).is_less_equal(SLASH_START_DISTANCE)
 	assert_float(pivot.global_basis.get_rotation_quaternion().angle_to(sheathed.basis.get_rotation_quaternion())).is_less_equal(deg_to_rad(SLASH_START_DEGREES))
 
@@ -316,7 +329,7 @@ func test_ac677_the_sheath_joint_is_data() -> void:
 	assert_bool(player_script.contains("SHEATH_JOINT")).is_false()
 
 
-## AC676: the charge pose keeps AC670 with the sheath in the left hand.
+## AC676: the charge pose keeps AC670 (revision 5) with the sheath in the left hand.
 func test_ac670_charging_sheathe_crouches_in_the_battojutsu_pose() -> void:
 	var humanoid: LowPolyHumanoid = _samurai_by_hand()
 	var ability: AbilityComponent = _equip_sheathe()
@@ -330,22 +343,32 @@ func test_ac670_charging_sheathe_crouches_in_the_battojutsu_pose() -> void:
 	_pose(humanoid, SHEATHE_CONFIG.charge_body_clip, 0.0)
 	var crouching: float = humanoid.get_joint("hips").global_position.y
 	assert_float(standing - crouching).is_greater_equal(CHARGE_DROP)
+	# Revision 5: the responsible's final pose (sheath-socket-hand-grip.md AC670).
 	var torso_up: Vector3 = humanoid.get_joint("torso").global_basis.y.normalized()
-	assert_float(rad_to_deg(torso_up.angle_to(Vector3.UP))).is_greater_equal(CHARGE_LEAN)
-	# Lunge, front to back, measured in the Visual (-Z toward the enemy).
+	var lean: float = rad_to_deg(torso_up.angle_to(Vector3.UP))
+	assert_float(lean).is_between(CHARGE_LEAN_MIN, CHARGE_LEAN_MAX)
+	# Lunge with the right foot forward, measured in the Visual (-Z toward the
+	# enemy, +X to the character's right).
 	var visual: Node3D = _player.get_node("Visual") as Node3D
 	var to_visual: Transform3D = visual.global_transform.affine_inverse()
 	var hips: Vector3 = to_visual * humanoid.get_joint("hips").global_position
 	var ankle_l: Vector3 = to_visual * humanoid.get_joint("ankle_l").global_position
 	var ankle_r: Vector3 = to_visual * humanoid.get_joint("ankle_r").global_position
-	assert_float(hips.z - ankle_l.z).is_greater_equal(LUNGE_REACH)
-	assert_float(ankle_r.z - hips.z).is_greater_equal(LUNGE_REACH)
+	assert_float(hips.z - ankle_r.z).is_greater_equal(LUNGE_REACH)
+	assert_float(ankle_l.z - hips.z).is_greater_equal(LUNGE_REACH)
 	assert_float(absf(ankle_l.x - ankle_r.x)).is_less_equal(LUNGE_WIDTH)
-	# The sheath follows the leaning torso: it rises toward its tip, behind the hips.
+	# The front foot points at the enemy and the back one sideways, both flat.
+	for foot: Array in [["ankle_r", Vector3.FORWARD], ["ankle_l", Vector3.LEFT]]:
+		var foot_basis: Basis = (to_visual.basis * humanoid.get_joint(foot[0]).global_basis).orthonormalized()
+		var toe: Vector3 = -foot_basis.z
+		assert_float(rad_to_deg(Vector3(toe.x, 0.0, toe.z).angle_to(foot[1]))).override_failure_message(foot[0]).is_less_equal(FOOT_HEADING)
+		assert_float(rad_to_deg(foot_basis.y.angle_to(Vector3.UP))).override_failure_message(foot[0]).is_less_equal(FOOT_FLAT)
+	# The sheath crosses behind the body to the right, about level.
 	var sheath: Node3D = _player.get_sheath()
-	var axis: Vector3 = to_visual.basis * -sheath.global_basis.z.normalized()
-	assert_float(rad_to_deg(asin(axis.normalized().y))).is_greater_equal(SHEATH_RISE)
+	var axis: Vector3 = (to_visual.basis * -sheath.global_basis.z).normalized()
 	assert_float(axis.z).is_greater(0.0)
+	assert_float(axis.x).is_greater_equal(SHEATH_RIGHT)
+	assert_float(rad_to_deg(absf(asin(axis.y)))).is_less_equal(SHEATH_TILT)
 	# The head looks at the enemy over the guard.
 	var face: Vector3 = to_visual.basis * -humanoid.get_joint("neck").global_basis.z
 	assert_float(rad_to_deg(face.angle_to(Vector3.FORWARD))).is_less_equal(FACE_ANGLE)

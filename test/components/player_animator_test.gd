@@ -53,7 +53,8 @@ func _next(current: PlayerAnimator.Locomotion, on_floor: bool, speed: float, ris
 # --- Pure state logic
 
 func test_ac593_run_above_the_threshold_idle_below() -> void:
-	assert_int(_next(PlayerAnimator.Locomotion.IDLE, true, CONFIG.run_speed_threshold + 0.1, false, false)).is_equal(PlayerAnimator.Locomotion.RUN)
+	# Adapted (samurai-run.md): from IDLE the run starts with RUN_START.
+	assert_int(_next(PlayerAnimator.Locomotion.IDLE, true, CONFIG.run_speed_threshold + 0.1, false, false)).is_equal(PlayerAnimator.Locomotion.RUN_START)
 	assert_int(_next(PlayerAnimator.Locomotion.IDLE, true, CONFIG.run_speed_threshold - 0.1, false, false)).is_equal(PlayerAnimator.Locomotion.IDLE)
 
 
@@ -75,6 +76,22 @@ func test_ac594_jump_start_air_land() -> void:
 
 func test_ac594_falling_off_a_ledge_goes_straight_to_air() -> void:
 	assert_int(_next(PlayerAnimator.Locomotion.RUN, false, 5.0, false, false)).is_equal(PlayerAnimator.Locomotion.AIR)
+
+
+# --- Run start (docs/specs/samurai-run.md, AC740)
+
+func test_ac740_the_run_starts_with_its_first_step() -> void:
+	var over: float = CONFIG.run_speed_threshold + 1.0
+	assert_int(_next(PlayerAnimator.Locomotion.IDLE, true, over, false, false)).is_equal(PlayerAnimator.Locomotion.RUN_START)
+	assert_int(_next(PlayerAnimator.Locomotion.RUN_START, true, over, false, false)).is_equal(PlayerAnimator.Locomotion.RUN_START)
+	assert_int(_next(PlayerAnimator.Locomotion.RUN_START, true, over, false, true)).is_equal(PlayerAnimator.Locomotion.RUN)
+	assert_int(_next(PlayerAnimator.Locomotion.RUN_START, true, 0.0, false, false)).is_equal(PlayerAnimator.Locomotion.IDLE)
+	assert_int(_next(PlayerAnimator.Locomotion.RUN_START, false, over, true, false)).is_equal(PlayerAnimator.Locomotion.JUMP_START)
+	assert_int(_next(PlayerAnimator.Locomotion.RUN_START, false, over, false, false)).is_equal(PlayerAnimator.Locomotion.AIR)
+	# Already moving: no first step.
+	assert_int(_next(PlayerAnimator.Locomotion.RUN_STOP, true, over, false, false)).is_equal(PlayerAnimator.Locomotion.RUN)
+	assert_int(_next(PlayerAnimator.Locomotion.LAND, true, over, false, false)).is_equal(PlayerAnimator.Locomotion.RUN)
+	assert_str(String(PlayerAnimator.LOCOMOTION_CLIPS[PlayerAnimator.Locomotion.RUN_START])).is_equal("run_start")
 
 
 # --- In the game loop

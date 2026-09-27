@@ -8,6 +8,8 @@
 [ext_resource type="Resource" path="res://data/classes/samurai/samurai_combo.tres" id="10_combo"]
 [ext_resource type="Resource" path="res://data/classes/samurai/samurai_hitstop.tres" id="11_hitstop"]
 
+[ext_resource type="Resource" path="res://data/classes/samurai/samurai_dash.tres" id="20_dash"]
+
 [resource]
 script = ExtResource("1_script")
 title = "Samurái"
@@ -19,3 +21,4 @@ weapon = ExtResource("4_weapon")
 animation_profile = &"samurai"
 combo = ExtResource("10_combo")
 hitstop = ExtResource("11_hitstop")
+dash = ExtResource("20_dash")

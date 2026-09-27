@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="DashAfterimageConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/dash_afterimage_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+count = 3
+fractions = PackedFloat32Array(0.15, 0.5, 0.85)
+lifetime = 0.25
+start_alpha = 0.35

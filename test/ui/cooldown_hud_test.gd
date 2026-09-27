@@ -1,9 +1,9 @@
 extends GdUnitTestSuite
-## docs/specs/cooldown-timers.md: remaining seconds of the dash, the buffs and
-## the boss debuffs in the arena HUD.
+## docs/specs/cooldown-timers.md: remaining seconds of the buffs and the boss
+## debuffs in the arena HUD. The dash (AC321) moved to test/ui/dash_button_test.gd
+## (AC771, docs/specs/dash-button.md).
 
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
-const HUD_CONFIG: HudConfig = preload("res://data/ui/hud_config.tres")
 const BOSS_BAR_CONFIG: BossBarConfig = preload("res://data/ui/boss_bar_config.tres")
 ## boss-titan: the Titán is the single boss of reference (the Coloso is gone).
 const TITAN: BossChallengeData = preload("res://data/enemies/boss_challenges/titan.tres")
@@ -32,22 +32,6 @@ func before_test() -> void:
 func after_test() -> void:
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-
-
-func test_ac321_dash_label_shows_the_remaining_cooldown() -> void:
-	var label: Label = _hud.get_node("%DashLabel") as Label
-	_hud._process(0.0)
-	assert_str(label.text).is_equal(HUD_CONFIG.dash_ready_text)
-	assert_str(HUD_CONFIG.dash_ready_text).is_equal("DASH")
-	assert_bool(_player.dash.try_dash(Vector3.FORWARD)).is_true()
-	_hud._process(0.0)
-	assert_str(label.text).is_equal("1.5")
-	_player.dash.advance_timers(0.7)
-	_hud._process(0.0)
-	assert_str(label.text).is_equal("0.8")
-	_player.dash.advance_timers(1.0)
-	_hud._process(0.0)
-	assert_str(label.text).is_equal("DASH")
 
 
 func test_ac322_buff_shows_time_in_the_centre_and_stacks_in_the_corner() -> void:

@@ -53,6 +53,8 @@ func build(humanoid: LowPolyHumanoid) -> AnimationLibrary:
 	var lib := AnimationLibrary.new()
 	_add_idle(lib)
 	_add_run(lib)
+	_add_sprint(lib)
+	_add_dash(lib)
 	_add_jump(lib)
 	_add_hit(lib)
 	_add_attacks(lib)
@@ -155,6 +157,98 @@ func _add_run(lib: AnimationLibrary) -> void:
 			"hip_r": Vector3(-26, 6, 12), "knee_r": Vector3(-60, 0, 0), "ankle_r": Vector3(58, 0, 0),
 			"shoulder_l": Vector3(40, 0, -40), "elbow_l": Vector3(30, 0, 0)})],
 		[0.5, _stance()],
+	], false, true))
+
+
+# ---------------------------------------------------------------- SPRINT
+
+## Embestida (docs/specs/sprint-stamina.md): el mandoble sigue al hombro, el
+## torso se vuelca bajo como un toro, la cadera cae fuerte en cada pisada y el
+## puño izquierdo bombea amplio. m = 1 pie derecho adelante.
+func _sprint_contact(m: int) -> Dictionary:
+	var f := "r" if m == 1 else "l"
+	var b := "l" if m == 1 else "r"
+	return _h.pose(_h.with({
+		"hips_pos": Vector3(0, -0.17, 0),
+		"hips": Vector3(0, 14 * m, 0),
+		"torso": Vector3(-30, -18 * m, 0), "neck": Vector3(24, 6 * m, 0),
+		"hip_" + f: Vector3(62, 0, 0), "knee_" + f: Vector3(-30, 0, 0), "ankle_" + f: Vector3(-8, 0, 0),
+		"hip_" + b: Vector3(-44, 0, 0), "knee_" + b: Vector3(-62, 0, 0), "ankle_" + b: Vector3(32, 0, 0),
+		"shoulder_l": Vector3(92 if m == 1 else -64, 0, -24), "elbow_l": Vector3(84 if m == 1 else 30, 0, 0),
+		"left_grip": 0.0,
+	}, SHOULDER_REST))
+
+
+func _sprint_pass(m: int) -> Dictionary:
+	var f := "r" if m == 1 else "l"
+	var b := "l" if m == 1 else "r"
+	return _h.pose(_h.with({
+		"hips_pos": Vector3(0, 0.02, 0),
+		"torso": Vector3(-26, 0, 0), "neck": Vector3(20, 0, 0),
+		"hip_" + f: Vector3(4, 0, 0), "knee_" + f: Vector3(-26, 0, 0), "ankle_" + f: Vector3(16, 0, 0),
+		"hip_" + b: Vector3(48, 0, 0), "knee_" + b: Vector3(-120, 0, 0), "ankle_" + b: Vector3(32, 0, 0),
+		"shoulder_l": Vector3(12, 0, -26), "elbow_l": Vector3(55, 0, 0),
+		"left_grip": 0.0,
+	}, _h.with(SHOULDER_REST, {"shoulder_r": Vector3(126, -29, 42)})))
+
+
+func _add_sprint(lib: AnimationLibrary) -> void:
+	lib.add_animation("sprint", _h.make_clip([
+		[0.0, _sprint_contact(1)], [0.13, _sprint_pass(1)],
+		[0.26, _sprint_contact(-1)], [0.39, _sprint_pass(-1)],
+		[0.52, _sprint_contact(1)],
+	], true, true))
+
+	# Arranque: se hunde y embiste con el hombro del mandoble adelante.
+	lib.add_animation("sprint_start", _h.make_clip([
+		[0.0, _stance()],
+		[0.12, _h.with(_sprint_contact(1), {
+			"hips_pos": Vector3(0, -0.24, 0), "hips": Vector3(0, 22, 0),
+			"torso": Vector3(-40, -24, 0), "neck": Vector3(30, 10, 0),
+			"hip_l": Vector3(-54, 0, 0), "knee_l": Vector3(-18, 0, 0), "ankle_l": Vector3(44, 0, 0)})],
+		[0.3, _sprint_contact(1)],
+	], false, true))
+
+	# Derrape largo: el peso del mandoble lo arrastra y clava los pies; el puño
+	# izquierdo se abre para frenar y vuelve a la guardia.
+	lib.add_animation("sprint_stop", _h.make_clip([
+		[0.0, _sprint_contact(1)],
+		[0.18, _stance({
+			"hips_pos": Vector3(0, -0.26, 0), "hips": Vector3(0, -14, 0),
+			"torso": Vector3(-34, 6, 0), "neck": Vector3(26, 6, 0),
+			"hip_l": Vector3(58, 10, -16), "knee_l": Vector3(-24, 0, 0), "ankle_l": Vector3(-20, 0, 0),
+			"hip_r": Vector3(-30, 18, 14), "knee_r": Vector3(-70, 0, 0), "ankle_r": Vector3(62, 0, 0),
+			"shoulder_l": Vector3(54, 0, -52), "elbow_l": Vector3(26, 0, 0)})],
+		[0.34, _stance({
+			"hips_pos": Vector3(0, -0.14, 0), "torso": Vector3(-14, -4, 0), "neck": Vector3(10, 10, 0),
+			"hip_l": Vector3(34, -4, -14), "knee_l": Vector3(-26, 0, 0), "ankle_l": Vector3(-6, 0, 0),
+			"hip_r": Vector3(-14, 6, 12), "knee_r": Vector3(-36, 0, 0), "ankle_r": Vector3(36, 0, 0)})],
+		[0.55, _stance()],
+	], false, true))
+
+
+# ---------------------------------------------------------------- DASH
+
+## Dash (docs/specs/dash-feel.md): impulso, estirado y el primer cuadro de
+## sprint, en las fracciones 0, 0.35 y 1 (la regla de conexión). El mandoble
+## sigue al hombro en todo el clip. Berserker: se lanza pesado con el hombro del
+## arma adelante y cae clavado en la pisada del sprint.
+func _add_dash(lib: AnimationLibrary) -> void:
+	var run_in := _sprint_contact(1)
+	lib.add_animation("dash", _h.make_clip([
+		[0.0, _h.with(run_in, {
+			"hips_pos": Vector3(0, -0.26, 0), "hips": Vector3(0, 24, 0),
+			"torso": Vector3(-42, -26, 0), "neck": Vector3(32, 12, 0),
+			"hip_l": Vector3(44, 0, 0), "knee_l": Vector3(-66, 0, 0), "ankle_l": Vector3(20, 0, 0),
+			"hip_r": Vector3(-52, 0, 0), "knee_r": Vector3(-14, 0, 0), "ankle_r": Vector3(46, 0, 0),
+			"shoulder_l": Vector3(-60, 0, -28), "elbow_l": Vector3(30, 0, 0)})],
+		[0.084, _h.with(run_in, {
+			"hips_pos": Vector3(0, -0.1, 0), "hips": Vector3(0, 20, 0),
+			"torso": Vector3(-38, -22, 0), "neck": Vector3(28, 9, 0),
+			"hip_r": Vector3(74, 0, 0), "knee_r": Vector3(-24, 0, 0), "ankle_r": Vector3(-12, 0, 0),
+			"hip_l": Vector3(-58, 0, 0), "knee_l": Vector3(-50, 0, 0), "ankle_l": Vector3(36, 0, 0),
+			"shoulder_l": Vector3(70, 0, -26), "elbow_l": Vector3(60, 0, 0)})],
+		[0.24, run_in],
 	], false, true))
 
 

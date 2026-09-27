@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="DashVfxSet" format=3]
+
+[ext_resource type="Script" path="res://resources/dash_vfx_set.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://components/dash/vfx/dash_afterimage_vfx.tscn" id="2_afterimage"]
+[ext_resource type="PackedScene" path="res://components/dash/vfx/dash_speed_lines_vfx.tscn" id="3_speed_lines"]
+[ext_resource type="PackedScene" path="res://components/dash/vfx/dash_dust_vfx.tscn" id="4_dust"]
+[ext_resource type="PackedScene" path="res://components/dash/vfx/dash_fov_kick_vfx.tscn" id="5_fov_kick"]
+
+[resource]
+script = ExtResource("1_script")
+modules = Array[PackedScene]([ExtResource("2_afterimage"), ExtResource("3_speed_lines"), ExtResource("4_dust"), ExtResource("5_fov_kick")])

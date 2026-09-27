@@ -10,3 +10,8 @@ extends Resource
 ## Seconds the body takes to blend from a strike's last pose back into
 ## locomotion: a strike ends where the next one starts, not in the guard.
 @export var attack_exit_blend: float
+## Seconds the body takes to blend from the sprint into walking
+## (docs/specs/sprint-stamina.md).
+@export var sprint_exit_blend: float
+## Seconds the body takes to blend into the dash clip (docs/specs/dash-feel.md).
+@export var dash_entry_blend: float

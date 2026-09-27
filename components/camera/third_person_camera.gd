@@ -17,6 +17,12 @@ var _pitch: float = 0.0
 var _shake_strength: float = 0.0
 var _shake_left: float = 0.0
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## Field of view kick (e.g. the dash, docs/specs/dash-feel.md): degrees added
+## at the start, eased back to the base over the return time.
+var _fov_base: float = 0.0
+var _fov_kick: float = 0.0
+var _fov_kick_total: float = 0.0
+var _fov_kick_left: float = 0.0
 
 @onready var _spring_arm: SpringArm3D = $SpringArm3D
 @onready var _camera: Camera3D = $SpringArm3D/Camera3D
@@ -24,6 +30,7 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_spring_arm.spring_length = config.spring_length
+	_fov_base = _camera.fov
 	_apply_rotation()
 	capture_mouse()
 
@@ -39,6 +46,7 @@ func _physics_process(_delta: float) -> void:
 func _process(delta: float) -> void:
 	_update_stick_look(delta)
 	_update_shake(delta)
+	_update_fov_kick(delta)
 
 
 ## Shakes the view; strength in [0, 1]. A new shake restarts the timer and
@@ -46,6 +54,23 @@ func _process(delta: float) -> void:
 func shake(strength: float) -> void:
 	_shake_strength = maxf(strength, _shake_strength if _shake_left > 0.0 else 0.0)
 	_shake_left = config.shake_duration
+
+
+## Widens the view by `amount_deg` at once and eases it back over
+## `return_time` seconds. A new kick restarts it; kicks never add up.
+func kick_fov(amount_deg: float, return_time: float) -> void:
+	_fov_kick = amount_deg
+	_fov_kick_total = return_time
+	_fov_kick_left = return_time
+	_camera.fov = _fov_base + amount_deg
+
+
+func get_fov() -> float:
+	return _camera.fov
+
+
+func get_base_fov() -> float:
+	return _fov_base
 
 
 func stop_shake() -> void:
@@ -140,3 +165,12 @@ func _apply_rotation() -> void:
 	rotation.y = _yaw
 	if _spring_arm != null:
 		_spring_arm.rotation.x = _pitch
+
+
+## Ease-out back to the base field of view.
+func _update_fov_kick(delta: float) -> void:
+	if _fov_kick_left <= 0.0:
+		return
+	_fov_kick_left = maxf(_fov_kick_left - delta, 0.0)
+	var remaining: float = _fov_kick_left / _fov_kick_total
+	_camera.fov = _fov_base + _fov_kick * remaining * remaining

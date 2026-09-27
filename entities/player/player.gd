@@ -16,6 +16,9 @@ const ACTION_DASH: StringName = &"dash"
 const ACTION_JUMP: StringName = &"jump"
 const ACTION_ABILITY_BASIC: StringName = &"ability_basic"
 const ACTION_ABILITY_ULTIMATE: StringName = &"ability_ultimate"
+const ACTION_SPRINT: StringName = &"sprint"
+## Movement actions: a double tap of any of them starts the sprint.
+const MOVE_ACTIONS: Array[StringName] = [ACTION_FORWARD, ACTION_BACK, ACTION_LEFT, ACTION_RIGHT]
 ## Blade markers every weapon scene provides for the weapon trail.
 const WEAPON_TRAIL_BASE: NodePath = ^"TrailBase"
 const WEAPON_TRAIL_TIP: NodePath = ^"TrailTip"
@@ -40,6 +43,8 @@ const WEAPON_OFF_HAND: NodePath = ^"OffHand"
 @onready var sword_swing: SwordSwing = $SwordSwing
 @onready var buffs: BuffComponent = $BuffComponent
 @onready var air_slash: AirSlashComponent = $AirSlash
+@onready var stamina: StaminaComponent = $StaminaComponent
+@onready var sprint: SprintComponent = $SprintComponent
 @onready var _weapon_pivot: Node3D = $Visual/SwordPivot
 @onready var _movement: MovementComponent = $MovementComponent
 @onready var _camera: ThirdPersonCamera = $CameraRig
@@ -48,13 +53,18 @@ const WEAPON_OFF_HAND: NodePath = ^"OffHand"
 @onready var _weapon_mount: WeaponMount = $WeaponMount
 @onready var _humanoid: LowPolyHumanoid = $Visual/Humanoid
 @onready var _hitstop: HitstopComponent = $Hitstop
+@onready var _dash_vfx: DashVfxHost = $DashVfx
 
 ## Scabbard of the class weapon, or null when the weapon has none.
 var _sheath: Node3D = null
 ## Socket on the torso the scabbard hangs from, or null without a scabbard.
 var _sheath_socket: Node3D = null
+## Shield of the class weapon, or null when the class carries none.
+var _shield: Node3D = null
+## Socket on a humanoid joint the shield hangs from, or null without a shield.
+var _shield_socket: Node3D = null
 ## Ignores the buttons still held from a closed menu (e.g. B closing the pause).
-var _input_guard: HeldInputGuard = HeldInputGuard.new([ACTION_ATTACK, ACTION_DASH, ACTION_JUMP, ACTION_ABILITY_BASIC, ACTION_ABILITY_ULTIMATE])
+var _input_guard: HeldInputGuard = HeldInputGuard.new([ACTION_ATTACK, ACTION_DASH, ACTION_JUMP, ACTION_ABILITY_BASIC, ACTION_ABILITY_ULTIMATE, ACTION_FORWARD, ACTION_BACK, ACTION_LEFT, ACTION_RIGHT, ACTION_SPRINT])
 ## Seconds left of a hold (a boss grab): no movement, attacks, jumps, dashes or abilities.
 var _hold_left: float = 0.0
 
@@ -66,6 +76,8 @@ func _ready() -> void:
 	air_slash.registry = enemy_registry
 	_apply_character_class()
 	_setup_health()
+	stamina.refill()
+	_connect_sprint_stops()
 	stats.stats_changed.connect(_on_stats_changed)
 	health.died.connect(_on_health_died)
 	attack.step_started.connect(_on_attack_step_started)
@@ -87,6 +99,7 @@ func _physics_process(delta: float) -> void:
 	_handle_abilities()
 	_handle_jump()
 	_handle_dash()
+	_handle_sprint(delta)
 	_handle_air_slash()
 	_handle_movement(delta)
 	_handle_attack()
@@ -96,6 +109,7 @@ func _physics_process(delta: float) -> void:
 ## action is ignored and the player stands still; a running dash or cast stops.
 func begin_hold(duration: float) -> void:
 	_hold_left = duration
+	sprint.stop()
 	dash.cancel()
 	attack.cancel()
 	basic_ability.cancel_charge()
@@ -135,6 +149,15 @@ func get_sheath_socket() -> Node3D:
 	return _sheath_socket
 
 
+## Shield of the class (docs/specs/warrior-sword-and-shield.md), or null.
+func get_shield() -> Node3D:
+	return _shield
+
+
+func get_shield_socket() -> Node3D:
+	return _shield_socket
+
+
 ## True while any ability is being charged or cast, or the air slash runs: the
 ## player can do nothing else (charging still allows the dash).
 func is_casting() -> bool:
@@ -146,6 +169,26 @@ func is_casting() -> bool:
 func get_body_clip() -> StringName:
 	var clip: StringName = basic_ability.get_body_clip()
 	return clip if clip != &"" else ultimate_ability.get_body_clip()
+
+
+## True while an ability's cast keeps the weapon in the humanoid's hand, so
+## WeaponMount keeps following it (docs/specs/sheathe-release-animation.md).
+func is_weapon_in_hand_cast() -> bool:
+	return basic_ability.holds_weapon_in_hand() or ultimate_ability.holds_weapon_in_hand()
+
+
+func is_sprinting() -> bool:
+	return sprint.is_sprinting()
+
+
+## Sprinting at full speed (not winded): what the body shows.
+func is_running() -> bool:
+	return sprint.is_running()
+
+
+## True while any movement action is held (the animator's sprint stop).
+func has_move_input() -> bool:
+	return _read_move_input() != Vector2.ZERO
 
 
 ## True while an ability is held down to charge it.
@@ -256,6 +299,7 @@ func _release_charge_if_key_up(ability: AbilityComponent, action: StringName) ->
 func _handle_jump() -> void:
 	if not _input_guard.is_just_pressed(ACTION_JUMP) or is_casting() or not is_on_floor():
 		return
+	sprint.stop()
 	attack.cancel()
 	_movement.jump()
 
@@ -272,6 +316,59 @@ func _handle_dash() -> void:
 			ultimate_ability.cut_cast_by_dash()
 			basic_ability.notify_dash()
 			ultimate_ability.notify_dash()
+
+
+## Sprint (docs/specs/sprint-stamina.md §11-§12): a double tap of any movement
+## action or the sprint action starts it; standing still (no movement input)
+## stops it. The dash pauses it (no stamina is spent while dashing) and a dash
+## that ends while moving starts it. Strikes, abilities, jumps and damage stop it too.
+func _handle_sprint(delta: float) -> void:
+	_start_sprint_if_requested()
+	if not has_move_input():
+		sprint.stop()
+	if not dash.is_dashing():
+		sprint.drain(delta)
+
+
+func _start_sprint_if_requested() -> void:
+	if not _double_tapped() and not _input_guard.is_just_pressed(ACTION_SPRINT):
+		return
+	if _can_start_sprint():
+		sprint.try_start(false)
+
+
+## True when a movement action was tapped twice in a row (same direction).
+func _double_tapped() -> bool:
+	for action: StringName in MOVE_ACTIONS:
+		if _input_guard.is_just_pressed(action):
+			return sprint.register_tap(action)
+	return false
+
+
+## On the floor, moving, and free: no dash, cast, charge or committed strike.
+func _can_start_sprint() -> bool:
+	if not is_on_floor() or dash.is_dashing() or is_casting() or attack.is_committed():
+		return false
+	return has_move_input()
+
+
+## Striking or being hit ends the sprint; finishing it does not bring it back.
+func _connect_sprint_stops() -> void:
+	attack.step_started.connect(sprint.stop.unbind(1))
+	basic_ability.cast_started.connect(sprint.stop)
+	ultimate_ability.cast_started.connect(sprint.stop)
+	basic_ability.charge_started.connect(sprint.stop)
+	ultimate_ability.charge_started.connect(sprint.stop)
+	health.damaged.connect(sprint.stop.unbind(1))
+	dash.dash_ended.connect(_on_dash_ended)
+
+
+## A dash that runs its full distance while moving (any direction) goes on as a
+## sprint.
+func _on_dash_ended(cancelled: bool) -> void:
+	if cancelled or is_casting() or not has_move_input():
+		return
+	sprint.try_start(true)
 
 
 func _can_dash() -> bool:
@@ -303,7 +400,7 @@ func _handle_movement(delta: float) -> void:
 	if attack.is_attacking():
 		_move_in_recovery(move_input, wish_direction, delta)
 		return
-	_movement.move(wish_direction, delta)
+	_movement.move(wish_direction, delta, sprint.get_speed_factor())
 
 
 ## STRAFE: slides slowly without turning (the facing is locked) and the strike
@@ -337,6 +434,7 @@ func _handle_air_slash() -> void:
 	if air_slash.is_active() or is_on_floor() or is_casting() or dash.is_dashing():
 		return
 	if _input_guard.is_pressed(ACTION_ATTACK) and air_slash.try_start():
+		sprint.stop()
 		attack.cancel()
 
 
@@ -368,6 +466,8 @@ func _apply_character_class() -> void:
 	stats.set_base_stats(character_class.base_stats)
 	_equip_weapon(character_class.weapon)
 	air_slash.setup(character_class.air_slash)
+	dash.equip(character_class.dash)
+	_dash_vfx.setup(character_class.dash.vfx_set if character_class.dash != null else null)
 	_apply_combat_style(character_class)
 
 
@@ -390,6 +490,7 @@ func _equip_weapon(weapon: WeaponData) -> void:
 	_grip_with_right_hand(model)
 	_grip_with_left_hand(model)
 	_equip_sheath(weapon)
+	_equip_shield(weapon)
 	_weapon_mount.setup(weapon, _sheath_socket)
 
 
@@ -404,6 +505,19 @@ func _equip_sheath(weapon: WeaponData) -> void:
 	_humanoid.attach_to_joint(String(weapon.sheath_joint), _sheath_socket, weapon.sheath_position, weapon.sheath_rotation)
 	_sheath = weapon.sheath.instantiate() as Node3D
 	_sheath_socket.add_child(_sheath)
+
+
+## The shield, if any, hangs from a socket on the weapon's `shield_joint`
+## (docs/specs/warrior-sword-and-shield.md): the Warrior's is held in the left
+## hand, so each clip's left arm sets its angle.
+func _equip_shield(weapon: WeaponData) -> void:
+	if weapon.shield == null:
+		return
+	_shield_socket = Node3D.new()
+	_shield_socket.name = "ShieldSocket"
+	_humanoid.attach_to_joint(String(weapon.shield_joint), _shield_socket, weapon.shield_position, weapon.shield_rotation)
+	_shield = weapon.shield.instantiate() as Node3D
+	_shield_socket.add_child(_shield)
 
 
 ## The left hand grips a two-handed weapon's second-hand marker, if it has one,

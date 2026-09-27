@@ -10,8 +10,9 @@ extends AbilityBehavior
 ## the ability ready; with "Tsubame Gaeshi" (tsubame_gaeshi), a manual full charge
 ## that connects stores an empowered Sheathe (glowing katana), cast at once at
 ## full charge on the next press. On the release the player draws with a
-## rising diagonal cut (gyaku kesa-giri); the slash lands on the release (the
-## cast that follows is a recovery a dash may cut short):
+## rising diagonal cut (gyaku kesa-giri) drawn by the body clip, with the katana
+## in the hand (docs/specs/sheathe-release-animation.md); the slash lands on the
+## release (the cast that follows is a recovery a dash may cut short):
 ## - every enemy in a rectangle in front (HIT_RANGE x factor long) takes
 ##   (BASE_DAMAGE + ATTACK_SCALING x DAMAGE) x factor, which can crit with the
 ##   player's CRIT_CHANCE / CRIT_DAMAGE (no damage bonus or lifesteal), and is
@@ -20,7 +21,6 @@ extends AbilityBehavior
 ## - a wind cut rises along the slash, opening upwards in a V (wind-cut-v.md).
 ## factor = SheatheConfig.charge_factor(charge ratio) also scales the push.
 
-const SLASH_ANIMATION: StringName = &"sheathe_slash"
 ## Unique upgrade "Paso del Viento": each dash while charging adds charge.
 const WIND_STEP: StringName = &"wind_step"
 ## Unique upgrade "Zanshin": a kill with the slash makes the dash ready.
@@ -76,9 +76,16 @@ func is_empowered() -> bool:
 	return _empowered
 
 
-## While charging the body crouches in the iai pose (sheath-socket-hand-grip.md §2.7).
+## While charging the body crouches in the iai pose (sheath-socket-hand-grip.md
+## §2.7); on the release it draws, follows through and shakes the blade
+## (sheathe-release-animation.md). Only asked while charging or casting.
 func get_body_clip(_ability: AbilityComponent) -> StringName:
-	return config.charge_body_clip if _charging else &""
+	return config.charge_body_clip if _charging else config.release_body_clip
+
+
+## The release is drawn by the body: the katana stays in the hand.
+func holds_weapon_in_hand(_ability: AbilityComponent) -> bool:
+	return not _charging
 
 
 func is_charged() -> bool:
@@ -139,19 +146,12 @@ func begin(ability: AbilityComponent) -> void:
 	_end_charge(ability)
 	face_nearest_enemy(ability)
 	_update_reach(ability, ability.get_released_charge_ratio())
-	play_cast_animation(ability, SLASH_ANIMATION)
 	_slash(ability)
 
 
 ## The recovery ran to its end: nothing left to do (the hit already landed).
 func release(_ability: AbilityComponent) -> void:
 	pass
-
-
-## A dash cut the recovery short: the katana goes back to rest at once.
-func cancel_cast(ability: AbilityComponent) -> void:
-	ability.swing_player.stop()
-	ability.sword_swing.recover()
 
 
 func _slash(ability: AbilityComponent) -> void:

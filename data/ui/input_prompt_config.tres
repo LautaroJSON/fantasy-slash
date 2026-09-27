@@ -6,10 +6,14 @@
 script = ExtResource("1_script")
 keyboard_prompts = Dictionary[StringName, String]({
 &"ability_basic": "E",
-&"ability_ultimate": "R"
+&"dash": "Clic D",
+&"ability_ultimate": "R",
+&"sprint": "Shift"
 })
 gamepad_prompts = Dictionary[StringName, String]({
 &"ability_basic": "LB",
-&"ability_ultimate": "RT"
+&"dash": "B",
+&"ability_ultimate": "RT",
+&"sprint": "L3"
 })
 gamepad_motion_threshold = 0.5

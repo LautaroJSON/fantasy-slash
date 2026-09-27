@@ -25,6 +25,9 @@ release/
 android/build/
 android/*.apk
 android/*.aab
+*.apk
+*.aab
+*.idsig
 web/
 exports/
 

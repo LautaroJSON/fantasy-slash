@@ -318,6 +318,12 @@ func get_body_clip() -> StringName:
 	return _behavior.get_body_clip(self)
 
 
+## True while the running cast keeps the weapon in the hand
+## (docs/specs/sheathe-release-animation.md).
+func holds_weapon_in_hand() -> bool:
+	return _behavior != null and is_casting() and _behavior.holds_weapon_in_hand(self)
+
+
 ## Charge reached, in [0, 1]: 1 once CHARGE_TIME has been held (0 when not charging).
 func get_charge_ratio() -> float:
 	if not is_charging():

@@ -1,7 +1,7 @@
 # Feature: identidad de combate por clase (idle, locomoción y combo)
 
-- **Estado:** Aprobada (2026-09-26, D1–D4 como están), en implementación.
-- **Constitución:** `docs/constitution.md` v4.10.0 → **v4.10.1** (enmienda PATCH propuesta, ver §8).
+- **Estado:** **Implementada** (2026-09-27). Aprobada el 2026-09-26 (D1–D4 como están), con revisiones del Samurái y del Berserker a pedido del responsable (§3.2, §3.3).
+- **Constitución:** `docs/constitution.md` **v4.10.1** (enmienda PATCH de §8, aplicada).
 - **Pilar (Principio I):** **combate.**
   - Pelear se vuelve más expresivo y legible: cada golpe tiene anticipación, impacto sostenido y follow-through, y la silueta de cada clase se reconoce de lejos.
   - Elegir clase cambia cómo se pelea: cuántos golpes tiene el combo, cuánto te compromete cada uno (*cancel point*), cuánto avanza, qué zona cubre y cuánto pesa el impacto.
@@ -282,7 +282,7 @@ assets/models/characters/low_poly_humanoid/
 
 **Revisión del Samurái (2026-09-26):**
 - **AC659** Con `auto_chain = true`, al llegar el golpe a su `cancel_point` arranca el golpe siguiente en el mismo cuadro, sin toque de ataque: el estado nunca pasa por `CHAIN_OPEN`, y mover o saltar no lo cortan. El dash sí corta cualquiera de las dos mitades. Con `auto_chain = false` el comportamiento es el de siempre.
-- **AC660** Pose del Samurái: en todos los clips de su perfil, la muñeca izquierda queda a ≤ 0.03 m de la boca de la funda (la mano nunca la suelta, y la sostiene sin despegarse), y en `idle` el torso está girado de costado (≥ 30° respecto del frente) mientras la cabeza mira al frente (±10°).
+- **AC660** Pose del Samurái: en todos los clips de su perfil, la muñeca izquierda queda a ≤ 0.03 m de la boca de la funda (la mano nunca la suelta, y la sostiene sin despegarse), y en `idle` el torso está girado de costado (≥ 30° respecto del frente) mientras la cabeza mira al frente (±10°). *(Reescrito por `samurai-rest-guard.md`, AC735, el 2026-09-27: en `idle` el torso está de frente (≤ 10°) y la cabeza mira al frente (±10°). La parte de la mano ya la había reemplazado AC672.)*
 
 **Revisión del Berserker (2026-09-27, AC678–AC682; AC661–AC677 los tomaron otras specs):**
 - **AC678** Pose del Berserker: en `idle` y `run`, muestreados cada 1/30 s, la mano izquierda no tiene peso de agarre; la mano derecha está a la derecha del cuerpo y más de 0.1 m sobre la articulación del hombro; la punta queda más de 1 m a la izquierda; la hoja sube entre 0° y 30° desde la horizontal y pasa por detrás de la nuca; y el arma entera, mango incluido, no atraviesa torso, cabeza ni cuello (mandoble cruzado sobre los hombros). *(Revisado: la primera versión pedía la hoja hacia atrás y arriba.)*
@@ -340,55 +340,51 @@ Cada paso deja el proyecto abriendo y jugable.
 - **D5 (revisión del Samurái). Remate doble con `auto_chain`** (dos clips encadenados solos) en lugar de un golpe con varios impactos. Alternativa: `AttackComboStep.hits` (lista de impactos por golpe, cada uno con tiempo, daño, hit lag y sector). Es más general, pero cambia el modelo de datos, el timing por posición y AC641 para un solo golpe del juego.
 - **D6 (revisión del Samurái). Lado del costado:** hombro izquierdo (el de la funda) hacia el enemigo, torso a −40° y cabeza al frente. Es la guardia de iaido: la funda queda adelante y la katana atrás, lista para cortar. Si preferís el hombro derecho adelante, es solo un cambio de ángulos.
 
-## 12. Traspaso a otra sesión (2026-09-27)
+## 12. Implementación y cierre (2026-09-27)
 
-**Estado:** Guerrero y Samurái implementados y aprobados por el responsable con capturas. **Berserker implementado (2026-09-27, §3.2 revisada), esperando el OK de las capturas.** Falta la limpieza (paso 5) y el cierre (paso 6).
+**Estado:** las tres clases tienen perfil, combo y hitstop propios, aprobados por el responsable con capturas. Limpieza hecha. Spec **Implementada**.
 
-### Berserker (2026-09-27)
-- `profiles/berserker_profile.gd`: guardia con el mandoble al hombro, locomoción y combo de §3.2 revisada. Los ángulos del brazo derecho se calcularon con un solver temporal (fuera del repo) a partir de la posición de la mano y la dirección de la hoja buscadas en cada pose clave.
-- `berserker.tres` → perfil `berserker`, `berserker_combo.tres` y `berserker_hitstop.tres`; `OffHand` en `greatsword.tscn`; `BERSERKER` en `CLASSES` del test.
-- `WeaponMount.update()` → `LowPolyHumanoid.refresh_hand_targets()` (§3.2).
-- Continuidad del combo y `PlayerAnimationConfig.attack_exit_blend` (§3.2), con `PlayerAnimator._request_locomotion()`.
-- Tests: `class_combat_identity_test` en verde (AC678–AC682 nuevos), salvo AC653 en el `sheathe_charge` del Samurái, que ya fallaba antes de este cambio (ver abajo). `sheath_grip_test` en verde salvo AC675 (previo).
-- **Tests adaptados** (verifican lo mismo):
-  - `sheath_grip_test` AC665: el Berserker tenía peso 1 en todos los cuadros de sus golpes; ahora se exige en el `hit_start` de cada golpe, porque suelta la izquierda al final del barrido de vuelta.
-  - `berserker_run_test` AC187 ("golpes más lentos"): suponía el combo provisorio a velocidad ×0.5; ahora verifica que el primer golpe siga comprometido (sin aceptar otro toque) hasta su *cancel point*, que es más del doble del del Guerrero.
-- **Fallos previos, ajenos a este cambio** (se reprodujeron sin él o no tocan datos modificados acá): AC653 del Samurái en `sheathe_charge` y AC675 (la pose de carga de `sheath-in-left-hand.md` y el primer cuadro de `sheathe_slash`), `berserker_run_test` AC221 (arco 150° vs. el `.tres`), `air_slash_test` AC578 (valores del `.tres`) y `spin_test` AC188.
-
-### Qué está hecho
+### Qué se hizo
 - **Infraestructura:**
   - perfiles del humanoide (`assets/models/characters/low_poly_humanoid/profiles/`), con librerías construidas una vez por ejecución y compartidas;
   - timing del golpe por posición del clip (`AttackComboStep.hit_start` … `end_time`), con rango y arco por golpe;
   - `auto_chain`;
   - `CharacterClassData.animation_profile` / `combo` / `hitstop`.
-- **Guerrero** (`warrior_profile.gd`, `warrior_combo.tres`, `warrior_hitstop.tres`): versión "expresiva" con referencia de Kaeya (Genshin), §3.1.
-- **Samurái** (`samurai_profile.gd`, `samurai_combo.tres`, `samurai_hitstop.tres`): §3.3 revisada, 4 golpes con remate doble, los ocho cortes, a una mano.
-  - La funda, las manos y la pose de carga de Envainar se rigen por `sheath-socket-hand-grip.md` y por `sheath-in-left-hand.md`, esta última de **otra sesión**, que la cuelga de `wrist_l`. **Leé esas dos specs antes de tocar al Samurái.**
-- **Tests:** `test/entities/player/class_combat_identity_test.gd`. La constante `CLASSES` lista las clases con perfil propio; hoy es `[WARRIOR, SAMURAI]`.
+- **Guerrero** (`warrior_profile.gd`, `warrior_combo.tres`, `warrior_hitstop.tres`): versión expresiva con referencia de Kaeya (Genshin), §3.1.
+- **Samurái** (`samurai_profile.gd`, `samurai_combo.tres`, `samurai_hitstop.tres`): §3.3 revisada, 4 golpes con remate doble, los ocho cortes, a una mano. La funda, las manos y la pose de carga de Envainar se rigen por `sheath-socket-hand-grip.md` y `sheath-in-left-hand.md`.
+- **Berserker** (`berserker_profile.gd`, `berserker_combo.tres`, `berserker_hitstop.tres`): §3.2 revisada.
+  - Guardia con el mandoble cruzado sobre los hombros, a una mano, con la guarda visible de frente; combo continuo (cada golpe termina en la pose con la que empieza el siguiente); la izquierda en el `OffHand` de `greatsword.tscn` en cada impacto.
+  - Los ángulos del brazo derecho se calcularon con un solver temporal (fuera del repo) a partir de la posición de la mano y la dirección de la hoja buscadas en cada pose clave; el brazo es invisible, así que lo que se lee es la mano y el arma.
+  - `WeaponMount.update()` → `LowPolyHumanoid.refresh_hand_targets()`, y `PlayerAnimationConfig.attack_exit_blend` (0.35 s) con `PlayerAnimator._request_locomotion()`.
+- **Limpieza (paso 5):**
+  - se borraron `profiles/legacy_profile.gd` (y su entrada en `PROFILES`), `data/player/attack_combo_config.tres` y `data/player/hitstop_config.tres`;
+  - `player.tscn` usa por defecto `warrior_combo.tres` y `warrior_hitstop.tres`;
+  - `SOURCE.md` del humanoide y `CLAUDE.md` ("Ataque básico = combo por clase" y "Cuerpo del jugador") actualizados.
 
-### Qué falta (en orden)
-1. **Berserker** (§3.2; la tabla de tiempos y datos sigue vigente):
-   - `profiles/berserker_profile.gd`, registrado en `LowPolyHumanoid.PROFILES`;
-   - `data/classes/berserker/berserker_combo.tres` y `berserker_hitstop.tres`;
-   - `berserker.tres`, que hoy apunta a `legacy` y a `data/player/*`: pasarlo a `animation_profile = &"berserker"` y a los datos nuevos;
-   - sumar `BERSERKER` a `CLASSES` del test.
-   - **Estilo que pide el responsable** (memoria `animation-expressiveness`): poses muy expresivas desde el primer intento, con giro e inclinación grandes de torso, brazos estirados, recorridos largos y zancadas bajas. Suele mandar referencias (juegos o fotos): pedile una antes de posar. Mostrale las capturas antes de seguir.
-   - **Mandoble a dos manos:** usar la API genérica `set_hand_target(Hand.LEFT, marker)` con un `Marker3D` de mango en `greatsword.tscn` y `left_grip` en los clips (ver `sheath-socket-hand-grip.md` §2.3). Evaluá cómo convive con la funda del Samurái, que usa la mano izquierda en `sheath-in-left-hand.md`.
-   - **No debe pisarse con el Giro ni con el Tajo aéreo** (§3.2). Verificá con capturas que esas habilidades se sigan viendo bien con la guardia nueva.
-2. **Limpieza (paso 5):**
-   - borrar `profiles/legacy_profile.gd` y su entrada en `PROFILES`;
-   - borrar `data/player/attack_combo_config.tres` y `data/player/hitstop_config.tres`, y apuntar `player.tscn` a los del Guerrero;
-   - adaptar `humanoid_model_test` (AC590 lee la librería `legacy`; AC607 lee `data/player/*`);
-   - actualizar en `CLAUDE.md` las líneas "Ataque básico = combo" y "Cuerpo del jugador" (combo y hitstop por clase, perfiles).
-3. **Cierre (paso 6):**
-   - suite completa: el responsable la pidió en esta spec, aunque la memoria `targeted-tests-only` diga lo contrario para specs sin pedido explícito;
-   - import y smoke test del arena con las tres clases;
-   - checklist de la constitución (I–VII y Calidad) en esta spec y estado **Implementada**;
-   - notas de implementación: tests adaptados y fallos previos AC236 y AC363, ver `sheath-socket-hand-grip.md` §9.
+### Tests adaptados (verifican lo mismo)
+- `attack_component_test`, `combat_feel_test`, `hitstop_test`: leen el combo y el hitstop de la clase en lugar de `data/player/*` (§10).
+- `humanoid_model_test`: AC590 compara los largos de clip del perfil `warrior` (los golpes duran el `end_time` de su step) en lugar de la librería `legacy`; AC607 lee `warrior_combo.tres` y `warrior_hitstop.tres` (§3.1) y verifica que `player.tscn` los use por defecto.
+- `sheath_grip_test` AC665: el Berserker tiene peso de agarre 1 en el `hit_start` de cada golpe (antes, en todos los cuadros), porque suelta la izquierda al final del barrido de vuelta.
+- `berserker_run_test` AC187 ("golpes más lentos"): el primer golpe sigue comprometido hasta su *cancel point*, que es más del doble del del Guerrero (antes suponía el combo provisorio a ×0.5).
+- `sprint_anim_test` AC718 y `dash_anim_test` AC785 (de otras specs) usaban el perfil `legacy` como "perfil sin clips de sprint/dash". Ahora usan una copia de la librería del Guerrero sin esos clips (`test/helpers/profile_without.gd`) y siguen verificando el respaldo a `run`.
+
+### Estado de los tests
+- **Pedido del responsable al cerrar (2026-09-27): no correr tests en el cierre** ("lo tengo todo verificado"). La limpieza (paso 5) y las adaptaciones de `humanoid_model_test`, `sprint_anim_test` y `dash_anim_test` **no se corrieron** en esta sesión.
+- Última corrida antes de la limpieza: `class_combat_identity_test` en verde (AC639–AC660 y AC678–AC682) salvo AC653 en el `sheathe_charge` del Samurái; `player_animator_test` en verde; smoke test del arena sin errores.
+- **Fallos ajenos a esta spec** (del Samurái, que otras sesiones están cambiando, o de datos que esta spec no toca): AC653 del Samurái en `sheathe_charge`, `sheath_grip_test` AC670 y AC675, `berserker_run_test` AC221 (arco 150° vs. el `.tres`), `air_slash_test` AC578 (valores del `.tres`) y `spin_test` AC188.
+- No se hicieron capturas del Giro ni del Tajo aéreo con la guardia nueva del Berserker (§12 del traspaso lo pedía): sus animaciones mueven el pivot del arma y no cambiaron.
+
+### Review de la constitución (v4.10.1)
+- [x] **Identidad (I):** sirve a combate: cada clase pelea distinto (golpes, compromiso, alcance, arco, hit lag) y se reconoce por su silueta.
+- [x] **Arte (II):** sin assets nuevos; el humanoide sigue siendo el asset procedural con perfiles construidos una vez al cargar (PATCH 4.10.1). `OffHand` es un `Marker3D` en la escena adaptadora del mandoble. Sin shaders; colores sin cambios.
+- [x] **Datos (III):** combos, hitstop, `attack_exit_blend` y timing del golpe en Resources `.tres`; las poses y sus tiempos son datos del asset. Ningún Resource se muta en runtime (los tests usan `duplicate`).
+- [x] **GDScript (IV):** tipado estático, nombres según la guía, callbacks delgados (`WeaponMount.update` delega en `_update_pivot`).
+- [x] **Performance (V):** las librerías se construyen una vez; `refresh_hand_targets()` no aloca, solo recoloca dos mallas por cuadro.
+- [x] **Input (VI):** sin inputs nuevos.
+- [x] **Combate (VII):** golpes comprometidos hasta su `cancel_point` (en `AttackComboStep`); hit lag local sin `Engine.time_scale`; los eventos del clip coinciden con los tiempos del step (AC641).
+- [ ] **Calidad:** la suite completa no se corrió al cerrar, por pedido del responsable (ver arriba).
 
 ### Cómo se validaron las poses
-- Las capturas salen de una escena temporal (`extends Node`) que corre sin `--headless` en una copia del proyecto en el scratchpad. Instancia `player.tscn` con la clase en `Session.character_class` y apaga `PlayerAnimator` y el proceso del jugador. Por cada `(clip, tiempo)` hace `anim.play(clip, 0)` + `anim.seek(t, true)` + `WeaponMount.update(1.0)`, y arma una hoja con una columna por tiempo y cuatro vistas por fila: juego (1.0, 2.3, 2.9), 3/4 de frente (1.7, 1.3, −2.3), costado (2.9, 1.0, −0.3) y frente a la altura del personaje (0.3, 0.9, −2.6).
+- Las capturas salen de una escena temporal (`extends Node`) que corre sin `--headless` en una copia del proyecto en el scratchpad. Instancia `player.tscn` con la clase en `Session.character_class` y apaga `PlayerAnimator` y el proceso del jugador. Por cada `(clip, tiempo)` hace `anim.play(clip, 0)` + `anim.seek(t, true)` + `WeaponMount.update(1.0)`, y arma una hoja con una columna por tiempo y una vista por fila (juego, 3/4 de frente, costado, frente). El mandoble mide ~2.3 m de la mano a la punta: las cámaras se alejan para él.
 - Para los golpes conviene capturar en `hit_start × 0.6`, `× 0.85`, `hit_start`, a mitad del *active*, en `hit_end` y en `cancel_point`.
 - AC653 (la hoja no atraviesa torso ni cabeza) detecta la mayoría de los errores de pose antes de capturar.
-
-**Próximo criterio de aceptación libre:** mirá `CLAUDE.md` (hoy AC683). AC639–AC660 y AC678–AC682 siguen reservados por esta spec.

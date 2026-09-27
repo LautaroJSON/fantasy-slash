@@ -6,7 +6,6 @@ const STYLE: PlayerHealthBarStyle = preload("res://data/ui/player_health_bar_sty
 var _arena: Node3D
 var _player: Player
 var _health_bar: ProgressBar
-var _dash_bar: ProgressBar
 var _health_label: Label
 
 
@@ -17,7 +16,6 @@ func before_test() -> void:
 	_player = _arena.get_node("Player") as Player
 	var hud: Hud = _arena.get_node("UI/Hud") as Hud
 	_health_bar = hud.get_node("%HealthBar") as ProgressBar
-	_dash_bar = hud.get_node("%DashBar") as ProgressBar
 	_health_label = hud.get_node("%HealthLabel") as Label
 	get_tree().paused = true
 	await get_tree().process_frame
@@ -49,10 +47,8 @@ func test_ac172_health_bar_is_green_and_rounded() -> void:
 	_assert_rounded(_health_bar.get_theme_stylebox(&"background") as StyleBoxFlat, STYLE.background_color)
 
 
-func test_ac173_dash_bar_is_anchored_bottom_left() -> void:
-	assert_float(_dash_bar.anchor_left).is_equal(0.0)
-	assert_float(_dash_bar.anchor_top).is_equal(1.0)
-	assert_float(_dash_bar.anchor_bottom).is_equal(1.0)
+# AC173 (dash bar bottom left) was replaced by AC769 (docs/specs/dash-button.md):
+# the dash is a button next to the abilities, see test/ui/dash_button_test.gd.
 
 
 func test_ac174_health_bar_still_tracks_health() -> void:

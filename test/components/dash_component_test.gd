@@ -109,7 +109,9 @@ func _assert_dash(measured: Array[float], expected_duration: float, expected_dis
 
 
 func test_ac395_dash_speed_is_the_last_stat_and_every_class_has_one() -> void:
-	assert_int(PlayerStats.Stat.DASH_SPEED).is_equal(PlayerStats.Stat.size() - 1)
+	# Adapted (sprint-stamina.md): the stamina stats come after it; DASH_SPEED keeps
+	# its index as the last of the stats before them.
+	assert_int(PlayerStats.Stat.DASH_SPEED).is_equal(PlayerStats.Stat.STAMINA_MAX - 1)
 	for stats: PlayerStats in [PLAYER_STATS, BERSERKER_STATS, SAMURAI_STATS]:
 		assert_float(stats.dash_speed).is_greater(0.0)
 		assert_float(stats.get_base(PlayerStats.Stat.DASH_SPEED)).is_equal(stats.dash_speed)

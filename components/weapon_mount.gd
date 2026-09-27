@@ -5,7 +5,7 @@ extends Node
 ## animation owns the weapon pivot, the pivot follows the hand at the weapon's
 ## grip offset. After an ability it blends back into the hand. While held in the
 ## sheath (Sheathe charging, docs/specs/sheath-socket-hand-grip.md) the pivot
-## follows the scabbard socket on the torso instead, before anything else.
+## follows the scabbard socket instead, before anything else.
 
 @export var player: Player
 ## The weapon pivot (Visual/SwordPivot); the weapon model hangs from it.
@@ -84,9 +84,13 @@ func get_sheath_pose() -> Transform3D:
 	return Transform3D(pose.basis.orthonormalized(), pose.origin)
 
 
-## True when nothing else animates the weapon pivot.
+## True when nothing else animates the weapon pivot. A cast that keeps the
+## weapon in the hand (Sheathe's release, docs/specs/sheathe-release-animation.md)
+## leaves it to the hand.
 func is_hand_free() -> bool:
-	return not sword_swing.is_active() and not swing_player.is_playing() and not player.is_casting()
+	if sword_swing.is_active() or swing_player.is_playing():
+		return false
+	return not player.is_casting() or player.is_weapon_in_hand_cast()
 
 
 func is_mounted() -> bool:

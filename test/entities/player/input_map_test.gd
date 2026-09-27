@@ -3,6 +3,7 @@ extends GdUnitTestSuite
 const GAME_ACTIONS: Array[StringName] = [
 	&"move_forward", &"move_back", &"move_left", &"move_right",
 	&"attack", &"dash", &"jump", &"pause", &"ability_basic", &"ability_ultimate",
+	&"sprint",  # sprint-stamina.md
 ]
 
 

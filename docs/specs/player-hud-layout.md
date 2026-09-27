@@ -39,7 +39,7 @@
 
 - **AC171** La barra de vida está anclada abajo al centro (anchors x = 0.5, y = 1) y centrada horizontalmente (`offset_left = -offset_right`).
 - **AC172** El relleno de la barra usa un `StyleBoxFlat` con `bg_color` igual a `fill_color` (verde) y las 4 esquinas con `corner_radius`. El fondo usa `background_color` con el mismo radio.
-- **AC173** La barra de dash está anclada abajo a la izquierda (anchors x = 0, y = 1).
+- **AC173** (_reemplazado por AC769 de `dash-button.md`_) La barra de dash está anclada abajo a la izquierda (anchors x = 0, y = 1).
 - **AC174** La barra sigue reflejando la vida: tras un golpe de 20 (17 tras la defensa), `value = 83` y el texto dice `83 / 100`.
 - **AC175** Regresión: la suite completa en verde.
 

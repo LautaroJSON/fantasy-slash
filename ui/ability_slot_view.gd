@@ -7,14 +7,19 @@ extends Control
 ## During the cooldown the remaining seconds replace the key label, and when it
 ## ends the circle pulses (docs/specs/cooldown-timers.md).
 ## Only redraws when the cooldown ratio, the charge or the equipped state changes.
+## It shows an ability or the dash (a SlotSource, docs/specs/dash-button.md);
+## with a `touch_action`, touching the circle presses that InputMap action.
 
 @export var config: AbilitySlotViewConfig
 ## Key or button hint ("E", "LB"...), hidden while the remaining seconds are shown.
 @export var key_label: Label
 ## Action whose prompt the key label shows (written by the HUD per input device).
 @export var prompt_action: StringName
+## InputMap action a touch on the circle presses (constitution VI, HUD touch
+## buttons); &"" = not touchable. Mouse events are ignored.
+@export var touch_action: StringName
 
-var _ability: AbilityComponent = null
+var _source: SlotSource = null
 var _drawn_ratio: float = -1.0
 var _drawn_charge: float = 0.0
 var _drawn_charging: bool = false
@@ -23,6 +28,8 @@ var _drawn_empowered: bool = false
 var _time_label: Label = null
 var _shown_step: int = 0
 var _pulse_left: float = 0.0
+## Touch index holding the button, -1 = none.
+var _touch_index: int = -1
 ## Reused polygon of the cooldown clock.
 var _clock_points: PackedVector2Array = PackedVector2Array()
 
@@ -39,8 +46,26 @@ func _draw() -> void:
 	_draw_slot()
 
 
+func _gui_input(event: InputEvent) -> void:
+	_handle_touch(event as InputEventScreenTouch)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED or what == NOTIFICATION_EXIT_TREE:
+		_release_touch()
+
+
 func setup(ability: AbilityComponent) -> void:
-	_ability = ability
+	_setup_source(AbilitySlotSource.new(ability))
+
+
+## The dash as a button (docs/specs/dash-button.md): its cooldown only.
+func setup_dash(dash: DashComponent) -> void:
+	_setup_source(DashSlotSource.new(dash))
+
+
+func _setup_source(source: SlotSource) -> void:
+	_source = source
 	var diameter: float = get_radius() * 2.0
 	custom_minimum_size = Vector2(diameter, diameter)
 	pivot_offset = Vector2(get_radius(), get_radius())
@@ -57,7 +82,12 @@ func advance(delta: float) -> void:
 
 
 func get_radius() -> float:
-	return config.get_radius(_ability.slot)
+	return config.get_radius(_slot_kind())
+
+
+## True while a finger holds the button down.
+func is_touch_held() -> bool:
+	return _touch_index >= 0
 
 
 func is_locked() -> bool:
@@ -118,11 +148,11 @@ func get_charge_ring_radius() -> float:
 
 
 func _refresh_if_changed() -> void:
-	var ratio: float = _ability.get_cooldown_ratio()
-	var equipped: bool = _ability.is_equipped()
-	var charging: bool = _ability.is_charging()
-	var charge: float = _ability.get_charge_ratio()
-	var empowered: bool = _ability.is_empowered()
+	var ratio: float = _source.get_cooldown_ratio()
+	var equipped: bool = _source.is_equipped()
+	var charging: bool = _source.is_charging()
+	var charge: float = _source.get_charge_ratio()
+	var empowered: bool = _source.is_empowered()
 	if ratio == _drawn_ratio and equipped == _drawn_equipped and charging == _drawn_charging and charge == _drawn_charge and empowered == _drawn_empowered:
 		return
 	if _drawn_ratio > 0.0 and ratio <= 0.0 and equipped:
@@ -137,7 +167,7 @@ func _refresh_if_changed() -> void:
 
 ## Writes the label only when the shown step changes (strings come from a table).
 func _update_time_text() -> void:
-	var step: int = CooldownText.to_step(_ability.get_cooldown_remaining(), config.cooldown_text)
+	var step: int = CooldownText.to_step(_source.get_cooldown_remaining(), config.cooldown_text)
 	if step == _shown_step:
 		return
 	_shown_step = step
@@ -167,13 +197,13 @@ func _create_time_label() -> void:
 	_time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_time_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_time_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	CooldownText.style_label(_time_label, config.get_cooldown_font_size(_ability.slot), config.cooldown_text)
+	CooldownText.style_label(_time_label, config.get_cooldown_font_size(_slot_kind()), config.cooldown_text)
 	add_child(_time_label)
 
 
 ## Body of the current state, then the frame on top of every state.
 func _draw_slot() -> void:
-	if _ability == null:
+	if _source == null:
 		return
 	var radius: float = get_radius()
 	var center := Vector2(radius, radius)
@@ -214,3 +244,33 @@ func _draw_ring(center: Vector2, fraction: float, color: Color) -> void:
 		return
 	var start: float = -PI / 2.0
 	draw_arc(center, get_charge_ring_radius(), start, start + TAU * fraction, config.arc_point_count, color, config.ring_width, true)
+
+
+## Size and font of the shown source: the ultimate's or the basic one's.
+func _slot_kind() -> AbilityData.Slot:
+	return AbilityData.Slot.ULTIMATE if _source.is_ultimate() else AbilityData.Slot.BASIC
+
+
+## A touch inside the circle presses `touch_action` until that finger lifts.
+func _handle_touch(touch: InputEventScreenTouch) -> void:
+	if touch == null or touch_action == &"" or _source == null:
+		return
+	if touch.pressed and _touch_index < 0 and _is_inside(touch.position):
+		_touch_index = touch.index
+		Input.action_press(touch_action)
+		accept_event()
+	elif not touch.pressed and touch.index == _touch_index:
+		_release_touch()
+		accept_event()
+
+
+func _is_inside(point: Vector2) -> bool:
+	var radius: float = get_radius()
+	return point.distance_to(Vector2(radius, radius)) <= radius
+
+
+func _release_touch() -> void:
+	if _touch_index < 0:
+		return
+	_touch_index = -1
+	Input.action_release(touch_action)

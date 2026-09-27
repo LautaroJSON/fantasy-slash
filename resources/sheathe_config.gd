@@ -16,8 +16,11 @@ extends Resource
 ## enemies the slash missed, in meters.
 @export var wave_radius: float
 ## Humanoid clip played while charging (docs/specs/sheath-socket-hand-grip.md §2.7);
-## the katana waits in its sheath, which hangs from the torso.
+## the katana waits in its sheath, held in the left hand.
 @export var charge_body_clip: StringName
+## Humanoid clip played during the release cast: draw, follow-through and
+## chiburi, with the katana in the hand (docs/specs/sheathe-release-animation.md).
+@export var release_body_clip: StringName
 ## Transparency of the ground outline once fully charged (0 = opaque).
 @export var full_charge_transparency: float
 

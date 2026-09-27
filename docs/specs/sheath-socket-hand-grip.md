@@ -1,6 +1,6 @@
 # Feature: la funda sigue al torso y la mano izquierda la sostiene
 
-- **Estado:** Aprobada (2026-09-27, con la pose de carga de Envainar de §2.7), en implementación. Revisión 4 de la pose de carga (§2.7, AC670) aprobada e implementada (2026-09-27).
+- **Estado:** Aprobada (2026-09-27, con la pose de carga de Envainar de §2.7), en implementación. Revisión 4 de la pose de carga (§2.7, AC670) aprobada e implementada (2026-09-27). Revisión 5 de AC670 (la pose final del responsable) implementada (2026-09-27).
 - **Constitución:** `docs/constitution.md` v4.10.1 (sin enmienda: ver §8).
 - **Pilar (Principio I):** **combate.** La silueta del Samurái (la mano en la funda, el cuerpo que gira sobre ella) es parte de cómo se lee su guardia y cada corte. Hoy la funda y la mano quedan quietas mientras el cuerpo gira, y el golpe se lee peor.
 - **Reemplazos:** §2.1 (socket en el torso) y la curva `left_grip` de §2.4 quedan reemplazados por `sheath-in-left-hand.md` (la funda cuelga de la mano izquierda; AC661, AC662 y AC666 pasan a AC671–AC673, y AC667 a AC675).
@@ -73,7 +73,7 @@
 
 ### 2.7 Pose de carga de Envainar (agregada al aprobar, con imagen de referencia)
 
-- **Clip nuevo del perfil del Samurái: `sheathe_charge`** (loop, 2 s de respiración contenida). *Revisado cuatro veces (2026-09-27) con las referencias del responsable. La revisión 4 reemplaza la sentadilla abierta y erguida de la 3 (de frente se leía como sumo, con la katana horizontal saliendo de costado) por la estocada baja y volcada de la foto de Renji en la escalera.*
+- **Clip nuevo del perfil del Samurái: `sheathe_charge`** (loop, 2 s de respiración contenida). *Revisado cuatro veces (2026-09-27) con las referencias del responsable. La revisión 4 reemplaza la sentadilla abierta y erguida de la 3 (de frente se leía como sumo, con la katana horizontal saliendo de costado) por la estocada baja y volcada de la foto de Renji en la escalera. La revisión 5 es la pose final que el responsable ajustó a mano en `_charge_pose()` (pie derecho adelante, pie de atrás de costado, torso casi erguido, funda horizontal por detrás): la describe AC670, y lo que sigue en esta lista es la revisión 4.*
   - **Piernas: estocada baja, adelante-atrás (no abiertas a los costados).** La izquierda adelante, con la rodilla flexionada sobre el pie (el muslo casi horizontal, el pie plano ≈ 40 cm delante de la cadera). La derecha estirada atrás, con la rodilla cerca del piso y el pie ≈ 45 cm detrás de la cadera. Los pies quedan casi en línea: ≤ 30 cm de separación lateral, contra los ≈ 55 cm de la revisión 3. La cadera ≈ 30 cm más baja que de pie y girada ≈ −35°, así que el hombro izquierdo sigue adelante.
   - **Torso: volcado hacia el enemigo (≈ 40°)**, con el pecho casi de frente (poca torsión), como quien se agazapa antes de saltar. Como la funda sigue al torso (§2.1), al volcarlo **la funda deja de estar horizontal**: el mango queda adelante y abajo, junto a la cadera izquierda, y la punta sube detrás de la espalda (≥ 20° sobre la horizontal), igual que en la foto. `katana.tres` no cambia: la inclinación sale del torso.
   - **Cabeza arriba:** el cuello compensa el vuelco (≈ +35°), así la cara mira al enemigo por encima de la guardia, como en la foto.
@@ -84,16 +84,16 @@
 - **Mano derecha en el mango:** `katana.tscn` suma un `Marker3D` **`Hilt`** en el mango y `Player` lo registra como objetivo de la mano derecha (`set_hand_target(RIGHT, hilt)`). Solo `sheathe_charge` tiene `right_grip` en 1; en el resto de los clips vale 0 y la mano sigue su animación, mientras el arma sigue a la muñeca con `WeaponMount`.
 - **Quién elige el clip:** `SheatheConfig.charge_body_clip: StringName` (`&"sheathe_charge"`). `AbilityBehavior.get_body_clip(ability) -> StringName` (nuevo; por defecto `&""`) lo devuelve mientras se carga. `PlayerAnimator` pide ese clip en lugar de `idle` mientras dure la acción, si el perfil activo lo tiene, y si no, `idle`. El dash con carga sigue sonando `run`.
 - **El tajo** (`sheathe_slash`, recuperación) vuelve a `idle` con la mezcla de siempre. El primer cuadro de `sheathe_slash` se alinea con el socket **en `sheathe_charge`** (t = 0), que es la pose desde la que se suelta, en lugar de `idle`.
-- **AC670** Con Envainar cargando suena `sheathe_charge` (revisión 4; medido en t = 0, en el espacio del `Visual`, con −Z hacia el enemigo):
-  - la cadera está ≥ 20 cm más baja que en `idle` y el torso volcado hacia adelante ≥ 35°;
-  - estocada: el tobillo izquierdo está ≥ 25 cm delante de la cadera y el derecho ≥ 25 cm detrás, con ≤ 30 cm de separación lateral entre los dos;
-  - la funda sube hacia atrás: su eje, del mango a la punta, queda ≥ 20° sobre la horizontal, y la punta está detrás de la cadera;
+- **AC670** Con Envainar cargando suena `sheathe_charge` (revisión 5; medido en t = 0, en el espacio del `Visual`, con −Z hacia el enemigo y +X a la derecha del personaje):
+  - la cadera está ≥ 20 cm más baja que en `idle`, y el torso casi erguido: volcado entre 10° y 25° hacia adelante;
+  - estocada con el pie derecho adelante: el tobillo derecho está ≥ 25 cm delante de la cadera y el izquierdo ≥ 25 cm detrás, con ≤ 30 cm de separación lateral entre los dos;
+  - los pies: el derecho apunta al enemigo y el izquierdo, de costado hacia la izquierda (la punta de cada pie a ≤ 20° de −Z y de −X del `Visual`, respectivamente), los dos apoyados planos (≤ 10°);
+  - la funda cruza por detrás hacia la derecha: su eje, de la boca a la punta, apunta atrás (+Z > 0) y a la derecha (+X ≥ 0.5), a ≤ 20° de la horizontal;
   - la cabeza mira al enemigo: su frente queda a ≤ 25° de −Z del `Visual`;
   - la mano izquierda está sobre el `Grip` de la funda y la derecha sobre el `Hilt` de la katana envainada (≤ 1 mm);
-  - el cuerpo está centrado: el promedio horizontal de cadera, torso, cabeza y pies queda a ≤ 5 cm de la posición del jugador;
-  - al soltar, el primer cuadro de `sheathe_slash` coincide con el socket en esa pose (≤ 2 cm, ≤ 5°).
+  - el cuerpo está centrado: el promedio horizontal de cadera, torso, cabeza y pies queda a ≤ 7 cm de la posición del jugador.
 
-  *(Revisión 4: suben los mínimos de caída y vuelco, 12 cm → 20 cm y 20° → 35°, y se suman la estocada, la funda inclinada y la cabeza al frente. La spec sigue abierta, así que AC670 se reescribe en lugar de tomar un número nuevo.)*
+  *(Revisión 5, 2026-09-27: describe la pose final del responsable, que él mismo ajustó en `_charge_pose()`. Cambia la revisión 4: el pie derecho pasa adelante, el pie de atrás va de costado, el torso casi erguido reemplaza al vuelco de ≥ 35° y la funda cruza horizontal por detrás en lugar de subir 20°. El centrado se afloja de 5 a 7 cm, porque la pose medida queda a 6 cm. La parte del primer cuadro de `sheathe_slash` se fue con esa animación: la cubre AC723 de `sheathe-release-animation.md`. Valores medidos: caída 29 cm; vuelco 16°; pies a 38 cm adelante y 32 cm atrás, con 26 cm de separación lateral; funda 10° bajo la horizontal; cara a 5°; centro a 6 cm.)*
 
   El Guerrero y el Berserker no tienen `sheathe_charge`, y sus habilidades siguen con `idle`.
 
@@ -204,3 +204,15 @@ La API de objetivos de mano se documenta en el `SOURCE.md` del asset.
   - **AC250:** la katana cargando está en la pose del socket.
   - **AC660:** la parte de la mano pasó a AC666.
   - **AC653:** `sheathe_charge` se evalúa con la katana en la funda.
+
+### Revisión 5 de AC670 (2026-09-27)
+
+- AC670 describe ahora la pose final que el responsable ajustó en `_charge_pose()` (`samurai_profile.gd`). Medido en t = 0:
+  - la cadera 29 cm más baja que de pie y el torso volcado 16°;
+  - el pie derecho 38 cm delante de la cadera, apuntando al enemigo;
+  - el pie izquierdo 32 cm detrás, de costado hacia la izquierda;
+  - 26 cm de separación lateral entre los pies;
+  - la funda cruzando por detrás hacia la derecha, 10° bajo la horizontal;
+  - la cara a 5° del frente y el centro a 6 cm.
+- Test adaptado: `test_ac670_charging_sheathe_crouches_in_the_battojutsu_pose` (`sheath_grip_test`). Se suman la dirección y el apoyo de cada pie, y la funda horizontal hacia la derecha en lugar de subir 20°. El vuelco pasa a un rango de 10° a 25°, y el centrado se afloja a 7 cm. La parte del primer cuadro de `sheathe_slash` salió con esa animación (AC723 de `sheathe-release-animation.md`).
+- `sheath_grip_test`: 16 casos en verde.

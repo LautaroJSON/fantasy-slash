@@ -35,8 +35,12 @@
 [ext_resource type="Resource" path="res://data/player/player_animation_config.tres" id="36_animation_config"]
 [ext_resource type="Script" path="res://components/weapon_mount.gd" id="37_weapon_mount"]
 [ext_resource type="Script" path="res://components/hitstop_component.gd" id="38_hitstop"]
-[ext_resource type="Resource" path="res://data/player/hitstop_config.tres" id="39_hitstop_config"]
-[ext_resource type="Resource" path="res://data/player/attack_combo_config.tres" id="40_combo"]
+[ext_resource type="Resource" path="res://data/classes/warrior/warrior_hitstop.tres" id="39_hitstop_config"]
+[ext_resource type="Resource" path="res://data/classes/warrior/warrior_combo.tres" id="40_combo"]
+[ext_resource type="Script" path="res://components/stamina_component.gd" id="41_stamina"]
+[ext_resource type="Script" path="res://components/sprint_component.gd" id="42_sprint"]
+[ext_resource type="Resource" path="res://data/player/sprint_config.tres" id="43_sprint_config"]
+[ext_resource type="Script" path="res://components/dash/dash_vfx_host.gd" id="44_dash_vfx"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -154,41 +158,12 @@ tracks/1/keys = {
 "values": [Vector3(0.1, 1.0, -0.4), Vector3(0.45, 1.3, 0)]
 }
 
-[sub_resource type="Animation" id="Animation_sheathe_slash"]
-resource_name = "sheathe_slash"
-length = 1.0
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Visual/SwordPivot:rotation")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.3, 0.75, 1),
-"transitions": PackedFloat32Array(1, 1, 1, 1),
-"update": 0,
-"values": [Vector3(0.2803, -1.8888, 0.3483), Vector3(-0.45, 0.7, 0), Vector3(1.1, -0.7, 0), Vector3(0.93, -0.99, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Visual/SwordPivot:position")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.3, 0.75, 1),
-"transitions": PackedFloat32Array(1, 1, 1, 1),
-"update": 0,
-"values": [Vector3(-0.5067, 0.4411, -0.0342), Vector3(-0.2, 0.8, -0.4), Vector3(0.3, 1.55, -0.35), Vector3(-0.1, 0.95, -0.5)]
-}
-
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_sword"]
 _data = {
 &"thrust": SubResource("Animation_thrust"),
 &"thrust_recover": SubResource("Animation_thrust_recover"),
 &"swift_strike": SubResource("Animation_swift_strike"),
-&"swift_strike_recover": SubResource("Animation_swift_strike_recover"),
-&"sheathe_slash": SubResource("Animation_sheathe_slash")
+&"swift_strike_recover": SubResource("Animation_swift_strike_recover")
 }
 
 [node name="Player" type="CharacterBody3D"]
@@ -235,6 +210,22 @@ body = NodePath("..")
 visual = NodePath("../Visual")
 health = NodePath("../HealthComponent")
 stats = NodePath("../StatsComponent")
+
+[node name="StaminaComponent" type="Node" parent="." node_paths=PackedStringArray("stats")]
+script = ExtResource("41_stamina")
+stats = NodePath("../StatsComponent")
+config = ExtResource("43_sprint_config")
+
+[node name="SprintComponent" type="Node" parent="." node_paths=PackedStringArray("stats", "stamina")]
+script = ExtResource("42_sprint")
+stats = NodePath("../StatsComponent")
+stamina = NodePath("../StaminaComponent")
+config = ExtResource("43_sprint_config")
+
+[node name="DashVfx" type="Node" parent="." node_paths=PackedStringArray("player", "dash")]
+script = ExtResource("44_dash_vfx")
+player = NodePath("..")
+dash = NodePath("../DashComponent")
 
 [node name="SwordSwing" type="Node" parent="." node_paths=PackedStringArray("pivot", "animator")]
 script = ExtResource("20_sword_swing")

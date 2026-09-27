@@ -7,3 +7,5 @@ script = ExtResource("1_script")
 run_speed_threshold = 0.5
 weapon_mount_blend = 0.1
 attack_exit_blend = 0.35
+sprint_exit_blend = 0.2
+dash_entry_blend = 0.05

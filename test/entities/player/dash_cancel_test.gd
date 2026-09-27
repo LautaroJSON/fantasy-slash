@@ -68,7 +68,8 @@ func _wait_dash_end() -> void:
 func _slash(ability: AbilityComponent) -> void:
 	assert_bool(ability.try_cast()).is_true()
 	ability.release_charge()
-	await _physics_frames(25)
+	# Adapted (sheathe-release-animation.md): wait out the whole release cast.
+	await _physics_frames(ceili(SHEATHE.cast_duration * Engine.physics_ticks_per_second) + 5)
 	assert_bool(ability.is_casting()).is_false()
 	assert_bool(ability.is_on_cooldown()).is_true()
 

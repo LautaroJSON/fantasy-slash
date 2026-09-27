@@ -1,13 +1,18 @@
 [gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://l2ugd4dallt4"]
 
 [ext_resource type="Script" uid="uid://b44mffs4r0cov" path="res://resources/weapon_data.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://bx1elvr64q2yc" path="res://entities/player/weapons/sword.tscn" id="2_model"]
+[ext_resource type="PackedScene" path="res://entities/player/weapons/knight_sword.tscn" id="2_model"]
 [ext_resource type="Resource" path="res://data/classes/warrior/sword_swing_config.tres" id="3_swing"]
+[ext_resource type="PackedScene" path="res://entities/player/weapons/knight_shield.tscn" id="4_shield"]
 
 [resource]
 script = ExtResource("1_script")
 model = ExtResource("2_model")
 rest_position = Vector3(0.45, 1.3, 0)
 rest_rotation = Vector3(0.9, 0, 0)
-grip_position = Vector3(0, -0.04, -0.19)
+grip_position = Vector3(0, -0.04, 0.1538)
 swing = ExtResource("3_swing")
+shield = ExtResource("4_shield")
+shield_joint = &"wrist_l"
+shield_position = Vector3(-0.0437, -0.0033, 0)
+shield_rotation = Vector3(0, 1.5708, 0)

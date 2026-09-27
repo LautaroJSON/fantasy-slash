@@ -8,6 +8,8 @@
 [ext_resource type="Resource" path="res://data/classes/berserker/berserker_combo.tres" id="10_combo"]
 [ext_resource type="Resource" path="res://data/classes/berserker/berserker_hitstop.tres" id="11_hitstop"]
 
+[ext_resource type="Resource" path="res://data/classes/berserker/berserker_dash.tres" id="20_dash"]
+
 [resource]
 script = ExtResource("1_script")
 title = "Berserker"
@@ -20,3 +22,4 @@ air_slash = ExtResource("5_air_slash")
 animation_profile = &"berserker"
 combo = ExtResource("10_combo")
 hitstop = ExtResource("11_hitstop")
+dash = ExtResource("20_dash")

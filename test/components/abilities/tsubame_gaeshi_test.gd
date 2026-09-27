@@ -187,7 +187,8 @@ func test_ac393_the_hud_frame_turns_gold_while_empowered() -> void:
 	assert_bool(ability.is_empowered()).is_true()
 	assert_bool(slot.is_showing_empowered()).is_true()
 	assert_that(SLOT_CONFIG.empowered_frame_color).is_not_equal(SLOT_CONFIG.frame_color)
-	for i: int in 10:
+	# Adapted (sheathe-release-animation.md): wait out the whole release cast.
+	for i: int in ceili(SHEATHE.cast_duration / STEP) + 1:
 		ability.advance(STEP)
 	ability.reset_cooldown()
 	ability.try_cast()

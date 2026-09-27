@@ -21,3 +21,5 @@ extends Resource
 @export var combo: AttackComboConfig
 ## How the enemies hit by the combo shake.
 @export var hitstop: HitstopConfig
+## The class dash: its clip, VFX and optional extra rules (docs/specs/dash-feel.md).
+@export var dash: DashData

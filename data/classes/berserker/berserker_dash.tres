@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="DashData" format=3]
+
+[ext_resource type="Script" path="res://resources/dash_data.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/player/dash/dash_vfx_set.tres" id="2_vfx_set"]
+
+[resource]
+script = ExtResource("1_script")
+clip = &"dash"
+vfx_set = ExtResource("2_vfx_set")
