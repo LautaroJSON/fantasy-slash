@@ -2,7 +2,11 @@ extends GdUnitTestSuite
 ## The katana sheath is held in the left hand and the hands grip their targets
 ## (docs/specs/sheath-socket-hand-grip.md AC663–AC670 and
 ## docs/specs/sheath-in-left-hand.md AC671–AC677; docs/specs/katana-hand-proportions.md
+<<<<<<< HEAD
+## AC684–AC685)).
+=======
 ## AC684–AC685; docs/specs/katana-sheath-shape.md AC696)).
+>>>>>>> origin/claude/eloquent-albattani-qapzro
 
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const KatanaParts := preload("res://test/helpers/katana_parts.gd")
@@ -48,10 +52,13 @@ const POMMEL_OUT: float = 0.05
 ## mouth from the guard front face, in meters.
 const HILT_GAP: float = 0.01
 const MOUTH_GAP: float = 0.01
+<<<<<<< HEAD
+=======
 ## AC696: least gap between the sheathed blade and the sheath outline, in
 ## meters, and the least X gap between the two edges of the sheath.
 const BLADE_MARGIN: float = 0.0015
 const ACROSS_WIDTH: float = 0.03
+>>>>>>> origin/claude/eloquent-albattani-qapzro
 
 var _player: Player
 
@@ -444,6 +451,8 @@ func test_ac685_sheathed_the_guard_sits_between_the_hands() -> void:
 	var tip_local: float = (katana_model.transform * katana_model.mesh.get_aabb()).position.z
 	var tip: Vector3 = to_sheath * (pivot.global_transform * Vector3(0.0, 0.0, tip_local))
 	assert_float(tip.z).is_greater_equal(sheath_box.position.z)
+<<<<<<< HEAD
+=======
 
 
 # --- Katana sheath shape (docs/specs/katana-sheath-shape.md)
@@ -511,3 +520,4 @@ func test_ac696_the_sheathed_blade_stays_inside_the_sheath() -> void:
 		assert_bool(Geometry2D.is_point_in_polygon(q, polygon)).override_failure_message(label + " is outside the sheath").is_true()
 		assert_float(_distance_to_outline(polygon, q)).override_failure_message(label).is_greater_equal(BLADE_MARGIN)
 		assert_float(absf(s.y)).override_failure_message(label).is_less_equal(sheath_box.end.y)
+>>>>>>> origin/claude/eloquent-albattani-qapzro

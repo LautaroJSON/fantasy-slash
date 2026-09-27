@@ -47,6 +47,8 @@ const GUARD_THICKNESS_MAX: float = 0.035
 const SAMURAI_ATTACK_RANGE: float = 2.3
 const KATANA_HILT_OFFSET: float = 0.35
 const TRAIL_BASE_GAP: float = 0.05
+<<<<<<< HEAD
+=======
 ## AC694: sheath thickness range, the band where it is measured (weapon z), and
 ## how much its neck rings stand out of the body, in meters.
 const SHEATH_THICKNESS_MIN: float = 0.021
@@ -65,6 +67,7 @@ const SHEATH_CORNER_RADIUS: float = 0.015
 const SHEATH_CORNER_TOLERANCE: float = 0.003
 const SHEATH_MAX_TURN_DEGREES: float = 45.0
 const SHEATH_END_WIDTH_TOLERANCE: float = 0.002
+>>>>>>> origin/claude/eloquent-albattani-qapzro
 
 
 func _model_of(scene: PackedScene) -> MeshInstance3D:
@@ -231,6 +234,8 @@ func test_ac688_the_derived_katana_meshes_keep_the_source_topology_and_are_repro
 		_assert_same_mesh(KatanaBuilder.build(part[0]), mesh)
 	var source_md: String = FileAccess.get_file_as_string(KATANA_ASSET_DIR + "SOURCE.md")
 	assert_str(source_md).contains("build_katana_meshes.gd")
+<<<<<<< HEAD
+=======
 
 
 # --- Katana sheath shape (docs/specs/katana-sheath-shape.md)
@@ -324,3 +329,4 @@ func test_ac695_the_sheath_end_has_rounded_corners() -> void:
 	# The width where the arcs end is the width of the sheath before its end.
 	var station_width: float = outline[0].x - outline[outline.size() - 1].x
 	assert_float(end[0].x - end[end.size() - 1].x).is_equal_approx(station_width, SHEATH_END_WIDTH_TOLERANCE)
+>>>>>>> origin/claude/eloquent-albattani-qapzro

@@ -30,8 +30,10 @@ const TORSO_HALF_DEPTH: float = 0.08
 ## AC653: head center and radius in the neck joint's space.
 const HEAD_CENTER: Vector3 = Vector3(0.0, 0.21, 0.0)
 const HEAD_RADIUS: float = 0.2
-## AC678: most distance from the right shoulder joint to the grip (hand → blade base).
-const BERSERKER_SHOULDER_GAP: float = 0.3
+## AC678: the greatsword across the shoulders: its tip reaches this far to the
+## left (m) and its blade rises at most this much (degrees) from horizontal.
+const BERSERKER_TIP_LEFT: float = 1.0
+const BERSERKER_BLADE_TILT: float = 30.0
 ## AC679: the left hand on the OffHand marker.
 const HAND_ON_HILT: float = 0.001
 ## AC682: degrees the right wrist still is from the guard halfway through the exit blend.
@@ -530,13 +532,7 @@ func _weapon_marker(marker: String) -> Node3D:
 	return _player.get_node("Visual/SwordPivot").get_child(0).get_node(marker) as Node3D
 
 
-## Shortest distance from `point` to the segment `a`–`b`.
-func _distance_to_segment(point: Vector3, a: Vector3, b: Vector3) -> float:
-	var t: float = clampf((point - a).dot(b - a) / (b - a).length_squared(), 0.0, 1.0)
-	return point.distance_to(a.lerp(b, t))
-
-
-func test_ac678_the_berserker_rests_the_greatsword_on_his_shoulder() -> void:
+func test_ac678_the_berserker_rests_the_greatsword_across_his_shoulders() -> void:
 	_spawn_player(BERSERKER)
 	ComboDriver.drive_by_hand(_player)
 	var humanoid: LowPolyHumanoid = _humanoid()
@@ -551,15 +547,24 @@ func test_ac678_the_berserker_rests_the_greatsword_on_his_shoulder() -> void:
 			mount.update(1.0)
 			var label: String = "%s at %.2f s" % [clip_name, time]
 			var hand: Vector3 = to_visual * (_player.get_node("Visual/SwordPivot") as Node3D).global_position
-			var base: Vector3 = to_visual * _weapon_marker("TrailBase").global_position
 			var tip: Vector3 = to_visual * _weapon_marker("TrailTip").global_position
 			var shoulder: Vector3 = to_visual * humanoid.get_joint("shoulder_r").global_position
+			var neck: Vector3 = to_visual * humanoid.get_joint("neck").global_position
 			# One-handed: the left hand has no target.
 			assert_float(humanoid.left_hand_grip_weight).override_failure_message(label).is_zero()
-			# The grip lies on the right shoulder and the blade points back and up.
-			assert_float(_distance_to_segment(shoulder, hand, base)).override_failure_message(label).is_less_equal(BERSERKER_SHOULDER_GAP)
-			assert_float(tip.z - hand.z).override_failure_message(label).is_greater(1.0)
-			assert_float(tip.y - shoulder.y).override_failure_message(label).is_greater(0.4)
+			# The right hand is up by the head and the blade lies across the shoulders,
+			# behind the neck, rising a little to the left (like the reference sketch).
+			assert_float(hand.x).override_failure_message(label).is_greater(0.0)
+			assert_float(hand.y - shoulder.y).override_failure_message(label).is_greater(0.1)
+			assert_float(tip.x).override_failure_message(label).is_less(-BERSERKER_TIP_LEFT)
+			var blade: Vector3 = tip - hand
+			var tilt: float = rad_to_deg(atan2(blade.y, Vector2(blade.x, blade.z).length()))
+			assert_float(tilt).override_failure_message(label).is_between(0.0, BERSERKER_BLADE_TILT)
+			var behind: Vector3 = hand.lerp(tip, (neck.x - hand.x) / blade.x)
+			assert_float(behind.z).override_failure_message(label).is_greater(neck.z)
+			# The whole weapon, grip included, clears the head, the neck and the torso.
+			var grip: Vector3 = (_player.get_node("Visual/SwordPivot") as Node3D).global_position
+			assert_str(_blade_hits_body(humanoid, grip, _weapon_marker("TrailTip").global_position)).override_failure_message(label).is_empty()
 			time += SAMPLE_STEP
 
 
