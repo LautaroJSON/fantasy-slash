@@ -14,6 +14,11 @@ extends Resource
 ## Highest anchor above the enemy's feet, so a tall boss keeps its numbers in
 ## frame (docs/specs/readable-damage-numbers.md).
 @export var anchor_max_height: float
+## Height of an Affliction name above the enemy's feet, in meters; grows with
+## the body scale up to name_max_height (chest height; see the addendum of
+## docs/specs/readable-damage-numbers.md).
+@export var name_height: float
+@export var name_max_height: float
 ## Height above the blade's contact point where a hit's number appears, in meters.
 @export var contact_rise: float
 ## Sideways step between consecutive numbers, along the camera's right, in meters.
