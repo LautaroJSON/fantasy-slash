@@ -58,6 +58,7 @@ func build(humanoid: LowPolyHumanoid) -> AnimationLibrary:
 	_add_jump(lib)
 	_add_hit(lib)
 	_add_attacks(lib)
+	_add_spin(lib)
 	return lib
 
 
@@ -323,6 +324,13 @@ func _sweep_right_hold() -> Dictionary:
 	}), _h.with(LEFT_REACH, {"left_grip": 0.0})))
 
 
+## Mitad del barrido de derecha a izquierda: la hoja cruza al frente, a dos
+## manos, con todo el peso adelante (golpe 1 y Corte del Giro).
+func _sweep_front_cross() -> Dictionary:
+	return _two_hands(_body(-0.2, -6, Vector3(-22, -8, -4), HEAVY_STRIDE), {
+		"shoulder_r": Vector3(105, 8, -21), "elbow_r": Vector3(0, 0, 0), "wrist_r": Vector3(-64, -63, 0)})
+
+
 ## 1. Barrido horizontal amplio de derecha a izquierda: saca el mandoble del
 ## hombro, se enrosca con la hoja atrás a la derecha y la suelta con todo el
 ## cuerpo. Desde el *cancel point* queda en la pose con la que empieza el golpe 2.
@@ -335,8 +343,7 @@ func _add_wide_sweep(lib: AnimationLibrary) -> void:
 			"shoulder_r": Vector3(27, -61, -62), "elbow_r": Vector3(59, 0, 0), "wrist_r": Vector3(-61, -60, 0)})],
 		[0.3, _two_hands(_body(-0.18, -34, Vector3(-16, -68, 8), COILED_LEGS), {  # carga el peso
 			"shoulder_r": Vector3(25, -58, -64), "elbow_r": Vector3(63, 0, 0), "wrist_r": Vector3(-63, -59, 0)})],
-		[0.36, _two_hands(_body(-0.2, -6, Vector3(-22, -8, -4), HEAVY_STRIDE), {  # la hoja cruza al frente
-			"shoulder_r": Vector3(105, 8, -21), "elbow_r": Vector3(0, 0, 0), "wrist_r": Vector3(-64, -63, 0)})],
+		[0.36, _sweep_front_cross()],
 		[0.43, _two_hands(_body(-0.21, 16, Vector3(-24, 30, -8), HEAVY_STRIDE), {
 			"shoulder_r": Vector3(64, -4, -7), "elbow_r": Vector3(108, 0, 0), "wrist_r": Vector3(-151, -6, 0)})],
 		[0.5, _two_hands(_body(-0.22, 28, Vector3(-28, 60, -12), HEAVY_STRIDE), {
@@ -392,3 +399,53 @@ func _add_woodcutter(lib: AnimationLibrary) -> void:
 		[1.3, _h.with(_stance(RAISED_UPRIGHT), {"hips_pos": Vector3(0, -0.1, 0)})],
 		[1.45, _stance()],
 	], false, false, _h.strike_events(0.62, 0.74, 1.1, 1.45)))
+
+
+# ---------------------------------------------------------------- GIRO
+
+## Giro (docs/specs/spin-visual-rework.md §2.1): el mandoble a dos manos, con
+## los brazos casi estirados a la derecha y un poco adelante; la hoja horizontal
+## a la altura de la cintura (~1 m), apuntando afuera, así el filo va adelante
+## en el giro (el Visual gira en sentido antihorario visto desde arriba). El
+## torso se inclina y se abre hacia la hoja, con el peso bajo. La pose del brazo
+## derecho sale de la posición de la mano y la dirección de la hoja buscadas.
+const SPIN_ARM := {
+	"shoulder_r": Vector3(63, 54, 24), "elbow_r": Vector3(49, 0, 0), "wrist_r": Vector3(-34, -106, -20),
+}
+## Pisoteo del giro: apoyado en la izquierda, la derecha empuja por afuera.
+const SPIN_LEGS_LEFT := {
+	"hip_l": Vector3(26, 0, -26), "knee_l": Vector3(-44, 0, 0), "ankle_l": Vector3(16, 0, 20),
+	"hip_r": Vector3(-14, 0, 30), "knee_r": Vector3(-34, 0, 0), "ankle_r": Vector3(44, 0, -22),
+}
+## Pisoteo del giro: apoyado en la derecha, la izquierda cruza por detrás.
+const SPIN_LEGS_RIGHT := {
+	"hip_l": Vector3(-10, 0, -30), "knee_l": Vector3(-38, 0, 0), "ankle_l": Vector3(40, 0, 20),
+	"hip_r": Vector3(22, 0, 24), "knee_r": Vector3(-44, 0, 0), "ankle_r": Vector3(18, 0, -18),
+}
+
+
+## Pose del giro con las piernas `legs` y la cadera `drop` metros más abajo.
+func _spin_pose(drop: float, legs: Dictionary) -> Dictionary:
+	return _two_hands(_body(drop, -24, Vector3(-12, -30, 6), legs), SPIN_ARM)
+
+
+func _add_spin(lib: AnimationLibrary) -> void:
+	# Loop de dos pisadas (0.5 s): el giro lo da el Visual, el clip solo sostiene
+	# el mandoble y arrastra los pies.
+	var left_foot := _spin_pose(-0.18, SPIN_LEGS_LEFT)
+	lib.add_animation("spin", _h.make_clip([
+		[0.0, left_foot],
+		[0.25, _spin_pose(-0.14, SPIN_LEGS_RIGHT)],
+		[0.5, left_foot],
+	], true, true))
+
+	# Corte del Giro (§2.3): arranca en la pose del giro, barre a dos manos de
+	# derecha a izquierda cruzando al frente, suelta la izquierda y cae en la
+	# pisada del sprint (la regla de conexión del dash, AC786). Se estira a la
+	# duración del dash.
+	lib.add_animation("spin_dash_slash", _h.make_clip([
+		[0.0, left_foot],
+		[0.08, _sweep_front_cross()],
+		[0.15, _sweep_left_hold()],
+		[0.3, _sprint_contact(1)],
+	], false, true))

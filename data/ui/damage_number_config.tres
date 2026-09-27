@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="DamageNumberConfig" format=3]
 
 [ext_resource type="Script" path="res://resources/damage_number_config.gd" id="1_script"]
+[ext_resource type="FontVariation" path="res://data/ui/over_time_damage_font.tres" id="2_over_time_font"]
 
 [resource]
 script = ExtResource("1_script")
@@ -20,3 +21,4 @@ crit_lifetime = 1.0
 crit_rise_speed = 1.0
 crit_suffix = "!"
 fade_start = 0.55
+over_time_font = ExtResource("2_over_time_font")

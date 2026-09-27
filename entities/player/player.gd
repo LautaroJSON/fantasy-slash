@@ -174,6 +174,16 @@ func get_body_clip() -> StringName:
 	return clip if clip != &"" else ultimate_ability.get_body_clip()
 
 
+## Clip the body plays while dashing: the one an ability asks for (e.g. the
+## Spin's dash slash, docs/specs/spin-visual-rework.md §2.3), else the class
+## dash clip.
+func get_dash_clip() -> StringName:
+	var clip: StringName = basic_ability.get_dash_clip()
+	if clip == &"":
+		clip = ultimate_ability.get_dash_clip()
+	return clip if clip != &"" else dash.get_clip()
+
+
 ## True while an ability's cast keeps the weapon in the humanoid's hand, so
 ## WeaponMount keeps following it (docs/specs/sheathe-release-animation.md).
 func is_weapon_in_hand_cast() -> bool:
@@ -493,6 +503,8 @@ func _apply_combat_style(character_class: CharacterClassData) -> void:
 	_humanoid.set_profile(character_class.animation_profile)
 	attack.combo = character_class.combo
 	_hitstop.config = character_class.hitstop
+	basic_ability.hitstop = character_class.hitstop
+	ultimate_ability.hitstop = character_class.hitstop
 
 
 ## The class weapon is fixed: placed once on the pivot, held in the humanoid's

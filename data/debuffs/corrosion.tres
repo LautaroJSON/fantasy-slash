@@ -10,4 +10,4 @@ effect = 1
 duration = 5.0
 max_stacks = 4
 icon = ExtResource("9_glyph")
-icon_color = Color(0.55, 0.35, 0.8, 1)
+icon_color = Color(0.7, 0.7, 0.72, 1)

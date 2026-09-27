@@ -297,13 +297,14 @@ func test_ac250_the_outline_grows_with_the_charge_and_fades_after_the_hit() -> v
 	var indicator: AbilityRectIndicator = (_ability.get_behavior() as SheatheAbility).get_indicator()
 	_ability.try_cast()
 	assert_bool(indicator.is_showing()).is_true()
-	var far_edge: MeshInstance3D = indicator.get_segment(AbilityRectIndicator.Edge.FAR)
-	assert_float(-far_edge.position.z).is_equal_approx(SHEATHE.hit_range * 0.3, TOLERANCE)
+	# Adapted (docs/specs/spin-visual-rework.md §2.6): the area is one fill, so
+	# its length replaces the far edge's position.
+	assert_float(indicator.get_length()).is_equal_approx(SHEATHE.hit_range * 0.3, TOLERANCE)
 	_advance(1.5)
-	assert_float(-far_edge.position.z).is_equal_approx(SHEATHE.hit_range * 0.65, TOLERANCE)
+	assert_float(indicator.get_length()).is_equal_approx(SHEATHE.hit_range * 0.65, TOLERANCE)
 	assert_float(indicator.get_transparency()).is_not_equal(SHEATHE_CONFIG.full_charge_transparency)
 	_advance(1.5 + STEP)
-	assert_float(-far_edge.position.z).is_equal_approx(SHEATHE.hit_range, TOLERANCE)
+	assert_float(indicator.get_length()).is_equal_approx(SHEATHE.hit_range, TOLERANCE)
 	# The full-charge milestone pulses the outline first (sheathe-feel.md).
 	indicator.advance(indicator.config.pulse_duration)
 	assert_float(indicator.get_transparency()).is_equal_approx(SHEATHE_CONFIG.full_charge_transparency, TOLERANCE)

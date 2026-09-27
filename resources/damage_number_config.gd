@@ -33,3 +33,6 @@ extends Resource
 @export var crit_suffix: String
 ## Fraction of the lifetime after which the number starts fading out.
 @export var fade_start: float
+## Font of damage-over-time ticks (poison, bleeding): the default font slanted
+## into italics (docs/specs/affliction-damage-colors.md).
+@export var over_time_font: FontVariation

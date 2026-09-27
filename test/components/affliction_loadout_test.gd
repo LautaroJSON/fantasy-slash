@@ -15,6 +15,8 @@ const BURST_BASIC: AfflictionUpgradeData = preload("res://data/afflictions/cards
 const FROST_BASIC: AfflictionUpgradeData = preload("res://data/afflictions/cards/frost_basic_attack.tres")
 const FROST_ABILITY: AfflictionUpgradeData = preload("res://data/afflictions/cards/frost_ability.tres")
 const CORROSION_BASIC: AfflictionUpgradeData = preload("res://data/afflictions/cards/corrosion_basic_attack.tres")
+const BLEEDING_BASIC: AfflictionUpgradeData = preload("res://data/afflictions/cards/bleeding_basic_attack.tres")
+const BLEEDING_STATUS: DebuffData = preload("res://data/debuffs/bleeding.tres")
 const POISON_STATUS: DebuffData = preload("res://data/debuffs/poison.tres")
 const FROST_STATUS: DebuffData = preload("res://data/debuffs/frost.tres")
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
@@ -164,7 +166,7 @@ func test_ac875_burst_hits_enemies_in_range_without_being_a_hit() -> void:
 		enemy.health.setup(1000.0, 0.0)
 	_player.apply_upgrade(BURST_BASIC)
 	var bursts: Array[Enemy] = []
-	_player.afflictions.burst_hit.connect(func(enemy: Enemy, _applied: float) -> void: bursts.append(enemy))
+	_player.afflictions.burst_hit.connect(func(enemy: Enemy, _applied: float, _type: AfflictionData) -> void: bursts.append(enemy))
 	var hits: Array[int] = [0]
 	_player.attack.enemy_hit.connect(func(_e: Enemy, _a: float, _c: bool) -> void: hits[0] += 1)
 	var healed_from: float = _player.health.current_health
@@ -254,3 +256,50 @@ func test_ac889_the_triggered_status_shows_in_the_overlay() -> void:
 	for hit: int in 10:
 		_combo_hit(enemy)
 	assert_str(probe.row().icon(0).get_stack_text()).is_equal("3")
+
+
+## docs/specs/frost-freeze.md: Frost freezes a common enemy and chills a boss.
+func test_ac942_ac943_frost_freezes_commons_and_chills_bosses() -> void:
+	_spawn_player(WARRIOR)
+	var common: Enemy = _spawn_enemy(Vector3.ZERO)
+	var boss: Enemy = _spawn_enemy(Vector3(5.0, 0.0, 0.0))
+	boss.stats = VERDUGO
+	_player.apply_upgrade(FROST_BASIC)
+	for hit: int in 5:
+		_combo_hit(common)
+	assert_float(common.debuffs.get_speed_scale()).is_equal(0.0)
+	assert_float(common.debuffs.get_remaining_seconds(FROST_STATUS.id)).is_equal_approx(1.5, 0.001)
+	for hit: int in 10:
+		_combo_hit(boss)
+	assert_float(boss.debuffs.get_speed_scale()).is_equal_approx(0.6, 0.001)
+	assert_float(boss.debuffs.get_remaining_seconds(FROST_STATUS.id)).is_equal_approx(5.0, 0.001)
+
+
+## docs/specs/affliction-bleed.md: every filled bar adds a stack; bosses a tenth.
+func test_ac963_ac964_bleeding_from_the_bar() -> void:
+	_spawn_player(WARRIOR)
+	var common: Enemy = _spawn_enemy(Vector3.ZERO)
+	common.health.setup(1000.0, 0.0)
+	var boss: Enemy = _spawn_enemy(Vector3(5.0, 0.0, 0.0))
+	boss.stats = VERDUGO
+	boss.health.setup(1000.0, 0.0)
+	_player.apply_upgrade(BLEEDING_BASIC)
+	for hit: int in 10:
+		_combo_hit(common)
+		_combo_hit(boss)
+	assert_int(common.debuffs.get_stacks(BLEEDING_STATUS.id)).is_equal(2)
+	var before: float = common.health.current_health
+	common.debuffs.advance(1.0)
+	assert_float(before - common.health.current_health).is_equal_approx(30.0, 0.001)
+	before = boss.health.current_health
+	boss.debuffs.advance(1.0)
+	assert_float(before - boss.health.current_health).is_equal_approx(3.0, 0.001)
+
+
+func test_ac967_bleeding_takes_a_slot_of_the_cap() -> void:
+	_spawn_player(WARRIOR)
+	_player.apply_upgrade(POISON_BASIC)
+	_player.apply_upgrade(BURST_BASIC)
+	_player.apply_upgrade(BLEEDING_BASIC)
+	assert_int(_player.afflictions.get_type_count()).is_equal(3)
+	assert_bool(_player.is_maxed(FROST_BASIC)).is_true()

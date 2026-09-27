@@ -1,14 +1,13 @@
 class_name AbilityIndicatorConfig
 extends Resource
-## Look and timing of an ability's hitbox indicator on the ground.
+## Look and timing of an ability's hitbox area on the ground (a white, very
+## transparent fill: at most 0.3 opacity at rest and 0.5 in a pulse, Principle II).
 
-## Width of each outline line on the ground, in meters.
-@export var line_width: float
-## Vertical thickness of each segment, in meters.
+## Vertical thickness of the flat fill, in meters.
 @export var line_thickness: float
 ## Height above the player's feet, in meters (avoids z-fighting with the floor).
 @export var ground_offset: float
-## Seconds the outline takes to fade out after the hit.
+## Seconds the area takes to fade out after the hit.
 @export var fade_duration: float
 ## Transparency while casting and at the start of the fade (0 = opaque, 1 = invisible).
 @export var start_transparency: float

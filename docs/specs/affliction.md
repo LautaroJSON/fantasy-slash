@@ -1,6 +1,6 @@
 # Feature: Aflicción (acumulación de estados en los enemigos)
 
-- **Estado:** **Implementada** (2026-09-27). Aprobada con las decisiones del responsable (§3) y los supuestos confirmados. ACs: AC851–AC898 (reservados AC851–AC900; AC899–AC900 quedan libres). Tests: solo los de esta spec y los que tocan (a pedido del responsable); ver §6 y §11. Constitución enmendada a 4.17.0 (aplicada).
+- **Estado:** **Implementada** (2026-09-27). Aprobada con las decisiones del responsable (§3) y los supuestos confirmados. ACs: AC851–AC898 (reservados AC851–AC900; AC899–AC900 quedan libres). Tests: solo los de esta spec y los que tocan (a pedido del responsable); ver §6 y §11. Constitución enmendada a 4.17.0 (aplicada). Escarcha (congela a los comunes, lentitud a los bosses) y los colores de Corrosión y Estallido fueron revisados por `frost-freeze.md`.
 - **Constitución:** `docs/constitution.md` v4.16.0 (con la enmienda de `status-icons.md` aplicada) → **enmienda MINOR a 4.17.0** (Principios II y III, ver §9).
 - **Pilar (Principio I):** **progresión** y **combate.**
   - Progresión: cada carta violeta suma una Aflicción a una fuente (básicos o habilidad) y el tope de 3 tipos obliga a armar la build. El stat "Acumulación de Aflicción" las potencia a todas.

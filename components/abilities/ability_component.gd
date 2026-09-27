@@ -16,6 +16,9 @@ signal charge_milestone_reached(index: int, is_full: bool)
 signal enemy_hit(enemy: Enemy, applied: float, is_crit: bool)
 ## Emitted when the ability gains or spends an empowered cast (e.g. Tsubame Gaeshi).
 signal empowered_changed(active: bool)
+## Emitted when is_trailing() may have changed outside the cast (e.g. the
+## Spin's dash slash starts or ends).
+signal trail_changed
 
 ## Float tolerance when comparing charge times (the steps add up only
 ## approximately). Structural, not a design value.
@@ -43,6 +46,12 @@ const TIME_EPSILON: float = 0.0001
 ## Lets abilities act on the player's dash (e.g. reset its cooldown) or follow
 ## a dash that cut their cast short (e.g. the Spin's slash).
 @export var dash: DashComponent
+## Lets abilities shake the camera on impact (e.g. the Spin's turns).
+@export var camera: ThirdPersonCamera
+## How the enemies an ability hits shake (the class's, set by Player).
+@export var hitstop: HitstopConfig
+## Lets abilities pause the player's dash clip on impact (e.g. the Spin's dash slash).
+@export var animator: PlayerAnimator
 
 var _data: AbilityData = null
 var _behavior: AbilityBehavior = null
@@ -316,6 +325,27 @@ func get_body_clip() -> StringName:
 	if _behavior == null or not (is_charging() or is_casting()):
 		return &""
 	return _behavior.get_body_clip(self)
+
+
+## Clip that replaces the class dash clip while the ability rides a dash
+## (e.g. the Spin's dash slash); &"" = none.
+func get_dash_clip() -> StringName:
+	if _behavior == null:
+		return &""
+	return _behavior.get_dash_clip(self)
+
+
+## True while the weapon trail follows this ability: during the cast, or after
+## it while the behavior extends it (e.g. the Spin's dash slash).
+func is_trailing() -> bool:
+	if _behavior == null:
+		return false
+	return is_casting() or _behavior.extends_trail(self)
+
+
+## Behaviors call it when extends_trail() changes.
+func notify_trail_changed() -> void:
+	trail_changed.emit()
 
 
 ## True while the running cast keeps the weapon in the hand
