@@ -1,7 +1,7 @@
 # Feature: re-work visual del Giro
 
-- **Estado:** Propuesta, revisión 2 (2026-09-27). ACs **AC861–AC880**, reservados en `CLAUDE.md`. Se dejan libres AC801–AC860 para `warrior-abilities-rework.md`, que se escribe en paralelo en otra sesión.
-- **Constitución:** `docs/constitution.md` v4.15.x. Propone una enmienda **MINOR** (§7).
+- **Estado:** **Implementada** (2026-09-27). `spin_visual_rework_test` 18/18 en verde. La suite completa no suma fallas nuevas: las que quedan ya fallaban antes (§11). Smoke test del menú y de la arena sin errores ni warnings nuevos. Capturas con Forward+ revisadas. ACs **AC861–AC877** (AC878–AC880 sin usar), reservados en `CLAUDE.md`. Se dejan libres AC801–AC860 para `warrior-abilities-rework.md`, que se escribe en paralelo en otra sesión.
+- **Constitución:** `docs/constitution.md` v4.15.x. Enmienda **MINOR** a 4.16.0 aprobada con esta spec (§7).
 - **Pilar (Principio I):** **combate.** El Giro es la habilidad del Berserker, pero hoy no se lee:
   - el cuerpo gira quieto en `idle`;
   - el mandoble flota lejos de la mano;
@@ -306,3 +306,66 @@ Otros cambios del Principio II:
    - checklist de la constitución en esta spec, estado **Implementada** y el próximo AC libre en `CLAUDE.md`.
 
    **Nota:** en esta sesión en la nube no está el Godot de Windows. Voy a intentar instalar un Godot 4.7.2 para Linux. Si no se puede, los pasos 3 y 8 (capturas, suite y smoke test) se corren en tu máquina.
+
+
+## 11. Notas de implementación (cierre)
+
+**Entorno de prueba.** Se corrió en la sesión en la nube con Godot 4.7.2 para Linux. Faltaban dos cosas del repo, que se usaron solo en la copia de trabajo:
+- `addons/gdUnit4/bin/`: `.gitignore` excluye `bin/`; se tomó de gdUnit4 v6.2.0.
+- Los `.uid`: también están en `.gitignore`, así que el import avisa "invalid UID" en recursos que ya existían. No es de esta spec.
+
+Las capturas se hicieron con Forward+ sobre Vulkan por software (lavapipe, bajo Xvfb). El renderer de compatibilidad ignora `GeometryInstance3D.transparency` y muestra el área opaca, así que no sirve para revisar este VFX.
+
+**Suite completa: base y con esta spec.**
+
+| Corrida | Tests | Con falla |
+|---|---|---|
+| Base (`HEAD` antes de esta spec, con `-c` para no cortar en la primera falla) | 895 | 34 |
+| Con esta spec | 913 (18 nuevos) | 35 |
+
+- **Fallas nuevas: ninguna.** Las dos que aparecen solo en la corrida con la spec son inestables también en la base (fallan en corridas alternas aisladas, con y sin los cambios):
+  - `attack_component_test` AC9;
+  - `hitstop_test` AC619–AC621.
+- **Arreglada por esta spec:** `spin_test` AC189. Verificaba la pose fija del mandoble (`blade_position`), que esta spec reemplaza. Se adaptó: ahora verifica el arma en la mano durante el giro y después, y toma el tiempo de la vuelta de los datos.
+- **Fallas previas que siguen**, por datos retocados sin actualizar sus tests. Por ejemplo, `spin.tres` tiene `tick_interval` 0.8 y `cast_duration` 4, y los tests esperan 1.0 y 3. Esos tests verifican justamente esos números, así que no se adaptaron:
+  - `spin_test` (6);
+  - `spin_golden_upgrades_test` (4);
+  - `spin_tornado_test` (4);
+  - `air_slash_test` (5);
+  - `buff_component_test` (1);
+  - `weapon_reach_test` (2);
+  - `weapon_trail_test` AC217;
+  - `dash_cancel_test` (2);
+  - `warrior_sword_and_shield_test` AC751;
+  - `arena_waves_test`, `berserker_run_test`, `boss_challenge_run_test` (3), `samurai_run_test` y `upgrade_ban_run_test`.
+
+  Corregirlas (los tests o los datos) es una decisión de balance del responsable.
+- **AC878/AC879:** se cumplen como "sin fallas nuevas respecto de la base". La premisa de la spec (suites en verde antes del cambio) no era cierta.
+
+**Tests adaptados** (sin cambiar lo que verifican):
+- `spin_dash_slash_test` AC567 y AC573: el barrido lo dibuja el clip `spin_dash_slash`, no `SwordSwing` con arco y duración.
+- `thrust_indicator_test`, `sheathe_test` AC250 y `swift_strike_test` AC79: el área es un solo relleno; su largo, ancho y centro reemplazan a los cuatro bordes.
+
+**Diferencias con el diseño:**
+- `SpinVortexVfx.follow(visual)` no recibe la punta de la hoja. El polvo sale de `dust_offset` (datos) en el espacio del jugador, y el vórtice sigue al `Visual` solo desde `begin()` hasta `finish()`.
+- Se sumó la señal `pulsed`, para contar los pulsos en AC870.
+- La pose del brazo derecho del giro (`SPIN_ARM`) salió de buscar la mano en (0.45, 1.0, −0.3) m y la hoja en (0.95, 0, −0.3), en el espacio del `Visual`.
+- `spin_dash_slash` reutiliza `_sweep_front_cross()` (extraída del golpe 1, mismos valores) y `_sweep_left_hold()`.
+
+**Observado en las capturas:** al empezar el Giro, la estela dibuja el paso del mandoble del hombro a la cintura (≈ 0.1 s), igual que en los golpes del combo, que también encienden la estela desde la anticipación. Se deja así.
+
+### Review de la constitución (cierre)
+- [x] **I:** combate. El Giro se lee: el cuerpo sostiene el arma, el área muestra el alcance real y cada vuelta marca su golpe.
+- [x] **II:** primitivas (`CylinderMesh` y `BoxMesh` planos, `SphereMesh` en `CPUParticles3D`) con materiales `.tres` compartidos.
+  - El área es blanca, con opacidad 0.25 en reposo y 0.45 en el pulso, según la enmienda 4.16.0.
+  - El polvo usa el tierra registrado.
+  - Sin shaders ni texturas.
+- [x] **III:** clips, *hit lag* y sacudidas en `spin_config.tres`; el área, el pulso y el polvo en `spin_vortex_config.tres`; las transparencias de los indicadores en sus `.tres`. Sin literales de diseño en los scripts, y ningún Resource se muta en runtime.
+- [x] **IV:** tipado completo. `_process` y `_physics_process` solo delegan (`advance`, `advance_dash_hold` y `update`).
+- [x] **V:** el vórtice y el relleno se crean una vez en `_ready`. Por cuadro solo se copia una transformación y se asignan escala y transparencia, sin *allocations* ni búsquedas de nodos.
+- [x] **VI:** sin input nuevo.
+- [x] **VII:**
+  - las vueltas no pausan al jugador (enmienda 4.16.0);
+  - el Corte pausa solo su clip, una vez, y el dash conserva su recorrido, su duración y su invulnerabilidad (AC875);
+  - no se toca `Engine.time_scale`.
+- [x] **Calidad:** el proyecto importa sin errores nuevos. AC861–AC877 en verde y ninguna falla nueva en la suite completa (ver arriba).
