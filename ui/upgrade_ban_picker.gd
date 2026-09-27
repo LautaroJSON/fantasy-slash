@@ -16,6 +16,7 @@ var _offered: Array[UpgradeCard] = []
 ## Built once in _ready and shared by every ability card.
 var _ability_style: CardStyle
 var _unique_style: CardStyle
+var _affliction_style: CardStyle
 
 @onready var _title: Label = %Title
 @onready var _cards: GridContainer = %Cards
@@ -27,6 +28,7 @@ func _ready() -> void:
 	hide()
 	_ability_style = CardStyle.new(config.ability_card_color, config.ability_card_hover_color, config.ability_card_font_color, config)
 	_unique_style = CardStyle.new(config.unique_card_color, config.unique_card_hover_color, config.unique_card_font_color, config)
+	_affliction_style = CardStyle.new(config.affliction_card_color, config.affliction_card_hover_color, config.affliction_card_font_color, config)
 	_back_button.pressed.connect(cancel)
 
 
@@ -84,6 +86,8 @@ func _make_card(upgrade: UpgradeCard) -> Button:
 		_ability_style.apply_to(card)
 	elif upgrade is AbilityUniqueUpgradeData:
 		_unique_style.apply_to(card)
+	elif upgrade is AfflictionUpgradeData:
+		_affliction_style.apply_to(card)
 	return card
 
 

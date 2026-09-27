@@ -45,3 +45,7 @@ extends Resource
 @export_group("Feedback")
 ## Camera shake strength on impact, in [0, 1].
 @export var impact_shake: float
+
+@export_group("Affliction")
+## Scale of the Affliction build-up of its hits (a basic-attack source; docs/specs/affliction.md).
+@export var affliction_scale: float

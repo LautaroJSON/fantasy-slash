@@ -34,19 +34,29 @@ func after_test() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
-func test_ac322_buff_shows_time_in_the_centre_and_stacks_in_the_corner() -> void:
+## status-icons.md (AC906) replaced the seconds in the centre with the clock
+## alone: what this checks (stacks, stack loss, hiding and processing) is kept.
+func test_ac322_ac906_buff_shows_stacks_and_clock_without_time() -> void:
 	var bar: BuffBar = _hud.get_node("%BuffBar") as BuffBar
 	assert_bool(bar.is_processing()).is_false()
 	_player.buffs.add_stack(CONCUSSION)
 	_player.buffs.add_stack(CONCUSSION)
 	assert_bool(bar.is_processing()).is_true()
-	assert_str(bar.get_time_text(0)).is_equal("2.5")
+	var icon: StatusIconView = bar.get_icon(0)
+	assert_float(icon.get_side()).is_equal(36.0)
+	assert_object(icon.get_glyph_texture()).is_same(CONCUSSION.icon)
 	assert_str(bar.get_stack_text(0)).is_equal("2")
+	assert_float(icon.get_clock_fraction()).is_equal_approx(1.0, TOLERANCE)
+	var labels: int = 0
+	for child: Node in icon.get_children():
+		if child is Label:
+			labels += 1
+	assert_int(labels).is_equal(1)
 	_player.buffs.advance(1.0)
 	bar.update_times()
-	assert_str(bar.get_time_text(0)).is_equal("1.5")
+	assert_float(icon.get_clock_fraction()).is_equal_approx(0.6, TOLERANCE)
 	_player.buffs.advance(1.5)
-	assert_str(bar.get_time_text(0)).is_equal("2.5")
+	assert_float(icon.get_clock_fraction()).is_equal_approx(1.0, TOLERANCE)
 	assert_str(bar.get_stack_text(0)).is_equal("1")
 	_player.buffs.advance(CONCUSSION.stack_duration)
 	assert_int(bar.get_visible_icon_count()).is_equal(0)
@@ -69,18 +79,21 @@ func _start_titan() -> void:
 	wave_manager.start_boss_wave(TITAN)
 
 
-func test_ac325_boss_bar_shows_debuff_seconds_on_the_icon() -> void:
+## status-icons.md (AC907): the seconds on the icon are gone; the clock tells
+## the time left and the icons measure 28 px. What this checks is kept.
+func test_ac325_boss_bar_shows_debuff_time_on_the_icon() -> void:
 	_start_titan()
 	var registry: EnemyRegistry = _arena.get_node("EnemyRegistry") as EnemyRegistry
 	var boss: Enemy = registry.get_active()[0]
 	var bar: BossHealthBar = (_hud.get_node("%BossBars") as BossBarStack).get_bar(0)
 	boss.debuffs.apply(WEAKEN, 0.05)
 	assert_int(bar.get_visible_debuff_count()).is_equal(1)
-	assert_str(bar.get_debuff_time_text(0)).is_equal("4.0")
+	assert_float(bar.get_debuff_icon(0).get_clock_fraction()).is_equal_approx(1.0, TOLERANCE)
 	boss.debuffs.advance(1.5)
 	bar.advance(0.0)
-	assert_str(bar.get_debuff_time_text(0)).is_equal("2.5")
-	assert_float(BOSS_BAR_CONFIG.debuff_icon_size_px).is_equal(24.0)
+	assert_float(bar.get_debuff_icon(0).get_clock_fraction()).is_equal_approx(0.625, TOLERANCE)
+	assert_float(BOSS_BAR_CONFIG.debuff_icon_size_px).is_equal(28.0)
+	assert_float(bar.get_debuff_icon(0).get_side()).is_equal(28.0)
 
 
 func test_ac349_buff_clock_covers_the_current_stack_time() -> void:
@@ -89,7 +102,8 @@ func test_ac349_buff_clock_covers_the_current_stack_time() -> void:
 	_player.buffs.add_stack(CONCUSSION)
 	var clock: CooldownClock = bar.get_clock(0)
 	assert_int(clock.shape).is_equal(CooldownClock.Shape.SQUARE)
-	assert_object(bar.get_icon(0).get_child(0)).is_same(clock)
+	# status-icons.md: the clock is the third child of the shared icon (over the glyph).
+	assert_object(bar.get_icon(0).get_child(2)).is_same(clock)
 	assert_float(clock.get_fraction()).is_equal_approx(1.0, TOLERANCE)
 	_player.buffs.advance(1.0)
 	bar.update_times()
@@ -98,7 +112,9 @@ func test_ac349_buff_clock_covers_the_current_stack_time() -> void:
 	assert_float(clock.get_fraction()).is_equal_approx(1.0, TOLERANCE)
 
 
-func test_ac350_boss_debuff_clock_and_no_clock_on_3d_icons() -> void:
+## status-icons.md: the 3D enemy icons are gone (the enemy overlay, AC909,
+## replaces them), so only the boss clock part of AC350 remains.
+func test_ac350_boss_debuff_clock() -> void:
 	_start_titan()
 	var registry: EnemyRegistry = _arena.get_node("EnemyRegistry") as EnemyRegistry
 	var boss: Enemy = registry.get_active()[0]
@@ -110,11 +126,6 @@ func test_ac350_boss_debuff_clock_and_no_clock_on_3d_icons() -> void:
 	boss.debuffs.advance(1.5)
 	bar.advance(0.0)
 	assert_float(bar.get_debuff_clock(0).get_fraction()).is_equal_approx(0.625, TOLERANCE)
-	var icons: DebuffIconRow = boss.get_node("HealthBar/DebuffIcons") as DebuffIconRow
-	for i: int in icons.get_child_count():
-		var icon: Node = icons.get_child(i)
-		for child: Node in icon.get_children():
-			assert_bool(child is CooldownClock).is_false()
 
 
 func test_ac384_boss_debuff_icon_shows_stacks() -> void:

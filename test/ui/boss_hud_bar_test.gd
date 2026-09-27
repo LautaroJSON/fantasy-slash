@@ -140,7 +140,12 @@ func test_ac162_bleed_shows_an_icon_with_its_color() -> void:
 	assert_int(bar.get_visible_debuff_count()).is_equal(0)
 	_boss(0).debuffs.apply(BLEED, 0.01)
 	assert_int(bar.get_visible_debuff_count()).is_equal(1)
-	assert_that(bar.get_debuff_color(0)).is_equal(BLEED.icon_material.albedo_color)
+	# status-icons.md (AC907): the flat color became the shared 28 px icon with its glyph.
+	var icon: StatusIconView = bar.get_debuff_icon(0)
+	assert_object(icon.get_glyph_texture()).is_same(BLEED.icon)
+	assert_that(icon.get_glyph_color()).is_equal(BLEED.icon_color.lightened(icon.config.glyph_lighten))
+	assert_float(icon.get_side()).is_equal(28.0)
+	assert_str(icon.get_stack_text()).is_empty()
 	_boss(0).debuffs.clear()
 	assert_int(bar.get_visible_debuff_count()).is_equal(0)
 
@@ -175,4 +180,4 @@ func test_ac541_the_colmena_bar_shows_the_shield_icon() -> void:
 	var bar: BossHealthBar = _stack.get_bar(0)
 	assert_bool(_boss(0).debuffs.has_debuff(SHIELD.id)).is_true()
 	assert_int(bar.get_visible_debuff_count()).is_equal(1)
-	assert_that(bar.get_debuff_color(0)).is_equal(SHIELD.icon_material.albedo_color)
+	assert_object(bar.get_debuff_icon(0).get_glyph_texture()).is_same(SHIELD.icon)

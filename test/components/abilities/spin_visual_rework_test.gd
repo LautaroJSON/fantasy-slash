@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## The Spin's body, weapon, vortex and impact feedback, and the white area of
-## the abilities on the ground (docs/specs/spin-visual-rework.md AC861–AC877).
+## the abilities on the ground (docs/specs/spin-visual-rework.md AC961–AC977).
 ## Poses are measured in the Visual's space (-Z forward, +X to the right).
 
 const TestWorld := preload("res://test/helpers/test_world.gd")
@@ -20,17 +20,17 @@ const AIR_SLASH_INDICATOR: AbilityIndicatorConfig = preload("res://data/classes/
 const ENEMY_HEALTH: float = 10000.0
 const STEP: float = 0.05
 const TOLERANCE: float = 0.0001
-## AC862: pivot on the hand pose, in meters.
+## AC962: pivot on the hand pose, in meters.
 const GRIP_TOLERANCE: float = 0.001
-## AC864: blade height band, torso capsule radius (as AC751) and sampling.
+## AC964: blade height band, torso capsule radius (as AC751) and sampling.
 const BLADE_LOW: float = 0.6
 const BLADE_HIGH: float = 1.4
 const TORSO_RADIUS: float = 0.16
 const SAMPLE_STEP: float = 0.05
-## AC867: same comparison as AC786.
+## AC967: same comparison as AC786.
 const LINK_DEGREES: float = 2.0
 const LINK_METERS: float = 0.01
-## AC869 / AC876: most opaque the area may be at rest and in a pulse.
+## AC969 / AC976: most opaque the area may be at rest and in a pulse.
 const MAX_REST_ALPHA: float = 0.3
 const MAX_PULSE_ALPHA: float = 0.5
 ## Sideways offset of the enemies in the dash path, so their bodies do not
@@ -142,7 +142,7 @@ func _track_pose(animation: Animation, time: float) -> Dictionary:
 
 # --- Body and weapon
 
-func test_ac861_the_berserker_has_the_spin_clips() -> void:
+func test_ac961_the_berserker_has_the_spin_clips() -> void:
 	var probe: LowPolyHumanoid = auto_free(HUMANOID_SCENE.instantiate() as LowPolyHumanoid)
 	add_child(probe)
 	var library: AnimationLibrary = probe.get_profile_library(&"berserker")
@@ -158,7 +158,7 @@ func test_ac861_the_berserker_has_the_spin_clips() -> void:
 		time += SAMPLE_STEP
 
 
-func test_ac862_the_body_spins_with_the_weapon_in_its_hands() -> void:
+func test_ac962_the_body_spins_with_the_weapon_in_its_hands() -> void:
 	assert_bool(_ability.try_cast()).is_true()
 	await _physics_frames(int(ceil(ANIMATION_CONFIG.weapon_mount_blend * Engine.physics_ticks_per_second)) + 2)
 	assert_str(_clip()).is_equal(String(SPIN_CONFIG.body_clip))
@@ -168,7 +168,7 @@ func test_ac862_the_body_spins_with_the_weapon_in_its_hands() -> void:
 	assert_float(_pivot().global_position.distance_to(hand.origin)).is_less_equal(GRIP_TOLERANCE)
 
 
-func test_ac863_swordswing_no_longer_holds_the_weapon() -> void:
+func test_ac963_swordswing_no_longer_holds_the_weapon() -> void:
 	assert_bool(_ability.try_cast()).is_true()
 	await _physics_frames(5)
 	assert_bool(_player.sword_swing.is_active()).is_false()
@@ -179,7 +179,7 @@ func test_ac863_swordswing_no_longer_holds_the_weapon() -> void:
 		assert_bool(names.has(gone)).override_failure_message(gone).is_false()
 
 
-func test_ac864_the_blade_is_level_outwards_and_clear_of_the_torso() -> void:
+func test_ac964_the_blade_is_level_outwards_and_clear_of_the_torso() -> void:
 	_humanoid.anim.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 	_animator().set_physics_process(false)
 	var to_visual: Transform3D = (_player.get_node("Visual") as Node3D).global_transform.affine_inverse()
@@ -203,7 +203,7 @@ func test_ac864_the_blade_is_level_outwards_and_clear_of_the_torso() -> void:
 		time += SAMPLE_STEP
 
 
-func test_ac865_out_of_the_spin_the_body_blends_back_slowly() -> void:
+func test_ac965_out_of_the_spin_the_body_blends_back_slowly() -> void:
 	_cast_by_hand()
 	await _physics_frames(2)
 	assert_str(_clip()).is_equal(String(SPIN_CONFIG.body_clip))
@@ -217,7 +217,7 @@ func test_ac865_out_of_the_spin_the_body_blends_back_slowly() -> void:
 
 # --- Dash slash
 
-func test_ac866_the_dash_slash_plays_its_clip_with_the_weapon_in_hand() -> void:
+func test_ac966_the_dash_slash_plays_its_clip_with_the_weapon_in_hand() -> void:
 	_cast_by_hand()
 	await _start_dash()
 	assert_str(_clip()).is_equal(String(SPIN_CONFIG.dash_slash_body_clip))
@@ -234,7 +234,7 @@ func _start_dash_after_cooldown() -> void:
 	await _start_dash()
 
 
-func test_ac867_the_dash_slash_ends_on_the_sprint_first_frame() -> void:
+func test_ac967_the_dash_slash_ends_on_the_sprint_first_frame() -> void:
 	var library: AnimationLibrary = _humanoid.get_profile_library(&"berserker")
 	var slash: Animation = library.get_animation(SPIN_CONFIG.dash_slash_body_clip)
 	var last: Dictionary = _track_pose(slash, slash.length)
@@ -252,7 +252,7 @@ func test_ac867_the_dash_slash_ends_on_the_sprint_first_frame() -> void:
 			assert_float(float(a)).override_failure_message(message).is_equal_approx(float(b), 0.001)
 
 
-func test_ac868_the_trail_follows_the_spin_and_its_dash_slash() -> void:
+func test_ac968_the_trail_follows_the_spin_and_its_dash_slash() -> void:
 	var trail: WeaponTrail = _player.get_node("WeaponTrail") as WeaponTrail
 	assert_bool(trail.is_emitting()).is_false()
 	_cast_by_hand()
@@ -268,7 +268,7 @@ func test_ac868_the_trail_follows_the_spin_and_its_dash_slash() -> void:
 
 # --- Area, pulse and dust
 
-func test_ac869_the_white_area_shows_the_reach_and_follows_the_player() -> void:
+func test_ac969_the_white_area_shows_the_reach_and_follows_the_player() -> void:
 	var vortex: SpinVortexVfx = _spin.get_vortex()
 	assert_bool(vortex.is_showing()).is_false()
 	assert_bool(vortex.visible).is_false()
@@ -296,7 +296,7 @@ func test_ac869_the_white_area_shows_the_reach_and_follows_the_player() -> void:
 	assert_bool(vortex.is_showing()).is_false()
 
 
-func test_ac870_one_pulse_per_completed_turn_with_or_without_enemies() -> void:
+func test_ac970_one_pulse_per_completed_turn_with_or_without_enemies() -> void:
 	var vortex: SpinVortexVfx = _spin.get_vortex()
 	var pulses: Array[int] = [0]
 	vortex.pulsed.connect(func() -> void: pulses[0] += 1)
@@ -318,7 +318,7 @@ func test_ac870_one_pulse_per_completed_turn_with_or_without_enemies() -> void:
 	assert_int(pulses[0]).is_equal(5)
 
 
-func test_ac871_the_dust_rises_only_while_spinning() -> void:
+func test_ac971_the_dust_rises_only_while_spinning() -> void:
 	var vortex: SpinVortexVfx = _spin.get_vortex()
 	assert_bool(vortex.is_dust_emitting()).is_false()
 	_cast_by_hand()
@@ -330,7 +330,7 @@ func test_ac871_the_dust_rises_only_while_spinning() -> void:
 
 # --- Impact feedback
 
-func test_ac872_a_turn_that_hits_shakes_the_camera_and_the_enemies() -> void:
+func test_ac972_a_turn_that_hits_shakes_the_camera_and_the_enemies() -> void:
 	var tick: float = _ability.get_stat(AbilityData.Stat.TICK_INTERVAL)
 	_cast_by_hand()
 	_camera().stop_shake()
@@ -342,7 +342,7 @@ func test_ac872_a_turn_that_hits_shakes_the_camera_and_the_enemies() -> void:
 	assert_bool(enemy.is_in_hitlag()).is_true()
 
 
-func test_ac873_the_player_never_pauses_during_the_turns() -> void:
+func test_ac973_the_player_never_pauses_during_the_turns() -> void:
 	_spawn_idle_enemy(Vector3(2.0, 0.0, 0.0))
 	var visual: Node3D = _player.get_node("Visual") as Node3D
 	_cast_by_hand()
@@ -356,7 +356,7 @@ func test_ac873_the_player_never_pauses_during_the_turns() -> void:
 	assert_float(absf(angle_difference(yaw, visual.rotation.y))).is_equal_approx(TAU * STEP / tick, 0.001)
 
 
-func test_ac874_the_dash_slash_shakes_and_pauses_the_clip_once() -> void:
+func test_ac974_the_dash_slash_shakes_and_pauses_the_clip_once() -> void:
 	var enemies: Array[Enemy] = []
 	for i: int in 3:
 		enemies.append(_spawn_idle_enemy(Vector3(IN_PATH_X * (1 if i % 2 == 0 else -1), 0.0, -1.0 - i * 0.6)))
@@ -377,7 +377,7 @@ func test_ac874_the_dash_slash_shakes_and_pauses_the_clip_once() -> void:
 	assert_float(held_frames[0] * frame).is_greater_equal(SPIN_CONFIG.dash_slash_hitlag - 2.0 * frame)
 
 
-func test_ac874_every_slashed_enemy_freezes() -> void:
+func test_ac974_every_slashed_enemy_freezes() -> void:
 	var enemy: Enemy = _spawn_idle_enemy(Vector3(IN_PATH_X, 0.0, -1.5))
 	_cast_by_hand()
 	await _start_dash()
@@ -386,7 +386,7 @@ func test_ac874_every_slashed_enemy_freezes() -> void:
 	assert_bool(enemy.is_in_hitlag()).is_true()
 
 
-func test_ac875_the_pause_does_not_change_the_dash() -> void:
+func test_ac975_the_pause_does_not_change_the_dash() -> void:
 	var start: Vector3 = _player.global_position
 	await _start_dash_and_wait_from(start)
 	var plain: float = _flat(_player.global_position - start)
@@ -417,7 +417,7 @@ func _flat(v: Vector3) -> float:
 
 # --- Indicators and text
 
-func test_ac876_the_ability_areas_are_a_white_fill() -> void:
+func test_ac976_the_ability_areas_are_a_white_fill() -> void:
 	assert_object(AREA_MATERIAL.albedo_color).is_equal(Color(1, 1, 1, 1))
 	assert_int(AREA_MATERIAL.shading_mode).is_equal(BaseMaterial3D.SHADING_MODE_UNSHADED)
 	assert_int(AREA_MATERIAL.transparency).is_equal(BaseMaterial3D.TRANSPARENCY_ALPHA)
@@ -436,7 +436,7 @@ func test_ac876_the_ability_areas_are_a_white_fill() -> void:
 	assert_float(1.0 - SHEATHE_CONFIG.full_charge_transparency).is_less_equal(MAX_PULSE_ALPHA)
 
 
-func test_ac877_the_spin_text_matches_its_data() -> void:
+func test_ac977_the_spin_text_matches_its_data() -> void:
 	var text: String = SPIN.description
 	var cooldown: float = maxf(SPIN.cooldown, SPIN.min_cooldown)
 	assert_str(text).contains("%d s" % roundi(SPIN.cast_duration))

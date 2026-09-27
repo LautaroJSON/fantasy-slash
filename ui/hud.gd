@@ -2,7 +2,8 @@ class_name Hud
 extends Control
 ## In-game HUD: player health, stamina (bottom left), current wave, the action
 ## buttons (dash, basic and ultimate ability; docs/specs/dash-button.md), the
-## boss health bars (top centre), the active buffs (above the health bar). The game mode is shown in the pause menu.
+## boss health bars (top centre), the active buffs (above the health bar), the
+## common enemies' statuses over their health bars. The game mode is shown in the pause menu.
 ## The action buttons show the key or the gamepad button, after the last device used.
 
 @export var player: Player
@@ -15,6 +16,9 @@ extends Control
 @export var stamina_bar_style: PlayerHealthBarStyle
 ## Key and button names of the action buttons.
 @export var prompts: InputPromptConfig
+## Enemies whose statuses the overlay draws over their health bars
+## (docs/specs/status-icons.md).
+@export var enemy_registry: EnemyRegistry
 
 @onready var _health_bar: ProgressBar = %HealthBar
 @onready var _health_label: Label = %HealthLabel
@@ -26,6 +30,7 @@ extends Control
 @onready var _boss_bars: BossBarStack = %BossBars
 @onready var _buff_bar: BuffBar = %BuffBar
 @onready var _device_monitor: InputDeviceMonitor = %InputDeviceMonitor
+@onready var _enemy_status_overlay: EnemyStatusOverlay = %EnemyStatusOverlay
 
 
 func _ready() -> void:
@@ -35,6 +40,7 @@ func _ready() -> void:
 	_basic_slot.setup(player.basic_ability)
 	_ultimate_slot.setup(player.ultimate_ability)
 	_buff_bar.setup(player.buffs)
+	_enemy_status_overlay.registry = enemy_registry
 	_device_monitor.device_changed.connect(_show_prompts)
 	_show_prompts(_device_monitor.get_device())
 	player.health.health_changed.connect(_on_health_changed)

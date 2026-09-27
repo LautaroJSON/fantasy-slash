@@ -23,6 +23,7 @@ enum Stat {
 	STAMINA_REGEN,
 	SPRINT_STAMINA_COST,
 	SPRINT_SPEED_FACTOR,
+	AFFLICTION_BUILDUP,
 }
 
 @export var damage: float
@@ -61,6 +62,8 @@ enum Stat {
 @export var sprint_stamina_cost: float
 ## Sprint top speed as a multiple of move_speed.
 @export var sprint_speed_factor: float
+## Extra Affliction build-up per hit, as a fraction (0.1 = +10 %; docs/specs/affliction.md).
+@export var affliction_buildup: float
 
 
 func get_base(stat: Stat) -> float:
@@ -103,4 +106,6 @@ func get_base(stat: Stat) -> float:
 			return sprint_stamina_cost
 		Stat.SPRINT_SPEED_FACTOR:
 			return sprint_speed_factor
+		Stat.AFFLICTION_BUILDUP:
+			return affliction_buildup
 	return 0.0

@@ -59,6 +59,11 @@ func is_enabled() -> bool:
 	return _config != null
 
 
+## Affliction build-up scale of its hits (0 while disabled).
+func get_affliction_scale() -> float:
+	return 0.0 if _config == null else _config.affliction_scale
+
+
 ## On the floor and idle: remembers the floor height and allows a new slash.
 func track_floor() -> void:
 	if _phase != Phase.IDLE or not body.is_on_floor():

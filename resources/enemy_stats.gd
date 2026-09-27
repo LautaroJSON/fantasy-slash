@@ -39,6 +39,12 @@ enum Stat { DAMAGE, DEFENSE, MAX_HEALTH, ATTACK_INTERVAL, ATTACK_RANGE, MOVE_SPE
 ## Hit lag (docs/specs/bdo-combat-feel.md): true = a player hit only shakes
 ## its body; its behavior keeps running (bosses).
 @export var resists_hitlag: bool
+## Bosses: control effects (e.g. the freeze of Frost) reach it in their weaker
+## "resisted" version (AfflictionData.resisted_debuff; docs/specs/frost-freeze.md).
+@export var resists_control: bool
+## Fraction of every Affliction build-up it resists, in [0, AfflictionConfig.max_resistance]
+## (docs/specs/affliction.md). 0 = none.
+@export var affliction_resistance: float
 
 
 func get_stat(stat: Stat) -> float:

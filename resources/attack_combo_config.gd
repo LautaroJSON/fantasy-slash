@@ -51,3 +51,6 @@ enum RecoveryMove {
 @export var lunge_stop_distance: float
 ## Half angle, in degrees, of the cone ahead where an enemy stops the lunge.
 @export var lunge_stop_half_arc: float
+## Scale of the Affliction build-up of every strike of this combo, so classes
+## with fewer, heavier hits fill the bars as fast as quick ones (docs/specs/affliction.md).
+@export var affliction_scale: float

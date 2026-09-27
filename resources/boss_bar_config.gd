@@ -21,13 +21,10 @@ extends Resource
 @export var shake_amplitude_px: float
 @export var debuff_icon_size_px: float
 @export var debuff_spacing_px: int
-## Icon slots created up front; debuffs beyond this are not shown.
+## Icon slots created up front, the "+" overflow slot included.
 @export var max_debuff_icons: int
-## Remaining seconds centred on each debuff icon.
-@export var debuff_time_font_size: int
-## Stack count in the bottom-right corner of stacking debuffs.
-@export var debuff_stack_font_size: int
-## Translucent sector over each icon covering the time still left.
-@export var clock: CooldownClockConfig
-@export var cooldown_text: CooldownTextConfig
+## Shared look of the status icons (docs/specs/status-icons.md).
+@export var status_icon: StatusIconConfig
 @export var health_bar_config: HealthBarConfig
+## Affliction rows under the bar (docs/specs/affliction.md).
+@export var affliction_config: AfflictionConfig

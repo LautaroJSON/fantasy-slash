@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AfflictionCatalog" format=3]
+
+[ext_resource type="Script" path="res://resources/affliction_catalog.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/affliction_upgrade_data.gd" id="2_card"]
+[ext_resource type="Resource" path="res://data/afflictions/cards/poison_basic_attack.tres" id="3_poison_basic_attack"]
+[ext_resource type="Resource" path="res://data/afflictions/cards/poison_ability.tres" id="4_poison_ability"]
+[ext_resource type="Resource" path="res://data/afflictions/cards/burst_basic_attack.tres" id="5_burst_basic_attack"]
+[ext_resource type="Resource" path="res://data/afflictions/cards/burst_ability.tres" id="6_burst_ability"]
+[ext_resource type="Resource" path="res://data/afflictions/cards/frost_basic_attack.tres" id="7_frost_basic_attack"]
+[ext_resource type="Resource" path="res://data/afflictions/cards/frost_ability.tres" id="8_frost_ability"]
+[ext_resource type="Resource" path="res://data/afflictions/cards/corrosion_basic_attack.tres" id="9_corrosion_basic_attack"]
+[ext_resource type="Resource" path="res://data/afflictions/cards/corrosion_ability.tres" id="10_corrosion_ability"]
+
+[resource]
+script = ExtResource("1_script")
+cards = Array[ExtResource("2_card")]([ExtResource("3_poison_basic_attack"), ExtResource("4_poison_ability"), ExtResource("5_burst_basic_attack"), ExtResource("6_burst_ability"), ExtResource("7_frost_basic_attack"), ExtResource("8_frost_ability"), ExtResource("9_corrosion_basic_attack"), ExtResource("10_corrosion_ability")])

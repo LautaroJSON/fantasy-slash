@@ -11,8 +11,10 @@ extends Resource
 @export var max_stacks: int
 ## Seconds until one stack is lost; adding a stack restarts the countdown.
 @export var stack_duration: float
-## Color of the HUD icon.
+## Color of the HUD icon: tints its glyph and background.
 @export var icon_color: Color
+## Glyph of the HUD icon (white SVG in assets/icons/status/).
+@export var icon: Texture2D
 ## Effects of each stack.
 @export var modifiers: Array[BuffModifier]
 

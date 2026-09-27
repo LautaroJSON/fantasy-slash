@@ -13,6 +13,7 @@ const CONCUSSION: BuffData = preload("res://data/buffs/concussion.tres")
 const ENEMY_HEALTH: float = 40.0
 const STEP: float = 0.05
 const TOLERANCE: float = 0.0001
+const StatusOverlayProbe := preload("res://test/helpers/status_overlay_probe.gd")
 
 var _registry: EnemyRegistry
 var _player: Player
@@ -111,24 +112,26 @@ func test_ac285_weaken_data() -> void:
 	assert_int(WEAKEN.effect).is_equal(DebuffData.Effect.ARMOR_REDUCTION)
 	assert_float(WEAKEN.duration).is_equal_approx(4.0, TOLERANCE)
 	assert_int(WEAKEN.max_stacks).is_equal(3)
-	assert_that(WEAKEN.icon_material.albedo_color).is_equal(Color(0.55, 0.35, 0.8))
+	assert_that(WEAKEN.icon_color).is_equal(Color(0.55, 0.35, 0.8))
 
 
 func test_ac286_weaken_stacks_to_three_and_expires_whole() -> void:
 	var enemy: Enemy = _spawn_idle_enemy(Vector3(0.0, 0.0, 20.0))
-	var icons: DebuffIconRow = enemy.get_node("HealthBar/DebuffIcons") as DebuffIconRow
+	var probe: StatusOverlayProbe = auto_free(StatusOverlayProbe.new())
+	add_child(probe)
+	probe.watch(enemy)
 	for i: int in 4:
 		enemy.debuffs.apply(WEAKEN, 0.05)
 		enemy.debuffs.advance(1.0)
 	assert_int(enemy.debuffs.get_stacks(WEAKEN.id)).is_equal(3)
 	enemy.debuffs.apply(WEAKEN, 0.05)
 	assert_float(enemy.debuffs.get_time_left(WEAKEN.id)).is_equal_approx(4.0, TOLERANCE)
-	assert_int(icons.get_visible_icon_count()).is_equal(1)
+	assert_int(probe.visible_icon_count()).is_equal(1)
 	enemy.debuffs.advance(3.9)
 	assert_int(enemy.debuffs.get_stacks(WEAKEN.id)).is_equal(3)
 	enemy.debuffs.advance(0.2)
 	assert_int(enemy.debuffs.get_stacks(WEAKEN.id)).is_equal(0)
-	assert_int(icons.get_visible_icon_count()).is_equal(0)
+	assert_int(probe.visible_icon_count()).is_equal(0)
 
 
 func test_ac287_three_stacks_lower_defense_per_level() -> void:
@@ -276,10 +279,12 @@ func test_ac385_three_spin_turns_show_three_weaken_stacks() -> void:
 	var enemy: Enemy = _spawn_idle_enemy(Vector3(2.0, 0.0, 0.0))
 	# Survives three hits whatever the spin damage is tuned to.
 	enemy.health.set_max_health(_hit_damage() * 10.0)
-	var icons: DebuffIconRow = enemy.get_node("HealthBar/DebuffIcons") as DebuffIconRow
+	# status-icons.md: the icon lives in the HUD overlay row of the enemy.
+	var probe: StatusOverlayProbe = auto_free(StatusOverlayProbe.new())
+	add_child(probe)
+	probe.watch(enemy)
 	_cast_by_hand()
 	for turn: int in 3:
 		_advance(1.0)
 		assert_int(enemy.debuffs.get_stacks(WEAKEN.id)).is_equal(turn + 1)
-		assert_str(icons.get_stack_text(0)).is_equal(str(turn + 1))
-	assert_bool(icons.is_stack_visible(0)).is_true()
+		assert_str(probe.row().icon(0).get_stack_text()).is_equal(str(turn + 1))

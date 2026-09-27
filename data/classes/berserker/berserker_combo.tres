@@ -67,3 +67,4 @@ recovery_strafe_factor = 0.15
 move_cancel_threshold = 0.3
 lunge_stop_distance = 1.2
 lunge_stop_half_arc = 60.0
+affliction_scale = 2.3

@@ -34,3 +34,4 @@ min_cast_duration = 3.0
 dash_cancels_cast = true
 upgrades = Array[ExtResource("2_upgrade_script")]([ExtResource("4_damage"), ExtResource("5_duration"), ExtResource("6_speed"), ExtResource("7_range")])
 unique_upgrades = Array[ExtResource("8_unique_script")]([ExtResource("9_armor_break"), ExtResource("10_invigorating"), ExtResource("11_tornado")])
+affliction_scale = 0.4

@@ -15,6 +15,7 @@ const SLICE: float = 13.5
 ## Thrust hit with base player DAMAGE (15): 10 + 0.05 x 15.
 const THRUST_HIT: float = 10.75
 const SPRINT_FRAMES: int = 40
+const StatusOverlayProbe := preload("res://test/helpers/status_overlay_probe.gd")
 
 var _registry: EnemyRegistry
 var _player: Player
@@ -156,7 +157,8 @@ func test_ac100_different_debuffs_coexist_and_clear_on_recycle() -> void:
 	poison.id = &"test_poison"
 	poison.duration = 3.0
 	poison.tick_interval = 1.0
-	poison.icon_material = BLEED.icon_material
+	poison.icon = BLEED.icon
+	poison.icon_color = BLEED.icon_color
 	enemy.debuffs.apply(BLEED, 0.01)
 	enemy.debuffs.apply(poison, 0.01)
 	enemy.debuffs.apply(BLEED, 0.01)
@@ -165,22 +167,25 @@ func test_ac100_different_debuffs_coexist_and_clear_on_recycle() -> void:
 	assert_int(enemy.debuffs.get_active().size()).is_equal(0)
 
 
+## status-icons.md: the icon lives in the HUD overlay row of the enemy.
 func test_ac101_icon_shows_while_the_debuff_lasts() -> void:
 	var enemy: Enemy = _spawn_idle_enemy(Vector3(0.0, 0.0, -2.0))
-	var icons: DebuffIconRow = enemy.get_node("HealthBar/DebuffIcons") as DebuffIconRow
-	assert_int(icons.get_visible_icon_count()).is_equal(0)
+	var probe: StatusOverlayProbe = auto_free(StatusOverlayProbe.new())
+	add_child(probe)
+	probe.watch(enemy)
+	assert_int(probe.visible_icon_count()).is_equal(0)
 	enemy.debuffs.apply(BLEED, 0.01)
-	assert_int(icons.get_visible_icon_count()).is_equal(1)
-	assert_object(icons.get_icon(0).material_override).is_same(BLEED.icon_material)
+	assert_int(probe.visible_icon_count()).is_equal(1)
+	assert_object(probe.row().icon(0).get_glyph_texture()).is_same(BLEED.icon)
 	for i: int in 5:
 		enemy.debuffs.advance(BLEED.tick_interval)
-	assert_int(icons.get_visible_icon_count()).is_equal(0)
+	assert_int(probe.visible_icon_count()).is_equal(0)
 
 
 func test_ac102_every_bleed_tick_is_reported_for_a_damage_number() -> void:
 	var enemy: Enemy = _spawn_idle_enemy(Vector3(0.0, 0.0, -2.0))
 	var ticks: Array[float] = []
-	_registry.enemy_debuff_ticked.connect(func(_e: Enemy, amount: float) -> void: ticks.append(amount))
+	_registry.enemy_debuff_ticked.connect(func(_e: Enemy, amount: float, _d: DebuffData) -> void: ticks.append(amount))
 	enemy.debuffs.apply(BLEED, 0.01)
 	for i: int in 5:
 		enemy.debuffs.advance(BLEED.tick_interval)

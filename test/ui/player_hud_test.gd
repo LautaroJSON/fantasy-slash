@@ -66,7 +66,9 @@ func test_ac295_buff_bar_shows_concussion_stacks_while_active() -> void:
 	_player.buffs.add_stack(concussion)
 	_player.buffs.add_stack(concussion)
 	assert_int(bar.get_visible_icon_count()).is_equal(1)
-	assert_that(bar.get_icon(0).color).is_equal(concussion.icon_color)
+	# status-icons.md: the flat color became a glyph tinted with the buff color.
+	assert_object(bar.get_icon(0).get_glyph_texture()).is_same(concussion.icon)
+	assert_that(bar.get_icon(0).get_background_color()).is_equal(concussion.icon_color.darkened(bar.config.status_icon.background_darken))
 	assert_str(bar.get_stack_text(0)).is_equal("2")
 	_player.buffs.advance(concussion.stack_duration)
 	assert_str(bar.get_stack_text(0)).is_equal("1")

@@ -41,6 +41,8 @@
 [ext_resource type="Script" path="res://components/sprint_component.gd" id="42_sprint"]
 [ext_resource type="Resource" path="res://data/player/sprint_config.tres" id="43_sprint_config"]
 [ext_resource type="Script" path="res://components/dash/dash_vfx_host.gd" id="44_dash_vfx"]
+[ext_resource type="Script" path="res://components/affliction_loadout.gd" id="45_afflictions"]
+[ext_resource type="Resource" path="res://data/combat/affliction_config.tres" id="46_affliction_config"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -361,3 +363,11 @@ health = NodePath("../HealthComponent")
 camera = NodePath("../CameraRig")
 humanoid = NodePath("../Visual/Humanoid")
 config = ExtResource("39_hitstop_config")
+
+[node name="Afflictions" type="Node" parent="." node_paths=PackedStringArray("stats", "attack", "air_slash", "basic_ability")]
+script = ExtResource("45_afflictions")
+config = ExtResource("46_affliction_config")
+stats = NodePath("../StatsComponent")
+attack = NodePath("../AttackComponent")
+air_slash = NodePath("../AirSlash")
+basic_ability = NodePath("../BasicAbility")

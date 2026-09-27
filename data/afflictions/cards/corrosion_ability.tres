@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AfflictionUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://resources/affliction_upgrade_data.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/afflictions/corrosion.tres" id="2_affliction"]
+[ext_resource type="Script" path="res://resources/value_format.gd" id="3_format"]
+
+[sub_resource type="Resource" id="Format_points"]
+script = ExtResource("3_format")
+format = "%.0f"
+multiplier = 1.0
+
+[resource]
+script = ExtResource("1_script")
+affliction = ExtResource("2_affliction")
+source = 1
+max_level = 3
+level_values = Array[float]([35.0, 50.0, 65.0])
+level_descriptions = Array[String](["Tu habilidad acumula Corrosión.\nAl llenarse: Corrosión, ignora un 25 %\nde la defensa por stack durante 5 s (hasta ×4).", "Corrosión (habilidad) nv. 2:\nacumula más rápido.", "Corrosión (habilidad) nv. 3:\nacumula mucho más rápido."])
+value_format = SubResource("Format_points")
+title = "Aflicción: Corrosión"
+description = "Tu habilidad acumula Corrosión.\nAl llenarse: Corrosión, ignora un 25 %\nde la defensa por stack durante 5 s (hasta ×4)."

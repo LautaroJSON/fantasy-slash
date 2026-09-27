@@ -35,3 +35,4 @@ interrupts_dash = true
 dash_cancels_cast = true
 upgrades = Array[ExtResource("2_upgrade_script")]([ExtResource("4_damage"), ExtResource("5_charge_speed")])
 unique_upgrades = Array[ExtResource("6_unique_script")]([ExtResource("7_wind_step"), ExtResource("8_zanshin"), ExtResource("9_nuki"), ExtResource("10_tsubame")])
+affliction_scale = 2.0

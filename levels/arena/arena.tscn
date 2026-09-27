@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://bo6f8jpgex76d" path="res://systems/wave_manager.gd" id="9_wave_manager"]
 [ext_resource type="Resource" path="res://data/waves/wave_config.tres" id="10_wave_config"]
 [ext_resource type="Resource" path="res://data/upgrades/upgrade_catalog.tres" id="11_catalog"]
+[ext_resource type="Resource" path="res://data/afflictions/affliction_catalog.tres" id="90_affliction_catalog"]
 [ext_resource type="PackedScene" path="res://ui/upgrade_picker.tscn" id="12_picker"]
 [ext_resource type="PackedScene" path="res://ui/game_over_screen.tscn" id="13_game_over"]
 [ext_resource type="PackedScene" path="res://ui/pause_menu.tscn" id="14_pause_menu"]
@@ -218,10 +219,11 @@ script = ExtResource("8_run_state")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=48373861]
 
-[node name="Hud" parent="UI" unique_id=874545095 node_paths=PackedStringArray("player", "run_state", "wave_manager") instance=ExtResource("6_hud")]
+[node name="Hud" parent="UI" unique_id=874545095 node_paths=PackedStringArray("player", "run_state", "wave_manager", "enemy_registry") instance=ExtResource("6_hud")]
 player = NodePath("../../Player")
 run_state = NodePath("../../RunState")
 wave_manager = NodePath("../../WaveManager")
+enemy_registry = NodePath("../../EnemyRegistry")
 
 [node name="UpgradePicker" parent="UI" unique_id=1328616733 node_paths=PackedStringArray("player") instance=ExtResource("12_picker")]
 player = NodePath("../../Player")
@@ -247,6 +249,7 @@ wave_manager = NodePath("../../WaveManager")
 script = ExtResource("9_wave_manager")
 config = ExtResource("10_wave_config")
 catalog = ExtResource("11_catalog")
+affliction_catalog = ExtResource("90_affliction_catalog")
 ban_rules = ExtResource("21_ban_rules")
 rage = ExtResource("27_rage_config")
 pace = ExtResource("36_pace")

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyStatusOverlayConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_status_overlay_config.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/ui/enemy_health_bar_config.tres" id="2_bar"]
+[ext_resource type="Resource" path="res://data/ui/status_icon_config.tres" id="3_icon"]
+
+[resource]
+script = ExtResource("1_script")
+max_rows = 24
+icons_per_bar = 5
+min_icon_size_px = 14.0
+max_icon_size_px = 32.0
+spacing_px = 3
+row_offset_px = Vector2(0, -16)
+resize_threshold_px = 1.0
+health_bar = ExtResource("2_bar")
+status_icon = ExtResource("3_icon")
