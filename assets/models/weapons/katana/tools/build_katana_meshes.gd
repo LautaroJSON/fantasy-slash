@@ -46,14 +46,25 @@ const BLADE_HALF_THICKNESS: float = 0.0011
 
 
 func _init() -> void:
-	var mesh: ArrayMesh = _find_mesh((load(SOURCE) as PackedScene).instantiate())
-	var arrays: Array = mesh.surface_get_arrays(0)
-	_save(_build(arrays, BLADE_BONE), BLADE_OUT)
-	_save(_build(arrays, SHEATH_BONE), SHEATH_OUT)
+	_save(build(BLADE_BONE), BLADE_OUT)
+	_save(build(SHEATH_BONE), SHEATH_OUT)
 	quit()
 
 
-func _find_mesh(node: Node) -> ArrayMesh:
+## Arrays of the source skinned mesh (one surface, both bones).
+static func source_arrays() -> Array:
+	var source: Node = (load(SOURCE) as PackedScene).instantiate()
+	var arrays: Array = _find_mesh(source).surface_get_arrays(0)
+	source.free()
+	return arrays
+
+
+## The derived mesh of one bone (BLADE_BONE or SHEATH_BONE), without saving it.
+static func build(bone: int) -> ArrayMesh:
+	return _build(source_arrays(), bone)
+
+
+static func _find_mesh(node: Node) -> ArrayMesh:
 	if node is MeshInstance3D:
 		return (node as MeshInstance3D).mesh as ArrayMesh
 	for child: Node in node.get_children():
@@ -63,13 +74,13 @@ func _find_mesh(node: Node) -> ArrayMesh:
 	return null
 
 
-func _new_guard_front_y() -> float:
+static func new_guard_front_y() -> float:
 	return NEW_GUARD_BACK_Y + (GUARD_FRONT_Y - GUARD_BACK_Y) * GUARD_THICKNESS_SCALE
 
 
 ## Maps a source height to its new height, and the Y scale of that region.
-func _map_y(y: float, bone: int) -> Vector2:
-	var front: float = _new_guard_front_y()
+static func _map_y(y: float, bone: int) -> Vector2:
+	var front: float = new_guard_front_y()
 	if bone == SHEATH_BONE:
 		return _segment(y, SHEATH_MOUTH_Y, SHEATH_END_Y, front, SHEATH_END_Y)
 	if y <= GUARD_BACK_Y:
@@ -79,13 +90,13 @@ func _map_y(y: float, bone: int) -> Vector2:
 	return _segment(y, GUARD_FRONT_Y, BLADE_TIP_Y, front, BLADE_TIP_Y)
 
 
-func _segment(y: float, from_a: float, from_b: float, to_a: float, to_b: float) -> Vector2:
+static func _segment(y: float, from_a: float, from_b: float, to_a: float, to_b: float) -> Vector2:
 	var scale: float = (to_b - to_a) / (from_b - from_a)
 	return Vector2(to_a + (y - from_a) * scale, scale)
 
 
 ## Cross-section scale of a source vertex.
-func _section_scale(p: Vector3, bone: int) -> float:
+static func _section_scale(p: Vector3, bone: int) -> float:
 	if bone == SHEATH_BONE:
 		return 1.0
 	if p.y <= GUARD_BACK_Y:
@@ -95,7 +106,7 @@ func _section_scale(p: Vector3, bone: int) -> float:
 	return 1.0
 
 
-func _build(src: Array, bone: int) -> ArrayMesh:
+static func _build(src: Array, bone: int) -> ArrayMesh:
 	var positions: PackedVector3Array = src[Mesh.ARRAY_VERTEX]
 	var normals: PackedVector3Array = src[Mesh.ARRAY_NORMAL]
 	var tangents: PackedFloat32Array = src[Mesh.ARRAY_TANGENT]
@@ -112,7 +123,7 @@ func _build(src: Array, bone: int) -> ArrayMesh:
 	var out_uvs: PackedVector2Array = []
 	for i: int in positions.size():
 		remap[i] = -1
-		if _main_bone(bones, weights, i, per_vertex) != bone:
+		if main_bone(bones, weights, i, per_vertex) != bone:
 			continue
 		remap[i] = out_positions.size()
 		var p: Vector3 = positions[i]
@@ -143,7 +154,7 @@ func _build(src: Array, bone: int) -> ArrayMesh:
 	return result
 
 
-func _main_bone(bones: PackedInt32Array, weights: PackedFloat32Array, vertex: int, per_vertex: int) -> int:
+static func main_bone(bones: PackedInt32Array, weights: PackedFloat32Array, vertex: int, per_vertex: int) -> int:
 	var best: int = 0
 	for j: int in per_vertex:
 		if weights[vertex * per_vertex + j] > weights[vertex * per_vertex + best]:
@@ -151,7 +162,7 @@ func _main_bone(bones: PackedInt32Array, weights: PackedFloat32Array, vertex: in
 	return bones[vertex * per_vertex + best]
 
 
-func _save(mesh: ArrayMesh, path: String) -> void:
+static func _save(mesh: ArrayMesh, path: String) -> void:
 	var err: Error = ResourceSaver.save(mesh, path)
 	if err != OK:
 		push_error("build_katana_meshes: could not save %s (%s)" % [path, error_string(err)])

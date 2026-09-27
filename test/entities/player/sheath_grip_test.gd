@@ -1,9 +1,11 @@
 extends GdUnitTestSuite
 ## The katana sheath is held in the left hand and the hands grip their targets
 ## (docs/specs/sheath-socket-hand-grip.md AC663–AC670 and
-## docs/specs/sheath-in-left-hand.md AC671–AC677).
+## docs/specs/sheath-in-left-hand.md AC671–AC677; docs/specs/katana-hand-proportions.md
+## AC684–AC685)).
 
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
+const KatanaParts := preload("res://test/helpers/katana_parts.gd")
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.tres")
 const BERSERKER: CharacterClassData = preload("res://data/classes/berserker/berserker.tres")
@@ -40,6 +42,12 @@ const FACE_ANGLE: float = 25.0
 ## in meters; and the head center in the neck joint (low_poly_humanoid.gd).
 const CENTER_TOLERANCE: float = 0.05
 const HEAD_CENTER: Vector3 = Vector3(0.0, 0.21, 0.0)
+## AC684: least the pommel sticks out behind the right hand, in meters.
+const POMMEL_OUT: float = 0.05
+## AC685: farthest the Hilt may be from the combat grip point, and the sheath
+## mouth from the guard front face, in meters.
+const HILT_GAP: float = 0.01
+const MOUTH_GAP: float = 0.01
 
 var _player: Player
 
@@ -355,3 +363,80 @@ func test_ac670_other_classes_keep_idle_while_casting() -> void:
 	for character_class: CharacterClassData in [WARRIOR, BERSERKER]:
 		var humanoid: LowPolyHumanoid = _humanoid(_spawn_player(character_class))
 		assert_bool(humanoid.anim.has_animation(SHEATHE_CONFIG.charge_body_clip)).is_false()
+
+
+# --- Katana proportions (docs/specs/katana-hand-proportions.md)
+
+func _katana_model() -> MeshInstance3D:
+	return _player.get_node("Visual/SwordPivot").get_child(0).get_node("Model") as MeshInstance3D
+
+
+## Katana guard vertices, in world space.
+func _guard_world() -> PackedVector3Array:
+	var model: MeshInstance3D = _katana_model()
+	var weapon: Transform3D = (model.get_parent() as Node3D).global_transform
+	var points: PackedVector3Array = []
+	for p: Vector3 in KatanaParts.guard_points(model):
+		points.append(weapon * p)
+	return points
+
+
+## Label of the first world point inside the box of a hand mesh, or "".
+func _inside_hand(points: PackedVector3Array, hand: MeshInstance3D) -> String:
+	var to_hand: Transform3D = hand.global_transform.affine_inverse()
+	var box: AABB = hand.get_aabb()
+	for p: Vector3 in points:
+		if box.has_point(to_hand * p):
+			return "guard vertex %s is inside %s" % [p, hand.name]
+	return ""
+
+
+func test_ac684_the_guard_and_the_pommel_show_around_the_right_hand() -> void:
+	var humanoid: LowPolyHumanoid = _samurai_by_hand()
+	var mount: WeaponMount = _player.get_node("WeaponMount") as WeaponMount
+	var pivot: Node3D = _player.get_node("Visual/SwordPivot") as Node3D
+	_pose(humanoid, &"idle", 0.0)
+	mount.update(1.0)
+	assert_vector(pivot.global_position).is_equal_approx(mount.get_hand_pose().origin, Vector3.ONE * GRIP_TOLERANCE)
+	var hand: MeshInstance3D = humanoid.get_hand_mesh(LowPolyHumanoid.Hand.RIGHT)
+	assert_str(_inside_hand(_guard_world(), hand)).is_empty()
+	# Behind the fist along the weapon axis (+Z of the weapon is the pommel end).
+	var to_weapon: Transform3D = pivot.global_transform.affine_inverse() * hand.global_transform
+	var hand_back: float = -INF
+	var box: AABB = hand.get_aabb()
+	for corner: int in 8:
+		hand_back = maxf(hand_back, (to_weapon * box.get_endpoint(corner)).z)
+	var model: MeshInstance3D = _katana_model()
+	var pommel: float = (model.transform * model.mesh.get_aabb()).end.z
+	assert_float(pommel - hand_back).is_greater_equal(POMMEL_OUT)
+
+
+func test_ac685_sheathed_the_guard_sits_between_the_hands() -> void:
+	var humanoid: LowPolyHumanoid = _samurai_by_hand()
+	var mount: WeaponMount = _player.get_node("WeaponMount") as WeaponMount
+	var pivot: Node3D = _player.get_node("Visual/SwordPivot") as Node3D
+	# Combat grip point: the right hand center, in weapon space.
+	_pose(humanoid, &"idle", 0.0)
+	mount.update(1.0)
+	var right: MeshInstance3D = humanoid.get_hand_mesh(LowPolyHumanoid.Hand.RIGHT)
+	var grip_point: Vector3 = mount.get_hand_pose().affine_inverse() * right.global_position
+	assert_float(_hilt().position.distance_to(grip_point)).is_less_equal(HILT_GAP)
+	_equip_sheathe().try_cast()
+	_pose(humanoid, SHEATHE_CONFIG.charge_body_clip, 0.0)
+	mount.update(1.0)
+	assert_bool(mount.is_holding_in_sheath()).is_true()
+	var guard: PackedVector3Array = _guard_world()
+	assert_str(_inside_hand(guard, right)).is_empty()
+	assert_str(_inside_hand(guard, humanoid.get_hand_mesh(LowPolyHumanoid.Hand.LEFT))).is_empty()
+	# Sheath mouth on the guard front face, and the blade within the sheath.
+	var sheath_model: MeshInstance3D = _player.get_sheath().get_node("Model") as MeshInstance3D
+	var sheath_box: AABB = sheath_model.transform * sheath_model.mesh.get_aabb()
+	var to_sheath: Transform3D = _player.get_sheath().global_transform.affine_inverse()
+	var guard_front: float = INF
+	for p: Vector3 in guard:
+		guard_front = minf(guard_front, (to_sheath * p).z)
+	assert_float(absf(guard_front - sheath_box.end.z)).is_less_equal(MOUTH_GAP)
+	var katana_model: MeshInstance3D = _katana_model()
+	var tip_local: float = (katana_model.transform * katana_model.mesh.get_aabb()).position.z
+	var tip: Vector3 = to_sheath * (pivot.global_transform * Vector3(0.0, 0.0, tip_local))
+	assert_float(tip.z).is_greater_equal(sheath_box.position.z)

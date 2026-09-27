@@ -167,7 +167,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.3, 0.75, 1),
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 0,
-"values": [Vector3(0.4467, 2.9245, -0.1522), Vector3(-0.45, 0.7, 0), Vector3(1.1, -0.7, 0), Vector3(0.93, -0.99, 0)]
+"values": [Vector3(0.2803, -1.8888, 0.3483), Vector3(-0.45, 0.7, 0), Vector3(1.1, -0.7, 0), Vector3(0.93, -0.99, 0)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
@@ -179,7 +179,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 0.3, 0.75, 1),
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 0,
-"values": [Vector3(-0.2286, 0.5127, 0.0328), Vector3(-0.2, 0.8, -0.4), Vector3(0.3, 1.55, -0.35), Vector3(-0.1, 0.95, -0.5)]
+"values": [Vector3(-0.5067, 0.4411, -0.0342), Vector3(-0.2, 0.8, -0.4), Vector3(0.3, 1.55, -0.35), Vector3(-0.1, 0.95, -0.5)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_sword"]

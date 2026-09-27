@@ -11,4 +11,4 @@ mesh = ExtResource("1_model")
 surface_material_override/0 = ExtResource("2_material")
 
 [node name="Grip" type="Marker3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.03)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3032)
