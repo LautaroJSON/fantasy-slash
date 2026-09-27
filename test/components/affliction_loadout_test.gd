@@ -254,3 +254,20 @@ func test_ac889_the_triggered_status_shows_in_the_overlay() -> void:
 	for hit: int in 10:
 		_combo_hit(enemy)
 	assert_str(probe.row().icon(0).get_stack_text()).is_equal("3")
+
+
+## docs/specs/frost-freeze.md: Frost freezes a common enemy and chills a boss.
+func test_ac942_ac943_frost_freezes_commons_and_chills_bosses() -> void:
+	_spawn_player(WARRIOR)
+	var common: Enemy = _spawn_enemy(Vector3.ZERO)
+	var boss: Enemy = _spawn_enemy(Vector3(5.0, 0.0, 0.0))
+	boss.stats = VERDUGO
+	_player.apply_upgrade(FROST_BASIC)
+	for hit: int in 5:
+		_combo_hit(common)
+	assert_float(common.debuffs.get_speed_scale()).is_equal(0.0)
+	assert_float(common.debuffs.get_remaining_seconds(FROST_STATUS.id)).is_equal_approx(1.5, 0.001)
+	for hit: int in 10:
+		_combo_hit(boss)
+	assert_float(boss.debuffs.get_speed_scale()).is_equal_approx(0.6, 0.001)
+	assert_float(boss.debuffs.get_remaining_seconds(FROST_STATUS.id)).is_equal_approx(5.0, 0.001)

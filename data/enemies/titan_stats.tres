@@ -52,3 +52,4 @@ behavior_config = ExtResource("5_config")
 ignores_attack_tokens = true
 resists_hitlag = true
 affliction_resistance = 0.5
+resists_control = true

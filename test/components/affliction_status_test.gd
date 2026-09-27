@@ -5,6 +5,7 @@ extends GdUnitTestSuite
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const POISON: DebuffData = preload("res://data/debuffs/poison.tres")
 const FROST: DebuffData = preload("res://data/debuffs/frost.tres")
+const FROST_CHILL: DebuffData = preload("res://data/debuffs/frost_chill.tres")
 const CORROSION: DebuffData = preload("res://data/debuffs/corrosion.tres")
 const BLEED: DebuffData = preload("res://data/debuffs/bleed.tres")
 const WEAKEN: DebuffData = preload("res://data/debuffs/weaken.tres")
@@ -85,11 +86,11 @@ func test_ac873_upgradable_corrosion_grows_and_restarts() -> void:
 	assert_int(enemy.debuffs.get_stacks(CORROSION.id)).is_equal(4)
 
 
-func test_ac874_frost_slows_walking_and_the_behavior_clock() -> void:
+func test_ac874_a_slow_status_slows_walking_and_the_behavior_clock() -> void:
 	var enemy: Enemy = _spawn_enemy()
 	var probe: DeltaProbe = auto_free(DeltaProbe.new())
 	enemy._behavior = probe
-	enemy.debuffs.apply(FROST, 0.4)
+	enemy.debuffs.apply(FROST_CHILL, 0.4)
 	assert_float(enemy.debuffs.get_speed_scale()).is_equal_approx(0.6, 0.001)
 	var frames: int = 0
 	while probe.total < 1.0 and frames < 1000:
@@ -100,16 +101,43 @@ func test_ac874_frost_slows_walking_and_the_behavior_clock() -> void:
 	assert_float(enemy.velocity.z).is_equal_approx(-enemy.get_scaled_stats().move_speed * 0.6, 0.001)
 
 
-func test_ac874_a_second_frost_restarts_without_slowing_more() -> void:
+## docs/specs/frost-freeze.md: a frozen common enemy stands still for 1.5 s.
+func test_ac942_frost_freezes_a_common_enemy() -> void:
 	var enemy: Enemy = _spawn_enemy()
-	enemy.debuffs.apply(FROST, 0.4)
-	enemy.debuffs.advance(2.0)
-	enemy.debuffs.apply(FROST, 0.4)
-	assert_float(enemy.debuffs.get_speed_scale()).is_equal_approx(0.6, 0.001)
-	assert_float(enemy.debuffs.get_remaining_seconds(FROST.id)).is_equal_approx(3.0, 0.001)
-	enemy.debuffs.advance(3.1)
+	var probe: DeltaProbe = auto_free(DeltaProbe.new())
+	enemy._behavior = probe
+	enemy.debuffs.apply(FROST, 1.0)
+	assert_float(enemy.debuffs.get_speed_scale()).is_equal(0.0)
+	for i: int in 60:
+		enemy._update_behaviour(1.0 / 60.0)
+	assert_float(probe.total).is_equal(0.0)
+	assert_float(enemy.velocity.x).is_equal(0.0)
+	assert_float(enemy.velocity.z).is_equal(0.0)
+	enemy.debuffs.advance(1.4)
+	assert_float(enemy.debuffs.get_speed_scale()).is_equal(0.0)
+	enemy.debuffs.advance(0.2)
 	assert_float(enemy.debuffs.get_speed_scale()).is_equal(1.0)
 
+
+func test_ac944_a_frozen_enemy_still_takes_damage_and_pushes() -> void:
+	var enemy: Enemy = _spawn_enemy()
+	enemy.debuffs.apply(FROST, 1.0)
+	enemy.health.receive_hit(20.0)
+	assert_float(enemy.health.current_health).is_less(1000.0)
+	enemy.apply_knockback(Vector3.FORWARD, 5.0)
+	assert_bool(enemy.is_knocked_back()).is_true()
+
+
+func test_ac943_boss_chill_lasts_five_seconds() -> void:
+	var enemy: Enemy = _spawn_enemy()
+	enemy.debuffs.apply(FROST_CHILL, 0.4)
+	enemy.debuffs.advance(4.9)
+	assert_float(enemy.debuffs.get_speed_scale()).is_equal_approx(0.6, 0.001)
+	enemy.debuffs.apply(FROST_CHILL, 0.4)
+	assert_float(enemy.debuffs.get_speed_scale()).is_equal_approx(0.6, 0.001)
+	assert_float(enemy.debuffs.get_remaining_seconds(FROST_CHILL.id)).is_equal_approx(5.0, 0.001)
+	enemy.debuffs.advance(5.1)
+	assert_float(enemy.debuffs.get_speed_scale()).is_equal(1.0)
 
 func test_ac876_bleed_still_removes_a_fraction_of_max_health() -> void:
 	var enemy: Enemy = _spawn_enemy()

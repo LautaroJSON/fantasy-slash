@@ -171,9 +171,11 @@ func _build_up(enemy: Enemy, applied: float, source: AfflictionUpgradeData.Sourc
 
 
 func _trigger(enemy: Enemy, type: AfflictionData) -> void:
-	var potency: float = type.potency_for(stats.get_stat(PlayerStats.Stat.DAMAGE))
-	if type.debuff != null:
-		enemy.debuffs.apply(type.debuff, potency)
+	var resists: bool = enemy.stats.resists_control
+	var potency: float = type.potency_for(stats.get_stat(PlayerStats.Stat.DAMAGE), resists)
+	var status: DebuffData = type.debuff_for(resists)
+	if status != null:
+		enemy.debuffs.apply(status, potency)
 	if type.has_burst():
 		_burst(enemy, type, potency)
 	triggered.emit(enemy, type)
