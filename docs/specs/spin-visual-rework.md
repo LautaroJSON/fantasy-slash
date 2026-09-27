@@ -1,13 +1,19 @@
 # Feature: re-work visual del Giro
 
-- **Estado:** Propuesta (2026-09-27). ACs **AC861–AC880**, reservados en `CLAUDE.md`. Se dejan libres AC801–AC860 para `warrior-abilities-rework.md`, que se escribe en paralelo en otra sesión.
+- **Estado:** Propuesta, revisión 2 (2026-09-27). ACs **AC861–AC880**, reservados en `CLAUDE.md`. Se dejan libres AC801–AC860 para `warrior-abilities-rework.md`, que se escribe en paralelo en otra sesión.
 - **Constitución:** `docs/constitution.md` v4.15.x. Propone una enmienda **MINOR** (§7).
 - **Pilar (Principio I):** **combate.** El Giro es la habilidad del Berserker, pero hoy no se lee:
   - el cuerpo gira quieto en `idle`;
   - el mandoble flota lejos de la mano;
   - no se ve dónde llega el daño ni cuándo cae cada golpe.
 
-  Con el cuerpo sosteniendo el arma, un área visible y un pulso por vuelta, el jugador sabe qué golpea y cuándo.
+  Con el cuerpo sosteniendo el arma, el área marcada en el piso y un pulso por vuelta, el jugador sabe qué golpea y cuándo.
+- **Decisiones del responsable (2026-09-27):**
+  - Las **chispas al golpear un enemigo** quedan fuera: las trata otra spec de feedback visual de impacto.
+  - **Los límites de las habilidades pasan a ser un relleno blanco muy transparente en el piso** (opacidad ≈ 0.3), en vez de la línea celeste. Es una regla para todas las habilidades (§2.6).
+  - **Pausa en el Corte del Giro:** sí (§2.5).
+  - El feedback de impacto (temblor y sacudida) es **solo para el Giro**.
+  - Se **corrige el texto** del Giro a los valores reales (§2.7).
 - **Dependencias:**
   - `berserker.md`, `spin-buff-wind-trail.md`, `spin-dash-slash.md`, `spin-golden-upgrades.md` y `spin-tornado.md`: la mecánica del Giro no cambia;
   - `humanoid-player-model.md` (`WeaponMount`, `PlayerAnimator`);
@@ -20,12 +26,21 @@
    - el humanoide gira entero (rota el `Visual`) en esa pose;
    - como el Giro permite caminar (`move_speed_factor` 0.8), se desliza sin mover las piernas.
 2. **El mandoble flota.** `SpinAbility.begin()` llama `SwordSwing.hold_pose(blade_position (0.4, 1.1, 0), blade_rotation (0, −90°, 0))`. Con `SwordSwing` activo, `WeaponMount.is_hand_free()` es falso, así que:
-   - el arma queda en una pose fija del espacio del `Visual`, a la altura de la cadera y hacia la derecha;
-   - la mano derecha sigue al hombro, y la izquierda no toma el mango (`left_grip` 0 en `idle`).
+   - el arma queda en una pose fija del espacio del `Visual`;
+   - la mano derecha sigue al hombro, y la izquierda no toma el mango.
 3. **El Corte del Giro flota.** `cast_cut_by_dash()` llama `SwordSwing.play(220°, 0.2 s)`. El cuerpo hace el clip `dash` con el arma al hombro, mientras el mandoble barre solo.
 4. **No se ve el área.** El radio real es `HIT_RANGE` = 3.5 m más el radio del enemigo. La punta del mandoble llega a unos 2.8 m, así que se golpea a enemigos que la hoja no toca.
-5. **No se ve el golpe.** El daño cae al **completar** cada vuelta (`_hit_completed_turns`). Nada marca ese momento: no hay *hit lag*, temblor del enemigo, sacudida de cámara, chispas ni pulso. Solo aparecen los números de daño y la sacudida de la barra de vida.
-6. **Desfase de datos (fuera de alcance, §8).** La descripción de `spin.tres` dice "3 s", "Radio: 2.5 m" y "Enfriamiento: 9 s". Los valores efectivos son 4 s (`cast_duration`), 3.5 m (`hit_range`) y 9 s (`cooldown` 8 con piso `min_cooldown` 9).
+5. **No se ve el golpe.** El daño cae al **completar** cada vuelta (`_hit_completed_turns`). Nada marca ese momento: no hay temblor, sacudida ni pulso. Solo aparecen los números de daño y la sacudida de la barra.
+6. **Texto desfasado.** La descripción de `spin.tres` no coincide con los valores efectivos:
+
+   | Dato | El texto dice | El valor real es |
+   |---|---|---|
+   | Duración | 3 s | 4 s (`cast_duration`) |
+   | Daño | "8 de daño + 15 %" | 0 + 100 % de tu daño (`base_damage` no escrito = 0; `attack_scaling` 1.0) |
+   | Radio | 2.5 m | 3.5 m (`hit_range`) |
+   | Enfriamiento | 9 s | 9 s (`cooldown` 8 con piso `min_cooldown` 9) |
+
+   Tampoco nombra el ritmo: una vuelta cada 0.8 s (`tick_interval`).
 
 ## 2. Diseño
 
@@ -40,7 +55,7 @@ Es un clip nuevo en `berserker_profile.gd`: **en loop, 0.5 s**, con dos pasos de
 | 0.5 | = t 0.0 | Loop. |
 
 - **Sentido.** El `Visual` gira con yaw creciente (antihorario visto desde arriba). Con la hoja a la derecha, el filo va **adelante** en el giro.
-- **La hoja no toca el piso** (se mide como AC751, para el mandoble) y **no atraviesa el torso**.
+- **La hoja no toca el piso** y **no atraviesa el torso** (mismo criterio que AC751, aplicado al mandoble).
 - **Entrada:** el cambio de `idle` a `spin` usa la mezcla normal del animador.
 - **Salida:** hoy `PlayerAnimator` sale de un clip de habilidad con la mezcla lenta `attack_exit_blend` (0.35 s) **solo si es de un solo disparo**. La spec la extiende a los clips en loop: al terminar el Giro, el cuerpo vuelve a la guardia (o a caminar) con esa mezcla, en vez de saltar de pose.
 
@@ -72,47 +87,90 @@ Es un clip nuevo en `berserker_profile.gd`: **en loop, 0.5 s**, con dos pasos de
   - `AbilityComponent.is_trailing()` = `is_casting() or behavior.extends_trail()`, con la señal `trail_changed`;
   - `SpinAbility` la emite al empezar y al terminar el corte;
   - `WeaponTrail` usa `is_trailing()` y escucha `trail_changed`.
-- `DashSlashVfx` (chispas y destello al final del dash) no cambia.
+- `DashSlashVfx` (la estela horizontal, las chispas y el destello al final del dash) no cambia.
 
 ### 2.4 VFX nuevos: `SpinVortexVfx`
 
-Es un nodo nuevo, hijo de `SpinAbility`: `top_level`, creado una vez en `_ready` y reutilizado (Principio V). Sigue al jugador cada cuadro (`follow(visual)`, una asignación sin *allocations*).
+Es un nodo nuevo, hijo de `SpinAbility`: `top_level`, creado una vez en `_ready` y reutilizado (Principio V). Sigue al jugador cada cuadro (`follow(...)`, una asignación sin *allocations*).
 
-1. **Anillo de alcance en el piso.**
-   - Es un anillo plano y fino (`TorusMesh` aplanado) de radio `HIT_RANGE`, con el celeste pálido de los indicadores de área (color no reservado), unshaded y translúcido.
-   - Aparece con el Giro (fade in de `ring_fade_in`), se reescala si `HIT_RANGE` cambia con una mejora, y se desvanece al terminar (`ring_fade_out`).
+1. **Área en el piso.**
+   - Es un **disco relleno blanco**, muy transparente (opacidad `area_alpha` 0.25), de radio `HIT_RANGE`, apenas sobre el piso. Es un `CylinderMesh` plano, unshaded y con el material compartido de los indicadores (§2.6).
+   - Aparece con el Giro (fade in de `area_fade_in`), se reescala si `HIT_RANGE` cambia con una mejora y se desvanece al terminar (`area_fade_out`).
    - Muestra **el área real** del daño.
 2. **Pulso por vuelta.**
-   - Al completar una vuelta (el instante del daño), el anillo **destella**: sube su opacidad hasta `pulse_alpha` y crece de `pulse_start_scale` a 1 en `pulse_duration`.
+   - Al completar una vuelta (el instante del daño), el disco **destella**: sube su opacidad hasta `pulse_alpha` (0.45) y crece de `pulse_start_scale` a 1 en `pulse_duration`.
    - Pulsa aunque no haya enemigos: marca el ritmo del daño.
 3. **Polvo bajo la hoja.**
    - Son `CPUParticles3D` con el material de polvo existente (`wind_dust_material.tres`, color tierra), que emiten sin parar desde un punto en el piso bajo la punta del mandoble.
-   - Como el `Visual` gira, el polvo dibuja un remolino. Se apagan al terminar (dejan de emitir; las vivas terminan solas).
-4. **Chispas de impacto.**
-   - Hay un pool de `impact_pool_size` ráfagas one-shot (`CPUParticles3D` de `SphereMesh`, blanco aditivo, el material de `wind_cut_additive_material.tres`).
-   - Por cada enemigo golpeado (vuelta o corte) se dispara una en la altura del pecho del enemigo, en la dirección tangente al giro.
-   - Si el pool está lleno, se reutiliza la más vieja.
+   - Como el `Visual` gira, el polvo dibuja un remolino. Al terminar dejan de emitir, y las partículas vivas terminan solas.
 
 Todos los números viven en `SpinVortexConfig` (`data/abilities/spin/spin_vortex_config.tres`).
 
-### 2.5 Feedback de impacto
+### 2.5 Feedback de impacto (solo el Giro)
 
 - **Por vuelta que golpea al menos un enemigo:**
   - la cámara se sacude con `SpinConfig.turn_shake`;
   - cada enemigo golpeado tiembla y se congela (`Enemy.apply_hitlag`) `turn_hitlag` segundos, con la amplitud y la frecuencia del `HitstopConfig` de la clase (`berserker_hitstop.tres`). Los bosses solo tiemblan, igual que en el combo.
-- **Por enemigo cortado en el Corte del Giro:** lo mismo, con `dash_slash_hitlag` y `dash_slash_shake`.
-- **El jugador no se pausa.** El Giro es canalizado: pausar el clip o la rotación desfasaría las vueltas del daño (AC196/AC197). La excepción queda en la enmienda del Principio VII (§7).
-- Lo hace `SpinAbility` al golpear, con referencias que ya tiene `AbilityComponent`: la cámara y el `HitstopConfig` se agregan como `@export` del componente. Es un mecanismo **solo del Giro**. El mecanismo genérico para todas las habilidades lo decide `warrior-abilities-rework.md` (§9, pregunta 2).
+  - **El jugador no se pausa.** El Giro es canalizado: pausar el clip o la rotación desfasaría las vueltas del daño (AC196/AC197). La excepción queda en la enmienda del Principio VII (§7).
+- **En el Corte del Giro:**
+  - cada enemigo cortado tiembla y se congela `dash_slash_hitlag` segundos, y la cámara se sacude con `dash_slash_shake`;
+  - **el clip del jugador se pausa** `dash_slash_hitlag` segundos al cortar al **primer** enemigo (una sola pausa por corte; no se suma);
+  - **el dash sigue su curso**: el cuerpo se sigue moviendo y conserva la invulnerabilidad y la duración. Al reanudar, el clip toma la velocidad justa para terminar junto con el dash, así que la conexión con `sprint` (AC786) se mantiene.
+  - Lo hace `PlayerAnimator.hold_dash_clip(duration)`.
+- Lo dispara `SpinAbility` al golpear. `AbilityComponent` suma como `@export`:
+  - la cámara (`ThirdPersonCamera`);
+  - el `HitstopConfig` de la clase (lo asigna `Player` al aplicar la clase, igual que a `HitstopComponent`);
+  - el `PlayerAnimator`.
+
+  Es un mecanismo **solo del Giro**. El genérico para todas las habilidades lo decidirá otra spec.
+
+### 2.6 Límites de las habilidades: relleno blanco (todas las habilidades)
+
+Regla nueva: el área de una habilidad se marca en el piso con un **relleno blanco muy transparente** (opacidad en reposo ≤ 0.3, destello ≤ 0.5), no con un contorno celeste.
+
+- **`materials/attack_indicator_material.tres`:** pasa de celeste `Color(0.55, 0.85, 1)` a **blanco** `Color(1, 1, 1)` (unshaded, transparencia alpha). Lo usan Envainar, el Tajo aéreo, la Estocada y Swift Strike (estas dos se van con el re-work del Guerrero), y el disco del Giro.
+- **`AbilityRectIndicator`:**
+  - de 4 segmentos de contorno pasa a **un solo `BoxMesh` plano** que rellena el rectángulo (largo × ancho, con `line_thickness` de alto);
+  - se borran `line_width` y `Edge` de `AbilityIndicatorConfig` y de sus `.tres`;
+  - `show_rect`, `resize`, `set_transparency`, `pulse` y `start_fade` no cambian de firma.
+- **Transparencias nuevas** (en Godot, `transparency` = 1 − opacidad):
+
+  | Archivo | Campo | Antes | Ahora |
+  |---|---|---|---|
+  | `sheathe_indicator_config.tres` | `start_transparency` | 0.6 | **0.75** (opacidad 0.25) |
+  | `sheathe_indicator_config.tres` | `pulse_transparency` | 0.1 | **0.55** (opacidad 0.45) |
+  | `sheathe_config.tres` | `full_charge_transparency` (carga completa) | 0.2 | **0.6** (opacidad 0.4) |
+  | `air_slash_indicator_config.tres` | `start_transparency` | 0.5 | **0.75** |
+  | `air_slash_indicator_config.tres` | `pulse_transparency` | — | **0.55** |
+  | `thrust_indicator_config.tres` y `swift_strike_indicator_config.tres` | | | Se dejan como están: los borra el re-work del Guerrero |
+
+- **No cambian** los avisos de ataque enemigo (rojo anaranjado): así el área del jugador (blanca) y la del enemigo (roja) no se confunden.
+
+### 2.7 Texto del Giro
+
+`spin.tres`, campo `description`:
+
+```
+Girás con el mandoble durante 4 s
+golpeando a todos a tu alrededor
+en cada vuelta (una cada 0.8 s).
+Podés moverte lento.
+100 % de tu daño por vuelta.
+Radio: 3.5 m · Enfriamiento: 9 s
+```
+
+Las cartas del Giro cambian la duración, el ritmo, el daño y el radio. El texto describe la base, como las otras habilidades.
 
 ## 3. Datos (Principio III)
 
 | Archivo | Cambio |
 |---|---|
-| `resources/spin_config.gd` / `spin_config.tres` | **−** `blade_position`, `blade_rotation`, `dash_slash_arc_degrees`, `dash_slash_sweep_duration`. **+** `body_clip` (`&"spin"`), `dash_slash_body_clip` (`&"spin_dash_slash"`), `turn_hitlag` (0.06 s), `turn_shake` (0.15), `dash_slash_hitlag` (0.1 s), `dash_slash_shake` (0.35) |
-| `resources/spin_vortex_config.gd` (nuevo) / `data/abilities/spin/spin_vortex_config.tres` | Anillo: `ring_thickness` 0.05 m, `ring_alpha` 0.25, `ring_fade_in` 0.15 s, `ring_fade_out` 0.25 s. Pulso: `pulse_alpha` 0.6, `pulse_start_scale` 0.85, `pulse_duration` 0.2 s. Polvo: `dust_amount` 24, `dust_lifetime` 0.5 s, `dust_size` 0.3, `dust_rise_speed` 0.8. Chispas: `impact_pool_size` 8, `spark_amount` 12, `spark_lifetime` 0.25 s, `spark_speed_min`/`max` 3 / 6, `spark_size` 0.05, `spark_height` 1.0 m |
-| `materials/vfx/spin_ring_material.tres` (nuevo) | unshaded, transparencia alpha, celeste pálido (el mismo color que `attack_indicator_material.tres`) |
-| `components/player_animator.gd` | Mezcla de salida también para clips de habilidad en loop (§2.1); clip del dash desde `Player.get_dash_clip()` (§2.3) |
-| `entities/player/player.tscn` | `camera` y `hitstop` en `BasicAbility` y `UltimateAbility` |
+| `resources/spin_config.gd` / `spin_config.tres` | **Se borran:** `blade_position`, `blade_rotation`, `dash_slash_arc_degrees`, `dash_slash_sweep_duration`. **Se agregan:** `body_clip` (`&"spin"`), `dash_slash_body_clip` (`&"spin_dash_slash"`), `turn_hitlag` (0.06 s), `turn_shake` (0.15), `dash_slash_hitlag` (0.08 s), `dash_slash_shake` (0.35) |
+| `resources/spin_vortex_config.gd` (nuevo) / `data/abilities/spin/spin_vortex_config.tres` | **Área:** `area_alpha` 0.25, `area_height` 0.02 m, `ground_offset` 0.05 m, `area_fade_in` 0.15 s, `area_fade_out` 0.25 s. **Pulso:** `pulse_alpha` 0.45, `pulse_start_scale` 0.85, `pulse_duration` 0.2 s. **Polvo:** `dust_amount` 24, `dust_lifetime` 0.5 s, `dust_size` 0.3, `dust_rise_speed` 0.8 |
+| `resources/ability_indicator_config.gd` y sus `.tres` | Se borra `line_width`. Transparencias de §2.6 |
+| `materials/attack_indicator_material.tres` | Celeste → blanco |
+| `data/abilities/spin/spin.tres` | `description` (§2.7) |
+| `entities/player/player.tscn` | `camera`, `hitstop` y `animator` en `BasicAbility` y `UltimateAbility` |
 
 Los valores iniciales son el punto de partida y se ajustan con capturas.
 
@@ -121,93 +179,130 @@ Los valores iniciales son el punto de partida y se ajustan con capturas.
 ```
 SpinAbility (spin_ability.tscn)
 ├── DashSlash : DashSlashVfx            (sin cambios)
-└── Vortex : SpinVortexVfx (Node3D, top_level)   config + ring/dust/glow materials
-      ├── Ring : MeshInstance3D (TorusMesh)
-      ├── Dust : CPUParticles3D
-      └── 8 × Impact : CPUParticles3D (one-shot, pool)
+└── Vortex : SpinVortexVfx (Node3D, top_level)   config + area/dust materials
+      ├── Area : MeshInstance3D (CylinderMesh plano)
+      └── Dust : CPUParticles3D
+
+AbilityRectIndicator
+└── Fill : MeshInstance3D (BoxMesh plano)   (antes 4 segmentos)
 ```
 
 ## 5. Interfaz pública
 
 - **`SpinVortexVfx`** (`components/abilities/spin_vortex_vfx.gd`):
   - `begin(visual: Node3D, radius: float)`, `follow(visual: Node3D, blade_tip: Vector3)`, `set_radius(radius: float)`;
-  - `pulse()`, `burst(at: Vector3, direction: Vector3)`, `finish()`, `advance(delta: float)`;
-  - para tests: `is_showing()`, `get_ring_radius()`, `get_ring_alpha()`, `get_impact_count()`, `get_active_impacts()`.
+  - `pulse()`, `finish()`, `advance(delta: float)`;
+  - para tests: `is_showing()`, `get_area_radius()`, `get_area_alpha()`, `is_dust_emitting()`.
 - **`AbilityBehavior`:** `get_dash_clip(ability) -> StringName` y `extends_trail(ability) -> bool`.
 - **`AbilityComponent`:**
-  - `@export var camera: ThirdPersonCamera` y `@export var hitstop: HitstopConfig`;
+  - `@export var camera: ThirdPersonCamera`, `@export var hitstop: HitstopConfig` y `@export var animator: PlayerAnimator`;
   - `get_dash_clip()`, `is_trailing()`, `notify_trail_changed()`;
   - `signal trail_changed`.
 - **`Player`:** `get_dash_clip() -> StringName`.
+- **`PlayerAnimator`:** `hold_dash_clip(duration: float)` e `is_dash_clip_held() -> bool`.
 - **`SpinAbility`:**
   - `get_body_clip()`, `holds_weapon_in_hand()`, `get_dash_clip()`, `extends_trail()`, `get_vortex()`;
-  - llama `vortex.pulse()` en cada vuelta completada, y `burst()`, `camera.shake()` y `enemy.apply_hitlag()` al golpear.
+  - llama `vortex.pulse()` en cada vuelta completada. Al golpear, llama `camera.shake()` y `enemy.apply_hitlag()`, y en el corte además `animator.hold_dash_clip()`.
+- **`AbilityRectIndicator`:** misma interfaz. `get_fill()` reemplaza el acceso a los segmentos en los tests.
 
 ## 6. Criterios de aceptación
 
+**Cuerpo y arma**
 - **AC861** El perfil del Berserker tiene `spin` (loop) y `spin_dash_slash` (sin loop). En todo cuadro de `spin`, `left_grip` es 1.
 - **AC862** Mientras se castea el Giro, el humanoide reproduce `spin` y `Player.is_weapon_in_hand_cast()` es verdadero. Con `weapon_mount_blend` cumplido, el pivot del arma coincide con `WeaponMount.get_hand_pose()` (tolerancia 1 mm).
 - **AC863** Durante el Giro, `SwordSwing` no está activo y `SpinConfig` no tiene `blade_position`, `blade_rotation`, `dash_slash_arc_degrees` ni `dash_slash_sweep_duration`.
-- **AC864** En `spin`, muestreado cada 0.05 s: la hoja (base y punta del mandoble) queda entre 0.6 m y 1.4 m de altura, apunta hacia afuera (la punta está más lejos del eje del cuerpo que la mano) y no atraviesa el torso (mismo criterio que AC751).
+- **AC864** En `spin`, muestreado cada 0.05 s:
+  - la hoja (base y punta del mandoble) queda entre 0.6 m y 1.4 m de altura;
+  - apunta hacia afuera: la punta está más lejos del eje del cuerpo que la mano;
+  - no atraviesa el torso (mismo criterio que AC751).
 - **AC865** Al terminar el Giro sin dash, la locomoción entra con `attack_exit_blend`. Sin moverse, el cuerpo termina en `idle`.
+
+**Corte del Giro**
 - **AC866** Si un dash corta el Giro, el humanoide reproduce `spin_dash_slash` estirado a la duración del dash, y el arma sigue la mano. Sin el Giro, el dash reproduce `DashData.clip` como hoy.
 - **AC867** El último cuadro de `spin_dash_slash` es el primero de `sprint` (misma comparación que AC786).
 - **AC868** La estela se enciende durante el Giro y durante el Corte del Giro, y se apaga cuando termina el corte.
-- **AC869** El anillo del vórtice está oculto en reposo. Al empezar el Giro se muestra con radio `HIT_RANGE`, sigue al jugador y se desvanece al terminar en `ring_fade_out`. Con la mejora de radio, el anillo toma el nuevo `HIT_RANGE`.
-- **AC870** Cada vuelta completada lanza exactamente un pulso, con o sin enemigos. Un Giro de 4 s con `TICK_INTERVAL` 0.8 pulsa 5 veces.
-- **AC871** El polvo emite solo mientras se castea el Giro.
-- **AC872** Cada enemigo golpeado (vuelta o corte) dispara una ráfaga de chispas. Con más golpes que `impact_pool_size` en una vuelta, se reutilizan las del pool: la cantidad de nodos no cambia.
-- **AC873** Una vuelta que golpea sacude la cámara con `turn_shake`. Una que no golpea, no la sacude.
-- **AC874** Un enemigo golpeado por una vuelta recibe `apply_hitlag(turn_hitlag, …)`, y uno cortado por el Corte del Giro, `apply_hitlag(dash_slash_hitlag, …)`, con la cámara sacudida por `dash_slash_shake`.
-- **AC875** El clip del jugador y la rotación del `Visual` no se pausan al golpear. Las vueltas y el daño siguen los tiempos de AC196/AC197.
-- **AC876** Regresión: `spin_test`, `spin_dash_slash_test`, `spin_golden_upgrades_test`, `spin_tornado_test`, `weapon_trail_test` y `player_animator_test` en verde. Los tests que verificaban `blade_position` o el barrido de `SwordSwing` se adaptan a la mano, sin cambiar lo que verifican.
-- **AC877** Regresión: la suite completa en verde, y el smoke test del menú y de la arena sin errores ni warnings.
 
-AC878–AC880 quedan de reserva para ajustes que salgan de las capturas.
+**Área, pulso y polvo**
+- **AC869** El disco del área está oculto en reposo.
+  - Al empezar el Giro se muestra blanco, con radio `HIT_RANGE` y opacidad `area_alpha` (≤ 0.3).
+  - Sigue al jugador y se desvanece al terminar en `area_fade_out`.
+  - Con la mejora de radio, el disco toma el nuevo `HIT_RANGE`.
+- **AC870** Cada vuelta completada lanza exactamente un pulso, con o sin enemigos. La opacidad del pulso nunca supera 0.5. Un Giro de 4 s con `TICK_INTERVAL` 0.8 pulsa 5 veces.
+- **AC871** El polvo emite solo mientras se castea el Giro.
+
+**Feedback de impacto**
+- **AC872** Una vuelta que golpea sacude la cámara con `turn_shake`, y cada enemigo golpeado recibe `apply_hitlag(turn_hitlag, …)`. Una vuelta que no golpea no sacude la cámara.
+- **AC873** Durante las vueltas, el clip del jugador y la rotación del `Visual` no se pausan. Las vueltas y el daño siguen los tiempos de AC196/AC197.
+- **AC874** En el Corte del Giro:
+  - cada enemigo cortado recibe `apply_hitlag(dash_slash_hitlag, …)` y la cámara se sacude con `dash_slash_shake`;
+  - el clip del jugador se pausa `dash_slash_hitlag` una sola vez, al primer corte (con 3 enemigos cortados, la pausa total sigue siendo `dash_slash_hitlag`).
+- **AC875** La pausa del Corte del Giro no cambia el dash: misma distancia, duración e invulnerabilidad que un dash sin pausa. El clip termina en su último cuadro cuando termina el dash (tolerancia de un cuadro de física).
+
+**Indicadores y texto**
+- **AC876** `attack_indicator_material.tres` es blanco `Color(1, 1, 1)`, unshaded y translúcido. `AbilityRectIndicator` tiene un solo relleno que cubre largo × ancho. Las transparencias de Envainar y del Tajo aéreo son las de §2.6: opacidad en reposo ≤ 0.3 y destello ≤ 0.5.
+- **AC877** La descripción de `spin.tres` es la de §2.7, y sus números coinciden con los datos: `cast_duration`, `tick_interval`, `attack_scaling`, `hit_range` y el enfriamiento efectivo (`max(cooldown, min_cooldown)`).
+
+**Regresión**
+- **AC878** Los tests del Giro y de los indicadores siguen en verde: `spin_test`, `spin_dash_slash_test`, `spin_golden_upgrades_test`, `spin_tornado_test`, `weapon_trail_test`, `player_animator_test`, `thrust_indicator_test`, `sheathe_feel_test`, `air_slash_test`. Los tests que verificaban `blade_position`, el barrido de `SwordSwing`, los segmentos del contorno o transparencias fijas se adaptan, sin cambiar lo que verifican.
+- **AC879** La suite completa en verde, y el smoke test del menú y de la arena sin errores ni warnings.
+
+AC880 queda de reserva para ajustes que salgan de las capturas.
 
 ## 7. Enmienda de la constitución (MINOR → 4.16.0)
 
-- **Principio II, tabla de colores:** se agrega la fila **"Impactos del Giro (chispas por enemigo golpeado)"**: `SphereMesh`, partículas, **blanco** `Color(1, 1, 1)`, unshaded, blend aditivo, alpha ≤ 0.5. También se suma a la lista de elementos que comparten el blanco (translúcidos, décimas de segundo).
-- **Principio II, registro de colores no reservados:** el anillo de alcance del Giro usa el celeste pálido de los indicadores de área.
-- **Principio VII, hit lag local:** se agrega "**Las habilidades canalizadas** (p. ej. el Giro) comunican el impacto con el temblor de los golpeados y la sacudida de cámara, **sin pausar al jugador**, para no desfasar sus golpes periódicos."
+**Principio II, tabla de colores:** se agrega la fila:
+
+| Elemento | Malla base | Color (`albedo_color`) |
+|---|---|---|
+| Área de una habilidad del jugador (relleno en el piso: rectángulo o disco) | `BoxMesh` / `CylinderMesh` planos | **Blanco** `Color(1, 1, 1)`, unshaded, alpha ≤ 0.3 en reposo y ≤ 0.5 en un destello |
+
+Otros cambios del Principio II:
+- En la lista de elementos que comparten el blanco se agrega el área de las habilidades. No se confunde: es un relleno plano en el piso, muy transparente.
+- En el registro de colores no reservados, el celeste pálido queda **solo** para las cartas de mejora de habilidad (deja de ser el color de los indicadores de área).
+- Se registra el color tierra también para el polvo del Giro.
+
+**Principio VII, hit lag local:** se agrega "**Las habilidades canalizadas** (p. ej. el Giro) comunican el impacto con el temblor de los golpeados y la sacudida de cámara, **sin pausar al jugador**, para no desfasar sus golpes periódicos. Una pausa durante un dash (p. ej. el Corte del Giro) detiene solo el clip: el dash conserva su recorrido, su duración y su invulnerabilidad."
 
 ## 8. Fuera de alcance
 
-- La descripción desfasada de `spin.tres` (§1.6). Se puede corregir en esta spec si querés (§9, pregunta 3).
-- El Tajo aéreo del Berserker (también tiene el cuerpo en `idle` y el arma suelta): va en otra spec.
-- La Estocada y Swift Strike: los reemplaza `warrior-abilities-rework.md`.
-- El feedback de impacto de Envainar.
+- **Chispas y otros VFX al golpear un enemigo:** los trata la spec de feedback visual de impacto, en otra sesión.
+- **Feedback de impacto de otras habilidades** (Envainar, Tajo aéreo, las del Guerrero nuevo).
+- **El cuerpo y el arma del Tajo aéreo** (también está en `idle` con el arma suelta): va en otra spec.
+- **La Estocada y Swift Strike:** los reemplaza `warrior-abilities-rework.md`.
 
-## 9. Preguntas abiertas
+## 9. Plan
 
-1. **Pausa del jugador:** la propuesta es **no pausar** al jugador en el Giro (§2.5). ¿Querés además una micro-pausa solo en el Corte del Giro, que no es canalizado?
-2. **Mecanismo genérico:** el feedback de impacto queda local al Giro para no chocar con la sesión del Guerrero, que tiene el mandato de un mecanismo genérico. ¿Lo dejo así y después se unifica, o esta spec construye el genérico y se lo avisamos a la otra sesión?
-3. **Descripción:** ¿corrijo el texto de `spin.tres` a los valores reales (4 s, 3.5 m, 9 s), o los valores estaban mal y hay que corregir los datos?
-
-## 10. Plan
-
-1. **Datos y enmienda:** `SpinConfig` (quitar y agregar campos), `SpinVortexConfig` y su `.tres`, el material del anillo, y la enmienda 4.16.0 en `constitution.md`. Reservar AC861–AC880 en `CLAUDE.md`.
-2. **Clips:**
+1. **Datos y enmienda:**
+   - `SpinConfig` (quitar y agregar campos), `SpinVortexConfig` y su `.tres`;
+   - material de indicadores en blanco, `AbilityIndicatorConfig` sin `line_width` y las transparencias de §2.6;
+   - texto de `spin.tres`;
+   - enmienda 4.16.0 en `constitution.md`.
+2. **Indicadores:**
+   - `AbilityRectIndicator` con un solo relleno;
+   - adaptar `thrust_indicator_test`, `sheathe_feel_test` y `air_slash_test`.
+   - Tests AC876–AC877.
+3. **Clips:**
    - `spin` y `spin_dash_slash` en `berserker_profile.gd`;
    - hoja de capturas (humanoide aislado, 4 ángulos, cada 0.05 s) para ajustar brazos y hoja hasta cumplir AC864 y AC867.
-3. **Arma en la mano:**
+4. **Arma en la mano:**
    - `get_body_clip` y `holds_weapon_in_hand` en `SpinAbility`;
    - sacar `SwordSwing` de `begin`, `release` y `cancel_cast`;
    - mezcla de salida de clips en loop en `PlayerAnimator`.
    - Tests AC861–AC865 y adaptar `spin_test`.
-4. **Corte del Giro:**
+5. **Corte del Giro:**
    - `get_dash_clip` en `AbilityBehavior`, `AbilityComponent` y `Player`, y `PlayerAnimator._play_dash`;
    - `extends_trail`/`trail_changed` y `WeaponTrail`;
    - sacar `sword_swing.play` del corte.
    - Tests AC866–AC868 y adaptar `spin_dash_slash_test` y `weapon_trail_test`.
-5. **Vórtice:** `SpinVortexVfx` (anillo, pulso, polvo, pool de chispas) en `spin_ability.tscn`, conectado desde `SpinAbility`. Tests AC869–AC872.
-6. **Feedback de impacto:**
-   - `camera` y `hitstop` en `AbilityComponent` y `player.tscn`;
-   - sacudida de cámara y `apply_hitlag` en `SpinAbility._strike` y en el corte.
-   - Tests AC873–AC875.
-7. **Cierre:**
+6. **Vórtice:** `SpinVortexVfx` (área, pulso y polvo) en `spin_ability.tscn`, conectado desde `SpinAbility`. Tests AC869–AC871.
+7. **Feedback de impacto:**
+   - `camera`, `hitstop` y `animator` en `AbilityComponent` y `player.tscn`, y la asignación del `HitstopConfig` de la clase en `Player`;
+   - sacudida y `apply_hitlag` en las vueltas y en el corte;
+   - `PlayerAnimator.hold_dash_clip`.
+   - Tests AC872–AC875.
+8. **Cierre:**
    - suite completa, import y smoke test del menú y de la arena;
    - capturas del Giro en la arena;
    - checklist de la constitución en esta spec, estado **Implementada** y el próximo AC libre en `CLAUDE.md`.
 
-   **Nota:** en esta sesión en la nube no está el Godot de Windows. Si no puedo instalar un Godot 4.7.2 para Linux acá, los pasos 2 y 7 (capturas, suite y smoke test) se corren en tu máquina.
+   **Nota:** en esta sesión en la nube no está el Godot de Windows. Voy a intentar instalar un Godot 4.7.2 para Linux. Si no se puede, los pasos 3 y 8 (capturas, suite y smoke test) se corren en tu máquina.
