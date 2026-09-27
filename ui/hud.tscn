@@ -12,6 +12,8 @@
 [ext_resource type="Script" path="res://components/input/input_device_monitor.gd" id="11_device_monitor"]
 [ext_resource type="Resource" path="res://data/ui/input_prompt_config.tres" id="12_prompts"]
 [ext_resource type="Resource" path="res://data/ui/player_stamina_bar_style.tres" id="13_stamina_bar_style"]
+[ext_resource type="Script" path="res://ui/enemy_status_overlay.gd" id="14_enemy_status_overlay"]
+[ext_resource type="Resource" path="res://data/ui/enemy_status_overlay_config.tres" id="15_enemy_status_overlay_config"]
 
 [node name="Hud" type="Control"]
 layout_mode = 3
@@ -25,6 +27,18 @@ script = ExtResource("1_script")
 health_bar_style = ExtResource("7_health_bar_style")
 stamina_bar_style = ExtResource("13_stamina_bar_style")
 prompts = ExtResource("12_prompts")
+
+[node name="EnemyStatusOverlay" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("14_enemy_status_overlay")
+config = ExtResource("15_enemy_status_overlay_config")
 
 [node name="HealthBar" type="ProgressBar" parent="."]
 unique_name_in_owner = true

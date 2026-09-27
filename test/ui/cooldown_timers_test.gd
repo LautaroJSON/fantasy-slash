@@ -10,8 +10,7 @@ const SHEATHE: AbilityData = preload("res://data/abilities/sheathe/sheathe.tres"
 const SWIFT_STRIKE: AbilityData = preload("res://data/abilities/swift_strike/swift_strike.tres")
 const TEXT_CONFIG: CooldownTextConfig = preload("res://data/ui/cooldown_text_config.tres")
 const SLOT_CONFIG: AbilitySlotViewConfig = preload("res://data/ui/ability_slot_view_config.tres")
-const ICON_CONFIG: DebuffIconConfig = preload("res://data/ui/debuff_icon_config.tres")
-const LEVEL_MATERIAL: StandardMaterial3D = preload("res://materials/enemy_level_material.tres")
+const StatusOverlayProbe := preload("res://test/helpers/status_overlay_probe.gd")
 const BLEED: DebuffData = preload("res://data/debuffs/bleed.tres")
 const WEAKEN: DebuffData = preload("res://data/debuffs/weaken.tres")
 const TOLERANCE: float = 0.0001
@@ -142,51 +141,51 @@ func test_ac323_remaining_seconds_of_timed_and_tick_debuffs() -> void:
 	assert_float(enemy.debuffs.get_remaining_seconds(&"missing")).is_equal(0.0)
 
 
+func _probe(enemy: Enemy) -> StatusOverlayProbe:
+	var probe: StatusOverlayProbe = auto_free(StatusOverlayProbe.new())
+	add_child(probe)
+	probe.watch(enemy)
+	return probe
+
+
+## status-icons.md (AC909): the enemy icons moved to the HUD overlay and the
+## seconds became the clock. What this checks is kept: each icon tells its own
+## time left, an expired debuff leaves and clearing hides the row.
 func test_ac324_enemy_debuff_icons_show_their_remaining_seconds() -> void:
 	var enemy: Enemy = _spawn_idle_enemy()
-	var icons: DebuffIconRow = enemy.get_node("HealthBar/DebuffIcons") as DebuffIconRow
-	assert_bool(icons.is_processing()).is_false()
+	var probe: StatusOverlayProbe = _probe(enemy)
+	assert_object(probe.row()).is_null()
 	enemy.debuffs.apply(BLEED, 0.01)
 	enemy.debuffs.apply(WEAKEN, 0.05)
-	assert_bool(icons.is_processing()).is_true()
-	assert_str(icons.get_time_text(0)).is_equal("5.0")
-	assert_str(icons.get_time_text(1)).is_equal("4.0")
-	assert_object(icons.get_time_mesh(0)).is_not_same(icons.get_time_mesh(1))
-	var label: MeshInstance3D = icons.get_icon(0).get_child(0) as MeshInstance3D
-	assert_object(label.mesh).is_same(icons.get_time_mesh(0))
-	assert_object(label.material_override).is_same(LEVEL_MATERIAL)
-	assert_object(ICON_CONFIG.time_material).is_same(LEVEL_MATERIAL)
+	var row: StatusIconRow = probe.row()
+	assert_float(row.icon(0).get_clock_fraction()).is_equal_approx(1.0, TOLERANCE)
+	assert_float(row.icon(1).get_clock_fraction()).is_equal_approx(1.0, TOLERANCE)
 	enemy.debuffs.advance(1.5)
-	icons.update_times()
-	assert_str(icons.get_time_text(0)).is_equal("3.5")
-	assert_str(icons.get_time_text(1)).is_equal("2.5")
+	row = probe.row()
+	assert_float(row.icon(0).get_clock_fraction()).is_equal_approx(3.5 / 5.0, TOLERANCE)
+	assert_float(row.icon(1).get_clock_fraction()).is_equal_approx(2.5 / 4.0, TOLERANCE)
 	enemy.debuffs.advance(2.6)
-	assert_int(icons.get_visible_icon_count()).is_equal(1)
-	assert_str(icons.get_time_text(0)).is_equal("0.9")
+	row = probe.row()
+	assert_int(row.get_visible_icon_count()).is_equal(1)
+	assert_float(row.icon(0).get_clock_fraction()).is_equal_approx(0.9 / 5.0, TOLERANCE)
 	enemy.debuffs.clear()
-	assert_int(icons.get_visible_icon_count()).is_equal(0)
-	assert_bool(icons.is_processing()).is_false()
+	assert_object(probe.row()).is_null()
 
 
+## status-icons.md: the stack count is the Label of the shared icon.
 func test_ac382_enemy_icon_shows_weaken_stacks() -> void:
 	var enemy: Enemy = _spawn_idle_enemy()
-	var icons: DebuffIconRow = enemy.get_node("HealthBar/DebuffIcons") as DebuffIconRow
+	var probe: StatusOverlayProbe = _probe(enemy)
 	for stacks: int in [1, 2, 3, 3]:
 		enemy.debuffs.apply(WEAKEN, 0.05)
-		assert_str(icons.get_stack_text(0)).is_equal(str(stacks))
-	assert_bool(icons.is_stack_visible(0)).is_true()
-	var label: MeshInstance3D = icons.get_icon(0).get_child(1) as MeshInstance3D
-	assert_object(label.material_override).is_same(LEVEL_MATERIAL)
-	assert_str((label.mesh as TextMesh).text).is_equal("3")
-	assert_object(label.mesh).is_not_same(icons.get_time_mesh(0))
-	assert_float(ICON_CONFIG.icon_size).is_equal(0.2)
+		assert_str(probe.row().icon(0).get_stack_text()).is_equal(str(stacks))
 
 
 func test_ac383_bleed_shows_no_stack_count() -> void:
 	var enemy: Enemy = _spawn_idle_enemy()
-	var icons: DebuffIconRow = enemy.get_node("HealthBar/DebuffIcons") as DebuffIconRow
+	var probe: StatusOverlayProbe = _probe(enemy)
 	enemy.debuffs.apply(BLEED, 0.001)
 	enemy.debuffs.apply(WEAKEN, 0.05)
-	assert_bool(icons.is_stack_visible(0)).is_false()
-	assert_bool(icons.is_stack_visible(1)).is_true()
-	assert_str(icons.get_stack_text(1)).is_equal("1")
+	var row: StatusIconRow = probe.row()
+	assert_str(row.icon(0).get_stack_text()).is_empty()
+	assert_str(row.icon(1).get_stack_text()).is_equal("1")

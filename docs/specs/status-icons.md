@@ -1,8 +1,8 @@
 # Feature: íconos de estado estilo LoL (buffs y debuffs)
 
-- **Estado:** Aprobada (2026-09-27), con D1–D4 resueltas (§12).
+- **Estado:** **Implementada** (2026-09-27). Aprobada el mismo día, con D1–D4 resueltas (§12). ACs usados: AC901–AC918.
 - **ACs reservados:** AC901–AC930 (reservados en `CLAUDE.md` al escribir la spec).
-- **Constitución:** `docs/constitution.md` v4.15.0 → **enmienda MINOR a 4.16.0** (Principio II, ver §8).
+- **Constitución:** `docs/constitution.md` v4.15.0 → **enmienda MINOR a 4.16.0** (Principio II, ver §8; aplicada).
 - **Pilar (Principio I):** **combate** (legibilidad).
   - De un vistazo se sabe qué estado tiene cada enemigo, cuántos stacks tiene y cuánto le falta, sin leer números. Un ícono se reconoce aunque dos estados tengan colores parecidos (Rage y Sangrado son rojos).
   - Todos los estados se leen igual: los del jugador, los de un boss y los de un enemigo común. Eso prepara la mecánica global de acumulación (otra sesión), que va a sumar estados nuevos.
@@ -364,13 +364,56 @@ Cada paso deja el proyecto abriendo y la suite en verde.
 **Aprobación:** el responsable aprobó la spec y el plan el 2026-09-27, con el cambio del "+" dentro de las N casillas.
   - Hasta 24 filas en pantalla.
 
-## 13. Checklist de review (al cerrar)
+## 13. Notas de implementación
 
-- [ ] Identidad (I)
-- [ ] Arte (II)
-- [ ] Datos (III)
-- [ ] GDScript (IV)
-- [ ] Performance (V)
-- [ ] Input (VI)
-- [ ] Combate (VII)
-- [ ] Calidad
+- **Desvíos menores de la spec**, todos aditivos:
+  - `EnemyStatusOverlayConfig.resize_threshold_px` (1.0): el "1 px" de §2.2 es un dato (Principio III).
+  - `StatusIconView` suma `show_debuff`/`show_buff` y `update_debuff_time`/`update_buff_time`, para que los tres contenedores mapeen los datos igual.
+  - `StatusIconRow.set_shown(total)` devuelve cuántas casillas llenar (§5).
+  - El overlay expone `get_row_center()` y `get_content_write_count()` para los tests (AC909, AC912).
+- **Enemigos liberados sin salir del registro** (al cerrar una escena o en tests): el overlay los saltea con `is_instance_valid`. En juego no pasa, porque el pool los desactiva y el registro los saca.
+- **SVG a 64 px:** los `.import` no se versionan (`.gitignore`), así que a cada SVG se le agregó `width="64" height="64"`. Con eso, el importador por defecto genera texturas de 64 px y no de 512 (ver `SOURCE.md`).
+- **Tamaño sobre la barra:** a la distancia típica de juego, la barra de 1 m mide ~70 px en una ventana de 1600 × 900, así que el lado queda en el mínimo (14 px). En ese caso, las 5 casillas ocupan un poco más que la barra (82 px). El mínimo y el máximo son datos (`min_icon_size_px`, `max_icon_size_px`).
+- **Tests adaptados** (§9), sin cambiar lo que verifican:
+  - AC322 → `test_ac322_ac906_…`;
+  - AC325 (reloj y 28 px en lugar de segundos y 24 px);
+  - AC349 (el reloj es el tercer hijo);
+  - AC350 (sin la parte 3D);
+  - AC162 y AC541 (glifo en lugar del color del material);
+  - AC285 (`icon_color`);
+  - AC295 (glifo y fondo);
+  - AC324, AC382 y AC383 (fila del overlay, reloj en lugar de segundos);
+  - AC340, AC101, AC286 y AC385 (fila del overlay);
+  - AC100 (el veneno de prueba usa `icon` e `icon_color`).
+
+  Para leer los íconos de un enemigo fuera de la arena se agregó `test/helpers/status_overlay_probe.gd`: cámara, registro y overlay propios.
+- **Suite:** corrida en Linux con Godot 4.7.2 y el runner de GdUnit4 v6.2.0, porque `addons/gdUnit4/bin/` está en `.gitignore` y no viene con el repo.
+  - Antes: 806 tests, 15 fallando en `main` antes de este cambio (Giro, alcance y estela del arma, oleadas, datos de clases, escudo del Guerrero, etc.; ajenos a esta spec).
+  - Después: 824 tests (18 nuevos), con **los mismos 15 fallando y ninguna falla nueva**.
+  - Import y smoke test (menú y `arena.tscn`, 300 frames) sin errores nuevos.
+- **Captura:** arena con el HUD, un boss (Escudo, Debilitar ×2 y Sangrado), Conmoción ×3 en el jugador y tres enemigos: uno con Rage sin golpear (se ve el ícono sin la barra), uno con Debilitar ×3 + Sangrado, y uno con 7 estados (4 + "+").
+
+## 14. Checklist de review
+
+- [x] **Identidad (I):** combate (legibilidad de estados), como declara la spec.
+- [x] **Arte (II):**
+  - íconos SVG en `assets/icons/status/` con `SOURCE.md` y créditos CC BY 3.0, usados solo en la UI 2D;
+  - sin shaders;
+  - colores no reservados registrados en la enmienda 4.16.0;
+  - el glifo nunca es blanco puro (se aclara el color del estado).
+- [x] **Datos (III):**
+  - tamaños, colores, topes, desplazamiento y umbral en `StatusIconConfig` y `EnemyStatusOverlayConfig`;
+  - el color de cada estado en `icon_color`;
+  - ningún Resource se muta en runtime;
+  - `revision` es estado del nodo.
+- [x] **GDScript (IV):**
+  - firmas y miembros tipados;
+  - `_ready` y `_process` delegan (`_create_rows`, `update_rows`, `update_times`).
+- [x] **Performance (V):**
+  - filas e íconos creados una vez (AC911);
+  - por frame, solo se recorre la lista del registro sin copiarla y se proyectan puntos;
+  - el contenido se reescribe solo si cambia la `revision` (AC912);
+  - sin búsquedas de nodos por frame (`get_camera_3d` es un getter del viewport y se cachea).
+- [x] **Input (VI):** sin input nuevo.
+- [x] **Combate (VII):** sin cambios.
+- [x] **Calidad:** suite sin fallas nuevas (ver notas), smoke test sin errores nuevos.

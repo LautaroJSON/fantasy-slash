@@ -27,10 +27,14 @@ enum Effect {
 ## Highest stack count; each application adds one. 1 or less = no stacking.
 @export var max_stacks: int
 ## Never expires with time; only clear() (the entity's reset) removes it.
-## Its icon shows no remaining time.
+## Its icon has no clock.
 @export var permanent: bool
-## Material of the icon shown above the health bar.
-@export var icon_material: StandardMaterial3D
+## Glyph of the status icon (white SVG in assets/icons/status/, tinted with icon_color).
+@export var icon: Texture2D
+## Color of the status: tints the icon's glyph and background.
+@export var icon_color: Color
+## Good for whoever carries it (e.g. Rage on an enemy): its icon gets the buff frame.
+@export var is_beneficial: bool
 
 
 ## At least 1: debuffs that do not declare it never stack.

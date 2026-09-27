@@ -30,6 +30,9 @@ class ActiveDebuff:
 @export var target: Node3D
 
 var _active: Array[ActiveDebuff] = []
+## Bumped every time `changed` is emitted, so per-frame readers (the enemy
+## status overlay) can tell the list changed without connecting to the signal.
+var revision: int = 0
 
 
 func _ready() -> void:
@@ -44,7 +47,7 @@ func apply(data: DebuffData, potency: float) -> void:
 	var existing: ActiveDebuff = _find(data.id)
 	if existing != null:
 		_refresh(existing, potency)
-		changed.emit()
+		_emit_changed()
 		return
 	var debuff := ActiveDebuff.new()
 	debuff.data = data
@@ -193,6 +196,11 @@ func _on_list_shrunk() -> void:
 
 func _on_list_changed() -> void:
 	_write_defense_reduction()
+	_emit_changed()
+
+
+func _emit_changed() -> void:
+	revision += 1
 	changed.emit()
 
 

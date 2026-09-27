@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dmfij0ebi3hi8" path="res://resources/buff_data.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://be3t2vttqygd2" path="res://resources/buff_modifier.gd" id="2_modifier"]
+[ext_resource type="Texture2D" path="res://assets/icons/status/whirlwind.svg" id="3_glyph"]
 
 [sub_resource type="Resource" id="Modifier_move_speed"]
 script = ExtResource("2_modifier")
@@ -24,4 +25,5 @@ title = "Conmoción"
 max_stacks = 10
 stack_duration = 2.5
 icon_color = Color(0.55, 0.85, 0.25, 1)
+icon = ExtResource("3_glyph")
 modifiers = Array[ExtResource("2_modifier")]([SubResource("Modifier_move_speed"), SubResource("Modifier_ability_speed"), SubResource("Modifier_crit_chance")])

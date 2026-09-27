@@ -7,8 +7,6 @@
 [ext_resource type="Resource" path="res://data/combat/combat_rules.tres" id="5_rules"]
 [ext_resource type="PackedScene" path="res://components/enemy_health_bar.tscn" id="6_health_bar"]
 [ext_resource type="Script" path="res://components/debuff_component.gd" id="7_debuffs"]
-[ext_resource type="Script" path="res://components/debuff_icon_row.gd" id="8_debuff_icons"]
-[ext_resource type="Resource" path="res://data/ui/debuff_icon_config.tres" id="9_debuff_icon_config"]
 [ext_resource type="Script" path="res://components/status_aura.gd" id="10_status_aura"]
 [ext_resource type="Material" path="res://materials/vfx/rage_aura_material.tres" id="11_rage_aura_material"]
 [ext_resource type="Resource" path="res://data/debuffs/rage.tres" id="12_rage"]
@@ -103,11 +101,6 @@ target = NodePath("..")
 
 [node name="HealthBar" parent="." node_paths=PackedStringArray("health") instance=ExtResource("6_health_bar")]
 health = NodePath("../HealthComponent")
-
-[node name="DebuffIcons" type="Node3D" parent="HealthBar" node_paths=PackedStringArray("debuffs")]
-script = ExtResource("8_debuff_icons")
-debuffs = NodePath("../../DebuffComponent")
-config = ExtResource("9_debuff_icon_config")
 
 [node name="Hands" type="Node3D" parent="."]
 script = ExtResource("13_hands")
