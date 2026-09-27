@@ -1,6 +1,6 @@
 # Feature: íconos de estado estilo LoL (buffs y debuffs)
 
-- **Estado:** **Implementada** (2026-09-27). Aprobada el mismo día, con D1–D4 resueltas (§12). ACs usados: AC901–AC918.
+- **Estado:** **Implementada** (2026-09-27). Aprobada el mismo día, con D1–D4 resueltas (§12). ACs usados: AC901–AC919.
 - **ACs reservados:** AC901–AC930 (reservados en `CLAUDE.md` al escribir la spec).
 - **Constitución:** `docs/constitution.md` v4.15.0 → **enmienda MINOR a 4.16.0** (Principio II, ver §8; aplicada).
 - **Pilar (Principio I):** **combate** (legibilidad).
@@ -38,7 +38,7 @@ Un **cuadrado** con cinco capas, de abajo hacia arriba:
 1. **Fondo:** el color del estado oscurecido (`icon_color.darkened(background_darken)`).
 2. **Glifo:** el SVG del estado, centrado, con un margen interior (`glyph_margin`). Se tiñe con el color del estado aclarado (`icon_color.lightened(glyph_lighten)`), así el glifo contrasta con su fondo sin usar blanco puro (reservado, Principio II).
 3. **Reloj:** el `CooldownClock` cuadrado de siempre, un sector oscuro translúcido que **cubre el tiempo que falta** (D1). El ícono arranca oscurecido al aplicarse y se va limpiando en sentido horario, desde las 12, a medida que pasan las agujas. Al vencer queda limpio y desaparece. Es la misma convención que los botones de habilidad y que la de hoy en buffs y bosses. Los estados permanentes (Rage, Escudo) no tienen reloj.
-4. **Marco:** un borde de `border_width` px. Es **rojo** en los debuffs y **verde** en los buffs. Los estados que benefician a quien los tiene (Rage y Escudo en un enemigo, Conmoción en el jugador) llevan marco de buff.
+4. **Marco:** un borde proporcional al lado del ícono (`border_ratio` × lado, entre `min_border_px` y `max_border_px`: 1 px en los enemigos comunes, ~1.1 px en el boss y ~1.4 px en los buffs; ver AC919). Es **rojo** en los debuffs y **verde** en los buffs. Los estados que benefician a quien los tiene (Rage y Escudo en un enemigo, Conmoción en el jugador) llevan marco de buff.
 5. **Stacks:** un número abajo a la derecha, con el contorno de `CooldownTextConfig`. Se muestra solo en los estados que acumulan (`get_stack_cap() > 1` o, en buffs, `max_stacks > 1`), igual que hoy (AC383).
 
 **Desaparecen los segundos:** ningún ícono de estado muestra texto de tiempo. El reloj es la única indicación de duración.
@@ -115,7 +115,7 @@ Enemy (entities/enemy/enemy.tscn)
   - `background_darken: float` (0.55)
   - `glyph_lighten: float` (0.45)
   - `glyph_margin: float`: fracción del lado (0.12)
-  - `border_width: float`: px (2.0)
+  - `border_ratio: float` (0.04), `min_border_px: float` (1.0), `max_border_px: float` (1.5): ancho del marco = lado × ratio, acotado. Antes era un `border_width` fijo de 2 px (iteración del 2026-09-27, §14).
   - `debuff_border_color: Color`: `Color(0.85, 0.2, 0.15)`
   - `buff_border_color: Color`: `Color(0.3, 0.8, 0.35)`
   - `stack_font_ratio: float`: tamaño de fuente = lado × ratio (0.42)
@@ -294,6 +294,7 @@ Los tests de `unique_upgrades_test` que crean un veneno de prueba con `icon_mate
 - **AC908** `assets/icons/status/SOURCE.md` existe y lista cada SVG de la carpeta con su autor, la URL de origen y la licencia CC BY 3.0.
 - **AC909** Overlay: un enemigo común con Debilitar que **nunca fue golpeado** (barra de vida oculta) tiene una fila visible con 1 ícono. La fila está centrada en `camera.unproject_position(health_bar.global_position) + row_offset_px` (±1 px).
 - **AC917** Overlay, tamaño: con la cámara a una distancia en la que la barra de 1 m mide 150 px en pantalla, el lado del ícono es `(150 − 4 × 3) / 5 = 27.6` px (±1). Cinco íconos más sus 4 espacios miden lo mismo que la barra (±2 px). Si la barra mide 40 px, el lado queda en el mínimo (14 px); si mide 400 px, en el máximo (32 px). Si el lado cambia menos de 1 px, `set_side` no se llama.
+- **AC919** Marco más fino en los íconos chicos: `border_width(14) = 1` (mínimo), `border_width(28) = 1.12`, `border_width(36) = 1.44` y `border_width(64) = 1.5` (máximo). Un ícono de 14 px tiene un marco más fino que uno de 36, y al cambiar su lado a 36 queda igual.
 - **AC918** Desborde (`StatusIconRow`):
   - con 5 estados, la fila del enemigo muestra 5 íconos y no muestra el "+";
   - con 6 o 7 estados, muestra los 4 primeros (en orden de aplicación) y el "+" en la quinta casilla, y la fila nunca tiene más de 5 casillas visibles;
@@ -393,7 +394,11 @@ Cada paso deja el proyecto abriendo y la suite en verde.
   - Import y smoke test (menú y `arena.tscn`, 300 frames) sin errores nuevos.
 - **Captura:** arena con el HUD, un boss (Escudo, Debilitar ×2 y Sangrado), Conmoción ×3 en el jugador y tres enemigos: uno con Rage sin golpear (se ve el ícono sin la barra), uno con Debilitar ×3 + Sangrado, y uno con 7 estados (4 + "+").
 
-## 14. Checklist de review
+## 14. Iteraciones
+
+- **2026-09-27, marco más fino:** a pedido del responsable, el marco pasa de 2 px fijos a proporcional al lado (4 %, entre 1 y 1.5 px). Queda en 1 px en los enemigos comunes, 1.12 px en el boss y 1.44 px en los buffs. Nuevo AC919.
+
+## 15. Checklist de review
 
 - [x] **Identidad (I):** combate (legibilidad de estados), como declara la spec.
 - [x] **Arte (II):**

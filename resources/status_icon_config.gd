@@ -10,8 +10,13 @@ extends Resource
 @export var glyph_lighten: float
 ## Gap between the glyph and the icon edge, as a fraction of the side.
 @export var glyph_margin: float
-## Width of the frame, in pixels.
-@export var border_width: float
+## Width of the frame as a fraction of the icon side, so small icons (common
+## enemies) get a thinner frame than the HUD ones.
+@export var border_ratio: float
+## The frame never gets thinner than this, in pixels.
+@export var min_border_px: float
+## The frame never gets thicker than this, in pixels.
+@export var max_border_px: float
 @export var debuff_border_color: Color
 @export var buff_border_color: Color
 ## Font size of the stack count, as a fraction of the side.
@@ -27,6 +32,11 @@ extends Resource
 @export var clock: CooldownClockConfig
 ## Outline style of the stack count and the overflow text.
 @export var cooldown_text: CooldownTextConfig
+
+
+## Pure: frame width in pixels for an icon of `side` pixels.
+func border_width(side: float) -> float:
+	return clampf(side * border_ratio, min_border_px, max_border_px)
 
 
 ## Pure: font size in pixels for a side and a ratio, never below 1.

@@ -41,6 +41,7 @@ func set_side(side: float) -> void:
 	_glyph.offset_right = -margin
 	_glyph.offset_bottom = -margin
 	_apply_label_font()
+	_border.queue_redraw()
 
 
 func get_side() -> float:
@@ -123,6 +124,10 @@ func get_border_color() -> Color:
 	return _border_color
 
 
+func get_border_width() -> float:
+	return config.border_width(_side)
+
+
 func get_stack_text() -> String:
 	return _stack_label.text
 
@@ -175,9 +180,10 @@ func _set_border(color: Color) -> void:
 
 
 func _draw_border() -> void:
-	var inset: float = config.border_width / 2.0
-	var rect := Rect2(Vector2(inset, inset), _border.size - Vector2(config.border_width, config.border_width))
-	_border.draw_rect(rect, _border_color, false, config.border_width)
+	var width: float = config.border_width(_side)
+	var inset: float = width / 2.0
+	var rect := Rect2(Vector2(inset, inset), _border.size - Vector2(width, width))
+	_border.draw_rect(rect, _border_color, false, width)
 
 
 func _apply_label_font() -> void:

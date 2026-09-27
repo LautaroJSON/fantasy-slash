@@ -214,6 +214,18 @@ func test_ac918_row_overflow_takes_the_last_slot() -> void:
 	assert_int(row.get_child_count()).is_equal(6)
 
 
+func test_ac919_the_frame_is_thinner_on_small_icons() -> void:
+	assert_float(CONFIG.border_width(14.0)).is_equal(1.0)
+	assert_float(CONFIG.border_width(28.0)).is_equal_approx(1.12, TOLERANCE)
+	assert_float(CONFIG.border_width(36.0)).is_equal_approx(1.44, TOLERANCE)
+	assert_float(CONFIG.border_width(64.0)).is_equal(1.5)
+	var small: StatusIconView = _view(14.0)
+	var big: StatusIconView = _view(36.0)
+	assert_float(small.get_border_width()).is_less(big.get_border_width())
+	small.set_side(36.0)
+	assert_float(small.get_border_width()).is_equal(big.get_border_width())
+
+
 func test_ac914_the_3d_icons_are_gone() -> void:
 	var enemy: Enemy = _spawn_idle_enemy()
 	assert_bool(enemy.has_node("HealthBar/DebuffIcons")).is_false()
