@@ -1,6 +1,6 @@
 # Feature: Aflicción Sangrado
 
-- **Estado:** Propuesta (2026-09-27). Pendiente de aprobación (§2, propuesta de la versión resistida para bosses). ACs reservados: **AC961–AC970** (se usan AC961–AC967).
+- **Estado:** **Implementada** (2026-09-27). Aprobada con la versión resistida propuesta (un décimo en bosses). ACs: AC961–AC967 (reservados AC961–AC970). Constitución enmendada a 4.19.1 (aplicada).
 - **Constitución:** `docs/constitution.md` v4.19.0 → **enmienda PATCH a 4.19.1** (Principio II: registro del carmesí, ver §6).
 - **Pilar (Principio I):** **progresión** y **combate.** Un quinto tipo de Aflicción que premia insistir sobre el mismo enemigo: cada vez que su barra se llena, el sangrado sube un escalón y hace bastante más daño.
 - **Dependencias:** `affliction.md` (barras, cartas violetas, stacks mejorables), `affliction-damage-colors.md` (número de color y cursiva de los DoT), `frost-freeze.md` (versión resistida para bosses).
@@ -19,7 +19,7 @@
 ## 2. Decisiones
 
 - Resueltas por el responsable: opción (a) de daño por stacks; versión resistida para bosses; carmesí; Estocada y Lacerante fuera de alcance.
-- **Propuesta a aprobar:** un décimo de la potencia en bosses (0.1 / 0.3 / 0.6 %/s).
+- **Aprobado:** un décimo de la potencia en bosses (0.1 / 0.3 / 0.6 %/s).
 
 ## 3. Criterios de aceptación (AC961–AC967)
 
@@ -52,4 +52,6 @@ Principio II, registro de colores de las Aflicciones: se suma el carmesí `Color
 
 ## 7. Notas de implementación
 
-(Se completa al implementar.)
+- **Tests:** `affliction_status_test.gd` (AC961, AC963, AC964, AC966), `affliction_data_test.gd` (AC962), `affliction_loadout_test.gd` (AC963 y AC964 con disparos reales de la barra, AC967) y `damage_number_pool_test.gd` (AC965). En verde junto con las suites de Aflicción, `test/effects/`, `status_icons_test`, `sandbox_run_test`, `ability_run_test` y `unique_upgrades_test`. `spin_golden_upgrades_test` AC288 falla igual en `main` (2 fallos antes y después).
+- **Tests viejos adaptados:** `affliction_data_test.gd` AC852 (8 → 10 cartas) y las listas de AC855 y AC954 (suman Sangrado).
+- **Tabla de stacks:** `DebuffData.stack_multiplier(stacks)`; pasado el final de la tabla usa su último valor.

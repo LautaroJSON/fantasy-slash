@@ -11,6 +11,7 @@ const BLEED: DebuffData = preload("res://data/debuffs/bleed.tres")
 const WEAKEN: DebuffData = preload("res://data/debuffs/weaken.tres")
 const RAGE: DebuffData = preload("res://data/debuffs/rage.tres")
 const SHIELD: DebuffData = preload("res://data/debuffs/shield.tres")
+const BLEEDING: DebuffData = preload("res://data/debuffs/bleeding.tres")
 
 
 ## Adds up the delta its enemy hands it every frame.
@@ -164,3 +165,44 @@ func test_ac938_ticks_report_their_status() -> void:
 	enemy.debuffs.apply(BLEED, 0.01)
 	enemy.debuffs.advance(1.0)
 	assert_array(seen).contains_exactly_in_any_order([POISON, BLEED])
+
+
+## docs/specs/affliction-bleed.md
+func test_ac961_stack_multipliers_shape_the_strength() -> void:
+	assert_float(BLEEDING.stack_multiplier(1)).is_equal(1.0)
+	assert_float(BLEEDING.stack_multiplier(2)).is_equal(3.0)
+	assert_float(BLEEDING.stack_multiplier(3)).is_equal(6.0)
+	assert_float(CORROSION.stack_multiplier(3)).is_equal(3.0)
+	assert_float(WEAKEN.stack_multiplier(2)).is_equal(2.0)
+
+
+func test_ac963_bleeding_ticks_grow_with_stacks() -> void:
+	var enemy: Enemy = _spawn_enemy()
+	var expected: Array[float] = [10.0, 30.0, 60.0, 60.0]
+	for i: int in expected.size():
+		enemy.debuffs.apply(BLEEDING, 0.01)
+		assert_float(enemy.debuffs.get_remaining_seconds(BLEEDING.id)).is_equal_approx(5.0, 0.001)
+		var before: float = enemy.health.current_health
+		enemy.debuffs.advance(1.0)
+		assert_float(before - enemy.health.current_health).is_equal_approx(expected[i], 0.001)
+
+
+func test_ac964_bosses_bleed_a_tenth() -> void:
+	var enemy: Enemy = _spawn_enemy()
+	var expected: Array[float] = [1.0, 3.0, 6.0]
+	for i: int in expected.size():
+		enemy.debuffs.apply(BLEEDING, 0.001)
+		var before: float = enemy.health.current_health
+		enemy.debuffs.advance(1.0)
+		assert_float(before - enemy.health.current_health).is_equal_approx(expected[i], 0.001)
+
+
+func test_ac966_lacerante_bleed_is_unchanged_and_separate() -> void:
+	var enemy: Enemy = _spawn_enemy()
+	enemy.debuffs.apply(BLEED, 0.01)
+	enemy.debuffs.apply(BLEEDING, 0.01)
+	enemy.debuffs.apply(BLEEDING, 0.01)
+	assert_int(enemy.debuffs.get_stacks(BLEED.id)).is_equal(1)
+	assert_int(enemy.debuffs.get_stacks(BLEEDING.id)).is_equal(2)
+	assert_array(BLEED.stack_multipliers).is_empty()
+	assert_int(BLEED.get_stack_cap()).is_equal(1)
