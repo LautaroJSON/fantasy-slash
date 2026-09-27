@@ -1,6 +1,6 @@
 # Feature: íconos de estado estilo LoL (buffs y debuffs)
 
-- **Estado:** Propuesta (2026-09-27).
+- **Estado:** Aprobada (2026-09-27), con D1–D4 resueltas (§12).
 - **ACs reservados:** AC901–AC930 (reservados en `CLAUDE.md` al escribir la spec).
 - **Constitución:** `docs/constitution.md` v4.15.0 → **enmienda MINOR a 4.16.0** (Principio II, ver §8).
 - **Pilar (Principio I):** **combate** (legibilidad).
@@ -45,15 +45,15 @@ Un **cuadrado** con cinco capas, de abajo hacia arriba:
 
 ### 2.2 Dónde se muestra
 
-| Dónde | Contenedor | Tamaño | Íconos antes del "+" | Cambio |
+| Dónde | Contenedor | Tamaño | Casillas (N) | Cambio |
 |---|---|---|---|---|
 | Buffs del jugador | `BuffBar` (HUD, mismo lugar) | 36 px (`BuffBarConfig.icon_size`) | 6 (hoy 4) | `ColorRect` → `StatusIconRow` |
 | Debuffs de un boss | `BossHealthBar` (HUD) | 28 px (`BossBarConfig.debuff_icon_size_px`, hoy 24) | 8 (hoy 4) | `ColorRect` → `StatusIconRow` |
 | Estados de un enemigo común | **`EnemyStatusOverlay`**, una capa 2D nueva del HUD | el ancho de la barra ÷ 5 (ver abajo) | 5 (hoy 4) | reemplaza a la fila 3D |
 
 **Desborde, el ícono "+" (D4):**
-- Cada fila muestra hasta N íconos (N por contenedor, tabla de arriba). Si hay más estados, después del último ícono aparece una casilla **"+"**: del mismo tamaño, fondo oscuro, **borde negro** y un "+" gris claro en el centro. Avisa que hay más estados, sin decir cuáles.
-- Se muestran los primeros N en el orden de la lista (el orden de aplicación, como hoy). Con N estados justos no hay "+".
+- Cada fila tiene N casillas (N por contenedor, tabla de arriba) y **nunca ocupa más**. Con N estados o menos, cada casilla es un estado. Con más de N, se muestran los primeros N − 1 estados y la última casilla es el **"+"**: del mismo tamaño, fondo oscuro, **borde negro** y un "+" gris claro en el centro. Avisa que hay más estados, sin decir cuáles.
+- Se muestran en el orden de la lista (el orden de aplicación, como hoy). Con N estados justos no hay "+".
 - El "+" no tiene reloj ni stacks.
 
 **Capa 2D para los enemigos comunes:**
@@ -61,7 +61,7 @@ Un **cuadrado** con cinco capas, de abajo hacia arriba:
 - **Tamaño:** cinco íconos ocupan justo el ancho de la barra de vida sin desbordarla.
   - Cada frame se proyectan los dos extremos de la barra (centro ± `camera.basis.x × ancho / 2`, con el ancho de `HealthBarConfig.size.x`, hoy 1 m) y se mide su ancho en pantalla.
   - El lado del ícono es `(ancho − 4 × spacing_px) / 5`, acotado a [`min_icon_size_px`, `max_icon_size_px`] (14 y 32 px), para que de lejos se siga leyendo y de cerca no tape al enemigo.
-  - Con las 5 casillas llenas, el "+" queda a la derecha, por fuera del ancho de la barra.
+  - Las 5 casillas (con o sin "+") siempre caben en el ancho de la barra.
   - La fila se redimensiona solo si el lado cambia más de 1 px.
 - Se ve **aunque la barra de vida esté oculta** (enemigo sin golpear), en el mismo lugar donde aparecería la barra. La barra sigue apareciendo recién con el primer golpe.
 - No se muestra para bosses (barra suprimida: sus estados van en el HUD), ni para enemigos detrás de la cámara, inactivos o apareciendo desde el piso.
@@ -128,7 +128,7 @@ Enemy (entities/enemy/enemy.tscn)
   - `cooldown_text: CooldownTextConfig`: solo el estilo del contorno
 - **`EnemyStatusOverlayConfig`** (nuevo, `data/ui/enemy_status_overlay_config.tres`):
   - `max_rows: int` (24)
-  - `icons_per_bar: int`: cuántos íconos entran sobre la barra, que también es el tope antes del "+" (5)
+  - `icons_per_bar: int`: casillas sobre la barra, contando el "+" (5)
   - `min_icon_size_px: float` (14)
   - `max_icon_size_px: float` (32)
   - `spacing_px: int` (3)
@@ -176,9 +176,9 @@ static func shows_debuff_stacks(data: DebuffData) -> bool
 
 class_name StatusIconRow extends HBoxContainer
 static func create(config: StatusIconConfig, max_icons: int, side: float, spacing: int) -> StatusIconRow
-## Shows the first max_icons entries; `total` > max_icons also shows the "+".
-## Each container fills the icons with icon(i).show_status(...) and then calls:
-func set_shown(shown: int, total: int) -> void
+## Called first; the container then fills icon(0 .. returned - 1) with show_status.
+## Returns total, or max_icons - 1 (and shows the "+" last) when total > max_icons.
+func set_shown(total: int) -> int
 func icon(index: int) -> StatusIconView
 func set_side(side: float) -> void
 func get_visible_icon_count() -> int      # without the "+"
@@ -204,7 +204,7 @@ func get_row(index: int) -> StatusIconRow
   - `set_remaining` llama a `clock.set_fraction(ratio)`: el reloj cubre lo que falta. El reloj ya redibuja solo si cambia la fracción.
   - Sin `has_clock`, el reloj se oculta.
   - `show_overflow` oculta el glifo, el reloj y los stacks, pone el fondo y el borde del "+" y muestra el texto `overflow_text` centrado en el label.
-- **`StatusIconRow`:** crea `max_icons` íconos y el "+" una sola vez. `set_shown(shown, total)` muestra los primeros `shown` íconos y el "+" si `total > max_icons`. Los tres contenedores usan la misma fila, así que la regla del "+" es una sola.
+- **`StatusIconRow`:** crea `max_icons` íconos y el "+" una sola vez. `set_shown(total)` devuelve cuántos estados hay que llenar: `total` si `total <= max_icons`, y si no `max_icons − 1`, con el "+" en la última casilla. Los íconos sobrantes se ocultan. Los tres contenedores usan la misma fila, así que la regla del "+" es una sola.
 - **`BuffBar` y `BossHealthBar`:** misma lógica que hoy (refrescan contenido en `changed` y fracciones en `_process` mientras haya estados), sin labels de tiempo. La fracción sale de:
   - buffs: `time_left / stack_duration`;
   - debuffs: `DebuffComponent.get_remaining_ratio()`, que ya existe y devuelve 0 en los permanentes.
@@ -217,7 +217,7 @@ func get_row(index: int) -> StatusIconRow
      - no está apareciendo desde el piso;
      - no está detrás de la cámara (`camera.is_position_behind`).
   4. Si la fila `k` estaba asignada a otro enemigo, o si la `revision` del `DebuffComponent` cambió desde la última vez, reescribe su contenido con `show_status`.
-  5. Mide el ancho de la barra en pantalla (dos `unproject_position`, §2.2), calcula el lado y, si cambió más de 1 px, llama a `set_side`. Después posiciona la fila, centrando en X los íconos sin contar el "+", y actualiza las fracciones de sus íconos.
+  5. Mide el ancho de la barra en pantalla (dos `unproject_position`, §2.2), calcula el lado y, si cambió más de 1 px, llama a `set_side`. Después posiciona la fila, centrando en X las casillas visibles (el "+" incluido), y actualiza las fracciones de sus íconos.
   6. Oculta las filas que sobran después de `k`.
   7. Con más enemigos elegibles que `max_rows`, los que sobran no se muestran. Nunca se crean nodos en runtime.
   8. Con cero filas visibles, el `_process` sigue corriendo: el recorrido es barato y lo necesita para detectar estados nuevos. Alternativa descartada: conectarse a `changed` de cada enemigo, porque obliga a conectar y desconectar cada vez que el pool recicla.
@@ -296,11 +296,11 @@ Los tests de `unique_upgrades_test` que crean un veneno de prueba con `icon_mate
 - **AC917** Overlay, tamaño: con la cámara a una distancia en la que la barra de 1 m mide 150 px en pantalla, el lado del ícono es `(150 − 4 × 3) / 5 = 27.6` px (±1). Cinco íconos más sus 4 espacios miden lo mismo que la barra (±2 px). Si la barra mide 40 px, el lado queda en el mínimo (14 px); si mide 400 px, en el máximo (32 px). Si el lado cambia menos de 1 px, `set_side` no se llama.
 - **AC918** Desborde (`StatusIconRow`):
   - con 5 estados, la fila del enemigo muestra 5 íconos y no muestra el "+";
-  - con 7 estados, muestra los 5 primeros (en orden de aplicación) y el "+";
+  - con 6 o 7 estados, muestra los 4 primeros (en orden de aplicación) y el "+" en la quinta casilla, y la fila nunca tiene más de 5 casillas visibles;
   - el "+" tiene borde `overflow_border_color` (negro) y texto `"+"`, sin glifo, reloj ni stacks;
   - al volver a 5 estados, el "+" se oculta.
 
-  La misma regla vale en la `BuffBar` con 7 buffs (6 + "+") y en la barra del boss con 9 debuffs (8 + "+"). Se prueba con estados de test.
+  La misma regla vale en la `BuffBar` con 7 buffs (5 + "+") y en la barra del boss con 9 debuffs (7 + "+"). Se prueba con estados de test.
 - **AC910** Overlay, casos sin fila:
   - enemigo sin estados;
   - boss con estados (barra suprimida);
@@ -358,8 +358,10 @@ Cada paso deja el proyecto abriendo y la suite en verde.
 - **D3 — Rage y Escudo:** marco de buff, porque benefician al enemigo. Aceptado.
 - **D4 — Cuántos íconos:**
   - Sobre un enemigo común entran los íconos que llenan el ancho de la barra de vida sin desbordarla: **5**. El tamaño se ajusta al ancho de la barra en pantalla (§2.2).
-  - Si hay más, se agrega un ícono **"+" con borde negro**: avisa que hay más estados, sin decir cuáles.
-  - La misma regla se usa en el HUD: 6 buffs del jugador y 8 debuffs del boss antes del "+".
+  - Si hay más, se muestran 4 íconos y un **"+" con borde negro** en la quinta casilla: todo entra en el ancho de la barra, y el "+" avisa que hay más estados sin decir cuáles.
+  - La misma regla se usa en el HUD: 6 casillas para los buffs del jugador y 8 para los debuffs del boss, con el "+" en la última.
+
+**Aprobación:** el responsable aprobó la spec y el plan el 2026-09-27, con el cambio del "+" dentro de las N casillas.
   - Hasta 24 filas en pantalla.
 
 ## 13. Checklist de review (al cerrar)
