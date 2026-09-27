@@ -1,10 +1,12 @@
-[gd_resource type="Resource" script_class="CharacterClassData" format=3]
+[gd_resource type="Resource" script_class="CharacterClassData" format=3 uid="uid://ct70thbakfcwx"]
 
-[ext_resource type="Script" path="res://resources/character_class_data.gd" id="1_script"]
-[ext_resource type="Resource" path="res://data/classes/berserker/berserker_stats.tres" id="2_stats"]
+[ext_resource type="Script" uid="uid://c0anouj3aiswg" path="res://resources/character_class_data.gd" id="1_script"]
+[ext_resource type="Resource" uid="uid://b5jdpoygt7crb" path="res://data/classes/berserker/berserker_stats.tres" id="2_stats"]
 [ext_resource type="Resource" path="res://data/classes/berserker/berserker_abilities.tres" id="3_abilities"]
 [ext_resource type="Resource" path="res://data/classes/berserker/greatsword.tres" id="4_weapon"]
-[ext_resource type="Resource" path="res://data/classes/berserker/air_slash_config.tres" id="5_air_slash"]
+[ext_resource type="Resource" uid="uid://lhlsvhxcm3wd" path="res://data/classes/berserker/air_slash_config.tres" id="5_air_slash"]
+[ext_resource type="Resource" path="res://data/classes/berserker/berserker_combo.tres" id="10_combo"]
+[ext_resource type="Resource" path="res://data/classes/berserker/berserker_hitstop.tres" id="11_hitstop"]
 
 [resource]
 script = ExtResource("1_script")
@@ -15,3 +17,6 @@ base_stats = ExtResource("2_stats")
 abilities = ExtResource("3_abilities")
 weapon = ExtResource("4_weapon")
 air_slash = ExtResource("5_air_slash")
+animation_profile = &"berserker"
+combo = ExtResource("10_combo")
+hitstop = ExtResource("11_hitstop")

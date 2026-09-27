@@ -58,9 +58,15 @@ func test_ac238_only_the_samurai_wears_a_sheath_at_the_hip() -> void:
 	var sheath: Node3D = samurai.get_sheath()
 	assert_object(sheath).is_not_null()
 	assert_str(sheath.scene_file_path).is_equal(KATANA_SHEATH_SCENE.resource_path)
-	assert_object(sheath.get_parent()).is_same(samurai.get_node("Visual"))
-	assert_vector(sheath.position).is_equal_approx(SAMURAI.weapon.sheath_position, POSE_TOLERANCE)
-	assert_vector(sheath.rotation).is_equal_approx(SAMURAI.weapon.sheath_rotation, POSE_TOLERANCE)
+	# Adapted (docs/specs/sheath-in-left-hand.md): the sheath hangs from a
+	# socket on the weapon's sheath joint (the left wrist), with the weapon data
+	# as its offset.
+	var socket: Node3D = samurai.get_sheath_socket()
+	assert_object(sheath.get_parent()).is_same(socket)
+	assert_object(socket.get_parent()).is_same((samurai.get_node("Visual/Humanoid") as LowPolyHumanoid).get_joint(String(SAMURAI.weapon.sheath_joint)))
+	var size: float = (samurai.get_node("Visual/Humanoid") as Node3D).scale.x
+	assert_vector(socket.position * size).is_equal_approx(SAMURAI.weapon.sheath_position, POSE_TOLERANCE)
+	assert_vector(socket.basis.orthonormalized().get_euler()).is_equal_approx(SAMURAI.weapon.sheath_rotation, POSE_TOLERANCE)
 	assert_object(_spawn_player(WARRIOR).get_sheath()).is_null()
 	assert_object(_spawn_player(BERSERKER).get_sheath()).is_null()
 	assert_object(WARRIOR.weapon.sheath).is_null()

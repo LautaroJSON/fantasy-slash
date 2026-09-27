@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="AttackComboConfig" format=3 uid="uid://c3t6dp8iked1j"]
+[gd_resource type="Resource" script_class="AttackComboConfig" format=3 uid="uid://wjxvfn6a160n"]
 
 [ext_resource type="Script" uid="uid://bgdjjgofmck7j" path="res://resources/attack_combo_config.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://dvo8t42u2r21k" path="res://resources/attack_combo_step.gd" id="2_step"]
@@ -6,63 +6,64 @@
 [sub_resource type="Resource" id="Step_attack_1"]
 script = ExtResource("2_step")
 animation = &"attack_1"
-hit_start = 0.12
-hit_end = 0.22
-cancel_point = 0.24
-end_time = 0.45
-damage_multiplier = 0.35
-knockback_multiplier = 0.5
+hit_start = 0.36
+hit_end = 0.5
+cancel_point = 0.62
+end_time = 0.95
+damage_multiplier = 0.4
+knockback_multiplier = 0.8
 range_multiplier = 1.0
 arc_multiplier = 1.0
 lunge_distance = 0.5
-lunge_end = 0.12
-hitlag = 0.06
-shake_strength = 0.2
+lunge_start = 0.12
+lunge_end = 0.36
+hitlag = 0.09
+shake_strength = 0.3
 
 [sub_resource type="Resource" id="Step_attack_2"]
 script = ExtResource("2_step")
 animation = &"attack_2"
-hit_start = 0.14
-hit_end = 0.24
-cancel_point = 0.26
-end_time = 0.5
-damage_multiplier = 0.35
-knockback_multiplier = 0.5
+hit_start = 0.4
+hit_end = 0.54
+cancel_point = 0.66
+end_time = 1.0
+damage_multiplier = 0.43
+knockback_multiplier = 0.9
 range_multiplier = 1.0
 arc_multiplier = 1.0
 lunge_distance = 0.5
-lunge_start = 0.02
-lunge_end = 0.14
-hitlag = 0.06
-shake_strength = 0.2
+lunge_start = 0.14
+lunge_end = 0.4
+hitlag = 0.09
+shake_strength = 0.3
 
 [sub_resource type="Resource" id="Step_attack_3"]
 script = ExtResource("2_step")
 animation = &"attack_3"
-hit_start = 0.32
-hit_end = 0.44
-cancel_point = 0.6
-end_time = 0.85
-damage_multiplier = 0.62
-knockback_multiplier = 1.5
-range_multiplier = 1.0
-arc_multiplier = 1.0
-lunge_distance = 1.0
-lunge_start = 0.2
-lunge_end = 0.34
-hitlag = 0.12
-shake_strength = 0.35
+hit_start = 0.62
+hit_end = 0.74
+cancel_point = 1.1
+end_time = 1.45
+damage_multiplier = 0.6
+knockback_multiplier = 2.0
+range_multiplier = 1.15
+arc_multiplier = 0.75
+lunge_distance = 0.9
+lunge_start = 0.36
+lunge_end = 0.62
+hitlag = 0.16
+shake_strength = 0.5
 
 [resource]
 script = ExtResource("1_script")
 steps = Array[ExtResource("2_step")]([SubResource("Step_attack_1"), SubResource("Step_attack_2"), SubResource("Step_attack_3")])
-reference_attack_speed = 1.2
-input_buffer = 0.15
-windup_turn_speed = 360.0
+reference_attack_speed = 0.6
+input_buffer = 0.2
+windup_turn_speed = 240.0
 assist_half_angle = 30.0
 assist_range = 5.0
 recovery_move = 1
-recovery_strafe_factor = 0.3
+recovery_strafe_factor = 0.15
 move_cancel_threshold = 0.3
 lunge_stop_distance = 1.2
 lunge_stop_half_arc = 60.0

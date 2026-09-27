@@ -52,7 +52,7 @@ func test_ac590_clip_lengths_are_unchanged() -> void:
 		"jump_land": 0.3, "attack_1": 0.45, "attack_2": 0.5, "attack_3": 0.85, "hit": 0.35,
 	}
 	for clip: String in expected:
-		assert_float(_humanoid().anim.get_animation(clip).length).is_equal_approx(expected[clip], TOLERANCE)
+		assert_float(_humanoid().get_profile_library(&"legacy").get_animation(clip).length).is_equal_approx(expected[clip], TOLERANCE)
 
 
 func test_ac591_the_humanoid_replaces_the_capsule() -> void:

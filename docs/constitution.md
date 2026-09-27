@@ -28,14 +28,14 @@ El juego es un **hack and slash roguelike en tercera persona para PC, jugado con
 - Mallas primitivas: `CapsuleMesh`, `BoxMesh` (y, si hace falta, otras `PrimitiveMesh` nativas como `SphereMesh`, `CylinderMesh`, `PlaneMesh`).
 - **Mallas procedurales solo para VFX** (desde 3.1.0): efectos visuales que siguen una trayectoria (p. ej. la estela del arma) pueden construirse con `ImmediateMesh` desde buffers preasignados (Principio V), con material `.tres` compartido y sin texturas. No se usan para entidades ni escenario.
 - **Mallas planas procedurales para avisos enemigos** (desde 4.5.0): los avisos de ataque enemigo en el piso pueden usar sectores circulares construidos como `ArrayMesh` **una vez al cargar** (cuando el pool crea el enemigo), con material `.tres` compartido y sin texturas. Círculos y franjas siguen siendo primitivas (`CylinderMesh`, `BoxMesh`).
-- **Personaje procedural** (desde 4.9.0): el cuerpo del jugador puede ser `LowPolyHumanoid`, un asset de script que vive en `assets/models/characters/low_poly_humanoid/` con su `SOURCE.md`. Construye sus mallas (`ArrayMesh` de normales planas) y su `AnimationPlayer` **una vez**, en `_ready`, y se usa solo vía su escena adaptadora (`entities/player/humanoid.tscn`), con materiales `.tres` compartidos. Sus poses y tiempos de animación son datos del asset (como los keyframes de un `.glb`); los valores de gameplay que dependen de ellos viven en Resources.
+- **Personaje procedural** (desde 4.9.0): el cuerpo del jugador puede ser `LowPolyHumanoid`, un asset de script que vive en `assets/models/characters/low_poly_humanoid/` con su `SOURCE.md`. Construye sus mallas (`ArrayMesh` de normales planas) y su `AnimationPlayer` **una vez**, en `_ready`, y se usa solo vía su escena adaptadora (`entities/player/humanoid.tscn`), con materiales `.tres` compartidos. Sus poses y tiempos de animación son datos del asset (como los keyframes de un `.glb`); los valores de gameplay que dependen de ellos viven en Resources. Puede tener **perfiles de animación** (uno por clase, desde 4.10.1): todas sus librerías se construyen una vez al cargar, y elegir un perfil solo selecciona una librería ya construida.
 - **Partículas y luces breves solo para VFX** (desde 3.4.0): `CPUParticles3D` con mallas primitivas y material `.tres` compartido, sin texturas, con sus parámetros en un Resource; y `OmniLight3D` que se enciende y apaga en décimas de segundo. No se usan para entidades ni escenario.
 - Materiales: `StandardMaterial3D` con color plano (`albedo_color`). Excepción (desde 3.2.0): el material de un modelo importado puede usar como `albedo_texture` una textura que viva en la carpeta de ese asset.
 - **Assets importados permitidos** (desde 3.0.0), en formatos que Godot importa de forma nativa: modelos `.obj` para mallas estáticas y **`.glb`/`.gltf` como formato preferido** cuando hay jerarquía o animación (`.fbx`/`.blend` se convierten a glTF antes de entrar al repo), y **texturas de imagen** (`.png`) de un modelo importado (desde 3.2.0). A futuro, también audio. Reglas obligatorias:
   - **Scaffolding:** los archivos fuente viven en `assets/<tipo>/<categoría>/<asset>/` (p. ej. `assets/models/weapons/falchion/falchion.obj`), con nombres en `snake_case`. Nunca junto a scripts (`combat/`, `components/`…).
   - **Escena adaptadora:** cada asset se usa desde una escena propia del juego (p. ej. `entities/player/weapons/sword.tscn`) que normaliza pivot, rotación y escala a la convención del juego. Scripts y Resources referencian esa escena, nunca el archivo crudo.
   - **Materiales:** `.tres` compartidos en `materials/<categoría>/`, aplicados con `surface_material_override`. No se usan los materiales embebidos por el importador. Una textura se referencia **solo** desde esos `.tres` y el importador descarta las imágenes embebidas del glTF (`gltf/embedded_image_handling`).
-  - **Mallas derivadas:** si el archivo fuente no permite mostrar por separado una parte que el juego necesita (p. ej. una malla skinned con hoja y funda), se puede derivar una malla estática por parte (`.res` en la carpeta del asset). El procedimiento queda documentado en su `SOURCE.md`.
+  - **Mallas derivadas:** si el archivo fuente no permite mostrar por separado una parte que el juego necesita (p. ej. una malla skinned con hoja y funda), se puede derivar una malla estática por parte (`.res` en la carpeta del asset). Una malla derivada también puede reproporcionar regiones del modelo (estirar o escalar un mango, una guarda) para que encaje con el cuerpo del jugador, sin agregar ni quitar vértices ni cambiar UV o materiales (desde 4.11.0). El procedimiento queda documentado en su `SOURCE.md`, y el script que la genera vive en la carpeta del asset.
   - **Origen y licencia:** cada asset de terceros tiene un `SOURCE.md` en su carpeta con su origen y su licencia.
   - **Gameplay:** hitboxes y rangos siguen siendo datos (Principio III). El modelo es solo visual y su tamaño se alinea con esos datos.
 - **Prohibido:** shaders personalizados, y assets fuera de `assets/` o usados sin escena adaptadora.
@@ -107,9 +107,9 @@ Se sigue la [guía de estilo oficial de GDScript](https://docs.godotengine.org/e
 
   ```gdscript
   func _physics_process(delta: float) -> void:
-      _apply_gravity(delta)
-      _update_movement(delta)
-      _update_attack_cooldown(delta)
+	  _apply_gravity(delta)
+	  _update_movement(delta)
+	  _update_attack_cooldown(delta)
   ```
 
   Si una de estas funciones necesita un `if` con lógica propia, un bucle o más de unas pocas líneas, esa lógica se extrae a un método con nombre.
@@ -154,7 +154,7 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 - **Estocada:** los golpes desplazan al jugador con una distancia de datos atada al tiempo del clip (root motion por datos), que se frena ante un enemigo delante.
 - **Hit lag local:** el impacto se comunica pausando el clip del atacante y congelando y sacudiendo a los golpeados, con duración por golpe. **Prohibido modificar `Engine.time_scale`** como feedback de impacto. Los bosses solo tiemblan, para que el combo no los congele en cadena.
 - **Apuntado:** por defecto, el golpe apunta al enemigo más cercano y lo sigue durante la anticipación. La cámara solo mira, y el input de movimiento no desvía el golpe salvo que los datos lo indiquen.
-- Todos estos valores viven en `AttackComboConfig`, `AttackComboStep` y `HitstopConfig` (Principio III).
+- Todos estos valores viven en `AttackComboConfig`, `AttackComboStep` y `HitstopConfig` (Principio III). Los tiempos del golpe (inicio y fin del daño, *cancel point* y fin) viven en `AttackComboStep`; los eventos del clip del humanoide están en los mismos tiempos y un test los compara (desde 4.10.1).
 
 **Rationale:** en un hack and slash, el peso de cada golpe hace que pelear sea una decisión: golpear al aire tiene costo, y encadenar o cortar el combo es expresivo. Un hit lag local mantiene el resto del mundo vivo y legible.
 
@@ -205,6 +205,10 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 - Cada spec declara la versión de la constitución contra la que fue aprobada.
 
 ### Historial
+
+- **4.11.0** (2026-09-27): Principio II: las mallas derivadas pueden reproporcionar regiones del modelo para encajar con el cuerpo del jugador; su generador vive en la carpeta del asset (ver `katana-hand-proportions.md`).
+
+- **4.10.1** (2026-09-26): Principio II: el personaje procedural puede tener perfiles de animación por clase, todos construidos una vez al cargar. Principio VII: los tiempos del golpe viven en `AttackComboStep` y un test los compara con los eventos del clip. Se corrige la versión del pie (ver `class-combat-identity.md`).
 
 - **4.10.0** (2026-09-26): se agrega el Principio VII, *Sensación del combate*: golpes comprometidos con cancel point, estocada por datos, hit lag local (prohibido `Engine.time_scale` como feedback de impacto) y auto-apuntado al enemigo más cercano; se suma al checklist de review (ver `bdo-combat-feel.md`).
 
@@ -265,4 +269,4 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 ---
 
-**Version**: 4.9.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-26
+**Version**: 4.11.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-27

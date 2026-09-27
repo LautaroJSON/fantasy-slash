@@ -10,14 +10,16 @@ const STEP: float = 1.0 / 60.0
 const MAX_WAIT: float = 3.0
 
 
-## Combo whose strikes deal and push like a single old swing (multipliers 1),
-## no lunge and no hit lag, so tests that check damage math and positions
-## keep their numbers (docs/specs/bdo-combat-feel.md).
+## Combo whose strikes deal, push and reach like a single old swing
+## (multipliers 1), no lunge and no hit lag, so tests that check damage math
+## and positions keep their numbers (docs/specs/bdo-combat-feel.md).
 static func unit_combo(source: AttackComboConfig) -> AttackComboConfig:
 	var combo: AttackComboConfig = source.duplicate(true) as AttackComboConfig
 	for step: AttackComboStep in combo.steps:
 		step.damage_multiplier = 1.0
 		step.knockback_multiplier = 1.0
+		step.range_multiplier = 1.0
+		step.arc_multiplier = 1.0
 		step.lunge_distance = 0.0
 		step.hitlag = 0.0
 	return combo

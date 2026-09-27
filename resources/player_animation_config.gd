@@ -7,3 +7,6 @@ extends Resource
 @export var run_speed_threshold: float
 ## Seconds the weapon takes to blend back into the hand after an ability.
 @export var weapon_mount_blend: float
+## Seconds the body takes to blend from a strike's last pose back into
+## locomotion: a strike ends where the next one starts, not in the guard.
+@export var attack_exit_blend: float

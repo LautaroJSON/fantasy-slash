@@ -7,7 +7,7 @@ const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.tres")
 const BERSERKER: CharacterClassData = preload("res://data/classes/berserker/berserker.tres")
 const SAMURAI: CharacterClassData = preload("res://data/classes/samurai/samurai.tres")
-const COMBO: AttackComboConfig = preload("res://data/player/attack_combo_config.tres")
+const COMBO: AttackComboConfig = preload("res://data/classes/warrior/warrior_combo.tres")
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const TestWorld := preload("res://test/helpers/test_world.gd")
 ## A roll that never produces a critical hit (base crit chance is 0.15).
@@ -140,14 +140,16 @@ func test_ac10_enemy_dies_after_three_hits_and_leaves_the_registry() -> void:
 
 # --- Combo (docs/specs/humanoid-player-model.md)
 
-func test_ac596_taps_in_the_combo_window_chain_the_three_strikes_and_loop() -> void:
+func test_ac596_taps_in_the_combo_window_chain_every_strike_and_loop() -> void:
 	var steps: Array[int] = []
 	_attack.step_started.connect(func(index: int) -> void: steps.append(index))
 	_attack.request_attack()
-	for i: int in 3:
+	var expected: Array[int] = [0]
+	for i: int in COMBO.steps.size():
 		_wait_for_combo_window()
 		_attack.request_attack()
-	assert_array(steps).is_equal([0, 1, 2, 0])
+		expected.append((i + 1) % COMBO.steps.size())
+	assert_array(steps).is_equal(expected)
 	assert_str(String(_humanoid.anim.current_animation)).is_equal("attack_1")
 
 
@@ -166,8 +168,8 @@ func test_ac596_without_a_tap_the_strike_ends_and_the_combo_starts_over() -> voi
 
 func test_ac597_a_tap_within_the_buffer_before_the_window_chains() -> void:
 	_attack.request_attack()
-	# attack_1 opens its combo window at 0.24 s (clip speed 1 for the warrior).
-	_advance_clip(0.24 - COMBO.input_buffer + 0.02)
+	# The combo window of attack_1 opens at its cancel point (clip speed 1 for the warrior).
+	_advance_clip(COMBO.steps[0].cancel_point - COMBO.input_buffer + 0.02)
 	_attack.request_attack()
 	_wait_for_combo_window()
 	_advance_clip(FRAME)
@@ -176,7 +178,7 @@ func test_ac597_a_tap_within_the_buffer_before_the_window_chains() -> void:
 
 func test_ac597_a_tap_too_early_is_forgotten() -> void:
 	_attack.request_attack()
-	_advance_clip(0.24 - 0.2)
+	_advance_clip(COMBO.steps[0].cancel_point - 0.2)
 	_attack.request_attack()
 	_wait_for_combo_window()
 	_advance_clip(FRAME)
@@ -204,8 +206,8 @@ func test_ac599_damage_lands_when_the_hit_window_opens_once_per_strike() -> void
 	var hits: Array[int] = [0]
 	_attack.enemy_hit.connect(func(_e: Enemy, _a: float, _c: bool) -> void: hits[0] += 1)
 	_attack.try_attack_with_roll(NO_CRIT_ROLL)
-	# attack_1 opens its hit window at 0.12 s.
-	_advance_clip(0.1)
+	# attack_1 lands at its hit_start: one frame before, no damage yet.
+	_advance_clip(COMBO.steps[0].hit_start - FRAME)
 	assert_float(enemy.health.current_health).is_equal_approx(40.0, TOLERANCE)
 	ComboDriver.finish(_player)
 	assert_int(hits[0]).is_equal(1)
@@ -236,13 +238,14 @@ func test_ac600_clip_speed_follows_attack_speed() -> void:
 	assert_float(_humanoid.anim.speed_scale).is_equal_approx(1.5, TOLERANCE)
 
 
-func test_ac600_berserker_is_slower_and_samurai_faster() -> void:
-	Session.character_class = BERSERKER
-	_spawn_player()
-	assert_float(_attack.get_clip_speed()).is_equal_approx(0.5, TOLERANCE)
-	Session.character_class = SAMURAI
-	_spawn_player()
-	assert_float(_attack.get_clip_speed()).is_equal_approx(1.6 / 1.2, TOLERANCE)
+## Adapted (docs/specs/class-combat-identity.md): each class plays its clips at
+## ATTACK_SPEED / its own reference_attack_speed (1.0 at base stats, AC650).
+func test_ac600_each_class_clip_speed_follows_its_combo() -> void:
+	for character_class: CharacterClassData in [WARRIOR, BERSERKER, SAMURAI]:
+		Session.character_class = character_class
+		_spawn_player()
+		var expected: float = character_class.base_stats.attack_speed / character_class.combo.reference_attack_speed
+		assert_float(_attack.get_clip_speed()).is_equal_approx(expected, TOLERANCE)
 
 
 func test_ac601_full_combo_dps_matches_the_old_cadence() -> void:
@@ -259,7 +262,7 @@ func test_ac601_full_combo_dps_matches_the_old_cadence() -> void:
 		var elapsed: float = 0.0
 		_attack.try_attack_with_roll(NO_CRIT_ROLL)
 		# Two full cycles, chaining at every combo window.
-		for i: int in 6:
+		for i: int in 2 * _attack.combo.steps.size():
 			while _attack.get_state() != AttackComponent.ComboState.CHAIN_OPEN:
 				_advance_clip(FRAME)
 				elapsed += FRAME

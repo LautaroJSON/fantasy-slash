@@ -1,17 +1,17 @@
-[gd_resource type="Resource" script_class="ColmenaConfig" format=3]
+[gd_resource type="Resource" script_class="ColmenaConfig" format=3 uid="uid://cclnoq2wmwiod"]
 
-[ext_resource type="Script" path="res://resources/colmena_config.gd" id="1_script"]
-[ext_resource type="Script" path="res://resources/boss_move_data.gd" id="2_move_script"]
-[ext_resource type="Script" path="res://resources/shockwave_move_data.gd" id="3_wave_script"]
-[ext_resource type="Script" path="res://resources/boss_phase_data.gd" id="4_phase_script"]
-[ext_resource type="Script" path="res://resources/summon_data.gd" id="5_summon_script"]
-[ext_resource type="Script" path="res://resources/enemy_stats.gd" id="6_stats_script"]
+[ext_resource type="Script" uid="uid://bs77y35jgohme" path="res://resources/colmena_config.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://buogel1mtki4s" path="res://resources/boss_move_data.gd" id="2_move_script"]
+[ext_resource type="Script" uid="uid://c7iik8yn4j5kh" path="res://resources/shockwave_move_data.gd" id="3_wave_script"]
+[ext_resource type="Script" uid="uid://cw367jyogs8v" path="res://resources/boss_phase_data.gd" id="4_phase_script"]
+[ext_resource type="Script" uid="uid://b7skdlrvdyl3q" path="res://resources/summon_data.gd" id="5_summon_script"]
+[ext_resource type="Script" uid="uid://b7jvh5hu4k1jl" path="res://resources/enemy_stats.gd" id="6_stats_script"]
 [ext_resource type="Resource" path="res://data/enemies/attacks/colmena_summon.tres" id="7_summon"]
 [ext_resource type="Resource" path="res://data/enemies/attacks/colmena_pulse.tres" id="8_pulse"]
-[ext_resource type="Resource" path="res://data/enemies/grunt_stats.tres" id="9_grunt"]
-[ext_resource type="Resource" path="res://data/enemies/charger_stats.tres" id="10_charger"]
-[ext_resource type="Resource" path="res://data/enemies/harasser_stats.tres" id="11_harasser"]
-[ext_resource type="Resource" path="res://data/enemies/leaper_stats.tres" id="12_leaper"]
+[ext_resource type="Resource" uid="uid://e24b0yfedspt" path="res://data/enemies/grunt_stats.tres" id="9_grunt"]
+[ext_resource type="Resource" uid="uid://bfy2jo8xdp034" path="res://data/enemies/charger_stats.tres" id="10_charger"]
+[ext_resource type="Resource" uid="uid://ch2iot5ku3vdj" path="res://data/enemies/harasser_stats.tres" id="11_harasser"]
+[ext_resource type="Resource" uid="uid://w0826fboobvt" path="res://data/enemies/leaper_stats.tres" id="12_leaper"]
 [ext_resource type="Resource" path="res://data/debuffs/shield.tres" id="13_shield"]
 
 [sub_resource type="Resource" id="Resource_pulse"]
@@ -55,8 +55,6 @@ min_player_distance = 3.0
 
 [resource]
 script = ExtResource("1_script")
-moves = Array[ExtResource("2_move_script")]([SubResource("Resource_pulse")])
-phase_two = SubResource("Resource_phase_two")
 summon_attack = ExtResource("7_summon")
 summon_phase_one = SubResource("Resource_summon_one")
 summon_phase_two = SubResource("Resource_summon_two")
@@ -65,3 +63,5 @@ exposed_time_phase_two = 7.0
 keep_min_distance = 6.0
 keep_max_distance = 10.0
 shield_status = ExtResource("13_shield")
+moves = Array[ExtResource("2_move_script")]([SubResource("Resource_pulse")])
+phase_two = SubResource("Resource_phase_two")

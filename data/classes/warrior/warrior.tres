@@ -5,6 +5,9 @@
 [ext_resource type="Resource" path="res://data/classes/warrior/warrior_abilities.tres" id="3_abilities"]
 [ext_resource type="Resource" uid="uid://l2ugd4dallt4" path="res://data/classes/warrior/sword.tres" id="4_weapon"]
 
+[ext_resource type="Resource" path="res://data/classes/warrior/warrior_combo.tres" id="10_combo"]
+[ext_resource type="Resource" path="res://data/classes/warrior/warrior_hitstop.tres" id="11_hitstop"]
+
 [resource]
 script = ExtResource("1_script")
 title = "Guerrero"
@@ -13,3 +16,6 @@ a corta distancia"
 base_stats = ExtResource("2_stats")
 abilities = ExtResource("3_abilities")
 weapon = ExtResource("4_weapon")
+animation_profile = &"warrior"
+combo = ExtResource("10_combo")
+hitstop = ExtResource("11_hitstop")

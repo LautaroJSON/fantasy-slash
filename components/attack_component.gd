@@ -3,10 +3,12 @@ extends Node
 ## Basic attack combo with auto-aim at the nearest living enemy
 ## (docs/specs/humanoid-player-model.md). Each tap, remembered for
 ## combo.input_buffer seconds, starts the next strike when it can: from rest,
-## or inside the current strike's combo window. The humanoid's clips time each
-## strike: damage lands once when its hit window opens, and attack_finished
-## ends it. The hitbox is a logical circular sector (range + arc) checked by
-## distance, not an Area3D.
+## or inside the current strike's combo window. Each strike's times live in its
+## AttackComboStep (docs/specs/class-combat-identity.md) and run against the
+## position of its clip: damage lands once at hit_start, the combo window opens
+## at cancel_point and the strike ends at end_time. The hitbox is a logical
+## circular sector (range + arc, scaled per strike) checked by distance, not
+## an Area3D.
 ## Without a humanoid (unit tests), a strike lands and ends at once.
 
 signal attacked(hit_count: int, total_damage: float, was_crit: bool)
@@ -30,7 +32,7 @@ enum ComboState {
 @export var movement: MovementComponent
 @export var tuning: PlayerTuning
 @export var combo: AttackComboConfig
-## Source of the strike timing (hit window, combo window, end). Optional.
+## Plays the strike clips, whose position times each strike. Optional.
 @export var humanoid: LowPolyHumanoid
 ## Plays the strike clips on the humanoid. Required with a humanoid.
 @export var animator: PlayerAnimator
@@ -87,6 +89,7 @@ func try_attack_with_roll(crit_roll: float) -> bool:
 func advance(delta: float) -> void:
 	_buffer_left = maxf(_buffer_left - delta, 0.0)
 	_end_if_clip_lost()
+	_advance_strike_moments()
 	_try_start_buffered()
 
 
@@ -153,9 +156,6 @@ func cancel() -> void:
 func _connect_humanoid() -> void:
 	if humanoid == null:
 		return
-	humanoid.hit_window.connect(_on_hit_window)
-	humanoid.combo_window_opened.connect(_on_combo_window_opened)
-	humanoid.attack_finished.connect(_on_attack_finished)
 	humanoid.anim.animation_finished.connect(_on_clip_finished)
 
 
@@ -205,29 +205,33 @@ func _end_strike() -> void:
 	step_ended.emit()
 
 
-func _on_hit_window(active: bool) -> void:
-	if not active or _state == ComboState.READY or not _is_current_clip_playing():
+## Seconds of the current strike clip (at speed 1: the clip keeps its own time).
+func _clip_time() -> float:
+	return humanoid.anim.current_animation_position
+
+
+## Runs the moments of the strike in course that its clip already reached:
+## the hit at hit_start, the cancel point (or, with auto_chain, the next
+## strike), and the end at end_time.
+func _advance_strike_moments() -> void:
+	if humanoid == null or _state == ComboState.READY or not _is_current_clip_playing():
 		return
-	_facing_fixed = true
-	if not _struck:
+	var step: AttackComboStep = _current_step()
+	var time: float = _clip_time()
+	if not _struck and time >= step.hit_start:
+		_facing_fixed = true
 		_strike()
+	if _state == ComboState.STRIKING and time >= step.cancel_point:
+		_state = ComboState.CHAIN_OPEN
+		if step.auto_chain:
+			_start_strike(_rng.randf())
+			return
+	if time >= step.end_time:
+		_end_strike()
 
 
-func _on_combo_window_opened() -> void:
-	if _state != ComboState.STRIKING or not _is_current_clip_playing():
-		return
-	_state = ComboState.CHAIN_OPEN
-	_try_start_buffered()
-
-
-func _on_attack_finished() -> void:
-	if _state == ComboState.READY or not _is_current_clip_playing():
-		return
-	_end_strike()
-
-
-## The strike clip reached its end (the end event may still be deferred): the
-## strike ends in the same frame, before the animator picks the next clip.
+## The strike clip reached its end: the strike ends in the same frame, before
+## the animator picks the next clip.
 func _on_clip_finished(clip: StringName) -> void:
 	if _state != ComboState.READY and clip == _current_step().animation:
 		_end_strike()
@@ -313,7 +317,7 @@ func _windup_aim_direction(wish_direction: Vector3) -> Vector3:
 ## Until the hit window opens, turns the facing towards the aim at most
 ## combo.windup_turn_speed degrees per second.
 func _steer_facing(delta: float, wish_direction: Vector3) -> void:
-	if _facing_fixed or _state != ComboState.STRIKING:
+	if _facing_fixed or _state != ComboState.STRIKING or _reached_hit_start():
 		return
 	var direction: Vector3 = _windup_aim_direction(wish_direction)
 	if direction.is_zero_approx():
@@ -324,12 +328,18 @@ func _steer_facing(delta: float, wish_direction: Vector3) -> void:
 	visual.rotation.y += clampf(difference, -max_step, max_step)
 
 
+## True once the clip of the strike in course reached its hit_start, even if
+## advance() has not run yet this frame.
+func _reached_hit_start() -> bool:
+	return humanoid != null and _is_current_clip_playing() and _clip_time() >= _current_step().hit_start
+
+
 ## Horizontal velocity of the lunge this frame: the meters the clip advanced
 ## along the lunge since last frame, forward; zero with an enemy right ahead.
 func _lunge_velocity(delta: float) -> Vector3:
 	if humanoid == null or _state == ComboState.READY or delta <= 0.0 or not _is_current_clip_playing():
 		return Vector3.ZERO
-	var covered: float = _current_step().lunge_covered(humanoid.anim.current_animation_position)
+	var covered: float = _current_step().lunge_covered(_clip_time())
 	var advanced: float = covered - _lunge_covered
 	_lunge_covered = covered
 	if advanced <= 0.0 or _is_lunge_blocked():
@@ -369,7 +379,7 @@ func _strike() -> void:
 		stats.get_stat(PlayerStats.Stat.DAMAGE_BONUS),
 		is_crit,
 		stats.get_stat(PlayerStats.Stat.CRIT_DAMAGE))
-	_collect_hits()
+	_collect_hits(step)
 	var total: float = 0.0
 	for enemy: Enemy in _hit_buffer:
 		total += _hit_enemy(enemy, damage, is_crit, step.knockback_multiplier)
@@ -385,13 +395,15 @@ func _hit_enemy(enemy: Enemy, damage: float, is_crit: bool, knockback_multiplier
 	return applied
 
 
-func _collect_hits() -> void:
+## Enemies inside the strike's sector: ATTACK_RANGE and ATTACK_ARC scaled by
+## the step's multipliers, so the upgrades widen every strike.
+func _collect_hits(step: AttackComboStep) -> void:
 	_hit_buffer.clear()
 	var origin: Vector3 = visual.global_position
 	var forward: Vector3 = -visual.global_basis.z
 	var flat_forward := Vector2(forward.x, forward.z).normalized()
-	var attack_range: float = stats.get_stat(PlayerStats.Stat.ATTACK_RANGE)
-	var min_dot: float = cos(deg_to_rad(stats.get_stat(PlayerStats.Stat.ATTACK_ARC) / 2.0))
+	var attack_range: float = stats.get_stat(PlayerStats.Stat.ATTACK_RANGE) * step.range_multiplier
+	var min_dot: float = cos(deg_to_rad(stats.get_stat(PlayerStats.Stat.ATTACK_ARC) * step.arc_multiplier / 2.0))
 	for enemy: Enemy in registry.get_active():
 		if _is_in_hitbox(origin, flat_forward, enemy.global_position, attack_range + enemy.get_hit_padding(), min_dot):
 			_hit_buffer.append(enemy)

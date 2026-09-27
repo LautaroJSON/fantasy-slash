@@ -76,6 +76,11 @@ func is_empowered() -> bool:
 	return _empowered
 
 
+## While charging the body crouches in the iai pose (sheath-socket-hand-grip.md §2.7).
+func get_body_clip(_ability: AbilityComponent) -> StringName:
+	return config.charge_body_clip if _charging else &""
+
+
 func is_charged() -> bool:
 	return true
 
@@ -84,7 +89,7 @@ func begin_charge(ability: AbilityComponent) -> void:
 	_charging = true
 	_held_yaw = ability.visual.rotation.y
 	_face_target(ability)
-	ability.sword_swing.hold_pose(config.sheathed_position, config.sheathed_rotation)
+	ability.weapon_mount.hold_in_sheath(true)
 	ability.health.damage_reduction = config.charge_damage_reduction
 	_indicator.show_rect(
 		ability.visual.global_position,
@@ -225,6 +230,7 @@ func _find_blade(ability: AbilityComponent) -> MeshInstance3D:
 
 func _end_charge(ability: AbilityComponent) -> void:
 	_charging = false
+	ability.weapon_mount.hold_in_sheath(false)
 	ability.health.damage_reduction = 0.0
 
 

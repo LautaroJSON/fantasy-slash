@@ -1,0 +1,85 @@
+[gd_resource type="Resource" script_class="AttackComboConfig" format=3 uid="uid://53vjdob7jmi0"]
+
+[ext_resource type="Script" uid="uid://bgdjjgofmck7j" path="res://resources/attack_combo_config.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dvo8t42u2r21k" path="res://resources/attack_combo_step.gd" id="2_step"]
+
+[sub_resource type="Resource" id="Step_attack_1"]
+script = ExtResource("2_step")
+animation = &"attack_1"
+hit_start = 0.1
+hit_end = 0.16
+cancel_point = 0.22
+end_time = 0.4
+damage_multiplier = 0.28
+knockback_multiplier = 0.4
+range_multiplier = 1.1
+arc_multiplier = 0.35
+lunge_distance = 0.4
+lunge_end = 0.1
+hitlag = 0.05
+shake_strength = 0.15
+
+[sub_resource type="Resource" id="Step_attack_2"]
+script = ExtResource("2_step")
+animation = &"attack_2"
+hit_start = 0.12
+hit_end = 0.2
+cancel_point = 0.26
+end_time = 0.44
+damage_multiplier = 0.32
+knockback_multiplier = 0.5
+range_multiplier = 1.0
+arc_multiplier = 1.0
+lunge_distance = 0.3
+lunge_start = 0.02
+lunge_end = 0.12
+hitlag = 0.06
+shake_strength = 0.2
+
+[sub_resource type="Resource" id="Step_attack_3"]
+script = ExtResource("2_step")
+animation = &"attack_3"
+hit_start = 0.12
+hit_end = 0.2
+cancel_point = 0.26
+end_time = 0.44
+damage_multiplier = 0.32
+knockback_multiplier = 0.6
+range_multiplier = 1.0
+arc_multiplier = 1.0
+lunge_distance = 0.3
+lunge_start = 0.02
+lunge_end = 0.12
+hitlag = 0.06
+shake_strength = 0.2
+
+[sub_resource type="Resource" id="Step_attack_4"]
+script = ExtResource("2_step")
+animation = &"attack_4"
+hit_start = 0.24
+hit_end = 0.32
+cancel_point = 0.46
+end_time = 0.7
+damage_multiplier = 0.52
+knockback_multiplier = 1.6
+range_multiplier = 1.2
+arc_multiplier = 0.4
+lunge_distance = 1.2
+lunge_start = 0.08
+lunge_end = 0.24
+hitlag = 0.11
+shake_strength = 0.35
+
+[resource]
+script = ExtResource("1_script")
+steps = Array[ExtResource("2_step")]([SubResource("Step_attack_1"), SubResource("Step_attack_2"), SubResource("Step_attack_3"), SubResource("Step_attack_4")])
+reference_attack_speed = 1.2
+input_buffer = 0.15
+windup_turn_speed = 360.0
+assist_half_angle = 30.0
+assist_range = 5.0
+recovery_move = 1
+recovery_strafe_factor = 0.3
+move_cancel_threshold = 0.3
+lunge_stop_distance = 1.2
+lunge_stop_half_arc = 60.0

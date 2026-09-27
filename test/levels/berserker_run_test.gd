@@ -14,6 +14,7 @@ const STAT_FORMATS: AbilityStatFormats = preload("res://data/ui/ability_stat_for
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const NO_CRIT_ROLL: float = 0.99
+const FRAME: float = 1.0 / 60.0
 const POSE_TOLERANCE: Vector3 = Vector3(0.01, 0.01, 0.01)
 
 var _registry: EnemyRegistry
@@ -80,14 +81,17 @@ func test_ac186_the_weapon_starts_at_the_class_rest_pose() -> void:
 
 
 func test_ac187_slower_strikes() -> void:
-	# Adapted (humanoid-player-model.md): the basic attack is the combo, played
-	# at half speed by the berserker (0.6 / 1.2); the sweep no longer exists.
+	# Adapted (class-combat-identity.md): the basic attack is the berserker's own
+	# combo; its first strike stays committed (no new tap) far longer than the
+	# warrior's, until its cancel point.
 	var player: Player = _spawn_player(BERSERKER)
 	ComboDriver.drive_by_hand(player)
+	var first: AttackComboStep = BERSERKER.combo.steps[0]
+	assert_float(first.cancel_point).is_greater(WARRIOR.combo.steps[0].cancel_point * 2.0)
 	assert_bool(player.attack.try_attack_with_roll(NO_CRIT_ROLL)).is_true()
-	# attack_1 lasts 0.45 s at speed 1, so 0.9 s for the berserker.
-	ComboDriver.humanoid_of(player).anim.advance(0.8)
-	player.attack.advance(0.8)
+	var committed: float = first.cancel_point - FRAME
+	ComboDriver.humanoid_of(player).anim.advance(committed)
+	player.attack.advance(committed)
 	assert_bool(player.attack.is_attacking()).is_true()
 	assert_bool(player.attack.try_attack_with_roll(NO_CRIT_ROLL)).is_false()
 	ComboDriver.finish(player)

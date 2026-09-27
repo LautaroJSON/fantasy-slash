@@ -6,17 +6,37 @@ extends Node3D
 ## Cada articulación es un Node3D; las animaciones se generan por código
 ## a partir de poses clave (ángulos en grados).
 ##
+## Perfiles de animación (docs/specs/class-combat-identity.md): cada perfil
+## (profiles/*.gd) arma una librería completa con su guardia, su locomoción y
+## su combo. Todas las librerías se construyen una sola vez, en _ready;
+## set_profile() solo elige cuál es la librería por defecto del AnimationPlayer,
+## así que los nombres de clip no cambian entre perfiles.
+##
 ## Uso:
+##   $Humanoid.set_profile(&"samurai")
 ##   $Humanoid.play("run")
 ##   $Humanoid.play("attack_1")
 ##   $Humanoid.hit_window.connect(func(active): ...)   # la espada daña / deja de dañar
 ##
-## Animaciones: idle, run, run_stop, jump_start, jump_air, jump_land,
-##              attack_1, attack_2, attack_3, hit
+## Clips de cada perfil: idle, run, run_stop, jump_start, jump_air, jump_land,
+##                       hit, attack_1 … attack_N
 
 signal hit_window(active: bool)   ## La espada empieza / deja de hacer daño
 signal combo_window_opened        ## Desde acá se puede encadenar el siguiente golpe
 signal attack_finished            ## El ataque terminó (volver a idle/locomoción)
+
+## Mano con objetivo (set_hand_target).
+enum Hand { LEFT, RIGHT }
+
+## Perfiles disponibles: id -> script (extends HumanoidProfile).
+const PROFILES: Dictionary[StringName, Script] = {
+	&"legacy": preload("res://assets/models/characters/low_poly_humanoid/profiles/legacy_profile.gd"),
+	&"warrior": preload("res://assets/models/characters/low_poly_humanoid/profiles/warrior_profile.gd"),
+	&"samurai": preload("res://assets/models/characters/low_poly_humanoid/profiles/samurai_profile.gd"),
+	&"berserker": preload("res://assets/models/characters/low_poly_humanoid/profiles/berserker_profile.gd"),
+}
+## Clips que todo perfil tiene, además de su combo (attack_1 … attack_N).
+const LOCOMOTION_CLIPS: Array[StringName] = [&"idle", &"run", &"run_stop", &"jump_start", &"jump_air", &"jump_land", &"hit"]
 
 @export var body_color := Color(0.95, 0.95, 0.95)
 @export var accent_color := Color(0.12, 0.12, 0.15)
@@ -29,22 +49,37 @@ signal attack_finished            ## El ataque terminó (volver a idle/locomoci�
 @export var weapon_material: Material
 ## Creates the sword Area3D (hitbox). Games that compute hits otherwise turn it off.
 @export var use_hitbox := true
-## Teclas 1-0 reproducen cada animación (para probar)
+## Perfil activo al cargar (una clave de PROFILES).
+@export var profile: StringName = &"warrior"
+## Cuánto sigue cada mano a su objetivo (set_hand_target), de 0 a 1: 0 = su
+## animación, 1 = pegada al objetivo. Lo anima cada clip (pistas de make_clip).
+@export_range(0.0, 1.0) var left_hand_grip_weight: float = 0.0
+@export_range(0.0, 1.0) var right_hand_grip_weight: float = 0.0
+## Teclas para probar: 1-6 locomoción, 7 hit, 8 siguiente golpe del combo,
+## 9 vuelve al primer golpe, 0 siguiente perfil.
 @export var demo_controls := false
 ## Reconstruir en el editor (tildalo si cambiás colores)
 @export var rebuild := false:
 	set(v):
 		if v and is_inside_tree():
-			_build()
+			_build(true)
 
 const HIPS_REST := Vector3(0, 0.55, 0)
 const LEG_SCALE := 0.49  ## las poses se escribieron para piernas más largas
-const ANIM_LIST := ["idle", "run", "run_stop", "jump_start", "jump_air",
-		"jump_land", "attack_1", "attack_2", "attack_3", "hit"]
 
 var anim: AnimationPlayer
 var hitbox: Area3D
 var _j := {}  # nombre de articulación -> Node3D
+## Librería de cada perfil, construida una sola vez por ejecución y compartida
+## por todas las instancias (la estructura de articulaciones es siempre la misma).
+static var _libraries: Dictionary[StringName, AnimationLibrary] = {}
+## Cuántas veces se construyó la librería de cada perfil.
+static var _build_counts: Dictionary[StringName, int] = {}
+## Malla visible de cada mano (Hand), su transform local de reposo y su objetivo.
+var _hand_meshes: Array[MeshInstance3D] = [null, null]
+var _hand_rest: Array[Transform3D] = [Transform3D.IDENTITY, Transform3D.IDENTITY]
+var _hand_targets: Array[Node3D] = [null, null]
+var _demo_attack: int = 0
 
 
 func _ready() -> void:
@@ -69,18 +104,116 @@ func get_right_hand() -> Node3D:
 	return _j["wrist_r"]
 
 
+## Articulación por nombre (p. ej. "torso", "neck", "wrist_l"), o null.
+func get_joint(key: String) -> Node3D:
+	return _j.get(key) as Node3D
+
+
+## Objetivo de una mano (docs/specs/sheath-socket-hand-grip.md): la malla de
+## esa mano se lleva hacia `target` según su peso de agarre, cada vez que el
+## AnimationPlayer aplica la animación. Solo se mueve la malla visual: la
+## muñeca (y lo que cuelga de ella) conserva su animación.
+func set_hand_target(hand: Hand, target: Node3D) -> void:
+	_hand_targets[hand] = target
+	_apply_hand_targets()
+
+
+func clear_hand_target(hand: Hand) -> void:
+	_hand_targets[hand] = null
+	_apply_hand_targets()
+
+
+## Vuelve a llevar cada mano a su objetivo: llamalo si el objetivo se movió
+## después de que el AnimationPlayer aplicó el cuadro (p. ej. el arma).
+func refresh_hand_targets() -> void:
+	_apply_hand_targets()
+
+
+func get_hand_mesh(hand: Hand) -> MeshInstance3D:
+	return _hand_meshes[hand]
+
+
+## Cuelga `node` de la articulación `key` en `local_position` (metros) y
+## `local_rotation` (radianes) relativos a ella, compensando la escala del
+## humanoide: lo que cuelga mide lo mismo que fuera de él.
+func attach_to_joint(key: String, node: Node3D, local_position: Vector3, local_rotation: Vector3) -> void:
+	var joint: Node3D = _j[key]
+	joint.add_child(node)
+	var size: float = global_basis.get_scale().x
+	node.transform = Transform3D(Basis.from_euler(local_rotation).scaled(Vector3.ONE / size), local_position / size)
+
+
+## Elige la librería de un perfil ya construido y vuelve a idle. No crea animaciones.
+func set_profile(id: StringName) -> void:
+	if not _libraries.has(id):
+		push_error("LowPolyHumanoid: unknown animation profile '%s'" % id)
+		return
+	if anim.has_animation_library(&"") and anim.get_animation_library(&"") == _libraries[id]:
+		profile = id
+		return
+	anim.stop()
+	anim.remove_animation_library(&"")
+	anim.add_animation_library(&"", _libraries[id])
+	profile = id
+	if not Engine.is_editor_hint():
+		play("idle", 0.0)
+
+
+func get_profile() -> StringName:
+	return profile
+
+
+func has_profile(id: StringName) -> bool:
+	return _libraries.has(id)
+
+
+func get_profile_library(id: StringName) -> AnimationLibrary:
+	return _libraries.get(id) as AnimationLibrary
+
+
+## Veces que se construyó la librería del perfil `id` (1 salvo reconstrucciones en el editor).
+func get_library_build_count(id: StringName) -> int:
+	return _build_counts.get(id, 0)
+
+
+## Cantidad de golpes del combo del perfil activo (attack_1 … attack_N).
+func get_attack_count() -> int:
+	var count: int = 0
+	while anim.has_animation(StringName("attack_%d" % (count + 1))):
+		count += 1
+	return count
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if Engine.is_editor_hint() or not demo_controls:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
-		var i: int = event.keycode - KEY_1 if event.keycode != KEY_0 else 9
-		if i >= 0 and i < ANIM_LIST.size():
-			anim.play(ANIM_LIST[i], 0.1)  # reinicia aunque ya esté sonando
+		_demo_key(event.keycode)
+
+
+func _demo_key(keycode: Key) -> void:
+	var i: int = keycode - KEY_1 if keycode != KEY_0 else 9
+	if i >= 0 and i < LOCOMOTION_CLIPS.size():
+		anim.play(LOCOMOTION_CLIPS[i], 0.1)  # reinicia aunque ya esté sonando
+	elif i == 7:
+		_demo_attack = _demo_attack % get_attack_count() + 1
+		anim.play(StringName("attack_%d" % _demo_attack), 0.1)
+	elif i == 8:
+		_demo_attack = 1
+		anim.play(&"attack_1", 0.1)
+	elif i == 9:
+		var ids: Array[StringName] = []
+		for id: StringName in PROFILES:
+			ids.append(id)
+		set_profile(ids[(ids.find(profile) + 1) % ids.size()])
+		_demo_attack = 0
+		print("profile: ", profile)
 
 
 # ---------------------------------------------------------------- CUERPO
 
-func _build() -> void:
+## `rebuild_libraries`: vuelve a construir las librerías (botón del editor).
+func _build(rebuild_libraries := false) -> void:
 	for c in get_children():
 		if c.name == &"Rig" or c.name == &"Anim":
 			remove_child(c)
@@ -110,7 +243,10 @@ func _build() -> void:
 		var sh := _joint(torso, "shoulder_" + s, Vector3(0.2 * side, 0.28, 0))
 		var el := _joint(sh, "elbow_" + s, Vector3(0, -0.17, 0))
 		var wr := _joint(el, "wrist_" + s, Vector3(0, -0.15, 0))
-		_mesh(wr, _gem(0.08), Vector3(0, -0.04, 0), body)  # mano flotante
+		var hand_mesh := _mesh(wr, _gem(0.08), Vector3(0, -0.04, 0), body)  # mano flotante
+		var hand_index: int = Hand.RIGHT if side == 1 else Hand.LEFT
+		_hand_meshes[hand_index] = hand_mesh
+		_hand_rest[hand_index] = hand_mesh.transform
 
 		var hp := _joint(hips, "hip_" + s, Vector3(0.09 * side, -0.02, 0))
 		var kn := _joint(hp, "knee_" + s, Vector3(0, -0.22, 0))
@@ -140,9 +276,21 @@ func _build() -> void:
 	anim = AnimationPlayer.new()
 	anim.name = "Anim"
 	add_child(anim)
-	var lib := AnimationLibrary.new()
-	_build_animations(lib)
-	anim.add_animation_library("", lib)
+	anim.mixer_applied.connect(_apply_hand_targets)
+	_build_libraries(rebuild_libraries)
+	if not _libraries.has(profile):
+		profile = &"warrior"
+	anim.add_animation_library(&"", _libraries[profile])
+
+
+## Construye la librería de cada perfil que todavía no existe (o todas, con `force`).
+func _build_libraries(force: bool) -> void:
+	for id: StringName in PROFILES:
+		if _libraries.has(id) and not force:
+			continue
+		var builder: HumanoidProfile = PROFILES[id].new() as HumanoidProfile
+		_libraries[id] = builder.build(self)
+		_build_counts[id] = _build_counts.get(id, 0) + 1
 
 
 func _joint(parent: Node3D, key: String, pos: Vector3) -> Node3D:
@@ -331,15 +479,22 @@ func _mat(color: Color, metallic := 0.0) -> StandardMaterial3D:
 	return m
 
 
-# ---------------------------------------------------------------- POSES
+
+# ---------------------------------------------------------------- KIT DE POSES
+# Lo usan los perfiles (profiles/*.gd) para escribir sus poses clave.
 # Convención de ángulos (grados):
 #   hombro/cadera  X+ = hacia adelante     codo X+ = dobla hacia adelante
 #   rodilla        X- = dobla hacia atrás  torso X- = se inclina hacia adelante
 #   torso/hombro   Y+ = gira a su izquierda
 #   hombro         Z+ = abre el brazo derecho hacia afuera (Z- para el izquierdo)
+#   muñeca         X  = inclina el arma: con hombro + codo + muñeca en X = 0 la
+#                       hoja apunta adelante, +90 arriba y -90 abajo
 #   "hips_pos"     desplazamiento de la cadera en metros
+#   "left_grip" / "right_grip"  peso de agarre de cada mano (0 a 1, ver
+#                  set_hand_target); si falta, sigue el de la pose anterior
 
-func _p(over := {}) -> Dictionary:  # de pie, relajado
+## Pose base: de pie, relajado, con `over` encima.
+func pose(over := {}) -> Dictionary:
 	var p := {
 		"shoulder_l": Vector3(0, 0, -8), "shoulder_r": Vector3(0, 0, 8),
 		"elbow_l": Vector3(10, 0, 0), "elbow_r": Vector3(10, 0, 0),
@@ -348,209 +503,34 @@ func _p(over := {}) -> Dictionary:  # de pie, relajado
 	return p
 
 
-func _stance(over := {}) -> Dictionary:  # guardia de combate
-	var p := _p({
-		"hips_pos": Vector3(0, -0.04, 0),
-		"torso": Vector3(-6, -10, 0), "neck": Vector3(4, 10, 0),
-		"hip_l": Vector3(20, 0, -4), "knee_l": Vector3(-30, 0, 0), "ankle_l": Vector3(10, 0, 0),
-		"hip_r": Vector3(-5, 0, 4), "knee_r": Vector3(-20, 0, 0), "ankle_r": Vector3(25, 0, 0),
-		"shoulder_r": Vector3(25, 0, 12), "elbow_r": Vector3(55, 0, 0),
-		"shoulder_l": Vector3(15, 0, -15), "elbow_l": Vector3(40, 0, 0),
-	})
+## Copia de `base` con `over` encima (para variar una pose de guardia).
+func with(base: Dictionary, over := {}) -> Dictionary:
+	var p := base.duplicate()
 	p.merge(over, true)
 	return p
 
 
-func _side_z(s: String, deg: float) -> float:
-	return deg if s == "r" else -deg
-
-
-func _run_contact(m: int) -> Dictionary:  # m = 1: pie derecho adelante
-	var f := "r" if m == 1 else "l"
-	var b := "l" if m == 1 else "r"
-	return _p({
-		"hips_pos": Vector3(0, -0.05, 0),
-		"torso": Vector3(-14, -8 * m, 0), "neck": Vector3(10, 8 * m, 0),
-		"hip_" + f: Vector3(40, 0, 0), "knee_" + f: Vector3(-15, 0, 0), "ankle_" + f: Vector3(-10, 0, 0),
-		"hip_" + b: Vector3(-35, 0, 0), "knee_" + b: Vector3(-50, 0, 0), "ankle_" + b: Vector3(25, 0, 0),
-		"shoulder_" + b: Vector3(45, 0, _side_z(b, 10)), "elbow_" + b: Vector3(70, 0, 0),
-		"shoulder_" + f: Vector3(-35, 0, _side_z(f, 10)), "elbow_" + f: Vector3(45, 0, 0),
-	})
-
-
-func _run_pass(m: int) -> Dictionary:  # la pierna "m" apoya, la otra pasa recogida
-	var f := "r" if m == 1 else "l"
-	var b := "l" if m == 1 else "r"
-	return _p({
-		"hips_pos": Vector3(0, 0.03, 0),
-		"torso": Vector3(-12, 0, 0), "neck": Vector3(8, 0, 0),
-		"hip_" + f: Vector3(5, 0, 0), "knee_" + f: Vector3(-20, 0, 0), "ankle_" + f: Vector3(15, 0, 0),
-		"hip_" + b: Vector3(30, 0, 0), "knee_" + b: Vector3(-100, 0, 0), "ankle_" + b: Vector3(30, 0, 0),
-		"shoulder_l": Vector3(5, 0, -10), "elbow_l": Vector3(70, 0, 0),
-		"shoulder_r": Vector3(5, 0, 10), "elbow_r": Vector3(70, 0, 0),
-	})
-
-
-func _crouch() -> Dictionary:
-	return _p({
+## Agachado, con los brazos hacia atrás (antes de saltar y al aterrizar).
+func crouch(over := {}) -> Dictionary:
+	return pose(with({
 		"hips_pos": Vector3(0, -0.2, 0),
 		"torso": Vector3(-25, 0, 0), "neck": Vector3(20, 0, 0),
 		"hip_l": Vector3(45, 0, -5), "knee_l": Vector3(-80, 0, 0), "ankle_l": Vector3(35, 0, 0),
 		"hip_r": Vector3(45, 0, 5), "knee_r": Vector3(-80, 0, 0), "ankle_r": Vector3(35, 0, 0),
 		"shoulder_l": Vector3(-45, 0, -10), "elbow_l": Vector3(20, 0, 0),
 		"shoulder_r": Vector3(-45, 0, 10), "elbow_r": Vector3(20, 0, 0),
-	})
+	}, over))
 
 
-# ---------------------------------------------------------------- ANIMACIONES
-
-func _build_animations(lib: AnimationLibrary) -> void:
-	lib.add_animation("idle", _make([
-		[0.0, _stance()],
-		[1.0, _stance({"hips_pos": Vector3(0, -0.055, 0), "torso": Vector3(-9, -10, 0),
-				"shoulder_l": Vector3(12, 0, -18), "shoulder_r": Vector3(22, 0, 14)})],
-		[2.0, _stance()],
-	], true, true))
-
-	lib.add_animation("run", _make([
-		[0.0, _run_contact(1)], [0.15, _run_pass(1)],
-		[0.3, _run_contact(-1)], [0.45, _run_pass(-1)],
-		[0.6, _run_contact(1)],
-	], true, true))
-
-	lib.add_animation("run_stop", _make([
-		[0.0, _run_contact(1)],
-		[0.12, _p({  # derrape: se echa hacia atrás y frena con la pierna adelante
-			"hips_pos": Vector3(0, -0.12, 0), "torso": Vector3(8, 0, 0), "neck": Vector3(-5, 0, 0),
-			"hip_r": Vector3(45, 0, 0), "knee_r": Vector3(-10, 0, 0), "ankle_r": Vector3(-30, 0, 0),
-			"hip_l": Vector3(-15, 0, 0), "knee_l": Vector3(-70, 0, 0), "ankle_l": Vector3(60, 0, 0),
-			"shoulder_l": Vector3(40, 0, -30), "elbow_l": Vector3(30, 0, 0),
-			"shoulder_r": Vector3(40, 0, 30), "elbow_r": Vector3(30, 0, 0)})],
-		[0.4, _stance()],
-	], false, true))
-
-	lib.add_animation("jump_start", _make([
-		[0.0, _stance()],
-		[0.08, _crouch()],
-		[0.18, _p({  # despegue: todo estirado, brazos arriba
-			"hips_pos": Vector3(0, 0.05, 0), "torso": Vector3(-5, 0, 0),
-			"hip_l": Vector3(-5, 0, 0), "ankle_l": Vector3(-35, 0, 0),
-			"hip_r": Vector3(10, 0, 0), "knee_r": Vector3(-30, 0, 0), "ankle_r": Vector3(-20, 0, 0),
-			"shoulder_l": Vector3(150, 0, -15), "elbow_l": Vector3(20, 0, 0),
-			"shoulder_r": Vector3(150, 0, 15), "elbow_r": Vector3(20, 0, 0)})],
-	]))
-
-	var air := {
-		"torso": Vector3(-5, 0, 0),
-		"hip_r": Vector3(70, 0, 0), "knee_r": Vector3(-100, 0, 0), "ankle_r": Vector3(20, 0, 0),
-		"hip_l": Vector3(15, 0, 0), "knee_l": Vector3(-50, 0, 0), "ankle_l": Vector3(20, 0, 0),
-		"shoulder_l": Vector3(20, 0, -60), "elbow_l": Vector3(30, 0, 0),
-		"shoulder_r": Vector3(20, 0, 60), "elbow_r": Vector3(30, 0, 0),
-	}
-	var air2 := air.duplicate()
-	air2["shoulder_l"] = Vector3(25, 0, -70)
-	air2["shoulder_r"] = Vector3(25, 0, 70)
-	air2["hip_l"] = Vector3(22, 0, 0)
-	lib.add_animation("jump_air", _make([
-		[0.0, _p(air)], [0.3, _p(air2)], [0.6, _p(air)],
-	], true, true))
-
-	var land := _crouch()
-	land["hips_pos"] = Vector3(0, -0.22, 0)
-	land["shoulder_l"] = Vector3(30, 0, -40)
-	land["shoulder_r"] = Vector3(30, 0, 40)
-	lib.add_animation("jump_land", _make([
-		[0.0, land], [0.08, land], [0.3, _stance()],
-	]))
-
-	# --- ATAQUE 1: tajo horizontal rápido de derecha a izquierda
-	lib.add_animation("attack_1", _make([
-		[0.0, _stance()],
-		[0.1, _stance({  # anticipación: gira el torso y lleva la espada atrás
-			"hips_pos": Vector3(0, -0.06, 0),
-			"torso": Vector3(-5, -45, 0), "neck": Vector3(0, 40, 0),
-			"shoulder_r": Vector3(70, -65, 0), "elbow_r": Vector3(20, 0, 0), "wrist_r": Vector3(-70, 0, 0),
-			"shoulder_l": Vector3(30, 0, -30)})],
-		[0.2, _stance({  # impacto: barrido completo, pequeña estocada con la pierna
-			"hips_pos": Vector3(0, -0.08, 0),
-			"torso": Vector3(-12, 40, 0), "neck": Vector3(0, -35, 0),
-			"hip_l": Vector3(30, 0, -4), "knee_l": Vector3(-35, 0, 0), "ankle_l": Vector3(5, 0, 0),
-			"shoulder_r": Vector3(80, 50, 0), "elbow_r": Vector3(5, 0, 0), "wrist_r": Vector3(-80, 0, 0),
-			"shoulder_l": Vector3(-20, 0, -30)})],
-		[0.26, _stance({  # se sostiene un instante: se "siente" el golpe
-			"hips_pos": Vector3(0, -0.08, 0),
-			"torso": Vector3(-12, 45, 0), "neck": Vector3(0, -38, 0),
-			"hip_l": Vector3(30, 0, -4), "knee_l": Vector3(-35, 0, 0), "ankle_l": Vector3(5, 0, 0),
-			"shoulder_r": Vector3(78, 58, 0), "elbow_r": Vector3(8, 0, 0), "wrist_r": Vector3(-80, 0, 0),
-			"shoulder_l": Vector3(-20, 0, -30)})],
-		[0.45, _stance()],
-	], false, false, [
-		[0.12, "hit_on"], [0.22, "hit_off"], [0.24, "combo"], [0.45, "end"],
-	]))
-
-	# --- ATAQUE 2: revés de izquierda a derecha
-	lib.add_animation("attack_2", _make([
-		[0.0, _stance({"torso": Vector3(-12, 40, 0), "neck": Vector3(0, -35, 0),
-				"shoulder_r": Vector3(78, 58, 0), "elbow_r": Vector3(8, 0, 0), "wrist_r": Vector3(-80, 0, 0)})],
-		[0.12, _stance({  # carga: brazo cruzado sobre el pecho
-			"hips_pos": Vector3(0, -0.06, 0),
-			"torso": Vector3(-8, 50, 0), "neck": Vector3(0, -45, 0),
-			"shoulder_r": Vector3(75, 70, 0), "elbow_r": Vector3(60, 0, 0), "wrist_r": Vector3(-60, 0, 0),
-			"shoulder_l": Vector3(-10, 0, -40)})],
-		[0.22, _stance({  # impacto
-			"hips_pos": Vector3(0, -0.08, 0),
-			"torso": Vector3(-10, -40, 0), "neck": Vector3(0, 36, 0),
-			"hip_r": Vector3(25, 0, 4), "knee_r": Vector3(-30, 0, 0), "ankle_r": Vector3(5, 0, 0),
-			"shoulder_r": Vector3(80, -50, 0), "elbow_r": Vector3(5, 0, 0), "wrist_r": Vector3(-80, 0, 0),
-			"shoulder_l": Vector3(30, 0, -20)})],
-		[0.28, _stance({
-			"hips_pos": Vector3(0, -0.08, 0),
-			"torso": Vector3(-10, -45, 0), "neck": Vector3(0, 40, 0),
-			"hip_r": Vector3(25, 0, 4), "knee_r": Vector3(-30, 0, 0), "ankle_r": Vector3(5, 0, 0),
-			"shoulder_r": Vector3(80, -56, 0), "elbow_r": Vector3(8, 0, 0), "wrist_r": Vector3(-80, 0, 0),
-			"shoulder_l": Vector3(30, 0, -20)})],
-		[0.5, _stance()],
-	], false, false, [
-		[0.14, "hit_on"], [0.24, "hit_off"], [0.26, "combo"], [0.5, "end"],
-	]))
-
-	# --- ATAQUE 3: golpe pesado desde arriba (final del combo)
-	var slam := _stance({
-		"hips_pos": Vector3(0, -0.16, 0),
-		"torso": Vector3(-35, 0, 0), "neck": Vector3(25, 0, 0),
-		"hip_l": Vector3(50, 0, -4), "knee_l": Vector3(-70, 0, 0), "ankle_l": Vector3(20, 0, 0),
-		"hip_r": Vector3(-30, 0, 4), "knee_r": Vector3(-20, 0, 0), "ankle_r": Vector3(50, 0, 0),
-		"shoulder_r": Vector3(100, 0, 5), "elbow_r": Vector3(10, 0, 0), "wrist_r": Vector3(-100, 0, 0),
-		"shoulder_l": Vector3(90, 0, -10), "elbow_l": Vector3(20, 0, 0),
-	})
-	lib.add_animation("attack_3", _make([
-		[0.0, _stance()],
-		[0.28, _p({  # anticipación larga: se estira y levanta la espada
-			"hips_pos": Vector3(0, 0.0, 0),
-			"torso": Vector3(12, 0, 0), "neck": Vector3(-10, 0, 0),
-			"hip_l": Vector3(10, 0, -4), "knee_l": Vector3(-10, 0, 0),
-			"hip_r": Vector3(-10, 0, 4), "knee_r": Vector3(-5, 0, 0), "ankle_r": Vector3(15, 0, 0),
-			"shoulder_r": Vector3(165, 0, 10), "elbow_r": Vector3(30, 0, 0), "wrist_r": Vector3(-30, 0, 0),
-			"shoulder_l": Vector3(150, 0, -20), "elbow_l": Vector3(40, 0, 0)})],
-		[0.38, slam],   # cae rápido
-		[0.55, slam],   # se queda clavado: peso
-		[0.85, _stance()],
-	], false, false, [
-		[0.32, "hit_on"], [0.44, "hit_off"], [0.6, "combo"], [0.85, "end"],
-	]))
-
-	lib.add_animation("hit", _make([
-		[0.0, _stance()],
-		[0.08, _stance({
-			"hips_pos": Vector3(0, -0.05, 0.06),
-			"torso": Vector3(20, 0, 0), "neck": Vector3(25, 0, 0),
-			"shoulder_l": Vector3(10, 0, -35), "shoulder_r": Vector3(10, 0, 35)})],
-		[0.35, _stance()],
-	]))
+## Z de un hombro o cadera: `deg` hacia afuera para ese lado.
+func side_z(s: String, deg: float) -> float:
+	return deg if s == "r" else -deg
 
 
+## Arma un clip desde poses clave.
 ## keys: [[tiempo, pose], ...]   events: [[tiempo, "hit_on"|"hit_off"|"combo"|"end"], ...]
-func _make(keys: Array, loop := false, smooth := false, events := []) -> Animation:
+## El último tiempo de `keys` es el largo del clip.
+func make_clip(keys: Array, loop := false, smooth := false, events := []) -> Animation:
 	var a := Animation.new()
 	a.length = keys[-1][0]
 	a.loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
@@ -570,12 +550,26 @@ func _make(keys: Array, loop := false, smooth := false, events := []) -> Animati
 	for k: Array in keys:
 		a.track_insert_key(tp, k[0], HIPS_REST + k[1].get("hips_pos", Vector3.ZERO) * LEG_SCALE)
 
+	for side: String in ["left", "right"]:
+		var tw := a.add_track(Animation.TYPE_VALUE)
+		a.track_set_path(tw, NodePath(".:%s_hand_grip_weight" % side))
+		a.track_set_interpolation_type(tw, interp)
+		var weight: float = 0.0
+		for k: Array in keys:
+			weight = k[1].get(side + "_grip", weight)
+			a.track_insert_key(tw, k[0], weight)
+
 	if not events.is_empty():
 		var tm := a.add_track(Animation.TYPE_METHOD)
 		a.track_set_path(tm, NodePath("."))
 		for e: Array in events:
 			a.track_insert_key(tm, e[0], {"method": "_anim_event", "args": [e[1]]})
 	return a
+
+
+## Eventos de un golpe: el daño empieza y termina, se abre el combo y termina.
+func strike_events(hit_on: float, hit_off: float, combo: float, end: float) -> Array:
+	return [[hit_on, "hit_on"], [hit_off, "hit_off"], [combo, "combo"], [end, "end"]]
 
 
 func _anim_event(ev: String) -> void:
@@ -590,6 +584,26 @@ func _anim_event(ev: String) -> void:
 			combo_window_opened.emit()
 		"end":
 			attack_finished.emit()
+
+
+## Lleva la malla de cada mano hacia su objetivo según su peso (se llama con
+## AnimationMixer.mixer_applied: después de aplicar las pistas del cuadro).
+func _apply_hand_targets() -> void:
+	_apply_hand(Hand.LEFT, left_hand_grip_weight)
+	_apply_hand(Hand.RIGHT, right_hand_grip_weight)
+
+
+func _apply_hand(hand: Hand, weight: float) -> void:
+	var mesh: MeshInstance3D = _hand_meshes[hand]
+	if mesh == null:
+		return
+	mesh.transform = _hand_rest[hand]
+	var target: Node3D = _hand_targets[hand]
+	if target == null or weight <= 0.0 or not target.is_inside_tree() or not mesh.is_inside_tree():
+		return
+	var animated: Transform3D = mesh.global_transform
+	var goal := Transform3D(target.global_basis.orthonormalized().scaled(animated.basis.get_scale()), target.global_position)
+	mesh.global_transform = animated.interpolate_with(goal, minf(weight, 1.0))
 
 
 func _set_hitbox(on: bool) -> void:

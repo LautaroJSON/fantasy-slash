@@ -1,7 +1,7 @@
 extends Node3D
 ## Escena de prueba: creá una escena nueva con un Node3D, pegale este script y dale Play.
 ## Teclas: 1 idle · 2 run · 3 run_stop · 4 jump_start · 5 jump_air · 6 jump_land
-##         7 attack_1 · 8 attack_2 · 9 attack_3 · 0 hit
+##         7 hit · 8 siguiente golpe del combo · 9 primer golpe · 0 siguiente perfil
 
 func _ready() -> void:
 	var env := WorldEnvironment.new()
@@ -33,6 +33,6 @@ func _ready() -> void:
 	add_child(hero)
 
 	var label := Label.new()
-	label.text = "1 idle  2 run  3 run_stop  4 jump_start  5 jump_air  6 jump_land  7 attack_1  8 attack_2  9 attack_3  0 hit"
+	label.text = "1 idle  2 run  3 run_stop  4 jump_start  5 jump_air  6 jump_land  7 hit  8 golpe siguiente  9 primer golpe  0 perfil siguiente"
 	label.position = Vector2(12, 12)
 	add_child(label)

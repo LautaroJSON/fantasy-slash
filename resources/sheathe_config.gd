@@ -15,10 +15,9 @@ extends Resource
 ## Radius around the player of the wave that pushes (without damage) the
 ## enemies the slash missed, in meters.
 @export var wave_radius: float
-## Weapon pivot position while charging (katana in its sheath), relative to Visual.
-@export var sheathed_position: Vector3
-## Weapon pivot rotation while charging, in radians.
-@export var sheathed_rotation: Vector3
+## Humanoid clip played while charging (docs/specs/sheath-socket-hand-grip.md §2.7);
+## the katana waits in its sheath, which hangs from the torso.
+@export var charge_body_clip: StringName
 ## Transparency of the ground outline once fully charged (0 = opaque).
 @export var full_charge_transparency: float
 

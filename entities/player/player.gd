@@ -19,6 +19,12 @@ const ACTION_ABILITY_ULTIMATE: StringName = &"ability_ultimate"
 ## Blade markers every weapon scene provides for the weapon trail.
 const WEAPON_TRAIL_BASE: NodePath = ^"TrailBase"
 const WEAPON_TRAIL_TIP: NodePath = ^"TrailTip"
+## Optional hilt marker of a weapon: the right hand grips it when a clip asks
+## (docs/specs/sheath-socket-hand-grip.md).
+const WEAPON_HILT: NodePath = ^"Hilt"
+## Optional second-hand marker on a two-handed weapon's handle: the left hand
+## grips it when a clip asks (docs/specs/class-combat-identity.md §3.2).
+const WEAPON_OFF_HAND: NodePath = ^"OffHand"
 
 ## Assigned by the level; handed to the attack auto-aim and the abilities.
 @export var enemy_registry: EnemyRegistry
@@ -40,9 +46,13 @@ const WEAPON_TRAIL_TIP: NodePath = ^"TrailTip"
 @onready var _weapon_trail: WeaponTrail = $WeaponTrail
 @onready var _visual: Node3D = $Visual
 @onready var _weapon_mount: WeaponMount = $WeaponMount
+@onready var _humanoid: LowPolyHumanoid = $Visual/Humanoid
+@onready var _hitstop: HitstopComponent = $Hitstop
 
 ## Scabbard of the class weapon, or null when the weapon has none.
 var _sheath: Node3D = null
+## Socket on the torso the scabbard hangs from, or null without a scabbard.
+var _sheath_socket: Node3D = null
 ## Ignores the buttons still held from a closed menu (e.g. B closing the pause).
 var _input_guard: HeldInputGuard = HeldInputGuard.new([ACTION_ATTACK, ACTION_DASH, ACTION_JUMP, ACTION_ABILITY_BASIC, ACTION_ABILITY_ULTIMATE])
 ## Seconds left of a hold (a boss grab): no movement, attacks, jumps, dashes or abilities.
@@ -121,10 +131,21 @@ func get_sheath() -> Node3D:
 	return _sheath
 
 
+func get_sheath_socket() -> Node3D:
+	return _sheath_socket
+
+
 ## True while any ability is being charged or cast, or the air slash runs: the
 ## player can do nothing else (charging still allows the dash).
 func is_casting() -> bool:
 	return is_charging() or basic_ability.is_casting() or ultimate_ability.is_casting() or air_slash.is_active()
+
+
+## Humanoid clip an ability asks the body to play while it charges or casts;
+## &"" = the default (docs/specs/sheath-socket-hand-grip.md §2.7).
+func get_body_clip() -> StringName:
+	var clip: StringName = basic_ability.get_body_clip()
+	return clip if clip != &"" else ultimate_ability.get_body_clip()
 
 
 ## True while an ability is held down to charge it.
@@ -348,6 +369,15 @@ func _apply_character_class() -> void:
 	stats.set_base_stats(character_class.base_stats)
 	_equip_weapon(character_class.weapon)
 	air_slash.setup(character_class.air_slash)
+	_apply_combat_style(character_class)
+
+
+## How the class fights (docs/specs/class-combat-identity.md): its animation
+## profile on the humanoid, its combo and how the enemies it hits shake.
+func _apply_combat_style(character_class: CharacterClassData) -> void:
+	_humanoid.set_profile(character_class.animation_profile)
+	attack.combo = character_class.combo
+	_hitstop.config = character_class.hitstop
 
 
 ## The class weapon is fixed: placed once on the pivot, held in the humanoid's
@@ -358,18 +388,36 @@ func _equip_weapon(weapon: WeaponData) -> void:
 	_weapon_pivot.add_child(model)
 	sword_swing.setup(weapon)
 	_weapon_trail.attach(model.get_node(WEAPON_TRAIL_BASE) as Node3D, model.get_node(WEAPON_TRAIL_TIP) as Node3D)
-	_weapon_mount.setup(weapon)
+	_grip_with_right_hand(model)
+	_grip_with_left_hand(model)
 	_equip_sheath(weapon)
+	_weapon_mount.setup(weapon, _sheath_socket)
 
 
-## The weapon's scabbard, if any, is fixed on the Visual (it turns with the player).
+## The weapon's scabbard, if any, hangs from a socket on the weapon's
+## `sheath_joint` (docs/specs/sheath-in-left-hand.md): the katana's is held in
+## the left hand, so each clip's left arm sets its angle.
 func _equip_sheath(weapon: WeaponData) -> void:
 	if weapon.sheath == null:
 		return
+	_sheath_socket = Node3D.new()
+	_sheath_socket.name = "SheathSocket"
+	_humanoid.attach_to_joint(String(weapon.sheath_joint), _sheath_socket, weapon.sheath_position, weapon.sheath_rotation)
 	_sheath = weapon.sheath.instantiate() as Node3D
-	_visual.add_child(_sheath)
-	_sheath.position = weapon.sheath_position
-	_sheath.rotation = weapon.sheath_rotation
+	_sheath_socket.add_child(_sheath)
+
+
+## The left hand grips a two-handed weapon's second-hand marker, if it has one,
+## when a clip asks (e.g. the Berserker's greatsword).
+func _grip_with_left_hand(model: Node3D) -> void:
+	if model.has_node(WEAPON_OFF_HAND):
+		_humanoid.set_hand_target(LowPolyHumanoid.Hand.LEFT, model.get_node(WEAPON_OFF_HAND) as Node3D)
+
+
+## The right hand grips the weapon's hilt marker, if it has one, when a clip asks.
+func _grip_with_right_hand(model: Node3D) -> void:
+	if model.has_node(WEAPON_HILT):
+		_humanoid.set_hand_target(LowPolyHumanoid.Hand.RIGHT, model.get_node(WEAPON_HILT) as Node3D)
 
 
 func _setup_health() -> void:

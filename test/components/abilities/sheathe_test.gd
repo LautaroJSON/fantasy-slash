@@ -317,10 +317,15 @@ func test_ac250_the_katana_rests_in_its_sheath_while_charging_and_returns_after(
 	_equip_by_hand()
 	var pivot: Node3D = _player.get_node("Visual/SwordPivot") as Node3D
 	_ability.try_cast()
-	assert_vector(pivot.position).is_equal_approx(SHEATHE_CONFIG.sheathed_position, Vector3.ONE * 0.001)
-	assert_vector(SHEATHE_CONFIG.sheathed_position).is_equal(SAMURAI.weapon.sheath_position)
-	assert_vector(SHEATHE_CONFIG.sheathed_rotation).is_equal(SAMURAI.weapon.sheath_rotation)
+	# Adapted (docs/specs/sheath-socket-hand-grip.md): the katana waits in the
+	# sheath socket on the torso (no fixed sheathed pose in SheatheConfig).
+	var mount: WeaponMount = _player.get_node("WeaponMount") as WeaponMount
+	assert_bool(mount.is_holding_in_sheath()).is_true()
+	var sheathed: Transform3D = mount.get_sheath_pose()
+	assert_vector(pivot.global_position).is_equal_approx(sheathed.origin, Vector3.ONE * 0.001)
+	assert_float(pivot.global_basis.get_rotation_quaternion().angle_to(sheathed.basis.get_rotation_quaternion())).is_less(0.01)
 	_ability.release_charge()
+	assert_bool(mount.is_holding_in_sheath()).is_false()
 	var animator: AnimationPlayer = _player.get_node("SwingPlayer") as AnimationPlayer
 	assert_str(animator.current_animation).is_equal("sheathe_slash")
 	animator.advance(animator.current_animation_length)

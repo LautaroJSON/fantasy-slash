@@ -6,7 +6,8 @@ extends Node
 ## is the only one that plays clips on the humanoid.
 ## Priority each frame: a combo strike (its clip is requested by the
 ## AttackComponent through play_attack), then `hit`, then the dash (`run`),
-## then casts, charges, the air slash and holds (`idle`), then locomotion.
+## then casts, charges, the air slash and holds (`idle`, or the clip the
+## ability asks for, e.g. Sheathe's charge crouch), then locomotion.
 
 enum Locomotion {
 	IDLE,
@@ -36,6 +37,8 @@ var _locomotion_clip_finished: bool = false
 var _hit_playing: bool = false
 ## Last clip requested on the humanoid; a clip is only requested on change.
 var _requested: StringName = &""
+## True while the body still holds a strike's last pose (it blends out slowly).
+var _in_strike_pose: bool = false
 
 
 func _ready() -> void:
@@ -92,7 +95,7 @@ func update() -> void:
 		_play_action_clip()
 		return
 	_advance_locomotion()
-	_request(LOCOMOTION_CLIPS[_locomotion])
+	_request_locomotion(LOCOMOTION_CLIPS[_locomotion])
 
 
 ## Plays a combo strike clip at `speed` (the AttackComponent decides when).
@@ -101,6 +104,7 @@ func play_attack(clip: StringName, speed: float) -> void:
 	humanoid.anim.speed_scale = speed
 	humanoid.play(clip)
 	_requested = clip
+	_in_strike_pose = true
 
 
 func get_locomotion() -> Locomotion:
@@ -123,7 +127,7 @@ func _is_busy() -> bool:
 func _play_action_clip() -> void:
 	if attack.is_attacking() or _hit_playing:
 		return
-	_request(CLIP_DASH if dash.is_dashing() else CLIP_BUSY)
+	_request(CLIP_DASH if dash.is_dashing() else _busy_clip())
 
 
 func _advance_locomotion() -> void:
@@ -137,12 +141,25 @@ func _horizontal_speed() -> float:
 	return Vector2(player.velocity.x, player.velocity.z).length()
 
 
+## Locomotion after a strike blends out of its last pose slowly (the strike
+## ends in the pose the next one starts from, not in the guard).
+func _request_locomotion(clip: StringName) -> void:
+	if clip == _requested or not _in_strike_pose:
+		_request(clip)
+		return
+	humanoid.anim.speed_scale = 1.0
+	humanoid.play(clip, config.attack_exit_blend)
+	_requested = clip
+	_in_strike_pose = false
+
+
 func _request(clip: StringName) -> void:
 	if clip == _requested:
 		return
 	humanoid.anim.speed_scale = 1.0
 	humanoid.play(clip)
 	_requested = clip
+	_in_strike_pose = false
 
 
 ## Chains the next clip at once, so a finished one-shot clip never freezes a frame.
@@ -163,3 +180,13 @@ func _on_damaged(_amount: float) -> void:
 	humanoid.anim.speed_scale = 1.0
 	humanoid.play(CLIP_HIT)
 	_requested = CLIP_HIT
+	_in_strike_pose = false
+
+
+## The clip an ability asks for while it charges or casts (e.g. Sheathe's
+## crouch), if the active profile has it; idle otherwise.
+func _busy_clip() -> StringName:
+	var clip: StringName = player.get_body_clip()
+	if clip != &"" and humanoid.anim.has_animation(clip):
+		return clip
+	return CLIP_BUSY

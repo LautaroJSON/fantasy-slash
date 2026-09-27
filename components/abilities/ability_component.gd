@@ -32,6 +32,8 @@ const TIME_EPSILON: float = 0.0001
 @export var movement: MovementComponent
 ## Lets abilities that hold the weapon return it to its rest pose.
 @export var sword_swing: SwordSwing
+## Lets abilities hold the weapon in its scabbard (e.g. Sheathe while charging).
+@export var weapon_mount: WeaponMount
 ## Lets abilities change how much damage the player takes (e.g. while charging).
 @export var health: HealthComponent
 ## Spacing of the charge milestones of charged abilities.
@@ -306,6 +308,14 @@ func is_on_cooldown() -> bool:
 
 func is_charging() -> bool:
 	return _charging
+
+
+## Humanoid clip the body plays while this ability charges or casts; &"" =
+## the default (docs/specs/sheath-socket-hand-grip.md §2.7).
+func get_body_clip() -> StringName:
+	if _behavior == null or not (is_charging() or is_casting()):
+		return &""
+	return _behavior.get_body_clip(self)
 
 
 ## Charge reached, in [0, 1]: 1 once CHARGE_TIME has been held (0 when not charging).

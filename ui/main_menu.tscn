@@ -1,9 +1,9 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cemt158ow0a27"]
 
-[ext_resource type="Script" path="res://ui/main_menu.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://n4gkeilxicsb" path="res://ui/main_menu.gd" id="1_script"]
 [ext_resource type="Resource" path="res://data/classes/class_catalog.tres" id="2_class_catalog"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1502004446]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,7 +14,7 @@ script = ExtResource("1_script")
 game_scene_path = "res://levels/arena/arena.tscn"
 class_catalog = ExtResource("2_class_catalog")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=450714501]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -23,7 +23,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.1, 0.12, 0.16, 1)
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Center" type="CenterContainer" parent="." unique_id=1219098658]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -31,22 +31,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Layout" type="VBoxContainer" parent="Center"]
+[node name="Layout" type="VBoxContainer" parent="Center" unique_id=1631142796]
 layout_mode = 2
 theme_override_constants/separation = 40
 
-[node name="Title" type="Label" parent="Center/Layout"]
+[node name="Title" type="Label" parent="Center/Layout" unique_id=1233183961]
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
 text = "FANTASY SLASH"
 horizontal_alignment = 1
 
-[node name="MainPanel" type="VBoxContainer" parent="Center/Layout"]
+[node name="MainPanel" type="VBoxContainer" parent="Center/Layout" unique_id=193406214]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="PlayButton" type="Button" parent="Center/Layout/MainPanel"]
+[node name="PlayButton" type="Button" parent="Center/Layout/MainPanel" unique_id=678937989]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(260, 56)
 layout_mode = 2
@@ -54,24 +54,24 @@ size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 26
 text = "Jugar"
 
-[node name="ModePanel" type="VBoxContainer" parent="Center/Layout"]
+[node name="ModePanel" type="VBoxContainer" parent="Center/Layout" unique_id=936457407]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="ModeTitle" type="Label" parent="Center/Layout/ModePanel"]
+[node name="ModeTitle" type="Label" parent="Center/Layout/ModePanel" unique_id=47165947]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Modo de juego"
 horizontal_alignment = 1
 
-[node name="Modes" type="HBoxContainer" parent="Center/Layout/ModePanel"]
+[node name="Modes" type="HBoxContainer" parent="Center/Layout/ModePanel" unique_id=1067000476]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 24
+alignment = 1
 
-[node name="NormalButton" type="Button" parent="Center/Layout/ModePanel/Modes"]
+[node name="NormalButton" type="Button" parent="Center/Layout/ModePanel/Modes" unique_id=8554715]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 150)
 layout_mode = 2
@@ -82,7 +82,7 @@ Oleadas infinitas, mejoras al
 superarlas, hasta morir"
 autowrap_mode = 3
 
-[node name="SandboxButton" type="Button" parent="Center/Layout/ModePanel/Modes"]
+[node name="SandboxButton" type="Button" parent="Center/Layout/ModePanel/Modes" unique_id=1685586621]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 150)
 layout_mode = 2
@@ -93,7 +93,7 @@ Elegí cualquier mejora desde la
 pausa. No podés morir"
 autowrap_mode = 3
 
-[node name="BackButton" type="Button" parent="Center/Layout/ModePanel"]
+[node name="BackButton" type="Button" parent="Center/Layout/ModePanel" unique_id=1440302136]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 44)
 layout_mode = 2
@@ -101,25 +101,25 @@ size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 18
 text = "Volver"
 
-[node name="ClassPanel" type="VBoxContainer" parent="Center/Layout"]
+[node name="ClassPanel" type="VBoxContainer" parent="Center/Layout" unique_id=678839531]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="ClassTitle" type="Label" parent="Center/Layout/ClassPanel"]
+[node name="ClassTitle" type="Label" parent="Center/Layout/ClassPanel" unique_id=269011968]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Clase"
 horizontal_alignment = 1
 
-[node name="Classes" type="HBoxContainer" parent="Center/Layout/ClassPanel"]
+[node name="Classes" type="HBoxContainer" parent="Center/Layout/ClassPanel" unique_id=1670958114]
 unique_name_in_owner = true
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 24
+alignment = 1
 
-[node name="ClassCardTemplate" type="Button" parent="Center/Layout/ClassPanel/Classes"]
+[node name="ClassCardTemplate" type="Button" parent="Center/Layout/ClassPanel/Classes" unique_id=1011894139]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(280, 150)
@@ -127,7 +127,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 
-[node name="ClassBackButton" type="Button" parent="Center/Layout/ClassPanel"]
+[node name="ClassBackButton" type="Button" parent="Center/Layout/ClassPanel" unique_id=1559311161]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 44)
 layout_mode = 2

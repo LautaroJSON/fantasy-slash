@@ -1,10 +1,11 @@
-[gd_resource type="Resource" script_class="EnemyStats" format=3]
+[gd_resource type="Resource" script_class="EnemyStats" format=3 uid="uid://df25shqcoa77t"]
 
+[ext_resource type="Script" uid="uid://djw82ehqq88oc" path="res://resources/enemy_attack_data.gd" id="1_1gotd"]
 [ext_resource type="Script" uid="uid://b7jvh5hu4k1jl" path="res://resources/enemy_stats.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://bccm8umkwltgo" path="res://resources/enemy_stat_growth.gd" id="2_growth"]
 [ext_resource type="PackedScene" path="res://components/enemies/colmena_behavior.tscn" id="3_behavior"]
 [ext_resource type="Resource" path="res://data/enemies/hands/colmena_hands.tres" id="4_hands"]
-[ext_resource type="Resource" path="res://data/enemies/configs/colmena_boss.tres" id="5_config"]
+[ext_resource type="Resource" uid="uid://cclnoq2wmwiod" path="res://data/enemies/configs/colmena_boss.tres" id="5_config"]
 
 [sub_resource type="Resource" id="Resource_max_health"]
 script = ExtResource("2_growth")

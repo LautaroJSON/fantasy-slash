@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://bccm8umkwltgo" path="res://resources/enemy_stat_growth.gd" id="2_growth"]
 [ext_resource type="PackedScene" path="res://components/enemies/melee_behavior.tscn" id="3_behavior"]
 [ext_resource type="Resource" path="res://data/enemies/attacks/grunt_punch.tres" id="4_attack"]
-[ext_resource type="Script" path="res://resources/enemy_attack_data.gd" id="5_attack_script"]
+[ext_resource type="Script" uid="uid://djw82ehqq88oc" path="res://resources/enemy_attack_data.gd" id="5_attack_script"]
 
 [sub_resource type="Resource" id="Resource_max_health"]
 script = ExtResource("2_growth")

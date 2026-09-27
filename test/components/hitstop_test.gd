@@ -5,7 +5,7 @@ extends GdUnitTestSuite
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const WARRIOR: CharacterClassData = preload("res://data/classes/warrior/warrior.tres")
-const COMBO: AttackComboConfig = preload("res://data/player/attack_combo_config.tres")
+const COMBO: AttackComboConfig = preload("res://data/classes/warrior/warrior_combo.tres")
 const VERDUGO_STATS: EnemyStats = preload("res://data/enemies/verdugo_stats.tres")
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const NO_CRIT_ROLL: float = 0.99
@@ -106,13 +106,14 @@ func test_ac621_the_camera_shakes_with_each_strike_strength() -> void:
 	var camera: ThirdPersonCamera = _player.get_node("CameraRig") as ThirdPersonCamera
 	_strike()
 	assert_float(camera.get_shake_strength()).is_equal_approx(COMBO.steps[0].shake_strength, TOLERANCE)
-	for i: int in 2:
+	var last: int = COMBO.steps.size() - 1
+	for i: int in last:
 		ComboDriver.advance_until(_player, func() -> bool: return _player.attack.get_state() == AttackComponent.ComboState.CHAIN_OPEN)
 		_strike()
-	assert_int(_player.attack.get_step_index()).is_equal(2)
-	assert_float(camera.get_shake_strength()).is_equal_approx(COMBO.steps[2].shake_strength, TOLERANCE)
-	assert_float(COMBO.steps[2].shake_strength).is_greater(COMBO.steps[0].shake_strength)
-	assert_float(COMBO.steps[2].hitlag).is_greater(COMBO.steps[0].hitlag)
+	assert_int(_player.attack.get_step_index()).is_equal(last)
+	assert_float(camera.get_shake_strength()).is_equal_approx(COMBO.steps[last].shake_strength, TOLERANCE)
+	assert_float(COMBO.steps[last].shake_strength).is_greater(COMBO.steps[0].shake_strength)
+	assert_float(COMBO.steps[last].hitlag).is_greater(COMBO.steps[0].hitlag)
 
 
 func test_ac622_a_dash_ends_the_hit_lag_at_once() -> void:

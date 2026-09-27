@@ -137,3 +137,10 @@ func hit_damage(ability: AbilityComponent) -> float:
 		ability.get_stat(AbilityData.Stat.BASE_DAMAGE),
 		ability.get_stat(AbilityData.Stat.ATTACK_SCALING),
 		ability.player_stats.get_stat(PlayerStats.Stat.DAMAGE))
+
+
+## Humanoid clip the body plays while this ability charges or casts; &"" = the
+## default (idle). E.g. Sheathe crouches while charging
+## (docs/specs/sheath-socket-hand-grip.md §2.7).
+func get_body_clip(_ability: AbilityComponent) -> StringName:
+	return &""

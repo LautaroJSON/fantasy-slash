@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="TitanConfig" format=3]
+[gd_resource type="Resource" script_class="TitanConfig" format=3 uid="uid://ps6ui6qxtl3l"]
 
-[ext_resource type="Script" path="res://resources/titan_config.gd" id="1_script"]
-[ext_resource type="Script" path="res://resources/boss_move_data.gd" id="2_move_script"]
-[ext_resource type="Script" path="res://resources/hand_slam_move_data.gd" id="3_slam_script"]
-[ext_resource type="Script" path="res://resources/sweep_move_data.gd" id="4_sweep_script"]
-[ext_resource type="Script" path="res://resources/shockwave_move_data.gd" id="5_wave_script"]
-[ext_resource type="Script" path="res://resources/boss_phase_data.gd" id="6_phase_script"]
+[ext_resource type="Script" uid="uid://x2rnullrvhxs" path="res://resources/titan_config.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://buogel1mtki4s" path="res://resources/boss_move_data.gd" id="2_move_script"]
+[ext_resource type="Script" uid="uid://deokys6433agd" path="res://resources/hand_slam_move_data.gd" id="3_slam_script"]
+[ext_resource type="Script" uid="uid://ch1dwe26t18e" path="res://resources/sweep_move_data.gd" id="4_sweep_script"]
+[ext_resource type="Script" uid="uid://c7iik8yn4j5kh" path="res://resources/shockwave_move_data.gd" id="5_wave_script"]
+[ext_resource type="Script" uid="uid://cw367jyogs8v" path="res://resources/boss_phase_data.gd" id="6_phase_script"]
 [ext_resource type="Resource" path="res://data/enemies/attacks/titan_slam.tres" id="7_slam"]
 [ext_resource type="Resource" path="res://data/enemies/attacks/titan_sweep.tres" id="8_sweep"]
 [ext_resource type="Resource" path="res://data/enemies/attacks/titan_stomp.tres" id="9_stomp"]
@@ -63,8 +63,6 @@ transition_hand_offset = Vector3(0, 0.8, 0)
 
 [resource]
 script = ExtResource("1_script")
-moves = Array[ExtResource("2_move_script")]([SubResource("Resource_slam"), SubResource("Resource_sweep"), SubResource("Resource_stomp")])
-phase_two = SubResource("Resource_phase_two")
 body_armor = 0.7
 hand_health_fraction = 0.3
 weak_point_margin = 1.5
@@ -73,3 +71,5 @@ stun_body_drop = 0.15
 damaged_hand_min_scale = 0.7
 hit_shake_time = 0.15
 hit_shake_amount = 0.1
+moves = Array[ExtResource("2_move_script")]([SubResource("Resource_slam"), SubResource("Resource_sweep"), SubResource("Resource_stomp")])
+phase_two = SubResource("Resource_phase_two")
