@@ -8,6 +8,9 @@ const MATERIAL: StandardMaterial3D = preload("res://materials/damage_number_mate
 const CRIT_MATERIAL: StandardMaterial3D = preload("res://materials/damage_number_crit_material.tres")
 const NO_CRIT_ROLL: float = 0.99
 const CRIT_ROLL: float = 0.0
+const POISON: DebuffData = preload("res://data/debuffs/poison.tres")
+const BLEED: DebuffData = preload("res://data/debuffs/bleed.tres")
+const BURST: AfflictionData = preload("res://data/afflictions/burst.tres")
 
 var _registry: EnemyRegistry
 var _player: Player
@@ -29,6 +32,7 @@ func before_test() -> void:
 	_pool.config = CONFIG
 	_pool.material = MATERIAL
 	_pool.crit_material = CRIT_MATERIAL
+	_pool.registry = _registry
 	add_child(_pool)
 
 
@@ -100,7 +104,7 @@ func test_ac136_normal_number_is_white_smaller_and_dimmer() -> void:
 	assert_float(number.transparency).is_equal_approx(CONFIG.normal_transparency, 0.0001)
 
 
-func test_ac137_crit_number_is_amber_with_suffix_and_pops() -> void:
+func test_ac137_crit_number_is_white_with_suffix_and_pops() -> void:
 	_pool.spawn(22.5, true, Vector3.ZERO)
 	var number: DamageNumber = _pool.get_last_spawned()
 	assert_str(number.get_text()).is_equal("23!")
@@ -150,3 +154,83 @@ func test_ac140_recycled_crit_comes_back_as_a_normal_number() -> void:
 	assert_vector(oldest.scale).is_equal_approx(Vector3.ONE * CONFIG.normal_scale, Vector3(0.001, 0.001, 0.001))
 	oldest.advance(CONFIG.lifetime + 0.01)
 	assert_bool(oldest.is_active()).is_false()
+
+
+## docs/specs/affliction-damage-colors.md
+func test_ac931_a_combo_crit_is_white_with_its_suffix_and_size() -> void:
+	_spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	ComboDriver.strike(_player, CRIT_ROLL)
+	var number: DamageNumber = _pool.get_last_spawned()
+	assert_bool(number.is_crit()).is_true()
+	assert_object(number.material_override).is_same(CRIT_MATERIAL)
+	assert_object(CRIT_MATERIAL.albedo_color).is_equal(Color(1, 1, 1, 1))
+	assert_str(number.get_text()).ends_with(CONFIG.crit_suffix)
+	assert_float(number.scale.x).is_equal_approx(CONFIG.crit_pop_scale, 0.001)
+	assert_bool(number.is_over_time()).is_false()
+
+
+func test_ac932_ability_and_air_slash_crits_are_white_too() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	_player.basic_ability.enemy_hit.emit(enemy, 30.0, true)
+	assert_object(_pool.get_last_spawned().material_override).is_same(CRIT_MATERIAL)
+	assert_str(_pool.get_last_spawned().get_text()).is_equal("30" + CONFIG.crit_suffix)
+	_player.air_slash.enemy_hit.emit(enemy, 12.0, true)
+	assert_object(_pool.get_last_spawned().material_override).is_same(CRIT_MATERIAL)
+
+
+func test_ac933_ac939_a_poison_tick_is_green_and_italic() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	enemy.debuffs.apply(POISON, 4.5)
+	enemy.debuffs.advance(1.0)
+	var number: DamageNumber = _pool.get_last_spawned()
+	assert_object(number.material_override).is_same(POISON.damage_number_material)
+	assert_bool(number.is_crit()).is_false()
+	assert_str(number.get_text()).is_equal("5")
+	assert_float(number.scale.x).is_equal_approx(CONFIG.normal_scale, 0.001)
+	assert_bool(number.is_over_time()).is_true()
+	var italic: AABB = number.mesh.get_aabb()
+	assert_float(italic.size.x).is_greater(0.0)
+	_pool.spawn(5.0, false, Vector3.ZERO)
+	var upright: AABB = _pool.get_last_spawned().mesh.get_aabb()
+	assert_float(italic.size.x).is_not_equal(upright.size.x)
+
+
+func test_ac934_burst_numbers_take_the_bar_color() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	_player.afflictions.burst_hit.emit(enemy, 22.5, BURST)
+	var number: DamageNumber = _pool.get_last_spawned()
+	assert_object(number.material_override).is_same(BURST.damage_number_material)
+	assert_str(number.get_text()).is_equal("23")
+	assert_float(number.scale.x).is_equal_approx(CONFIG.normal_scale, 0.001)
+	assert_bool(number.is_over_time()).is_false()
+
+
+func test_ac935_ac939_hits_stay_white_and_bleed_ticks_white_italic() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	enemy.health.setup(1000.0, 0.0)
+	enemy.debuffs.apply(BLEED, 0.01)
+	enemy.debuffs.advance(1.0)
+	var tick: DamageNumber = _pool.get_last_spawned()
+	assert_object(tick.material_override).is_same(MATERIAL)
+	assert_bool(tick.is_over_time()).is_true()
+	_pool.spawn(10.0, false, Vector3.ZERO)
+	assert_object(_pool.get_last_spawned().material_override).is_same(MATERIAL)
+	assert_bool(_pool.get_last_spawned().is_over_time()).is_false()
+
+
+func test_ac937_colored_numbers_reuse_the_pool() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	var children: int = _pool.get_child_count()
+	for i: int in 50:
+		match i % 4:
+			0:
+				_pool.spawn(1.0, false, Vector3.ZERO)
+			1:
+				_pool.spawn(2.0, true, Vector3.ZERO)
+			2:
+				_pool.spawn(3.0, false, Vector3.ZERO, POISON.damage_number_material, true)
+			3:
+				_player.afflictions.burst_hit.emit(enemy, 4.0, BURST)
+	assert_int(_pool.get_child_count()).is_equal(children)
+	assert_int(children).is_equal(CONFIG.pool_size)
+	assert_object(MATERIAL.albedo_color).is_equal(Color(1, 1, 1, 1))

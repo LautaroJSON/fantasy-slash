@@ -25,6 +25,9 @@ enum EffectScaling {
 @export var effect_scaling: EffectScaling
 ## Radius of the area damage around the enemy, in meters (0 = no burst).
 @export var burst_radius: float
+## Material of the burst damage numbers: the color of its bar
+## (docs/specs/affliction-damage-colors.md).
+@export var damage_number_material: StandardMaterial3D
 
 
 func has_burst() -> bool:

@@ -122,3 +122,17 @@ func test_ac876_bleed_still_removes_a_fraction_of_max_health() -> void:
 
 func test_ac894_slow_is_the_last_effect_value() -> void:
 	assert_int(DebuffData.Effect.SLOW).is_equal(4)
+
+
+## docs/specs/affliction-damage-colors.md
+func test_ac938_ticks_report_their_status() -> void:
+	var enemy: Enemy = _spawn_enemy()
+	var registry: EnemyRegistry = auto_free(EnemyRegistry.new())
+	add_child(registry)
+	registry.register(enemy)
+	var seen: Array[DebuffData] = []
+	registry.enemy_debuff_ticked.connect(func(_e: Enemy, _a: float, data: DebuffData) -> void: seen.append(data))
+	enemy.debuffs.apply(POISON, 4.5)
+	enemy.debuffs.apply(BLEED, 0.01)
+	enemy.debuffs.advance(1.0)
+	assert_array(seen).contains_exactly_in_any_order([POISON, BLEED])

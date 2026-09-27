@@ -185,7 +185,7 @@ func test_ac101_icon_shows_while_the_debuff_lasts() -> void:
 func test_ac102_every_bleed_tick_is_reported_for_a_damage_number() -> void:
 	var enemy: Enemy = _spawn_idle_enemy(Vector3(0.0, 0.0, -2.0))
 	var ticks: Array[float] = []
-	_registry.enemy_debuff_ticked.connect(func(_e: Enemy, amount: float) -> void: ticks.append(amount))
+	_registry.enemy_debuff_ticked.connect(func(_e: Enemy, amount: float, _d: DebuffData) -> void: ticks.append(amount))
 	enemy.debuffs.apply(BLEED, 0.01)
 	for i: int in 5:
 		enemy.debuffs.advance(BLEED.tick_interval)

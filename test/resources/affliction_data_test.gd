@@ -119,3 +119,12 @@ func test_ac892_new_icons_are_credited_and_have_no_background() -> void:
 		assert_str(source).contains("`%s` | Lorc | https://game-icons.net/" % file)
 		assert_str(FileAccess.get_file_as_string(ICON_DIR + file)).not_contains("M0 0h512v512H0z")
 	assert_str(source).contains("CC BY 3.0")
+
+
+## docs/specs/affliction-damage-colors.md
+func test_ac936_damage_number_colors_match_the_bars() -> void:
+	assert_object(POISON.debuff.damage_number_material.albedo_color).is_equal(POISON.bar_material.albedo_color)
+	assert_object(BURST.damage_number_material.albedo_color).is_equal(BURST.bar_material.albedo_color)
+	for id: String in ["frost", "corrosion", "bleed", "weaken", "rage", "shield"]:
+		var data: DebuffData = load("res://data/debuffs/%s.tres" % id)
+		assert_object(data.damage_number_material).override_failure_message(id).is_null()

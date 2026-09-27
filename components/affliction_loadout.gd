@@ -11,8 +11,8 @@ extends Node
 ## A card was added, levelled up or removed.
 signal changed
 signal triggered(enemy: Enemy, type: AfflictionData)
-## Damage of a burst on one enemy (damage numbers).
-signal burst_hit(enemy: Enemy, applied: float)
+## Damage of a burst on one enemy (damage numbers, colored by `type`).
+signal burst_hit(enemy: Enemy, applied: float, type: AfflictionData)
 
 @export var config: AfflictionConfig
 @export var stats: StatsComponent
@@ -175,19 +175,19 @@ func _trigger(enemy: Enemy, type: AfflictionData) -> void:
 	if type.debuff != null:
 		enemy.debuffs.apply(type.debuff, potency)
 	if type.has_burst():
-		_burst(enemy, type.burst_radius, potency)
+		_burst(enemy, type, potency)
 	triggered.emit(enemy, type)
 
 
 ## Area damage around `center` (itself included), defense applies, no crit.
-func _burst(center: Enemy, radius: float, damage: float) -> void:
+func _burst(center: Enemy, type: AfflictionData, damage: float) -> void:
 	_burst_targets.clear()
 	_burst_targets.append(center)
 	if registry != null:
-		_gather_burst_targets(center, radius)
+		_gather_burst_targets(center, type.burst_radius)
 	for enemy: Enemy in _burst_targets:
 		var applied: float = enemy.health.receive_hit(damage)
-		burst_hit.emit(enemy, applied)
+		burst_hit.emit(enemy, applied, type)
 
 
 func _gather_burst_targets(center: Enemy, radius: float) -> void:

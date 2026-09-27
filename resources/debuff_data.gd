@@ -60,6 +60,9 @@ enum DamageScaling {
 @export var icon_color: Color
 ## Good for whoever carries it (e.g. Rage on an enemy): its icon gets the buff frame.
 @export var is_beneficial: bool
+## Material of the damage numbers of its ticks (null = the white default;
+## docs/specs/affliction-damage-colors.md).
+@export var damage_number_material: StandardMaterial3D
 
 
 ## At least 1: debuffs that do not declare it never stack.

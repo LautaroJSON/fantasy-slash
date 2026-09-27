@@ -1,9 +1,11 @@
 class_name DamageNumber
 extends MeshInstance3D
 ## One pooled floating damage number: a flat TextMesh that rises and fades out.
-## Normal hits are white, slightly smaller and dimmer. Critical hits are amber,
-## carry a suffix ("23!"), pop in big and shrink to crit_scale, and float
-## slower and longer. There is no bold: emboldened fonts break TextMesh
+## Normal hits are white (or tinted, e.g. Affliction damage in the color of its
+## bar), slightly smaller and dimmer; damage-over-time ticks are italic.
+## Critical hits are white too, carry a suffix ("23!"), pop in big and shrink
+## to crit_scale, and float slower and longer
+## (docs/specs/affliction-damage-colors.md). There is no bold: emboldened fonts break TextMesh
 ## triangulation (docs/specs/combat-feedback.md §2.2).
 
 signal finished(number: DamageNumber)
@@ -41,12 +43,14 @@ func _process(delta: float) -> void:
 	advance(delta)
 
 
-func show_damage(amount: float, is_crit: bool, at: Vector3) -> void:
+## `tint` colors a normal number (null = white); `over_time` sets the italic
+## font of damage-over-time ticks. Critical hits ignore both.
+func show_damage(amount: float, is_crit: bool, at: Vector3, tint: StandardMaterial3D = null, over_time: bool = false) -> void:
 	_is_crit = is_crit
 	if is_crit:
 		_show_crit(amount)
 	else:
-		_show_normal(amount)
+		_show_normal(amount, tint, over_time)
 	global_position = at
 	transparency = _base_transparency
 	_elapsed = 0.0
@@ -79,9 +83,10 @@ func get_text() -> String:
 	return _text_mesh.text
 
 
-func _show_normal(amount: float) -> void:
+func _show_normal(amount: float, tint: StandardMaterial3D, over_time: bool) -> void:
 	_text_mesh.text = str(roundi(amount))
-	material_override = _material
+	_text_mesh.font = _config.over_time_font if over_time else null
+	material_override = _material if tint == null else tint
 	scale = Vector3.ONE * _config.normal_scale
 	_lifetime = _config.lifetime
 	_rise_speed = _config.rise_speed
@@ -90,6 +95,7 @@ func _show_normal(amount: float) -> void:
 
 func _show_crit(amount: float) -> void:
 	_text_mesh.text = str(roundi(amount)) + _config.crit_suffix
+	_text_mesh.font = null
 	material_override = _crit_material
 	scale = Vector3.ONE * _config.crit_pop_scale
 	_lifetime = _config.crit_lifetime
@@ -118,3 +124,7 @@ func _finish() -> void:
 	hide()
 	set_process(false)
 	finished.emit(self)
+
+
+func is_over_time() -> bool:
+	return _text_mesh.font != null

@@ -14,8 +14,9 @@ extends Node
 ## STAT_BOOST: a buff whose stats the owner applies; only listed here.
 ## Permanent statuses never expire and do not keep the component processing.
 
-## A tick removed health. `target` is the owner, for listeners of many entities.
-signal ticked(target: Node3D, amount: float)
+## A tick removed health. `target` is the owner, for listeners of many entities;
+## `data` is the status that ticked (e.g. its damage number color).
+signal ticked(target: Node3D, amount: float, data: DebuffData)
 ## A debuff was added, stacked, expired or cleared.
 signal changed
 
@@ -231,7 +232,7 @@ func _tick(debuff: ActiveDebuff) -> void:
 	if health.is_dead() or health.is_invulnerable:
 		return
 	var amount: float = minf(_tick_damage(debuff), health.current_health)
-	ticked.emit(target, amount)
+	ticked.emit(target, amount, debuff.data)
 	health.receive_true_damage(amount)
 
 

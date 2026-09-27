@@ -164,7 +164,7 @@ func test_ac875_burst_hits_enemies_in_range_without_being_a_hit() -> void:
 		enemy.health.setup(1000.0, 0.0)
 	_player.apply_upgrade(BURST_BASIC)
 	var bursts: Array[Enemy] = []
-	_player.afflictions.burst_hit.connect(func(enemy: Enemy, _applied: float) -> void: bursts.append(enemy))
+	_player.afflictions.burst_hit.connect(func(enemy: Enemy, _applied: float, _type: AfflictionData) -> void: bursts.append(enemy))
 	var hits: Array[int] = [0]
 	_player.attack.enemy_hit.connect(func(_e: Enemy, _a: float, _c: bool) -> void: hits[0] += 1)
 	var healed_from: float = _player.health.current_health
