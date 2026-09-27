@@ -87,7 +87,7 @@
 - **AC147** Grunt sin cambios: `body_scale` 1, padding 0, la barra en `height_offset` y la colisión sin escalar.
 - **AC148** Coloso: colisión y cuerpo escalados ×2.5, barra en reposo a `2.2 × 2.5 = 5.5` m y escalada ×1.8, padding ≈ 0.6.
 - **AC149** El ataque básico le pega a un Coloso con el centro a 2.5 m y no a un grunt a 2.1 m. La Estocada le pega a un Coloso desplazado de costado a `half_width + 0.5`.
-- **AC150** Los números de daño sobre un Coloso aparecen a `spawn_height × 2.5`.
+- **AC150** Los números de daño sobre un Coloso aparecen a `spawn_height × 2.5`. *(Reemplazado por AC996 y AC998 de `readable-damage-numbers.md`: el número del golpe nace en el punto de contacto y el ancla tiene un tope de altura.)*
 - **AC151** La oleada 4 tiene solo jefes (1 Coloso o 2 Gemelos) en nivel 2. Las oleadas 3 y 5 son de grunts.
 - **AC152** Los Gemelos aparecen a ≥ `min_spawn_separation` entre sí.
 - **AC153** Tras una oleada normal, la oferta nunca incluye doradas.

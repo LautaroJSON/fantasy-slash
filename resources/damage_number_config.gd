@@ -8,10 +8,20 @@ extends Resource
 @export var lifetime: float
 ## Upward speed of a normal number, in m/s.
 @export var rise_speed: float
-## Height above the enemy origin where numbers appear, in meters.
+## Height above the enemy origin of the anchor (numbers without a blade contact),
+## in meters; grows with the body scale up to anchor_max_height.
 @export var spawn_height: float
-## Maximum random horizontal offset of the spawn point, in meters.
-@export var spread: float
+## Highest anchor above the enemy's feet, so a tall boss keeps its numbers in
+## frame (docs/specs/readable-damage-numbers.md).
+@export var anchor_max_height: float
+## Height above the blade's contact point where a hit's number appears, in meters.
+@export var contact_rise: float
+## Sideways step between consecutive numbers, along the camera's right, in meters.
+@export var fan_step: float
+## Positions of the fan (0, +1, -1, +2, -2, …) before it starts over.
+@export var fan_slots: int
+## Extra height per step away from the fan's center, in meters.
+@export var fan_rise_step: float
 @export var font_size: int
 ## World size of one font pixel, in meters.
 @export var pixel_size: float

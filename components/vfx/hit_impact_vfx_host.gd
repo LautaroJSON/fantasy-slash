@@ -47,14 +47,18 @@ func attach(base: Node3D, tip: Node3D) -> void:
 
 ## Plays the next free effect (or the oldest) where the blade crosses `enemy`.
 func show_impact(enemy: Enemy, is_crit: bool) -> void:
-	var blade_a: Vector3 = _blade_start()
 	var blade_b: Vector3 = _blade_end()
-	var player_pos: Vector3 = visual.global_position
-	var enemy_pos: Vector3 = enemy.global_position
-	var point: Vector3 = impact_point(enemy_pos, enemy.get_hit_padding(), blade_a, blade_b, player_pos, config.min_height, config.max_height)
-	var facing: Vector3 = _facing(point, impact_normal(enemy_pos, blade_a, blade_b, player_pos))
+	var point: Vector3 = contact_point(enemy)
+	var facing: Vector3 = _facing(point, impact_normal(enemy.global_position, _blade_start(), blade_b, visual.global_position))
 	var slash_dir: Vector3 = cut_direction(blade_b - _last_tip, facing, config.min_tip_speed)
 	_next_effect().play(point, facing, slash_dir, is_crit)
+
+
+## Where the blade crosses `enemy` right now; also where the damage number of
+## the hit is born (docs/specs/readable-damage-numbers.md).
+func contact_point(enemy: Enemy) -> Vector3:
+	return impact_point(enemy.global_position, enemy.get_hit_padding(), _blade_start(), _blade_end(),
+			visual.global_position, config.min_height, config.max_height)
 
 
 func get_active_count() -> int:
