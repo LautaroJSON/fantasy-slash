@@ -1,6 +1,6 @@
 # Feature: re-work visual del Giro
 
-- **Estado:** Revisión 3 **propuesta** (§12), sobre la versión **Implementada** (2026-09-27). `spin_visual_rework_test` 18/18 en verde. La suite completa no suma fallas nuevas: las que quedan ya fallaban antes (§11). Smoke test del menú y de la arena sin errores ni warnings nuevos. Capturas con Forward+ revisadas. ACs **AC971–AC987** (AC988–AC990 sin usar), reservados en `CLAUDE.md`. Renumerados al integrar con `main`: se habían reservado AC861–AC880, que se superponía con `affliction.md` (AC851–AC900), y después AC961–AC980, que se superponía con `affliction-bleed.md` (AC961–AC970).
+- **Estado:** **Implementada** (2026-09-27), con la revisión 3 (§12) implementada. `spin_visual_rework_test` 18/18 en verde. La suite completa no suma fallas nuevas: las que quedan ya fallaban antes (§11). Smoke test del menú y de la arena sin errores ni warnings nuevos. Capturas con Forward+ revisadas. ACs **AC971–AC987** (AC988–AC990 sin usar), reservados en `CLAUDE.md`. Renumerados al integrar con `main`: se habían reservado AC861–AC880, que se superponía con `affliction.md` (AC851–AC900), y después AC961–AC980, que se superponía con `affliction-bleed.md` (AC961–AC970).
 - **Constitución:** `docs/constitution.md` v4.19.1. Enmienda **MINOR** a 4.20.0 aprobada con esta spec (§7).
 - **Pilar (Principio I):** **combate.** El Giro es la habilidad del Berserker, pero hoy no se lee:
   - el cuerpo gira quieto en `idle`;
@@ -371,7 +371,7 @@ Las capturas se hicieron con Forward+ sobre Vulkan por software (lavapipe, bajo 
 - [x] **Calidad:** el proyecto importa sin errores nuevos. AC971–AC987 en verde y ninguna falla nueva en la suite completa (ver arriba).
 
 
-## 12. Revisión 3: el polvo sale de los pies y se quita el disco (propuesta)
+## 12. Revisión 3: el polvo sale de los pies y se quita el disco (implementada)
 
 **Pedido del responsable (2026-09-27):**
 - el polvo tiene que salir de los pies (el centro del giro);
@@ -412,3 +412,19 @@ En la fila del área de las habilidades, "rectángulo o disco" pasa a "rectángu
 2. `SpinDustVfx`: solo el polvo, con emisión en anillo; `spin_ability.tscn` con el nodo `Dust`; `SpinAbility` sin `pulse`/`set_radius`.
 3. Tests AC979–AC981 reescritos; `CLAUDE.md` actualizado.
 4. Tests del Giro, capturas con Forward+ y smoke test. La suite completa, si la querés.
+
+### 12.5 Cierre
+
+**Resultados:**
+- `spin_visual_rework_test`: 18/18 en verde, con AC979 y AC980 reescritos.
+- `spin_test`, `spin_golden_upgrades_test` y `spin_tornado_test` fallan en los mismos casos que antes: datos desfasados (§11).
+- `hit_impact_abilities_test` AC938 (llegó con `main`, `hit-impact-vfx.md`) también falla en `main` sin esta revisión, así que no es de acá.
+- Capturas con Forward+: el disco ya no aparece, y el polvo sale de los pies y queda atrás al terminar el giro.
+- La suite completa no se corrió.
+
+**Checklist de la constitución:**
+- **II:** un solo `CPUParticles3D` con el material de polvo compartido (tierra); la fila del área pasa a cubrir solo el rectángulo (4.20.1).
+- **III:** el anillo, la apertura y el resto del polvo viven en `spin_dust_config.tres`.
+- **IV:** tipado completo, con `_process` que solo delega en `advance()`.
+- **V:** se crea una vez; por cuadro solo copia una posición.
+- **I, VI y VII:** sin cambios.

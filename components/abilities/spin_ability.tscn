@@ -5,9 +5,8 @@
 [ext_resource type="Script" uid="uid://djhtqpbri0y5r" path="res://components/abilities/dash_slash_vfx.gd" id="3_dash_slash"]
 [ext_resource type="Resource" path="res://data/abilities/spin/dash_slash_vfx_config.tres" id="4_dash_slash_config"]
 [ext_resource type="Material" path="res://materials/vfx/wind_cut_additive_material.tres" id="5_glow_material"]
-[ext_resource type="Script" path="res://components/abilities/spin_vortex_vfx.gd" id="6_vortex"]
-[ext_resource type="Resource" path="res://data/abilities/spin/spin_vortex_config.tres" id="7_vortex_config"]
-[ext_resource type="Material" path="res://materials/attack_indicator_material.tres" id="8_area_material"]
+[ext_resource type="Script" path="res://components/abilities/spin_dust_vfx.gd" id="6_dust"]
+[ext_resource type="Resource" path="res://data/abilities/spin/spin_dust_config.tres" id="7_dust_config"]
 [ext_resource type="Material" path="res://materials/vfx/wind_dust_material.tres" id="9_dust_material"]
 
 [node name="SpinAbility" type="Node" unique_id=1330578358]
@@ -20,9 +19,8 @@ script = ExtResource("3_dash_slash")
 config = ExtResource("4_dash_slash_config")
 glow_material = ExtResource("5_glow_material")
 
-[node name="Vortex" type="Node3D" parent="."]
+[node name="Dust" type="Node3D" parent="."]
 top_level = true
-script = ExtResource("6_vortex")
-config = ExtResource("7_vortex_config")
-area_material = ExtResource("8_area_material")
+script = ExtResource("6_dust")
+config = ExtResource("7_dust_config")
 dust_material = ExtResource("9_dust_material")

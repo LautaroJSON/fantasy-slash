@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## The Spin's body, weapon, vortex and impact feedback, and the white area of
+## The Spin's body, weapon, dust and impact feedback, and the white area of
 ## the abilities on the ground (docs/specs/spin-visual-rework.md AC971–AC987).
 ## Poses are measured in the Visual's space (-Z forward, +X to the right).
 
@@ -10,8 +10,7 @@ const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const BERSERKER: CharacterClassData = preload("res://data/classes/berserker/berserker.tres")
 const SPIN: AbilityData = preload("res://data/abilities/spin/spin.tres")
 const SPIN_CONFIG: SpinConfig = preload("res://data/abilities/spin/spin_config.tres")
-const VORTEX_CONFIG: SpinVortexConfig = preload("res://data/abilities/spin/spin_vortex_config.tres")
-const RANGE_UPGRADE: AbilityUpgradeData = preload("res://data/abilities/spin/upgrades/range.tres")
+const DUST_CONFIG: SpinDustConfig = preload("res://data/abilities/spin/spin_dust_config.tres")
 const ANIMATION_CONFIG: PlayerAnimationConfig = preload("res://data/player/player_animation_config.tres")
 const AREA_MATERIAL: StandardMaterial3D = preload("res://materials/attack_indicator_material.tres")
 const SHEATHE_INDICATOR: AbilityIndicatorConfig = preload("res://data/abilities/sheathe/sheathe_indicator_config.tres")
@@ -268,64 +267,40 @@ func test_ac978_the_trail_follows_the_spin_and_its_dash_slash() -> void:
 
 # --- Area, pulse and dust
 
-func test_ac979_the_white_area_shows_the_reach_and_follows_the_player() -> void:
-	var vortex: SpinVortexVfx = _spin.get_vortex()
-	assert_bool(vortex.is_showing()).is_false()
-	assert_bool(vortex.visible).is_false()
-	assert_object(vortex.area_material).is_same(AREA_MATERIAL)
-	assert_object(AREA_MATERIAL.albedo_color).is_equal(Color(1, 1, 1, 1))
-	assert_float(VORTEX_CONFIG.area_alpha).is_less_equal(MAX_REST_ALPHA)
+## Revision 3 (docs/specs/spin-visual-rework.md §12): the spin draws no area
+## on the ground any more.
+func test_ac979_the_spin_draws_no_area_on_the_ground() -> void:
+	assert_object(_spin.get_node_or_null("Vortex")).is_null()
+	assert_object(_spin.get_dust().get_node_or_null("Area")).is_null()
+	for property: Dictionary in DUST_CONFIG.get_property_list():
+		var name: String = property.name
+		assert_bool(name.begins_with("area_") or name.begins_with("pulse_")).override_failure_message(name).is_false()
+
+
+func test_ac980_the_dust_rises_from_a_ring_around_the_feet() -> void:
+	var dust: SpinDustVfx = _spin.get_dust()
+	var particles: CPUParticles3D = dust.get_dust()
+	assert_int(particles.emission_shape).is_equal(CPUParticles3D.EMISSION_SHAPE_RING)
+	assert_float(particles.emission_ring_radius).is_equal_approx(DUST_CONFIG.dust_ring_radius, TOLERANCE)
+	assert_bool(particles.local_coords).is_false()
 	_cast_by_hand()
-	assert_bool(vortex.is_showing()).is_true()
-	assert_float(vortex.get_area_radius()).is_equal_approx(SPIN.hit_range, TOLERANCE)
-	vortex.advance(VORTEX_CONFIG.area_fade_in)
-	assert_float(vortex.get_area_alpha()).is_equal_approx(VORTEX_CONFIG.area_alpha, TOLERANCE)
+	for i: int in 3:
+		_advance(STEP)
+		dust.advance()
+		assert_float(_flat(particles.global_position - _player.global_position)).is_less(0.01)
 	_player.global_position += Vector3(1.5, 0.0, -2.0)
-	vortex.advance(0.01)
-	assert_float(vortex.global_position.x).is_equal_approx(_player.global_position.x, TOLERANCE)
-	assert_float(vortex.global_position.z).is_equal_approx(_player.global_position.z, TOLERANCE)
-	_ability.add_upgrade(RANGE_UPGRADE)
-	_advance(STEP)
-	assert_float(vortex.get_area_radius()).is_equal_approx(SPIN.hit_range + RANGE_UPGRADE.amount, TOLERANCE)
-	_advance(_ability.get_stat(AbilityData.Stat.CAST_DURATION) + STEP)
-	assert_bool(_ability.is_casting()).is_false()
-	vortex.advance(VORTEX_CONFIG.area_fade_out / 2.0)
-	assert_bool(vortex.is_showing()).is_true()
-	assert_float(vortex.get_area_alpha()).is_less(VORTEX_CONFIG.area_alpha)
-	vortex.advance(VORTEX_CONFIG.area_fade_out)
-	assert_bool(vortex.is_showing()).is_false()
-
-
-func test_ac980_one_pulse_per_completed_turn_with_or_without_enemies() -> void:
-	var vortex: SpinVortexVfx = _spin.get_vortex()
-	var pulses: Array[int] = [0]
-	vortex.pulsed.connect(func() -> void: pulses[0] += 1)
-	assert_float(VORTEX_CONFIG.pulse_alpha).is_less_equal(MAX_PULSE_ALPHA)
-	_cast_by_hand()
-	var brightest: float = 0.0
-	var left: float = _ability.get_stat(AbilityData.Stat.CAST_DURATION)
-	while _ability.is_casting():
-		_ability.advance(STEP)
-		vortex.advance(STEP)
-		brightest = maxf(brightest, vortex.get_area_alpha())
-	var turns: int = floori(left / _ability.get_stat(AbilityData.Stat.TICK_INTERVAL) + TOLERANCE)
-	assert_int(pulses[0]).is_equal(turns)
-	assert_int(pulses[0]).is_equal(_spin.get_turns_done())
-	assert_float(brightest).is_less_equal(MAX_PULSE_ALPHA)
-	# 4 s at 0.8 s a turn: 5 pulses (the spec's example, with today's data).
-	assert_float(SPIN.cast_duration).is_equal_approx(4.0, TOLERANCE)
-	assert_float(SPIN.tick_interval).is_equal_approx(0.8, TOLERANCE)
-	assert_int(pulses[0]).is_equal(5)
+	dust.advance()
+	assert_float(_flat(particles.global_position - _player.global_position)).is_less(0.01)
 
 
 func test_ac981_the_dust_rises_only_while_spinning() -> void:
-	var vortex: SpinVortexVfx = _spin.get_vortex()
-	assert_bool(vortex.is_dust_emitting()).is_false()
+	var dust: SpinDustVfx = _spin.get_dust()
+	assert_bool(dust.is_dust_emitting()).is_false()
 	_cast_by_hand()
-	assert_bool(vortex.is_dust_emitting()).is_true()
+	assert_bool(dust.is_dust_emitting()).is_true()
 	_advance(_ability.get_stat(AbilityData.Stat.CAST_DURATION) + STEP)
 	assert_bool(_ability.is_casting()).is_false()
-	assert_bool(vortex.is_dust_emitting()).is_false()
+	assert_bool(dust.is_dust_emitting()).is_false()
 
 
 # --- Impact feedback

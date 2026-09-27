@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SpinDustConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/spin_dust_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+dust_ring_radius = 0.4
+dust_spread_degrees = 60.0
+ground_offset = 0.05
+dust_amount = 24
+dust_lifetime = 0.5
+dust_size = 0.3
+dust_rise_speed = 0.8

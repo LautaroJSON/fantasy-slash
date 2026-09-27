@@ -53,7 +53,7 @@ El juego es un **hack and slash roguelike en tercera persona para PC, jugado con
   | Corte de viento (VFX de Envainar y del Tajo aéreo del Berserker): paredes en V, chispas y destello | `BoxMesh` / `SphereMesh`, partículas | **Blanco**: `Color(1, 1, 1)`, unshaded, blend aditivo, alpha ≤ 0.5 |
   | Corte del dash (VFX del Giro cancelado con un dash): estela horizontal, chispas y destello | `BoxMesh` / `SphereMesh`, partículas | **Blanco**: `Color(1, 1, 1)`, unshaded, blend aditivo, alpha ≤ 0.5 |
   | VFX del dash: imágenes residuales (copias del cuerpo) y líneas de velocidad | Mallas del humanoide / `BoxMesh` | **Blanco**: `Color(1, 1, 1)`, unshaded; residuos alpha ≤ 0.35, líneas aditivas alpha ≤ 0.5 |
-  | Área de una habilidad del jugador (relleno en el piso: rectángulo o disco) | `BoxMesh` / `CylinderMesh` planos | **Blanco**: `Color(1, 1, 1)`, unshaded, alpha ≤ 0.3 en reposo y ≤ 0.5 en un destello |
+  | Área de una habilidad del jugador (relleno en el piso: rectángulo) | `BoxMesh` plano | **Blanco**: `Color(1, 1, 1)`, unshaded, alpha ≤ 0.3 en reposo y ≤ 0.5 en un destello |
   | Enemigos | `CapsuleMesh` | **Gris**: `Color(0.5, 0.5, 0.5)` |
   | Manos de enemigos (las dos esferas que anticipan y dan el golpe) | `SphereMesh` | **Gris**: `Color(0.5, 0.5, 0.5)` (mismo `enemy_material.tres` que el cuerpo) |
   | Números de daño flotantes (normal) | `TextMesh` | **Blanco**: `Color(1, 1, 1)` |
@@ -213,6 +213,7 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 ### Historial
 
+- **4.20.1** (2026-09-27): Principio II: la fila del área de las habilidades cubre solo el rectángulo; el Giro ya no dibuja su disco (ver `spin-visual-rework.md` §12).
 - **4.20.0** (2026-09-27): Principio II: el área de las habilidades del jugador se marca con un relleno blanco muy transparente en el piso (fila nueva en la tabla de colores; el celeste pálido queda solo para las cartas de mejora de habilidad) y el polvo del Giro usa el tierra registrado. Principio VII: las habilidades canalizadas no pausan al jugador en el impacto, y una pausa durante un dash detiene solo el clip (ver `spin-visual-rework.md`).
 - **4.19.1** (2026-09-27): Principio II: se registra el carmesí de la Aflicción Sangrado (barra, ícono y número; ver `affliction-bleed.md`).
 - **4.19.0** (2026-09-27): Principio II: la fila de los números de daño de Aflicción pasa a cubrir también el nombre flotante de las Aflicciones que no hacen daño, en el color de su barra (ver `affliction-name-popup.md`).
@@ -290,4 +291,4 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 ---
 
-**Version**: 4.20.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-27
+**Version**: 4.20.1 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-27

@@ -6,10 +6,10 @@ extends AbilityBehavior
 ## light push outwards. A turn left unfinished when the spin ends does not hit.
 ## The player can walk while spinning, slowed by SpinConfig. The body loops its
 ## spin clip with the weapon in its hands, and the player's WeaponTrail follows
-## the blade while the spin is cast (docs/specs/spin-visual-rework.md). The
-## vortex shows the reach on the ground, pulses on every completed turn and
-## kicks up dust. A turn that hits shakes the camera and the enemies hit; the
-## player never pauses (Principle VII, channelled abilities).
+## the blade while the spin is cast (docs/specs/spin-visual-rework.md). Dust
+## rises from the player's feet while spinning. A turn that hits shakes the
+## camera and the enemies hit; the player never pauses (Principle VII,
+## channelled abilities).
 ## A dash cuts the spin short and turns into a horizontal slash: every enemy
 ## the dash crosses takes one spin hit x dash_slash_damage_factor and is pushed
 ## sideways (docs/specs/spin-dash-slash.md). The body plays the slash clip
@@ -47,7 +47,7 @@ var _slash_from: Vector3 = Vector3.ZERO
 var _slashed: Array[Enemy] = []
 
 @onready var _dash_slash: DashSlashVfx = $DashSlash
-@onready var _vortex: SpinVortexVfx = $Vortex
+@onready var _dust: SpinDustVfx = $Dust
 
 
 func _ready() -> void:
@@ -63,13 +63,12 @@ func begin(ability: AbilityComponent) -> void:
 	_start_yaw = ability.visual.rotation.y
 	_turn_progress = 0.0
 	_turns_done = 0
-	_vortex.begin(ability.visual, ability.get_stat(AbilityData.Stat.HIT_RANGE))
+	_dust.begin(ability.visual)
 
 
 func channel(ability: AbilityComponent, step: float) -> void:
 	_turn_progress += step / get_turn_time(ability)
 	ability.visual.rotation.y = wrapf(_start_yaw + TAU * _turn_progress, -PI, PI)
-	_vortex.set_radius(ability.get_stat(AbilityData.Stat.HIT_RANGE))
 	_hit_completed_turns(ability)
 
 
@@ -82,13 +81,13 @@ func move_body(ability: AbilityComponent, delta: float, wish_direction: Vector3)
 
 
 func release(_ability: AbilityComponent) -> void:
-	_vortex.finish()
+	_dust.finish()
 
 
-## Cut short (a dash or a boss grab): the vortex fades out. The weapon stays in
-## the hand, which the next clip moves.
+## Cut short (a dash or a boss grab): the dust stops. The weapon stays in the
+## hand, which the next clip moves.
 func cancel_cast(_ability: AbilityComponent) -> void:
-	_vortex.finish()
+	_dust.finish()
 
 
 ## The body loops the spin clip while casting (AbilityComponent only asks then).
@@ -145,8 +144,8 @@ func get_dash_slash() -> DashSlashVfx:
 	return _dash_slash
 
 
-func get_vortex() -> SpinVortexVfx:
-	return _vortex
+func get_dust() -> SpinDustVfx:
+	return _dust
 
 
 func get_turns_done() -> int:
@@ -179,7 +178,6 @@ func _hit_completed_turns(ability: AbilityComponent) -> void:
 	var completed: int = floori(_turn_progress + TIME_EPSILON)
 	while _turns_done < completed:
 		_turns_done += 1
-		_vortex.pulse()
 		_strike(ability)
 
 
