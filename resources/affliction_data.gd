@@ -30,13 +30,20 @@ enum EffectScaling {
 ## same status for every enemy (docs/specs/frost-freeze.md).
 @export var resisted_debuff: DebuffData
 @export var resisted_effect_value: float
-## Material of the burst damage numbers: the color of its bar
-## (docs/specs/affliction-damage-colors.md).
+## Material of its floating text, in the color of its bar: the burst damage
+## numbers or, for Afflictions that deal no damage, its name
+## (docs/specs/affliction-damage-colors.md, affliction-name-popup.md).
 @export var damage_number_material: StandardMaterial3D
 
 
 func has_burst() -> bool:
 	return burst_radius > 0.0
+
+
+## Whether triggering it deals damage (a burst or damage-over-time ticks); the
+## others show their name instead of a number.
+func deals_damage() -> bool:
+	return has_burst() or (debuff != null and debuff.effect == DebuffData.Effect.DAMAGE_OVER_TIME)
 
 
 ## Status for an enemy: the resisted one for bosses (resists_control) when set.

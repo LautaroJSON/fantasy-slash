@@ -11,6 +11,9 @@ const CRIT_ROLL: float = 0.0
 const POISON: DebuffData = preload("res://data/debuffs/poison.tres")
 const BLEED: DebuffData = preload("res://data/debuffs/bleed.tres")
 const BURST: AfflictionData = preload("res://data/afflictions/burst.tres")
+const FROST_TYPE: AfflictionData = preload("res://data/afflictions/frost.tres")
+const CORROSION_TYPE: AfflictionData = preload("res://data/afflictions/corrosion.tres")
+const POISON_TYPE: AfflictionData = preload("res://data/afflictions/poison.tres")
 
 var _registry: EnemyRegistry
 var _player: Player
@@ -234,3 +237,40 @@ func test_ac937_colored_numbers_reuse_the_pool() -> void:
 	assert_int(_pool.get_child_count()).is_equal(children)
 	assert_int(children).is_equal(CONFIG.pool_size)
 	assert_object(MATERIAL.albedo_color).is_equal(Color(1, 1, 1, 1))
+
+
+## docs/specs/affliction-name-popup.md
+func test_ac951_frost_shows_its_name_in_its_color() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	_player.afflictions.triggered.emit(enemy, FROST_TYPE)
+	var text: DamageNumber = _pool.get_last_spawned()
+	assert_str(text.get_text()).is_equal("Escarcha")
+	assert_object(text.material_override).is_same(FROST_TYPE.damage_number_material)
+	assert_bool(text.is_crit()).is_false()
+	assert_bool(text.is_over_time()).is_false()
+	assert_float(text.scale.x).is_equal_approx(CONFIG.normal_scale, 0.001)
+	assert_float(text.transparency).is_equal_approx(CONFIG.normal_transparency, 0.0001)
+
+
+func test_ac952_corrosion_shows_its_name_in_its_color() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	_player.afflictions.triggered.emit(enemy, CORROSION_TYPE)
+	var text: DamageNumber = _pool.get_last_spawned()
+	assert_str(text.get_text()).is_equal("Corrosión")
+	assert_object(text.material_override).is_same(CORROSION_TYPE.damage_number_material)
+
+
+func test_ac953_damaging_afflictions_show_no_name() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	_player.afflictions.triggered.emit(enemy, POISON_TYPE)
+	_player.afflictions.triggered.emit(enemy, BURST)
+	assert_int(_pool.active_count()).is_equal(0)
+
+
+func test_ac955_names_reuse_the_pool() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	var children: int = _pool.get_child_count()
+	for i: int in 40:
+		_player.afflictions.triggered.emit(enemy, FROST_TYPE if i % 2 == 0 else CORROSION_TYPE)
+	assert_int(_pool.get_child_count()).is_equal(children)
+	assert_int(_pool.active_count()).is_equal(CONFIG.pool_size)

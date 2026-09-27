@@ -50,13 +50,16 @@ func show_damage(amount: float, is_crit: bool, at: Vector3, tint: StandardMateri
 	if is_crit:
 		_show_crit(amount)
 	else:
-		_show_normal(amount, tint, over_time)
-	global_position = at
-	transparency = _base_transparency
-	_elapsed = 0.0
-	_active = true
-	show()
-	set_process(true)
+		_show_normal(str(roundi(amount)), tint, over_time)
+	_start(at)
+
+
+## A word instead of a number (e.g. the name of an Affliction that deals no
+## damage), with the look of a normal number (docs/specs/affliction-name-popup.md).
+func show_text(text: String, at: Vector3, tint: StandardMaterial3D = null) -> void:
+	_is_crit = false
+	_show_normal(text, tint, false)
+	_start(at)
 
 
 func advance(delta: float) -> void:
@@ -83,8 +86,17 @@ func get_text() -> String:
 	return _text_mesh.text
 
 
-func _show_normal(amount: float, tint: StandardMaterial3D, over_time: bool) -> void:
-	_text_mesh.text = str(roundi(amount))
+func _start(at: Vector3) -> void:
+	global_position = at
+	transparency = _base_transparency
+	_elapsed = 0.0
+	_active = true
+	show()
+	set_process(true)
+
+
+func _show_normal(text: String, tint: StandardMaterial3D, over_time: bool) -> void:
+	_text_mesh.text = text
 	_text_mesh.font = _config.over_time_font if over_time else null
 	material_override = _material if tint == null else tint
 	scale = Vector3.ONE * _config.normal_scale

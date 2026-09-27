@@ -1,6 +1,6 @@
 # Feature: nombre flotante de las Aflicciones sin daño
 
-- **Estado:** Propuesta (2026-09-27). ACs reservados: **AC951–AC960** (se usan AC951–AC955).
+- **Estado:** **Implementada** (2026-09-27). ACs: AC951–AC955 (reservados AC951–AC960). Constitución enmendada a 4.19.0 (aplicada).
 - **Constitución:** `docs/constitution.md` v4.18.1 → **enmienda MINOR a 4.19.0** (Principio II: tabla de colores, ver §5).
 - **Pilar (Principio I):** **combate** (legibilidad). Hoy, cuando se llena la barra de Escarcha o de Corrosión no aparece nada sobre el enemigo: solo cambia su ícono. Un texto flotante con el nombre, en el color de la Aflicción, confirma el disparo en el mismo lugar donde el jugador mira los números.
 - **Dependencias:** `affliction.md`, `affliction-damage-colors.md` (números de color, pool de números), `frost-freeze.md` (colores de Corrosión y Escarcha).
@@ -40,4 +40,5 @@ Principio II, tabla de colores: la fila "Números de daño de Aflicción (Veneno
 
 ## 6. Notas de implementación
 
-(Se completa al implementar.)
+- **Tests:** `damage_number_pool_test.gd` (AC951–AC953, AC955) y `affliction_data_test.gd` (AC954), en verde junto con `test/effects/`, las suites de Aflicción y `boss_body_test` (81 tests). Sin tests viejos adaptados.
+- `DamageNumber` separa el arranque (`_start`) del estilo (`_show_normal(text, …)`), así `show_damage` y `show_text` comparten el aspecto de un número normal.

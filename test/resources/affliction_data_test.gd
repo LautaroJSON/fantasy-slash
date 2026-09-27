@@ -161,3 +161,14 @@ func test_ac946_both_frost_statuses_look_the_same() -> void:
 	assert_int(chill.effect).is_equal(DebuffData.Effect.SLOW)
 	assert_float(chill.duration).is_equal(5.0)
 	assert_str(chill.icon.resource_path).starts_with(ICON_DIR)
+
+
+## docs/specs/affliction-name-popup.md
+func test_ac954_which_afflictions_deal_damage() -> void:
+	assert_bool(POISON.deals_damage()).is_true()
+	assert_bool(BURST.deals_damage()).is_true()
+	assert_bool(FROST.deals_damage()).is_false()
+	assert_bool(CORROSION.deals_damage()).is_false()
+	for data: AfflictionData in [POISON, BURST, FROST, CORROSION]:
+		var text: StandardMaterial3D = data.damage_number_material if data.damage_number_material != null else data.debuff.damage_number_material
+		assert_object(text.albedo_color).override_failure_message(String(data.id)).is_equal(data.bar_material.albedo_color)

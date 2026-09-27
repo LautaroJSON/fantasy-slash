@@ -28,6 +28,7 @@ func _ready() -> void:
 	player.ultimate_ability.enemy_hit.connect(_on_enemy_hit)
 	player.air_slash.enemy_hit.connect(_on_enemy_hit)
 	player.afflictions.burst_hit.connect(_on_affliction_burst_hit)
+	player.afflictions.triggered.connect(_on_affliction_triggered)
 	if registry != null:
 		registry.enemy_debuff_ticked.connect(_on_enemy_debuff_ticked)
 
@@ -36,6 +37,14 @@ func _ready() -> void:
 func spawn(amount: float, is_crit: bool, at: Vector3, tint: StandardMaterial3D = null, over_time: bool = false) -> void:
 	var number: DamageNumber = _take_number()
 	number.show_damage(amount, is_crit, at, tint, over_time)
+	_active.append(number)
+	_last_spawned = number
+
+
+## A word with the look of a normal number (e.g. an Affliction name).
+func spawn_text(text: String, at: Vector3, tint: StandardMaterial3D = null) -> void:
+	var number: DamageNumber = _take_number()
+	number.show_text(text, at, tint)
 	_active.append(number)
 	_last_spawned = number
 
@@ -75,6 +84,13 @@ func _on_enemy_hit(enemy: Enemy, applied: float, is_crit: bool) -> void:
 ## in the color of its bar.
 func _on_affliction_burst_hit(enemy: Enemy, applied: float, type: AfflictionData) -> void:
 	spawn(applied, false, enemy.global_position + _spawn_offset(enemy), type.damage_number_material)
+
+
+## An Affliction without damage shows its name in its color instead of a
+## number (docs/specs/affliction-name-popup.md).
+func _on_affliction_triggered(enemy: Enemy, type: AfflictionData) -> void:
+	if not type.deals_damage():
+		spawn_text(type.title, enemy.global_position + _spawn_offset(enemy), type.damage_number_material)
 
 
 ## Italic, and in the status color when it has one (e.g. poison).

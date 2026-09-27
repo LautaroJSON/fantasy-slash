@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://resources/affliction_data.gd" id="1_script"]
 [ext_resource type="Material" path="res://materials/afflictions/corrosion_material.tres" id="2_bar"]
+[ext_resource type="Material" path="res://materials/afflictions/corrosion_damage_number_material.tres" id="5_text"]
 [ext_resource type="Resource" path="res://data/debuffs/corrosion.tres" id="3_debuff"]
 
 [resource]
@@ -13,3 +14,4 @@ debuff = ExtResource("3_debuff")
 effect_value = 0.25
 effect_scaling = 0
 burst_radius = 0.0
+damage_number_material = ExtResource("5_text")
