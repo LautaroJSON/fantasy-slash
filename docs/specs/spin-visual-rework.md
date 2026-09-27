@@ -1,6 +1,6 @@
 # Feature: re-work visual del Giro
 
-- **Estado:** **Implementada** (2026-09-27). `spin_visual_rework_test` 18/18 en verde. La suite completa no suma fallas nuevas: las que quedan ya fallaban antes (§11). Smoke test del menú y de la arena sin errores ni warnings nuevos. Capturas con Forward+ revisadas. ACs **AC971–AC987** (AC988–AC990 sin usar), reservados en `CLAUDE.md`. Renumerados al integrar con `main`: se habían reservado AC861–AC880, que se superponía con `affliction.md` (AC851–AC900), y después AC961–AC980, que se superponía con `affliction-bleed.md` (AC961–AC970).
+- **Estado:** Revisión 3 **propuesta** (§12), sobre la versión **Implementada** (2026-09-27). `spin_visual_rework_test` 18/18 en verde. La suite completa no suma fallas nuevas: las que quedan ya fallaban antes (§11). Smoke test del menú y de la arena sin errores ni warnings nuevos. Capturas con Forward+ revisadas. ACs **AC971–AC987** (AC988–AC990 sin usar), reservados en `CLAUDE.md`. Renumerados al integrar con `main`: se habían reservado AC861–AC880, que se superponía con `affliction.md` (AC851–AC900), y después AC961–AC980, que se superponía con `affliction-bleed.md` (AC961–AC970).
 - **Constitución:** `docs/constitution.md` v4.19.1. Enmienda **MINOR** a 4.20.0 aprobada con esta spec (§7).
 - **Pilar (Principio I):** **combate.** El Giro es la habilidad del Berserker, pero hoy no se lee:
   - el cuerpo gira quieto en `idle`;
@@ -369,3 +369,46 @@ Las capturas se hicieron con Forward+ sobre Vulkan por software (lavapipe, bajo 
   - el Corte pausa solo su clip, una vez, y el dash conserva su recorrido, su duración y su invulnerabilidad (AC985);
   - no se toca `Engine.time_scale`.
 - [x] **Calidad:** el proyecto importa sin errores nuevos. AC971–AC987 en verde y ninguna falla nueva en la suite completa (ver arriba).
+
+
+## 12. Revisión 3: el polvo sale de los pies y se quita el disco (propuesta)
+
+**Pedido del responsable (2026-09-27):**
+- el polvo tiene que salir de los pies (el centro del giro);
+- se elimina el círculo blanco que marcaba el rango del Giro.
+
+### 12.1 Cambios
+
+1. **Polvo desde los pies.**
+   - Hoy sale de un punto bajo la punta de la hoja (`dust_offset` = (2.2, 0, 0)) y dibuja un remolino a 2.2 m del cuerpo.
+   - Pasa a salir de un **anillo chico alrededor de los pies**: emisión `EMISSION_SHAPE_RING`, con radio `dust_ring_radius` (0.4 m) y centrado en el jugador.
+   - Las bolitas suben (`dust_rise_speed`) y se abren hacia afuera con `dust_spread_degrees` (60°), así el polvo "patea" desde el pisoteo del giro.
+   - Sigue en el espacio del mundo (`local_coords` falso), así que queda atrás cuando el jugador camina girando.
+   - En `SpinVortexConfig`, `dust_offset` se reemplaza por `dust_ring_radius` y `dust_spread_degrees`.
+2. **Sin disco del área.**
+   - Se borran el nodo `Area`, su material y los campos `area_*` y `pulse_*` de `SpinVortexConfig`.
+   - También se borran `pulse()`, la señal `pulsed`, `set_radius()` y los getters del área.
+   - El vórtice queda solo con el polvo. Como ya no es un "vórtice", se renombra a **`SpinDustVfx`** (`spin_dust_vfx.gd`, `spin_dust_config.tres`/`SpinDustConfig`, nodo `Dust` en `spin_ability.tscn`).
+   - **Con el disco se va también el pulso por vuelta**, que vivía en él. Lo que marca una vuelta que conecta sigue estando: la sacudida de cámara, el temblor de los enemigos y el VFX de impacto de habilidades que llegó en `main`.
+3. **Sin cambios:** los rectángulos blancos de Envainar y del Tajo aéreo, el cuerpo, el arma, el Corte del Giro y el feedback de impacto.
+
+### 12.2 Constitución (PATCH → 4.20.1)
+
+En la fila del área de las habilidades, "rectángulo o disco" pasa a "rectángulo", y `CylinderMesh` sale de las mallas: el Giro ya no dibuja su área.
+
+### 12.3 Criterios de aceptación
+
+- **AC979** (reemplaza al anterior) El Giro no dibuja un área en el piso:
+  - `SpinAbility` no tiene nodo de área;
+  - `SpinDustConfig` no tiene campos `area_*` ni `pulse_*`.
+- **AC980** (reemplaza al anterior) El polvo sale de un anillo de radio `dust_ring_radius` **centrado en los pies del jugador**: el emisor está a menos de 1 cm del jugador en el plano, mientras gira y mientras camina.
+- **AC981** (sin cambios) El polvo emite solo mientras se castea el Giro.
+- **AC977** (texto de §2.6/AC976 sin cambios) Los rectángulos de Envainar y del Tajo aéreo siguen blancos, con opacidad ≤ 0.3.
+- Los tests de AC979 y AC980 se reescriben con los criterios nuevos. El resto de `spin_visual_rework_test` no cambia.
+
+### 12.4 Plan
+
+1. Datos: `SpinDustConfig` con los campos del polvo (el anillo en vez del offset) y el `.tres` renombrado; enmienda 4.20.1.
+2. `SpinDustVfx`: solo el polvo, con emisión en anillo; `spin_ability.tscn` con el nodo `Dust`; `SpinAbility` sin `pulse`/`set_radius`.
+3. Tests AC979–AC981 reescritos; `CLAUDE.md` actualizado.
+4. Tests del Giro, capturas con Forward+ y smoke test. La suite completa, si la querés.
