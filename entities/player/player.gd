@@ -55,6 +55,7 @@ const WEAPON_OFF_HAND: NodePath = ^"OffHand"
 @onready var _humanoid: LowPolyHumanoid = $Visual/Humanoid
 @onready var _hitstop: HitstopComponent = $Hitstop
 @onready var _dash_vfx: DashVfxHost = $DashVfx
+@onready var _hit_impact_vfx: HitImpactVfxHost = $HitImpactVfx
 
 ## Scabbard of the class weapon, or null when the weapon has none.
 var _sheath: Node3D = null
@@ -502,6 +503,7 @@ func _equip_weapon(weapon: WeaponData) -> void:
 	_weapon_pivot.add_child(model)
 	sword_swing.setup(weapon)
 	_weapon_trail.attach(model.get_node(WEAPON_TRAIL_BASE) as Node3D, model.get_node(WEAPON_TRAIL_TIP) as Node3D)
+	_hit_impact_vfx.attach(model.get_node(WEAPON_TRAIL_BASE) as Node3D, model.get_node(WEAPON_TRAIL_TIP) as Node3D)
 	_grip_with_right_hand(model)
 	_grip_with_left_hand(model)
 	_equip_sheath(weapon)

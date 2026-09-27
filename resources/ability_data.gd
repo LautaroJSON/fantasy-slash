@@ -57,6 +57,9 @@ enum Stat {
 ## A dash may cut this ability's cast short (its recovery). Otherwise the dash
 ## waits for the cast to end.
 @export var dash_cancels_cast: bool
+## Its hits show the impact VFX where the blade crosses the enemy
+## (docs/specs/hit-impact-vfx.md).
+@export var shows_hit_impact: bool
 ## Upgrade cards of this ability, offered only while it is equipped.
 @export var upgrades: Array[AbilityUpgradeData]
 ## Unique upgrades that change how this ability works; offered only while equipped.
