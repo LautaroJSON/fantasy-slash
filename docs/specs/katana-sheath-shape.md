@@ -1,6 +1,6 @@
 # Feature: funda de la katana más gruesa y con el final redondeado
 
-- **Estado:** Aprobada, en implementación (2026-09-27).
+- **Estado:** Implementada (2026-09-27).
 - **Constitución:** `docs/constitution.md` v4.12.0 → **enmienda PATCH 4.12.1** (ver §8).
 - **Pilar (Principio I):** **combate.** La funda tiene casi el mismo ancho que la hoja y es una tira de 1.1 cm, así que en la mano izquierda y en la carga de Envainar se confunde con una segunda espada. Más gruesa y con el final (*kojiri*) redondeado, se lee como vaina, y la katana del Samurái se distingue de su funda.
 - **Dependencias:** `katana-hand-proportions.md` (generador `build_katana_meshes.gd`, AC683–AC688), `sheath-in-left-hand.md` (AC671–AC677), `sheath-socket-hand-grip.md` (AC670).
@@ -123,13 +123,16 @@ Es PATCH porque no agrega un permiso nuevo: mantiene los mismos límites (ni vé
   - `weapon_model_test`: AC694 y AC695;
   - `sheath_grip_test`: AC696;
   - AC697 lo cubre AC688, que compara las dos mallas con las que genera el script. Ningún test adaptado.
-- **Suites:** SUITES_PLACEHOLDER
+- **Suites:** `weapon_model_test` (14/14) y `sheath_grip_test` (15/15, corrida sin AC670, que es previo y corta la suite) en verde.
+  - Suite completa (712 casos) comparada con la rama antes de este cambio, en las mismas condiciones: fallan los mismos tests previos (AC188, AC211, AC221, AC236, AC285/AC298, AC288, AC298, AC363, AC578, AC653 y AC670, registrados en `katana-hand-proportions.md` §9).
+  - `hitstop_test` (AC619–AC621) y `attack_component_test` AC9 alternan entre corridas en las dos versiones. Es el mismo error intermitente, un enemigo liberado durante la estocada (`attack_component.gd:359`), y es ajeno a la funda. Esta spec no agrega ningún fallo.
+- **Smoke test:** escena principal, arena y arena con el Samurái (`--quit-after 300`), e import, sin errores ni warnings (salvo los de UID inválido de cualquier copia limpia, porque los `.uid` están en el `.gitignore`).
 
 ### Checklist de la constitución
 
-- [ ] Principio I: pilar de combate (la silueta del Samurái: katana y funda distinguibles).
-- [ ] Principio II: la malla derivada sigue en la carpeta del asset, con `SOURCE.md` y su generador (4.12.1); mismo material de paleta; sin colores nuevos.
-- [ ] Principio III: sin valores de gameplay nuevos; las medidas son constantes del generador (preparación del asset).
-- [ ] Principio IV: el generador con tipado estricto, en inglés.
-- [ ] Principio V: sin cambios en runtime (solo una malla precalculada).
-- [ ] Principios VI y VII: sin cambios.
+- [x] Principio I: pilar de combate (la silueta del Samurái: katana y funda distinguibles).
+- [x] Principio II: la malla derivada sigue en la carpeta del asset, con `SOURCE.md` y su generador (4.12.1); mismo material de paleta; sin colores nuevos.
+- [x] Principio III: sin valores de gameplay nuevos; las medidas son constantes del generador (preparación del asset).
+- [x] Principio IV: el generador con tipado estricto, en inglés.
+- [x] Principio V: sin cambios en runtime (solo una malla precalculada).
+- [x] Principios VI y VII: sin cambios.
