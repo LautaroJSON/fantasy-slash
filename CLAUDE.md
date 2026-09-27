@@ -1,6 +1,6 @@
 # fantasy-slash: manual operativo
 
-Hack and slash roguelike en tercera persona (Godot 4.7, GDScript, PC con teclado y mouse).
+Hack and slash roguelike en tercera persona (Godot 4.7, GDScript; PC con teclado y mouse o mando, y Android con pantalla táctil).
 
 **Antes de tocar código, leé [`docs/constitution.md`](docs/constitution.md).** Ahí están las reglas no negociables. Este archivo es el manual operativo: flujo, mapa, comandos y trampas conocidas.
 
@@ -15,7 +15,7 @@ Hack and slash roguelike en tercera persona (Godot 4.7, GDScript, PC con teclado
 5. Al cerrar: suite completa en verde, smoke test, checklist de review de la constitución en la spec y estado **Implementada**. Si un test viejo tenía valores fijos, adaptalo sin cambiar lo que verifica y anotalo en la spec.
 6. Respondé en **español**. Código, identificadores y comentarios en **inglés**.
 
-**Próximo criterio de aceptación libre: AC728.** (AC698–AC727 reservados por `mobile-touch-controls.md`; AC639–AC660 y AC678–AC682 reservados por `class-combat-identity.md`; AC661–AC670 por `sheath-socket-hand-grip.md`; AC671–AC677 por `sheath-in-left-hand.md`; AC694–AC697 por `katana-sheath-shape.md`.) Actualizá este número al cerrar cada spec.
+**Próximo criterio de aceptación libre: AC728.** (AC639–AC660 y AC678–AC682 reservados por `class-combat-identity.md`; AC661–AC670 por `sheath-socket-hand-grip.md`; AC671–AC677 por `sheath-in-left-hand.md`; AC694–AC697 por `katana-sheath-shape.md`.) Actualizá este número al cerrar cada spec.
 
 ## Mapa del proyecto
 
@@ -31,6 +31,7 @@ Hack and slash roguelike en tercera persona (Godot 4.7, GDScript, PC con teclado
 | `entities/player/weapons/`           | Escenas adaptadoras de armas: `Model` + marcadores `TrailBase`/`TrailTip`.                                                                                              |
 | `assets/models/<categoría>/<asset>/` | Assets importados con su `SOURCE.md`. Siempre usados vía escena adaptadora.                                                                                             |
 | `materials/`                         | `StandardMaterial3D` compartidos (`materials/weapons/` para las armas).                                                                                                 |
+| `ui/touch/`                          | Controles táctiles (`TouchControls`, `VirtualStick`, `TouchActionButton`), instanciados en `hud.tscn`.                                                                   |
 | `docs/specs/`                        | Historial de features: una spec por cambio, con sus ACs y notas.                                                                                                        |
 | `test/`                              | GdUnit4, en espejo de la estructura del código.                                                                                                                         |
 
@@ -54,6 +55,7 @@ Hack and slash roguelike en tercera persona (Godot 4.7, GDScript, PC con teclado
 - **Bosses con repertorio** (`BossBehavior`: el Verdugo; `TitanBehavior`: el Titán, con armadura y manos rompibles en `TitanConfig`; `ColmenaBehavior`: la Colmena, con escudo, esbirros y distancia en `ColmenaConfig`; los esbirros los crea `WaveManager` desde los pools de tipos al recibir `Enemy.summon_requested`): movimientos y fase 2 en `data/enemies/configs/<boss>_boss.tres` (`BossConfig`: `ComboMoveData`, `ShockwaveMoveData`, `GrabMoveData` y `BossPhaseData`), con sus golpes en `data/enemies/attacks/<boss>_*.tres`. Cada desafío se suma en `WaveConfig.boss_challenges` y necesita su `BossPool*` en `arena.tscn` enlazado en `WaveManager.boss_pools`. La sujeción del jugador es `Player.begin_hold()`. Anillo de la onda: `materials/vfx/shockwave_material.tres`.
 - **Avisos de ataque en el piso** (sector, franja o círculo rojo anaranjado con relleno que crece, destello y polvo): `data/enemies/telegraph_config.tres` y `materials/vfx/telegraph_material.tres`. El nodo es `GroundTelegraph` en `enemy.tscn`; cada comportamiento llama a `show_*`, `follow`/`move_center`, `flash` y `clear`, y declara sus arcos en `get_telegraph_arcs()` (las mallas de sector se construyen al cargar).
 - **Ritmo de los enemigos** (dificultad): los `.tres` de ataques describen el ritmo más rápido. `data/enemies/enemy_pace_config.tres` estira las preparaciones (×1.8 a nivel 1 → ×1.2 a nivel 25) y la pausa entre ataques (×2.5 → ×1.4), y cada nivel de Rage lo acerca a ×1. El descanso de un turno entre ataques (1.5 s → 0.5 s) está en `group_ai_config.tres` (`rest_*`). La vida y la defensa de los bosses se calcularon para peleas de ~90 s (ver `boss-health-tuning.md`). Se aplica en `WaveManager._place()` con `Enemy.apply_pace()`, así que los enemigos de los tests conservan el ritmo de los datos. Los atacantes simultáneos dependen del Rage (`GroupAIConfig.rage_levels_per_extra_attacker`).
+- **Controles táctiles y Android** (joystick flotante, racimo de botones tipo WuWa, arrastre de cámara, pausa): tamaños, posiciones y colores en `data/ui/touch_controls_config.tres`; sensibilidad del arrastre en `camera_config.tres` (`touch_look_sensitivity`); textos en `input_prompt_config.tres` (`touch_prompts`). El HUD cambia al táctil según el último input (`InputDeviceMonitor.Device.TOUCH`, inicial en móvil) y se ajusta al área segura (`SafeArea`). La captura del mouse pasa siempre por `PointerMode`. Los bindings de mouse de acciones de juego usan `device = 32` (`InputEvent.DEVICE_ID_MOUSE`), nunca `-1`, o un toque ataca por el clic emulado. Preset "Android" en `export_presets.cfg` (`com.fantasyslash.game`). Ver `mobile-touch-controls.md`.
 - **Rage** (enemigos cuando no quedan mejoras): cuánto crece cada stat por nivel de rage y sus topes en `data/enemies/rage/rage_config.tres`; ícono y aura en `data/debuffs/rage.tres`, `materials/debuff_rage_material.tres` y `materials/vfx/rage_aura_material.tres`.
 
 ## Comandos
@@ -72,6 +74,8 @@ tar --exclude=./.godot --exclude='./*.exe' -cf - . | (cd "$DEST" && tar -xf -)
 - Para capturas visuales: una escena temporal con un script `extends Node` en la copia (no `-s`, porque con `-s` no cargan los autoloads como `Session`), corriendo sin `--headless` y guardando `get_viewport().get_texture().get_image()`.
 - No hay Python en la máquina: usá sed/awk o las herramientas de edición.
 - Las herramientas del MCP `godot` que generan scripts fallan (el proyecto exige tipado estricto).
+- **GdUnit en worktrees:** `addons/gdUnit4/bin/` no está en git (el `.gitignore` ignora `bin/`). En una copia hecha desde un worktree, copiá `addons/gdUnit4` entero del checkout principal (`D:/user/Documentos/godot/fantasy-slash/addons/gdUnit4`).
+- **Exportar a Android:** en la copia, `"$G" --headless --path "$DEST" --export-debug "Android" out.apk`. Necesita la plantilla Gradle `android/build/` (no versionada): copiala del checkout principal. Instalar en un teléfono: `adb install -r out.apk` (`adb` en `C:SERSADMINAPPDATAocalandroidsdkplatform-tools`).
 
 ## Trampas conocidas
 
@@ -86,4 +90,4 @@ tar --exclude=./.godot --exclude='./*.exe' -cf - . | (cd "$DEST" && tar -xf -)
 
 ## Specs recientes (para contexto)
 
-`katana-sheath-shape`, `jump-cancels-strike`, `katana-hand-proportions`, `sheath-in-left-hand`, `sheath-socket-hand-grip`, `class-combat-identity`, `bdo-combat-feel`, `humanoid-player-model`, `berserker-air-slash`, `spin-dash-slash`, `dash-iframes`, `enemy-level-pace`, `boss-health-tuning`, `boss-colmena` (reemplaza a los Gemelos), `enemy-pace`, `enemy-ground-telegraph`, `boss-titan` (reemplaza al Coloso), `boss-verdugo`, `enemy-group-ai`, `enemy-types`, `enemy-attack-telegraph`, `dash-speed`, `tsubame-gaeshi`, `debuff-stacks-display`, `sheathe-dash-cancel`, `ability-slot-frame`, `cooldown-clock`, `enemy-rage`, `cooldown-timers`, `nuki`, `zanshin`, `spin-tornado`, `spin-golden-upgrades`, `wind-step`, `wind-cut-v`, `endless-without-upgrades`, `sheathe-feel`, `samurai`, `weapon-models`, `hoplite-sword`, `weapon-reach`, `weapon-trail`, `berserker-heavy-sweep`, `class-sweep-timing`, `stats-rework`. Las specs reemplazadas se marcan como tales en su encabezado (p. ej. `attack-indicator`).
+`mobile-touch-controls`, `katana-sheath-shape`, `jump-cancels-strike`, `katana-hand-proportions`, `sheath-in-left-hand`, `sheath-socket-hand-grip`, `class-combat-identity`, `bdo-combat-feel`, `humanoid-player-model`, `berserker-air-slash`, `spin-dash-slash`, `dash-iframes`, `enemy-level-pace`, `boss-health-tuning`, `boss-colmena` (reemplaza a los Gemelos), `enemy-pace`, `enemy-ground-telegraph`, `boss-titan` (reemplaza al Coloso), `boss-verdugo`, `enemy-group-ai`, `enemy-types`, `enemy-attack-telegraph`, `dash-speed`, `tsubame-gaeshi`, `debuff-stacks-display`, `sheathe-dash-cancel`, `ability-slot-frame`, `cooldown-clock`, `enemy-rage`, `cooldown-timers`, `nuki`, `zanshin`, `spin-tornado`, `spin-golden-upgrades`, `wind-step`, `wind-cut-v`, `endless-without-upgrades`, `sheathe-feel`, `samurai`, `weapon-models`, `hoplite-sword`, `weapon-reach`, `weapon-trail`, `berserker-heavy-sweep`, `class-sweep-timing`, `stats-rework`. Las specs reemplazadas se marcan como tales en su encabezado (p. ej. `attack-indicator`).

@@ -1,6 +1,6 @@
 # Feature: Controles táctiles y versión Android
 
-- **Estado:** Aprobada (2026-09-27), en implementación
+- **Estado:** **Implementada** (2026-09-27)
 - **Constitución:** `docs/constitution.md` v4.12.1 → **v5.0.0** (enmienda MAJOR del Principio VI, del Principio I y del Technology Stack, sección 8).
 - **Criterios de aceptación:** AC698–AC727 (reservados en `CLAUDE.md`).
 - **Pilares (Principio I):**
@@ -60,7 +60,7 @@ Preset "Android" (`export_presets.cfg`):
 - `package/unique_name="com.fantasyslash.game"`, `package/name="Fantasy Slash"`, `version/name="0.1.0"`, `version/code=1`.
 - `exclude_filter="test/*, addons/gdUnit4/*"` (en la copia de este worktree está vacío).
 - Se mantiene Gradle build y solo `arm64-v8a`.
-- **Se versiona `export_presets.cfg`** (se quita de `.gitignore`): en Godot 4 las contraseñas del keystore viven en `.godot/export_credentials.cfg`, no en el preset, así que no tiene secretos y así el preset deja de ser configuración local de cada máquina.
+- `export_presets.cfg` ya está versionado (no tiene secretos: en Godot 4 las contraseñas del keystore viven en `.godot/export_credentials.cfg`). Se corrige al implementar: la spec decía que estaba en `.gitignore`, pero la línea que se veía era de `git ls-files`.
 
 ### 3.2 Datos (Principio III)
 
@@ -301,13 +301,33 @@ func setup(ability: AbilityComponent, radius_override: float = -1.0) -> void
 6. **HUD:** instanciar `touch_controls.tscn`, `_apply_device`, slots del racimo, reloj del dash, área segura (AC716, AC717, AC719, AC720). Re-leer `hud.tscn`/`hud.gd` y `player.gd` antes de editar (sesiones paralelas).
 7. **Player y regresiones de combate** con el táctil (AC714, AC715).
 8. **Menús y gesto atrás:** tamaños mínimos (sandbox), `Session` con go-back (AC718, AC722, AC723).
-9. **Exportación:** preset (quitar `export_presets.cfg` de `.gitignore`), export de debug en la copia; si hay teléfono, `adb install` y medición (AC725–AC727).
+9. **Exportación:** preset, export de debug en la copia; si hay teléfono, `adb install` y medición (AC725–AC727).
 10. **Cierre:** tests de esta spec en verde (y la suite completa para el cierre, según el flujo), copiar `.uid` nuevos, smoke test, enmienda 5.0.0 aplicada a la constitución, checklist de review, `CLAUDE.md` (mapa: `ui/touch/`, "Dónde se ajusta": controles táctiles; próximo AC libre), estado **Implementada**.
 
 ## 11. Notas de implementación
 
-_(se completa al implementar)_
+- **Spike (paso 1):** Godot 4.7 identifica al mouse con `InputEvent.DEVICE_ID_MOUSE` (32) y al teclado con `DEVICE_ID_KEYBOARD` (16); el mouse emulado desde un toque llega con `DEVICE_ID_EMULATION` (−1), que es también "todos los dispositivos" en un binding. Un binding escrito con `device = 0` se migra a 32 al cargar, así que se escribió 32 explícito. `InputEventMouseButton.new()` ya nace con `device = 32`, por eso AC371 sigue verde sin cambios.
+- **Ataque:** la spec original decía "mantener repite", pero desde `humanoid-player-model.md` cada toque es un golpe y mantener no repite. El botón táctil hereda esa regla; se corrigieron §5.2, AC714 y el pilar (lo que se verifica es lo mismo que con el clic).
+- **AC715:** con táctil, un botón apretado al pausar se suelta (AC712) y un toque en pausa se ignora (AC713), así que el caso de AC379 ("cerrar la pausa con B no hace dash") se verifica como "tocar el dash en pausa no hace dash al volver".
+- **Eventos de toque sin marcar como manejados** (§5.1): `InputDeviceMonitor` también los necesita para pasar a `TOUCH`. Va después de `TouchControls` en `hud.tscn`, así recibe el toque primero (Godot llama a `_input` en orden inverso) y activa los controles antes de que `TouchControls` lo procese.
+- **Área segura** (§5.5): la aplica el `Hud` a su propio rect con `SafeArea.inset`; `TouchControls` se ubica relativo a sus esquinas. Así no se aplica dos veces.
+- **Pausa táctil:** `pause_anchor` quedó en (−46, 96), debajo del número de oleada (con (−50, 50) se superponía con `WaveLabel`). Se agregó `label_color` a `TouchControlsConfig`.
+- **Cámara del jugador:** `Player.get_camera()` (nuevo) la expone para que `TouchControls.setup()` la tome si no se asignó una.
+- **`export_presets.cfg`** ya estaba versionado (§3.1 corregida). La copia del worktree tenía `exclude_filter` vacío; ahora coincide con la del checkout principal y suma nombre, versión y paquete.
+- **AC726:** `--export-debug "Android"` sobre la copia del scratchpad generó un APK firmado de 84.7 MB (84 678 776 bytes), sin errores (solo los avisos de UID de siempre en la copia).
+- **AC727:** smoke test headless del menú y de la arena (300 frames), sin errores. Además, captura sin headless del HUD táctil en la arena (1600 × 720): joystick flotante desplazado, dash apretado con su reloj de recarga (1.4 s), racimo y pausa en sus lugares, slots de PC y barra de dash ocultos. En una PC, mover el mouse real vuelve al HUD de PC (se ve en la captura si no se aísla el monitor), como se espera. **No se probó en un teléfono** (no hubo dispositivo conectado): instalar con `adb install -r` y medir FPS con la oleada más poblada queda pendiente; si da menos de 30 FPS estables, se abre la spec de ajustes móviles (§5.8).
+- **Tests corridos** (según la preferencia de correr solo los de la spec): `test/components/input/*` (incluye `touch_device_test`, `touch_input_bindings_test`), `test/components/camera/third_person_camera_test.gd`, `test/ui/touch_controls_test.gd`, `test/ui/touch_hud_test.gd`, `test/ui/touch_ui_sizes_test.gd` (68 casos, en verde), y los suites existentes que tocan código cambiado: `input_prompts_test`, `cooldown_hud_test`, `player_hud_test`, `pause_menu_test`, `main_menu_test`, `sandbox_run_test`, `paused_input_test`, `cooldown_timers_test` (58 casos, en verde). No se corrió la suite completa.
+- `.uid` de los scripts nuevos: están en `.gitignore` en este repo; el editor los genera al abrir el proyecto.
 
 ## 12. Review de la constitución (cierre)
 
-_(se completa al cerrar)_
+Contra la v5.0.0 (enmienda aplicada en esta spec).
+
+- [x] **Identidad (I):** sirve a Combate: el esquema táctil da acceso a todo el repertorio (combo, dash, salto, habilidades con carga) en el teléfono.
+- [x] **Arte (II):** sin assets ni shaders; los controles son círculos dibujados con `draw_circle`/`draw_arc` y texto. El blanco translúcido de los controles 2D queda registrado como color no reservado.
+- [x] **Datos (III):** tamaños, posiciones, zona muerta, colores y sensibilidad en `TouchControlsConfig` y `CameraConfig`; textos en `InputPromptConfig`. En código solo quedan nombres de acciones, el nombre de la feature `mobile` y centinelas (−1 = sin dedo). Ningún Resource se muta.
+- [x] **GDScript (IV):** todo tipado; `_ready`, `_input` y `_process` de `TouchControls` solo orquestan.
+- [x] **Performance (V):** `_process` no crea objetos (compara estado y escribe floats); el dibujo se pide solo al cambiar el estado; los `InputEventAction` se crean al recibir un toque, no por frame, y solo cuando cambia una fuerza (AC724, revisión de código).
+- [x] **Input (VI):** toda acción de juego tiene control táctil (salvo `camera_*`, que es el arrastre); los bindings de mouse usan `DEVICE_ID_MOUSE`; solo `TouchControls` lee toques, y solo `PointerMode` escribe `Input.mouse_mode` (AC703); botones de menú de 44 px o más (AC718); textos desde datos.
+- [x] **Combate (VII):** sin cambios en el `Player` salvo `get_camera()`: el golpe, el cancel point y el apuntado se comportan igual con táctil (AC714).
+- [x] **Calidad:** el proyecto importa sin errores ni warnings nuevos; los tests de la spec y los suites afectados están en verde (ver notas: no se corrió la suite completa).

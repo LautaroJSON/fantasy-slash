@@ -9,7 +9,7 @@
 
 ### I. Identidad de género
 
-El juego es un **hack and slash roguelike en tercera persona para PC, jugado con teclado y mouse o mando**. Toda mecánica, sistema o feature nueva debe poder responder **"sí"** al menos a una de estas preguntas antes de especificarse:
+El juego es un **hack and slash roguelike en tercera persona para PC y Android, jugado con teclado y mouse, mando o pantalla táctil**. Toda mecánica, sistema o feature nueva debe poder responder **"sí"** al menos a una de estas preguntas antes de especificarse:
 
 1. **Combate:** ¿hace más interesante, legible o expresivo el acto de pelear (atacar, esquivar, posicionarse, encadenar)?
 2. **Supervivencia:** ¿crea presión, riesgo o decisiones tácticas dentro de una run (salud, recursos, oleadas, amenazas)?
@@ -56,7 +56,7 @@ El juego es un **hack and slash roguelike en tercera persona para PC, jugado con
   | Nivel de enemigo (junto a su barra de vida) | `TextMesh` | **Blanco**: `Color(1, 1, 1)` |
   | Tiempo restante y stacks de debuff (sobre su ícono, en el enemigo) | `TextMesh` | **Blanco**: `Color(1, 1, 1)` |
 - Los colores de esta tabla quedan **reservados** para los elementos listados (salvo las armas, que se distinguen por su silueta). Ningún otro elemento (escenario, props, proyectiles, otra UI 3D) puede usarlos, para que jugador, arma y enemigos se identifiquen siempre de un vistazo. El blanco se comparte únicamente entre el cuerpo del jugador, los textos flotantes (números de daño, nivel de enemigo, tiempo restante y stacks de debuff), la estela del arma, el corte de viento de Envainar y el corte del dash del Giro, que no se confunden: uno es un cuerpo opaco, otros son texto, y la estela y los cortes son franjas translúcidas que se desvanecen en décimas de segundo. El gris se comparte solo entre el cuerpo del enemigo y sus manos, que forman una misma silueta.
-- Colores **no reservados** en uso, a modo de registro: celeste pálido para los indicadores de área y las cartas de mejora de habilidad, rojo para la carta de bloqueo, dorado para las cartas de mejora única (y, desde 4.0.1, el brillo de la katana y el marco del HUD con "Envainar: mejorado"), rojo oscuro para el ícono de sangrado, violeta `Color(0.55, 0.35, 0.8)` para el ícono de Debilitar, verde lima `Color(0.55, 0.85, 0.25)` para el ícono de Conmoción en el HUD, tierra `Color(0.62, 0.52, 0.4)` para el polvo del corte de viento y para el anillo de la onda de choque de los bosses (`TorusMesh` plano, unshaded, alpha ≤ 0.6), y rojo `Color(0.9, 0.1, 0.1)` para el ícono de Rage y su aura (cápsula unshaded translúcida, alpha ≤ 0.3, más grande que el cuerpo gris del enemigo), negro translúcido `Color(0.05, 0.05, 0.05)` (alpha ≤ 0.7, unshaded) para el agujero de aparición de los enemigos (`CylinderMesh` plano sobre el piso), rojo anaranjado `Color(1.0, 0.3, 0.1)` (unshaded, alpha ≤ 0.5, destello hasta 0.8) para los avisos de ataque enemigo en el piso, y miel `Color(0.95, 0.78, 0.25)` para el aura de escudo de la Colmena (cápsula unshaded translúcida, alpha ≤ 0.3, más grande que el cuerpo) y su ícono "Escudo".
+- Colores **no reservados** en uso, a modo de registro: celeste pálido para los indicadores de área y las cartas de mejora de habilidad, rojo para la carta de bloqueo, dorado para las cartas de mejora única (y, desde 4.0.1, el brillo de la katana y el marco del HUD con "Envainar: mejorado"), rojo oscuro para el ícono de sangrado, violeta `Color(0.55, 0.35, 0.8)` para el ícono de Debilitar, verde lima `Color(0.55, 0.85, 0.25)` para el ícono de Conmoción en el HUD, tierra `Color(0.62, 0.52, 0.4)` para el polvo del corte de viento y para el anillo de la onda de choque de los bosses (`TorusMesh` plano, unshaded, alpha ≤ 0.6), y rojo `Color(0.9, 0.1, 0.1)` para el ícono de Rage y su aura (cápsula unshaded translúcida, alpha ≤ 0.3, más grande que el cuerpo gris del enemigo), negro translúcido `Color(0.05, 0.05, 0.05)` (alpha ≤ 0.7, unshaded) para el agujero de aparición de los enemigos (`CylinderMesh` plano sobre el piso), rojo anaranjado `Color(1.0, 0.3, 0.1)` (unshaded, alpha ≤ 0.5, destello hasta 0.8) para los avisos de ataque enemigo en el piso, miel `Color(0.95, 0.78, 0.25)` para el aura de escudo de la Colmena (cápsula unshaded translúcida, alpha ≤ 0.3, más grande que el cuerpo) y su ícono "Escudo", y blanco translúcido (alpha ≤ 0.5) para los controles táctiles 2D (joystick y botones), que no se confunden con el blanco reservado porque la tabla reserva elementos 3D del mundo.
 - Los detalles que comunican gameplay (el frente del personaje, una hitbox visible en debug) también son primitivas.
 - Los materiales se definen como recursos `.tres` compartidos (p. ej. `materials/player_material.tres`, `materials/weapons/spartan_iron_material.tres`, `materials/enemy_material.tres`), no como sub-recursos duplicados en cada escena.
 
@@ -130,21 +130,24 @@ Cada frame se diseña para escalar con la cantidad de enemigos en pantalla, que 
   - Formas simples (`CapsuleShape3D`, `BoxShape3D`, `SphereShape3D`). Prohibidas las formas trimesh o convex en entidades dinámicas.
   - `Area3D` con `monitoring`/`monitorable` desactivados cuando no se usan.
   - No se usan cuerpos físicos donde basta un cálculo de distancia. Raycasts y queries por frame, solo si son imprescindibles.
-- **Render:** materiales compartidos (ver Principio II), sin luces dinámicas ni sombras innecesarias.
+- **Render:** materiales compartidos (ver Principio II), sin luces dinámicas ni sombras innecesarias. Android usa el renderer Mobile; un ajuste de calidad para móvil se decide con mediciones en el dispositivo, no por las dudas.
 
 **Rationale:** las allocations por frame provocan picos del recolector y stutter. Instanciar y liberar en combate genera hitches justo cuando hay más acción. La física innecesaria es el costo oculto que más escala con la cantidad de enemigos.
 
-### VI. Input: teclado y mouse, o mando
+### VI. Input: teclado y mouse, mando o pantalla táctil
 
-- El juego se controla con **teclado y mouse** o con **mando** (layout Xbox; otros mandos vía el mapeo SDL de Godot). No hay soporte de pantalla táctil.
-- Todo input pasa por el **InputMap** con acciones nombradas (`move_forward`, `attack`, `dash`…). **Toda acción de juego tiene binding en los dos esquemas.** Prohibido leer teclas o botones físicos directamente en la lógica de juego.
-- **Toda pantalla de UI se puede usar con mando:** foco inicial al mostrarse, foco visible, `ui_accept` para confirmar y `ui_cancel` para volver donde haya "volver".
-- Los textos de teclas y botones que muestra la UI (prompts) salen de datos (`InputPromptConfig`), nunca de literales en escenas o scripts.
+- El juego se controla con **teclado y mouse**, con **mando** (layout Xbox; otros mandos vía el mapeo SDL de Godot) o con **pantalla táctil** (Android, en horizontal).
+- Todo input pasa por el **InputMap** con acciones nombradas (`move_forward`, `attack`, `dash`…). **Toda acción de juego tiene binding de teclado/mouse y de mando, y un control táctil** que la dispara como `InputEventAction` (salvo `camera_*`, que en táctil es el arrastre de la mitad derecha). Prohibido leer teclas o botones físicos directamente en la lógica de juego.
+- Los bindings de mouse de acciones de juego se limitan al mouse real (`device = InputEvent.DEVICE_ID_MOUSE`, nunca `-1`): un toque genera clics de mouse emulados con `device = -1`, que de otro modo dispararían esas acciones.
+- **Toda pantalla de UI se puede usar con mando y al tacto:** foco inicial al mostrarse, foco visible, `ui_accept` para confirmar, `ui_cancel` para volver donde haya "volver", y botones de al menos 44 px de alto en la resolución base.
+- Los textos de teclas y botones que muestra la UI (prompts, también los de los botones táctiles) salen de datos (`InputPromptConfig`), nunca de literales en escenas o scripts.
 - Excepciones:
-  - El movimiento relativo del mouse para la cámara (`InputEventMouseMotion`), que el InputMap no puede representar. Se lee solo dentro del nodo de cámara.
-  - `InputDeviceMonitor` clasifica los eventos **por tipo** (teclado/mouse o mando) solo para elegir qué prompts mostrar. No lee botones concretos ni decide gameplay.
+  - El movimiento relativo del mouse para la cámara (`InputEventMouseMotion`), que el InputMap no puede representar. Se lee solo dentro del nodo de cámara, que ignora el movimiento emulado desde un toque.
+  - `InputDeviceMonitor` clasifica los eventos **por tipo** (teclado/mouse, mando o táctil) solo para elegir qué prompts y qué HUD mostrar. No lee botones concretos ni decide gameplay.
+  - `TouchControls` lee `InputEventScreenTouch`/`InputEventScreenDrag` **por posición** (en una pantalla táctil no hay botones físicos que mapear) y los traduce a acciones del InputMap y a un giro de cámara. Es el único nodo que lee eventos táctiles.
+  - La captura del mouse pasa por `PointerMode`, que no captura en móvil.
 
-**Rationale:** el combate de un hack and slash se juega cómodo con mando. Mantener todo en el InputMap y los prompts en datos hace que sumar el mando no duplique la lógica de juego.
+**Rationale:** el combate de un hack and slash se juega cómodo con mando, y en el teléfono con dos pulgares. Mantener todo en el InputMap y los prompts en datos hace que sumar un esquema de control no duplique la lógica de juego: los controles táctiles son una fuente más de las mismas acciones.
 
 ### VII. Sensación del combate
 
@@ -166,10 +169,10 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 |---|---|
 | Motor | **Godot 4.x** (actualmente 4.7) |
 | Lenguaje | **GDScript** con tipado estático (Principio IV). Sin C# ni GDExtension en el prototipo. |
-| Renderer | **Forward+** |
+| Renderer | **Forward+** (PC), **Mobile** (Android) |
 | Física | Jolt Physics (3D) |
-| Plataforma | **PC (Windows)** |
-| Input | **Teclado y mouse, o mando**, vía InputMap (Principio VI) |
+| Plataforma | **PC (Windows)** y **Android** (arm64-v8a, horizontal) |
+| Input | **Teclado y mouse, mando o pantalla táctil**, vía InputMap (Principio VI) |
 | Arte | Primitivas de Godot + `StandardMaterial3D` por defecto; assets importados en `assets/` con escena adaptadora (Principio II) |
 | Datos | Resources personalizados en `.tres` (Principio III) |
 | Tests | GdUnit4 |
@@ -186,7 +189,7 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
    - [ ] **Datos (III):** ningún valor tuneable quedó como literal en un script de comportamiento. Los nuevos stats y mejoras están en Resources `.tres`, los stats del jugador son mejorables y ningún Resource compartido se muta en runtime. Las mejoras únicas declaran `max_level` y guardan sus valores por nivel en datos.
    - [ ] **GDScript (IV):** nombres según convención. Todas las firmas y variables miembro tipadas. `_ready` / `_process` / `_physics_process` delgados y delegando en métodos con nombre.
    - [ ] **Performance (V):** sin allocations ni búsquedas de nodos por frame. Las entidades frecuentes usan pool. Capas y máscaras de colisión mínimas y explícitas.
-   - [ ] **Input (VI):** solo acciones del InputMap, con bindings de teclado/mouse y de mando. Pantallas nuevas navegables con mando. Prompts desde datos.
+   - [ ] **Input (VI):** solo acciones del InputMap, con bindings de teclado/mouse y de mando y control táctil. Los bindings de mouse de juego usan `device = DEVICE_ID_MOUSE`, nunca `-1`. Pantallas nuevas navegables con mando y usables al tacto (botones de 44 px de alto o más). Prompts desde datos.
    - [ ] **Combate (VII):** golpes comprometidos con cancel point; sin `Engine.time_scale` para feedback de impacto; auto-apuntado al enemigo más cercano salvo que los datos indiquen otra cosa.
    - [ ] **Calidad:** el proyecto abre sin errores ni warnings de tipado nuevos. Los tests de los criterios de aceptación de la spec están en verde y la suite completa sigue en verde.
 4. **Cierre:** la spec se marca como *Implementada* y cualquier violación justificada (ver *Governance*) queda registrada en ella.
@@ -206,6 +209,7 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 ### Historial
 
+- **5.0.0** (2026-09-27): se reincorpora Android como segundo target, con controles táctiles. Principio VI redefinido: tercer esquema de control (pantalla táctil), toda acción tiene control táctil, bindings de mouse limitados al mouse real, pantallas usables al tacto; nuevas excepciones `TouchControls` (lee toques por posición) y `PointerMode` (no captura en móvil). Principio I (PC y Android), Principio V (renderer Mobile, ajustes con mediciones), Principio II (blanco translúcido de los controles táctiles como color no reservado) y Technology Stack actualizados. Specs revisadas: ninguna contradice el nuevo principio; `gamepad-support.md` sigue valiendo (ver `mobile-touch-controls.md`).
 - **4.12.1** (2026-09-27): Principio II: la reproporción de una malla derivada incluye redondear un extremo reubicando sus vértices, y puede servir para distinguir una parte de otra (ver `katana-sheath-shape.md`).
 - **4.12.0** (2026-09-27): Principio VII: el salto (desde el piso) corta el golpe del ataque básico en cualquier momento, como el dash (ver `jump-cancels-strike.md`).
 
@@ -272,4 +276,4 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 ---
 
-**Version**: 4.12.1 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-27
+**Version**: 5.0.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-27

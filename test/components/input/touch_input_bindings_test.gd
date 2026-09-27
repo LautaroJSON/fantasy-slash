@@ -48,3 +48,26 @@ func test_parsed_action_events_set_pressed_state_and_strength() -> void:
 	Input.parse_input_event(release)
 	Input.flush_buffered_events()
 	assert_bool(Input.is_action_pressed(&"move_right")).is_false()
+
+
+func test_ac725_android_export_preset() -> void:
+	var presets := ConfigFile.new()
+	assert_int(presets.load("res://export_presets.cfg")).is_equal(OK)
+	var section: String = _android_section(presets)
+	assert_str(section).is_not_empty()
+	assert_str(presets.get_value(section, "exclude_filter")).contains("test/*").contains("addons/gdUnit4/*")
+	var options: String = section + ".options"
+	assert_str(presets.get_value(options, "package/unique_name")).is_equal("com.fantasyslash.game")
+	assert_str(presets.get_value(options, "package/name")).is_equal("Fantasy Slash")
+	assert_str(presets.get_value(options, "version/name")).is_equal("0.1.0")
+	assert_bool(presets.get_value(options, "gradle_build/use_gradle_build")).is_true()
+	assert_bool(presets.get_value(options, "architectures/arm64-v8a")).is_true()
+	assert_bool(presets.get_value(options, "architectures/armeabi-v7a")).is_false()
+	assert_bool(presets.get_value(options, "architectures/x86_64")).is_false()
+
+
+func _android_section(presets: ConfigFile) -> String:
+	for section: String in presets.get_sections():
+		if presets.has_section_key(section, "platform") and presets.get_value(section, "platform") == "Android":
+			return section
+	return ""
