@@ -80,7 +80,7 @@ Cada paso deja el proyecto andando.
 
 ## 6. Tests adaptados (se anotan al cerrar)
 
-- Se espera ninguno: AC688 ya compara la malla guardada con la que genera el script, así que cubre la funda nueva sin cambiar lo que verifica.
+- Ninguno: AC688 ya compara la malla guardada con la que genera el script, así que cubre la funda nueva sin cambiar lo que verifica.
 
 ## 7. Riesgos
 
@@ -100,7 +100,30 @@ Es PATCH porque no agrega un permiso nuevo: mantiene los mismos límites (ni vé
 
 ## 9. Notas de implementación
 
-*(Se completa al implementar.)*
+- **Medidas finales** (espacio de `katana_sheath.tscn`):
+  - cuerpo de **2.2 cm** de espesor (antes 1.1) y el mismo ancho, 5.9 cm;
+  - anillos del cuello de **3.8 cm** (±1.91 cm), que siguen sobresaliendo 0.81 cm;
+  - final en **z = −1.282**;
+  - esquina exterior con 4 puntos y esquina interior con 4 puntos, sobre arcos de 1.5 cm;
+  - ancho donde terminan los arcos de 5.93 cm, contra 5.87 cm en la última estación.
+- **Cambio respecto de §2.2: no se estira toda la funda, solo el final.**
+  - Al estirar la funda entera 1.2 cm, el ensanche de la punta se corría con ella y la esquina de la hoja (0.135, −1.247) quedaba a 0.6 mm del borde exterior.
+  - Ahora el cuerpo conserva su largo (mapeo boca → final original) y el perfil redondeado lleva el final a −1.282. El largo total crece lo mismo, 1.2 cm.
+  - Cada borde sigue la dirección que va de la última estación antes del final al primer punto del final de su lado. Así se conserva el ensanche que ya tenía la punta del glb, y la hoja queda a ≥ 1.5 mm del contorno en todo su largo.
+  - Con 2.5 mm, AC696 falla a lo largo de toda la hoja: el margen real es de 1.5–2.5 mm porque hoja y funda corren paralelas en el glb.
+- **Normales:**
+  - cuerpo: se dividen por la escala (1, 1, 2);
+  - anillos: sin cambio (solo se trasladan);
+  - lados del final: se recalculan sumando las normales de sus caras nuevas, con el sentido de la normal original.
+- **Capturas** (Xvfb + OpenGL, antes y después): funda desde arriba, de costado, primer plano del final, guardia, carga de Envainar y vista alta.
+  - De costado, la funda se ve claramente más gruesa que la hoja, y el final tiene las dos esquinas redondeadas (antes solo la exterior).
+  - Desde la cámara del juego el cambio es sutil, porque desde arriba se ve sobre todo el ancho, que no cambió (decisión del responsable).
+  - En la carga, la funda más gruesa no atraviesa el torso en los cuadros revisados (riesgo de §7).
+- **Tests nuevos:**
+  - `weapon_model_test`: AC694 y AC695;
+  - `sheath_grip_test`: AC696;
+  - AC697 lo cubre AC688, que compara las dos mallas con las que genera el script. Ningún test adaptado.
+- **Suites:** SUITES_PLACEHOLDER
 
 ### Checklist de la constitución
 
