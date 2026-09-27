@@ -79,6 +79,16 @@ func value_text(card: UpgradeCard) -> String:
 	return _unique_text(card as AbilityUniqueUpgradeData)
 
 
+## Row name: the card title; Affliction cards show their Affliction and source
+## instead ("Veneno (básicos)"), so the two cards of a type tell apart.
+func row_name(card: UpgradeCard) -> String:
+	var affliction: AfflictionUpgradeData = card as AfflictionUpgradeData
+	if affliction == null:
+		return card.title
+	var config: AfflictionConfig = _player.afflictions.config
+	return config.sandbox_name_format % [affliction.affliction.title, config.source_names[affliction.source]]
+
+
 ## Short summary shown on hover: what one pick gives and the cap.
 func tooltip_text(card: UpgradeCard) -> String:
 	var affliction: AfflictionUpgradeData = card as AfflictionUpgradeData
@@ -173,7 +183,7 @@ func _rebuild_rows() -> void:
 
 func _add_row(card: UpgradeCard) -> void:
 	var name_label: Label = _name_template.duplicate() as Label
-	name_label.text = card.title
+	name_label.text = row_name(card)
 	name_label.tooltip_text = tooltip_text(card)
 	name_label.visible = true
 	_tint(name_label, card)

@@ -179,5 +179,5 @@ func _labels_in(grid_name: String) -> Array[String]:
 func test_ac233_pause_lays_out_two_columns_and_a_block_below() -> void:
 	_pause.toggle()
 	assert_array(_labels_in("LeftGrid")).is_equal(["Daño", "Probabilidad de crítico", "Daño crítico", "Robo de vida", "Bono de daño"])
-	assert_array(_labels_in("RightGrid")).is_equal(["Vida máxima", "Defensa", "Estamina máxima", "Acumulación de Aflicción"])
+	assert_array(_labels_in("RightGrid")).is_equal(["Vida máxima", "Defensa", "Estamina máxima", "Acum. Aflicción"])
 	assert_array(_labels_in("BottomGrid")).is_equal(["Velocidad de ataque", "Velocidad de movimiento", "Rango"])

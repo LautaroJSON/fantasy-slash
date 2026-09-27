@@ -185,3 +185,23 @@ func test_ac897_affliction_cards_are_in_the_sandbox_panel() -> void:
 	assert_bool(_panel.is_plus_enabled(poison)).is_false()
 	_panel.remove(poison)
 	assert_str(_panel.get_value_text(poison)).is_equal("(30)")
+
+
+## docs/specs/affliction.md (AC898): the pause panel fits the default window
+## (1152 × 648) in sandbox, so every "+" button can be reached.
+func test_ac898_the_sandbox_pause_fits_the_window() -> void:
+	var window := Vector2(ProjectSettings.get_setting("display/window/size/viewport_width"), ProjectSettings.get_setting("display/window/size/viewport_height"))
+	_pause.open()
+	await get_tree().process_frame
+	var panel: Control = _pause.get_node("Center/Panel") as Control
+	assert_float(panel.size.x).is_less_equal(window.x)
+	assert_float(panel.size.y).is_less_equal(window.y)
+
+
+func test_ac898_affliction_rows_name_their_source() -> void:
+	var poison: AfflictionUpgradeData = load("res://data/afflictions/cards/poison_basic_attack.tres")
+	var frost: AfflictionUpgradeData = load("res://data/afflictions/cards/frost_ability.tres")
+	_pause.open()
+	assert_str(_panel.row_name(poison)).is_equal("Veneno (básicos)")
+	assert_str(_panel.row_name(frost)).is_equal("Escarcha (habilidad)")
+	assert_str(_panel.row_name(DAMAGE_UPGRADE)).is_equal(DAMAGE_UPGRADE.title)

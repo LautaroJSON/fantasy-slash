@@ -82,7 +82,7 @@ multiplier = 1.0
 [sub_resource type="Resource" id="Row_affliction_buildup"]
 script = ExtResource("2_row")
 stat = 19
-label = "Acumulación de Aflicción"
+label = "Acum. Aflicción"
 format = "+%.0f %%"
 multiplier = 100.0
 

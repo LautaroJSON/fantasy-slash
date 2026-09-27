@@ -32,6 +32,8 @@ extends Resource
 @export var pause_title_format: String
 ## Pause menu line: Affliction, source and level.
 @export var pause_entry_format: String
+## Sandbox row of an Affliction card: Affliction and source.
+@export var sandbox_name_format: String
 ## Name of each AfflictionUpgradeData.Source, in enum order.
 @export var source_names: Array[String]
 
