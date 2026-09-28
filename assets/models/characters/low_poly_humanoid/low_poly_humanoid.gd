@@ -74,6 +74,16 @@ var _j := {}  # nombre de articulación -> Node3D
 static var _libraries: Dictionary[StringName, AnimationLibrary] = {}
 ## Cuántas veces se construyó la librería de cada perfil.
 static var _build_counts: Dictionary[StringName, int] = {}
+## Libraries built without the motion layer (motion_enabled = false), so an
+## old and a new humanoid can live side by side (poc/samurai-motion).
+static var _classic_libraries: Dictionary[StringName, AnimationLibrary] = {}
+## Motion layer setup of each profile (null entry: the profile has none).
+static var _motion_setups: Dictionary[StringName, HumanoidMotionSetup] = {}
+## Procedural motion (arcs, springs, planted feet) on top of the clips, for
+## the profiles that provide a HumanoidMotionSetup (poc/samurai-motion).
+@export var motion_enabled: bool = true
+var _motion: HumanoidMotion = null
+var _foot_meshes: Array[MeshInstance3D] = []
 ## Malla visible de cada mano (Hand), su transform local de reposo y su objetivo.
 var _hand_meshes: Array[MeshInstance3D] = [null, null]
 ## Visible body meshes (torso, head, hands, feet), for VFX copies (dash-feel.md).
@@ -151,16 +161,18 @@ func attach_to_joint(key: String, node: Node3D, local_position: Vector3, local_r
 
 ## Elige la librería de un perfil ya construido y vuelve a idle. No crea animaciones.
 func set_profile(id: StringName) -> void:
-	if not _libraries.has(id):
+	if not _libs().has(id):
 		push_error("LowPolyHumanoid: unknown animation profile '%s'" % id)
 		return
-	if anim.has_animation_library(&"") and anim.get_animation_library(&"") == _libraries[id]:
+	if anim.has_animation_library(&"") and anim.get_animation_library(&"") == _libs()[id]:
 		profile = id
 		return
 	anim.stop()
 	anim.remove_animation_library(&"")
-	anim.add_animation_library(&"", _libraries[id])
+	anim.add_animation_library(&"", _libs()[id])
 	profile = id
+	if _motion != null:
+		_motion.setup = _motion_setups.get(id) as HumanoidMotionSetup
 	if not Engine.is_editor_hint():
 		play("idle", 0.0)
 
@@ -170,11 +182,11 @@ func get_profile() -> StringName:
 
 
 func has_profile(id: StringName) -> bool:
-	return _libraries.has(id)
+	return _libs().has(id)
 
 
 func get_profile_library(id: StringName) -> AnimationLibrary:
-	return _libraries.get(id) as AnimationLibrary
+	return _libs().get(id) as AnimationLibrary
 
 
 ## Veces que se construyó la librería del perfil `id` (1 salvo reconstrucciones en el editor).
@@ -226,6 +238,7 @@ func _build(rebuild_libraries := false) -> void:
 			c.free()
 	_j.clear()
 	_body_meshes.clear()
+	_foot_meshes.clear()
 
 	var body: Material = body_material if body_material else _mat(body_color)
 	var dark: Material = accent_material if accent_material else _mat(accent_color)
@@ -259,7 +272,9 @@ func _build(rebuild_libraries := false) -> void:
 		var hp := _joint(hips, "hip_" + s, Vector3(0.09 * side, -0.02, 0))
 		var kn := _joint(hp, "knee_" + s, Vector3(0, -0.22, 0))
 		var an := _joint(kn, "ankle_" + s, Vector3(0, -0.2, 0))
-		_body_meshes.append(_mesh(an, _foot(), Vector3.ZERO, body))  # pie flotante
+		var foot_mesh := _mesh(an, _foot(), Vector3.ZERO, body)  # pie flotante
+		_body_meshes.append(foot_mesh)
+		_foot_meshes.append(foot_mesh)
 
 	# Espada en la mano derecha (la hoja apunta hacia -Z = adelante con el brazo colgando)
 	var hand: Node3D = _j["wrist_r"]
@@ -284,21 +299,43 @@ func _build(rebuild_libraries := false) -> void:
 	anim = AnimationPlayer.new()
 	anim.name = "Anim"
 	add_child(anim)
-	anim.mixer_applied.connect(_apply_hand_targets)
+	anim.mixer_applied.connect(_on_mixer_applied)
 	_build_libraries(rebuild_libraries)
-	if not _libraries.has(profile):
+	if not _libs().has(profile):
 		profile = &"warrior"
-	anim.add_animation_library(&"", _libraries[profile])
+	anim.add_animation_library(&"", _libs()[profile])
+	if motion_enabled and not Engine.is_editor_hint():
+		_motion = HumanoidMotion.new(self, _foot_meshes)
+		_motion.setup = _motion_setups.get(profile) as HumanoidMotionSetup
 
 
 ## Construye la librería de cada perfil que todavía no existe (o todas, con `force`).
 func _build_libraries(force: bool) -> void:
 	for id: StringName in PROFILES:
-		if _libraries.has(id) and not force:
+		if _libs().has(id) and not force:
 			continue
 		var builder: HumanoidProfile = PROFILES[id].new() as HumanoidProfile
-		_libraries[id] = builder.build(self)
+		_libs()[id] = builder.build(self)
 		_build_counts[id] = _build_counts.get(id, 0) + 1
+		if motion_enabled:
+			_motion_setups[id] = builder.build_motion()
+
+
+func _libs() -> Dictionary[StringName, AnimationLibrary]:
+	return _libraries if motion_enabled else _classic_libraries
+
+
+func _on_mixer_applied() -> void:
+	if _motion != null:
+		_motion.apply(get_process_delta_time())
+	_apply_hand_targets()
+
+
+## Blade and edge directions and grip offset of the held weapon, in the right
+## wrist's frame (WeaponMount.setup): the grip arcs orient the blade with it.
+func set_weapon_frame(blade: Vector3, edge: Vector3, grip_origin: Vector3) -> void:
+	if _motion != null:
+		_motion.set_weapon_frame(blade, edge, grip_origin)
 
 
 func _joint(parent: Node3D, key: String, pos: Vector3) -> Node3D:
@@ -538,16 +575,24 @@ func side_z(s: String, deg: float) -> float:
 ## Arma un clip desde poses clave.
 ## keys: [[tiempo, pose], ...]   events: [[tiempo, "hit_on"|"hit_off"|"combo"|"end"], ...]
 ## El último tiempo de `keys` es el largo del clip.
-func make_clip(keys: Array, loop := false, smooth := false, events := []) -> Animation:
+## `overlap` (poc/samurai-motion, only with motion_enabled): joint -> seconds
+## of delay. When given, every joint is baked at BAKE_FPS with a monotone cubic
+## through its keys (smooth, no overshoot, no linear kinks) and sampled that
+## many seconds late, so the chain breaks in succession (hips first).
+func make_clip(keys: Array, loop := false, smooth := false, events := [], overlap: Dictionary = {}) -> Animation:
 	var a := Animation.new()
 	a.length = keys[-1][0]
 	a.loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
 	var interp := Animation.INTERPOLATION_CUBIC if smooth else Animation.INTERPOLATION_LINEAR
+	var bake: bool = motion_enabled and not overlap.is_empty()
 
 	for joint: String in _j.keys():
 		var t := a.add_track(Animation.TYPE_VALUE)
 		a.track_set_path(t, NodePath(String(get_path_to(_j[joint])) + ":rotation"))
 		a.track_set_interpolation_type(t, interp)
+		if bake:
+			_bake_track(a, t, keys, joint, Vector3.ZERO, PI / 180.0, Vector3.ZERO, overlap.get(joint, 0.0))
+			continue
 		for k: Array in keys:
 			var deg: Vector3 = k[1].get(joint, Vector3.ZERO)
 			a.track_insert_key(t, k[0], deg * (PI / 180.0))
@@ -555,8 +600,11 @@ func make_clip(keys: Array, loop := false, smooth := false, events := []) -> Ani
 	var tp := a.add_track(Animation.TYPE_VALUE)
 	a.track_set_path(tp, NodePath(String(get_path_to(_j["hips"])) + ":position"))
 	a.track_set_interpolation_type(tp, interp)
-	for k: Array in keys:
-		a.track_insert_key(tp, k[0], HIPS_REST + k[1].get("hips_pos", Vector3.ZERO) * LEG_SCALE)
+	if bake:
+		_bake_track(a, tp, keys, "hips_pos", Vector3.ZERO, LEG_SCALE, HIPS_REST, overlap.get("hips", 0.0))
+	else:
+		for k: Array in keys:
+			a.track_insert_key(tp, k[0], HIPS_REST + k[1].get("hips_pos", Vector3.ZERO) * LEG_SCALE)
 
 	for side: String in ["left", "right"]:
 		var tw := a.add_track(Animation.TYPE_VALUE)
@@ -573,6 +621,28 @@ func make_clip(keys: Array, loop := false, smooth := false, events := []) -> Ani
 		for e: Array in events:
 			a.track_insert_key(tm, e[0], {"method": "_anim_event", "args": [e[1]]})
 	return a
+
+
+const BAKE_FPS: float = 60.0
+
+
+## Dense keys for `key` of every pose: value = base + pose[key] * factor,
+## each component through a monotone cubic, sampled `delay` seconds late.
+func _bake_track(a: Animation, track: int, keys: Array, key: String, fallback: Vector3, factor: float, base: Vector3, delay: float) -> void:
+	var curves: Array[PackedVector2Array] = [PackedVector2Array(), PackedVector2Array(), PackedVector2Array()]
+	for k: Array in keys:
+		var v: Vector3 = k[1].get(key, fallback)
+		for c: int in 3:
+			curves[c].append(Vector2(k[0], v[c]))
+	var frames: int = maxi(ceili(a.length * BAKE_FPS), 1)
+	for f: int in frames + 1:
+		var time: float = minf(f / BAKE_FPS, a.length)
+		var sample_time: float = clampf(time - delay, 0.0, a.length)
+		var v := Vector3(
+			SlashArc.monotone_cubic(curves[0], sample_time),
+			SlashArc.monotone_cubic(curves[1], sample_time),
+			SlashArc.monotone_cubic(curves[2], sample_time))
+		a.track_insert_key(track, time, base + v * factor)
 
 
 ## Eventos de un golpe: el daño empieza y termina, se abre el combo y termina.

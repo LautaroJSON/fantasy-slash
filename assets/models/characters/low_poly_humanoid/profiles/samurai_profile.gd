@@ -74,7 +74,85 @@ const CHARGE_SINK: Array[Dictionary] = [
 	},
 ]
 
+## Succession of the body in the cuts (poc/samurai-motion): seconds each
+## joint trails the hips. The right arm is driven by the cut arcs.
+const OVERLAP := {
+	"hips": 0.0, "torso": 0.012, "neck": 0.026,
+	"shoulder_l": 0.02, "elbow_l": 0.02, "wrist_l": 0.02,
+}
+
 var _h: LowPolyHumanoid
+
+
+# ---------------------------------------------------------------- MOTION
+
+## The five cuts as arcs of the grip around the right shoulder (root space:
+## forward -Z, right +X, up +Y), with where the blade is at each moment.
+## f = 0 start, 1 in front (the hit), 2 end of the follow-through.
+func build_motion() -> HumanoidMotionSetup:
+	var m := HumanoidMotionSetup.new()
+	m.springs = {"neck": Vector2(4.5, 0.42), "torso": Vector2(6.5, 0.55)}
+
+	# 1. Horizontal, right to left: loads behind the right hip, whips across
+	# the chest, follows through far to the left.
+	var a1 := SlashArc.create(Vector3(0.75, -0.08, 0.66), Vector3(0.05, -0.02, -1), Vector3(-0.8, 0.02, 0.5))
+	a1.radius = 0.34
+	a1.center_offset = Vector3(-0.1, -0.12, 0)
+	a1.timing = PackedVector2Array([Vector2(0.03, 0.0), Vector2(0.075, 0.1), Vector2(0.145, 1.0),
+		Vector2(0.18, 1.6), Vector2(0.24, 1.97), Vector2(0.31, 2.03), Vector2(0.38, 2.0)])
+	a1.blend_in = Vector2(0.0, 0.05)
+	a1.blend_out = Vector2(0.27, 0.4)
+	m.arcs[&"attack_1"] = a1
+
+	# 2. Rising diagonal, low right to high left.
+	var a2 := SlashArc.create(Vector3(0.6, -0.75, 0.3), Vector3(0.05, -0.12, -1), Vector3(-0.55, 0.82, -0.2))
+	a2.radius = 0.33
+	a2.center_offset = Vector3(-0.08, -0.05, 0)
+	a2.timing = PackedVector2Array([Vector2(0.035, 0.0), Vector2(0.055, 0.12), Vector2(0.09, 1.0),
+		Vector2(0.12, 1.65), Vector2(0.165, 1.97), Vector2(0.22, 2.03), Vector2(0.28, 2.0)])
+	a2.blend_in = Vector2(0.0, 0.04)
+	a2.blend_out = Vector2(0.21, 0.34)
+	m.arcs[&"attack_2"] = a2
+
+	# 3. Vertical, from above and behind the head down to the floor in front.
+	var a3 := SlashArc.create(Vector3(0.12, 0.8, 0.6), Vector3(0.0, 0.05, -1), Vector3(-0.05, -0.88, -0.45))
+	a3.radius = 0.34
+	a3.center_offset = Vector3(-0.14, 0.02, 0)
+	a3.timing = PackedVector2Array([Vector2(0.04, 0.0), Vector2(0.065, 0.1), Vector2(0.105, 1.0),
+		Vector2(0.14, 1.7), Vector2(0.185, 1.97), Vector2(0.24, 2.03), Vector2(0.3, 2.0)])
+	a3.blend_in = Vector2(0.0, 0.05)
+	a3.blend_out = Vector2(0.23, 0.38)
+	m.arcs[&"attack_3"] = a3
+
+	# 4. Rising diagonal, low left (arm crossed) to high right: the first hit
+	# of the double finisher, chains straight into the kesa.
+	var a4 := SlashArc.create(Vector3(-0.65, -0.65, -0.3), Vector3(0.05, -0.05, -1), Vector3(0.55, 0.8, 0.15))
+	a4.radius = 0.33
+	a4.center_offset = Vector3(-0.1, -0.04, 0)
+	a4.timing = PackedVector2Array([Vector2(0.035, 0.0), Vector2(0.06, 0.12), Vector2(0.1, 1.0),
+		Vector2(0.13, 1.75), Vector2(0.17, 2.0), Vector2(0.24, 2.02)])
+	a4.blend_in = Vector2(0.0, 0.04)
+	m.arcs[&"attack_4"] = a4
+
+	# 5. Kesa, high right to low left, ending in zanshin.
+	var a5 := SlashArc.create(Vector3(0.55, 0.8, 0.2), Vector3(-0.05, 0.0, -1), Vector3(-0.62, -0.72, -0.15))
+	a5.radius = 0.35
+	a5.center_offset = Vector3(-0.1, 0.0, 0)
+	a5.timing = PackedVector2Array([Vector2(0.0, 0.0), Vector2(0.04, 0.12), Vector2(0.085, 1.0),
+		Vector2(0.12, 1.75), Vector2(0.17, 1.98), Vector2(0.24, 2.04), Vector2(0.34, 2.0)])
+	a5.blend_in = Vector2(0.0, 0.03)
+	a5.blend_out = Vector2(0.38, 0.6)
+	m.arcs[&"attack_5"] = a5
+
+	# The back (right) foot stays on the floor while each cut lunges forward.
+	m.plants = {
+		&"attack_1": [["r", 0.02, 0.22]],
+		&"attack_2": [["r", 0.0, 0.15]],
+		&"attack_3": [["r", 0.0, 0.18]],
+		&"attack_4": [["r", 0.0, 0.14]],
+		&"attack_5": [["r", 0.0, 0.3]],
+	}
+	return m
 
 
 func build(humanoid: LowPolyHumanoid) -> AnimationLibrary:
@@ -95,11 +173,11 @@ func build(humanoid: LowPolyHumanoid) -> AnimationLibrary:
 ## Arma un clip con la funda en la mano izquierda (docs/specs/sheath-in-left-hand.md):
 ## las poses que no escriben su propio brazo izquierdo (sin "wrist_l") llevan
 ## LEFT_SHEATH_ARM.
-func _clip(keys: Array, loop := false, smooth := false, events := []) -> Animation:
+func _clip(keys: Array, loop := false, smooth := false, events := [], overlap: Dictionary = {}) -> Animation:
 	for i: int in keys.size():
 		if not keys[i][1].has("wrist_l"):
 			keys[i] = [keys[i][0], _h.with(keys[i][1], LEFT_SHEATH_ARM)]
-	return _h.make_clip(keys, loop, smooth, events)
+	return _h.make_clip(keys, loop, smooth, events, overlap)
 
 
 ## Zancada larga con la pierna izquierda adelante (cortes que atraviesan).
@@ -453,7 +531,7 @@ func _add_horizontal(lib: AnimationLibrary) -> void:
 		[0.14, impact],
 		[0.18, follow],
 		[0.4, _stance()],
-	], false, false, _h.strike_events(0.14, 0.18, 0.22, 0.4)))
+	], false, false, _h.strike_events(0.14, 0.18, 0.22, 0.4), OVERLAP))
 
 
 ## Fin del tajo horizontal: el brazo cruzado bien a la izquierda, en zancada
@@ -511,7 +589,7 @@ func _add_rising_right_to_left(lib: AnimationLibrary) -> void:
 		[0.12, follow],
 		[0.17, _h.with(follow, {"torso": Vector3(5, 31, 17), "shoulder_r": Vector3(123, 57, 0)})],
 		[0.34, _stance()],
-	], false, false, _h.strike_events(0.08, 0.12, 0.17, 0.34)))
+	], false, false, _h.strike_events(0.08, 0.12, 0.17, 0.34), OVERLAP))
 
 
 ## 3. Vertical descendente (corte 1): se arquea con la hoja alzada atrás del
@@ -533,7 +611,7 @@ func _add_vertical(lib: AnimationLibrary) -> void:
 		[0.14, follow],
 		[0.2, _h.with(follow, {"torso": Vector3(-46, -6, 0), "shoulder_r": Vector3(46, -4, 6)})],
 		[0.38, _stance()],
-	], false, false, _h.strike_events(0.1, 0.14, 0.2, 0.38)))
+	], false, false, _h.strike_events(0.1, 0.14, 0.2, 0.38), OVERLAP))
 
 
 ## Arriba a la derecha: fin de la subida del remate y comienzo de la kesa.
@@ -567,7 +645,7 @@ func _add_rising_left_to_right(lib: AnimationLibrary) -> void:
 		[0.1, impact],
 		[0.13, _double_top()],
 		[0.24, _double_top()],
-	], false, false, _h.strike_events(0.1, 0.13, 0.16, 0.24)))
+	], false, false, _h.strike_events(0.1, 0.13, 0.16, 0.24), OVERLAP))
 
 
 ## 4b. Remate, 2.º impacto: kesa, de arriba a la derecha hasta abajo a la
@@ -591,4 +669,4 @@ func _add_kesa(lib: AnimationLibrary) -> void:
 		[0.12, zanshin],
 		[0.34, _h.with(zanshin, {"torso": Vector3(-33, 42, 14)})],
 		[0.6, _stance()],
-	], false, false, _h.strike_events(0.08, 0.12, 0.34, 0.6)))
+	], false, false, _h.strike_events(0.08, 0.12, 0.34, 0.6), OVERLAP))
