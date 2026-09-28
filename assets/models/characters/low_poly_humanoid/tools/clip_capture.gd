@@ -38,6 +38,9 @@ var _foot_materials: Array[StandardMaterial3D] = []
 func _ready() -> void:
 	_parse_args()
 	DirAccess.make_dir_recursive_absolute(_out_dir)
+	if _movie:
+		var window: Vector2 = get_viewport().get_visible_rect().size
+		_view_size = Vector2i(int(window.x / 2.0), int(window.y / 2.0))
 	_build_world()
 	_tip_material = _flat(Color(1.0, 0.85, 0.1))
 	_foot_materials = [_flat(Color(0.2, 0.9, 0.3)), _flat(Color(0.95, 0.25, 0.8))]

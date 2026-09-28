@@ -91,3 +91,19 @@ El combo completo pasa de ~1.3 s a ~1.0 s hasta el remate.
 - **Causa:** al salir de un golpe, el animador mezcla 0.35 s desde la última pose del clip del golpe. Los ángulos del brazo de esos clips no coinciden con dónde el arco dejaba la mano. La mezcla de salida de la capa duraba menos que ese fundido (0.24 s), así que al terminar la mano saltaba a una mezcla que apuntaba a otro lado.
 - **Arreglo:** durante `exit_hold` (0.45 s), la muñeca sigue el brazo del clip nuevo solo, encadenado sobre el torso ya mezclado (`HumanoidMotion._clip_wrist()`). Cuando termina, coincide con la animación.
 - **Verificación:** en una pelea simulada de 40 s con golpes, dashes y Envainar, el desvío después de cada golpe es 0°.
+
+## Adenda 3: arcos horneados en los clips (2026-09-28)
+
+El bug de la mano seguía apareciendo al cancelar un básico con dash.
+
+- **Causa de fondo:** la capa en tiempo real movía la muñeca por encima de un clip cuyo brazo guardado era otro. Cada cancelación (dash, salto, daño) mezclaba el motor desde ese brazo falso, y cada parche dejaba otro caso suelto.
+- **Arreglo:** los arcos se **hornean** en los clips. Al construir la librería, `LowPolyHumanoid._bake_arm()` recorre cada cuadro del golpe ya horneado:
+  1. reconstruye el torso y el hombro derecho a partir de las claves del clip;
+  2. ubica el agarre sobre el arco, con el latigazo de la punta y la mezcla entre arcos;
+  3. resuelve hombro, codo y muñeca con IK de dos huesos (codo hacia `ARM_POLE`);
+  4. escribe los ángulos, desenrollados para que no giren de golpe (`_unwrap_euler`).
+- **Resultado:** los clips traen el brazo verdadero, y cualquier mezcla del motor parte de la pose correcta.
+- **La capa en tiempo real** queda solo con los resortes y los pies clavados. El código de la muñeca sigue ahí, pero sin arcos no actúa.
+- **Marco de la katana para el horneado:** lo calcula el perfil desde `katana.tres` (`_set_bake_weapon()`), con la misma cuenta que `WeaponMount`.
+- **Verificación:** golpe y dash de 3 a 10 cuadros después, 16 veces. La capa nunca toca la muñeca, y la diferencia que queda es el fundido normal del motor entre el golpe y el dash.
+- **Limitación:** si el arco pide más alcance que el brazo (la estocada), la muñeca queda en el máximo del brazo y la mano no llega del todo al radio pedido.

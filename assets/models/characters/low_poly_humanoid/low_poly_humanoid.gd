@@ -579,15 +579,20 @@ func side_z(s: String, deg: float) -> float:
 ## of delay. When given, every joint is baked at BAKE_FPS with a monotone cubic
 ## through its keys (smooth, no overshoot, no linear kinks) and sampled that
 ## many seconds late, so the chain breaks in succession (hips first).
-func make_clip(keys: Array, loop := false, smooth := false, events := [], overlap: Dictionary = {}) -> Animation:
+## `arcs` (poc/samurai-motion, needs `overlap`): SlashArcs of the grip; the
+## right arm is then baked by two-bone IK so the clip itself carries the cut
+## (any blend of the engine, like a dash cancel, starts from the true arm).
+func make_clip(keys: Array, loop := false, smooth := false, events := [], overlap: Dictionary = {}, arcs: Array = []) -> Animation:
 	var a := Animation.new()
 	a.length = keys[-1][0]
 	a.loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
 	var interp := Animation.INTERPOLATION_CUBIC if smooth else Animation.INTERPOLATION_LINEAR
 	var bake: bool = motion_enabled and not overlap.is_empty()
+	var joint_tracks: Dictionary[String, int] = {}
 
 	for joint: String in _j.keys():
 		var t := a.add_track(Animation.TYPE_VALUE)
+		joint_tracks[joint] = t
 		a.track_set_path(t, NodePath(String(get_path_to(_j[joint])) + ":rotation"))
 		a.track_set_interpolation_type(t, interp)
 		if bake:
@@ -602,6 +607,8 @@ func make_clip(keys: Array, loop := false, smooth := false, events := [], overla
 	a.track_set_interpolation_type(tp, interp)
 	if bake:
 		_bake_track(a, tp, keys, "hips_pos", Vector3.ZERO, LEG_SCALE, HIPS_REST, overlap.get("hips", 0.0))
+		if not arcs.is_empty():
+			_bake_arm(a, joint_tracks, tp, arcs)
 	else:
 		for k: Array in keys:
 			a.track_insert_key(tp, k[0], HIPS_REST + k[1].get("hips_pos", Vector3.ZERO) * LEG_SCALE)
@@ -643,6 +650,110 @@ func _bake_track(a: Animation, track: int, keys: Array, key: String, fallback: V
 			SlashArc.monotone_cubic(curves[1], sample_time),
 			SlashArc.monotone_cubic(curves[2], sample_time))
 		a.track_insert_key(track, time, base + v * factor)
+
+
+## Where the right elbow points while the arm is solved (right, down, back).
+const ARM_POLE := Vector3(0.7, -0.35, 0.6)
+## Seconds one arc hands its orientation over to the next inside a clip.
+const ARC_BLEND: float = 0.05
+## Seconds back in time to measure the blade's angular speed (tip whip).
+const LAG_PROBE: float = 0.008
+## Blade and edge directions and grip offset of the weapon in the right
+## wrist's frame, for baking arcs (set by the profile before building).
+var bake_blade: Vector3 = Vector3.FORWARD
+var bake_edge: Vector3 = Vector3.RIGHT
+var bake_grip: Vector3 = Vector3.ZERO
+
+
+## Rewrites the right arm keys of an already baked clip so the grip rides
+## `arcs`: per key, the body's torso and right shoulder (from the clip's own
+## keys), the grip pose on the arc (blended with the authored arm by the arc
+## weight), then a two-bone IK solve with the elbow toward ARM_POLE.
+func _bake_arm(a: Animation, tracks: Dictionary[String, int], hips_track: int, arcs: Array) -> void:
+	var size: float = scale.x if scale.x > 0.0 else 1.0
+	var weapon: Basis = HumanoidMotion._frame(bake_blade, bake_edge)
+	var arm: Array[String] = ["shoulder_r", "elbow_r", "wrist_r"]
+	var previous: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
+	for k: int in a.track_get_key_count(tracks["shoulder_r"]):
+		var t: float = a.track_get_key_time(tracks["shoulder_r"], k)
+		var hips := Transform3D(Basis.from_euler(a.track_get_key_value(tracks["hips"], k)), a.track_get_key_value(hips_track, k))
+		var torso: Transform3D = hips * Transform3D(Basis.from_euler(a.track_get_key_value(tracks["torso"], k)), _j["torso"].position)
+		var shoulder_pos: Vector3 = torso * (_j["shoulder_r"] as Node3D).position
+		var authored: Transform3D = torso
+		for key: String in arm:
+			authored = authored * Transform3D(Basis.from_euler(a.track_get_key_value(tracks[key], k)), (_j[key] as Node3D).position)
+		var target: Transform3D = _arc_target(arcs, t, shoulder_pos, size, weapon, authored)
+		var solved: Array[Basis] = _solve_arm(torso.basis, shoulder_pos, target)
+		for i: int in 3:
+			var euler: Vector3 = solved[i].get_euler()
+			if k > 0:
+				euler = _unwrap_euler(euler, previous[i])
+			previous[i] = euler
+			a.track_set_key_value(tracks[arm[i]], k, euler)
+
+
+func _arc_target(arcs: Array, t: float, shoulder_pos: Vector3, size: float, weapon: Basis, authored: Transform3D) -> Transform3D:
+	var index: int = HumanoidMotion._active_arc(arcs, t)
+	var arc: SlashArc = arcs[index]
+	var pose: Transform3D = _arc_pose_at(arc, t, shoulder_pos, size, weapon)
+	if index > 0 and t - arc.start_time() < ARC_BLEND:
+		var before: Transform3D = _arc_pose_at(arcs[index - 1], t, shoulder_pos, size, weapon)
+		pose = before.interpolate_with(pose, smoothstep(0.0, 1.0, (t - arc.start_time()) / ARC_BLEND))
+	return authored.interpolate_with(pose, arc.weight_at(t))
+
+
+## Wrist pose (humanoid space) that puts the grip on `arc` at `t`. Arc
+## offsets and radii are in metres; the humanoid's space is `size` times smaller.
+func _arc_pose_at(arc: SlashArc, t: float, shoulder_pos: Vector3, size: float, weapon: Basis) -> Transform3D:
+	var center: Vector3 = shoulder_pos + arc.center_offset / size
+	var f: float = arc.progress_at(t)
+	var dir: Vector3 = arc.direction_at(f)
+	var rate: float = (f - arc.progress_at(t - LAG_PROBE)) / LAG_PROBE * arc.angle_rate_at(f)
+	var lag: float = clampf(rate * arc.tip_lag, -arc.max_lag, arc.max_lag)
+	var blade: Vector3 = dir.rotated(arc.axis, -lag)
+	var edge: Vector3 = arc.axis.cross(blade) * (-1.0 if arc.edge_flip else 1.0)
+	var basis: Basis = HumanoidMotion._frame(blade, edge) * weapon.inverse()
+	var grip: Vector3 = center + dir * arc.radius_at(t) / size
+	return Transform3D(basis, grip - basis * bake_grip)
+
+
+## Local rotations of shoulder, elbow and wrist that bring the wrist to
+## `target` (clamped to the arm's reach) with its orientation.
+func _solve_arm(torso_basis: Basis, shoulder_pos: Vector3, target: Transform3D) -> Array[Basis]:
+	var upper_len: float = (_j["elbow_r"] as Node3D).position.length()
+	var fore_len: float = (_j["wrist_r"] as Node3D).position.length()
+	var to: Vector3 = target.origin - shoulder_pos
+	var reach: float = clampf(to.length(), absf(upper_len - fore_len) + 0.001, upper_len + fore_len - 0.001)
+	var dir: Vector3 = to.normalized()
+	var pole: Vector3 = (ARM_POLE - dir * dir.dot(ARM_POLE)).normalized()
+	var cos_a: float = (upper_len * upper_len + reach * reach - fore_len * fore_len) / (2.0 * upper_len * reach)
+	var elbow: Vector3 = shoulder_pos + upper_len * (dir * cos_a + pole * sqrt(maxf(0.0, 1.0 - cos_a * cos_a)))
+	var wrist: Vector3 = shoulder_pos + dir * reach
+	var upper: Basis = _bone_basis(elbow - shoulder_pos, pole)
+	var fore: Basis = _bone_basis(wrist - elbow, pole)
+	return [torso_basis.orthonormalized().inverse() * upper, upper.inverse() * fore, fore.inverse() * target.basis.orthonormalized()]
+
+
+## A bone basis whose -Y runs along `along` (the rest direction of the arm).
+static func _bone_basis(along: Vector3, pole: Vector3) -> Basis:
+	var y: Vector3 = -along.normalized()
+	var z: Vector3 = (pole - y * y.dot(pole)).normalized()
+	return Basis(y.cross(z), y, z)
+
+
+## The YXZ Euler angles of the same rotation closest to `previous` (the two
+## equivalent triples, each wrapped by whole turns), so baked keys never spin.
+static func _unwrap_euler(euler: Vector3, previous: Vector3) -> Vector3:
+	var near := _nearest_turns(euler, previous)
+	var other := _nearest_turns(Vector3(PI - euler.x, euler.y + PI, euler.z + PI), previous)
+	return near if near.distance_to(previous) <= other.distance_to(previous) else other
+
+
+static func _nearest_turns(v: Vector3, reference: Vector3) -> Vector3:
+	return Vector3(
+		v.x + TAU * roundf((reference.x - v.x) / TAU),
+		v.y + TAU * roundf((reference.y - v.y) / TAU),
+		v.z + TAU * roundf((reference.z - v.z) / TAU))
 
 
 ## Eventos de un golpe: el daño empieza y termina, se abre el combo y termina.
