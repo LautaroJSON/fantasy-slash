@@ -85,3 +85,33 @@ La cámara se consulta una vez por número (`get_viewport().get_camera_3d()`; si
   - Titán: el golpe nace a la altura del impacto y el nombre a 3 m (antes a 8.4 m, fuera de cuadro).
 - **Tests viejos:** AC32 (`damage_number_pool_test.gd`) pasó a verificar el punto de contacto, con el mismo texto, crítico y escala. AC150 (`boss_body_test.gd`) quedó reemplazado por AC996 en el mismo archivo. Ver la nota en `boss-challenge.md`.
 - El número de un golpe puede superponerse al cuerpo del jugador cuando el enemigo está pegado y centrado: los dos son blancos. Sube rápido (1.6 m/s) y el abanico reparte los siguientes a los lados. Si molesta, se ajusta `contact_rise` o se hace que el abanico no use el centro.
+
+## 9. Adenda: tamaño ×2 y nombres de Aflicción al pecho
+
+**Estado:** Implementada · **ACs:** AC1014–AC1016 (primero numerados AC1006–AC1008, que en paralelo tomó `berserker-greatsword.md`; se renumeraron al llevarlos a `main`)
+
+Pedido tras probarlo: números y textos más grandes en general, y los nombres de Aflicción más abajo. Respuestas a la consulta: **×2**, **solo los nombres** (los ticks de veneno o sangrado y los estallidos siguen en el ancla del §2) y **a la altura del pecho**.
+
+**Cambios (solo datos y una fuente del pool):**
+- `pixel_size` 0.0009 → **0.0018**. Todo se duplica en pantalla (normal, crítico, ticks, nombres) y se conservan las proporciones entre tipos (`normal_scale`, `crit_scale`, pop).
+- `DamageNumberConfig` suma `name_height` (**1.4 m**, crece con `body_scale`) y `name_max_height` (**2.0 m**).
+- `DamageNumberPool.name_spawn_point(enemy)` = eje del enemigo a `min(name_height × body_scale, name_max_height)`. Lo usa solo `_on_affliction_triggered`, siempre más el abanico. Un Bruto lo muestra a 1.4 m (antes 2.4 m) y un Titán a 2.0 m (antes 3.0 m).
+
+**Criterios de aceptación:**
+- **AC1014** El mismo número mide el doble en pantalla que con `pixel_size = 0.0009` (medido por captura, ±1 px) y sigue midiendo lo mismo a 4 m y a 12 m.
+- **AC1015** El nombre de una Aflicción nace a `name_height × body_scale` en un Bruto y a `name_max_height` en el Titán, sobre su eje. Los ticks y los estallidos del mismo enemigo siguen en el ancla.
+- **AC1016** `name_height` y `name_max_height` son > 0 en el `.tres`, y `name_max_height < anchor_max_height`.
+
+**Test que cambia:** AC999 verificaba que los nombres de Aflicción nacían en el ancla. Pasa a cubrir solo ticks y estallidos; los nombres los cubre AC1015.
+
+**Plan:**
+1. Config y `.tres`.
+2. `name_spawn_point` en el pool.
+3. Tests AC1015–AC1016 y adaptación de AC999.
+4. Captura de medición (AC1014) y capturas en la arena.
+5. Commit en `claude/readable-damage-numbers` (el PR abierto se actualiza solo).
+
+**Cierre de la adenda:**
+- **AC1014:** la escena de medición da 29 px a 4 m y a 12 m (antes 15 px). Es el doble dentro de ±1 px de redondeo.
+- **Capturas** (Guerrero contra Bruto, Verdugo y Titán, con "Escarcha" forzada): todo se lee y el nombre queda a la altura del pecho. Un número de golpe que sube puede cruzar el nombre durante unas décimas; el abanico los separa a los lados.
+- **Tests:** 60 casos en verde (`test/effects`, `boss_body_test`, `test/components/vfx`); smoke de la arena sin errores. AC999 adaptado a ticks y estallidos.

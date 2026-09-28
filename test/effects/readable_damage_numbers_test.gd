@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## Damage numbers stay in frame next to tall bosses
-## (docs/specs/readable-damage-numbers.md, AC997–AC1004; AC996 lives in
-## boss_body_test.gd, where it replaces AC150).
+## (docs/specs/readable-damage-numbers.md, AC997–AC1004 and AC1015–AC1016;
+## AC996 lives in boss_body_test.gd, where it replaces AC150).
 
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
@@ -109,7 +109,8 @@ func test_ac998_the_anchor_is_the_head_capped_at_anchor_max_height() -> void:
 	assert_vector(_pool.anchor_spawn_point(titan)).is_equal_approx(titan_cap, Vector3.ONE * TOLERANCE)
 
 
-func test_ac999_status_ticks_bursts_and_affliction_names_use_the_anchor() -> void:
+## Addendum: Affliction names moved to chest height (AC1015).
+func test_ac999_status_ticks_and_bursts_use_the_anchor() -> void:
 	var titan: Enemy = _spawn(TITAN_STATS, Vector3(0.0, 0.0, -3.0))
 	var anchor: Vector3 = _pool.anchor_spawn_point(titan)
 	_restart_fan()
@@ -117,10 +118,6 @@ func test_ac999_status_ticks_bursts_and_affliction_names_use_the_anchor() -> voi
 	assert_vector(_last_position()).is_equal_approx(anchor, Vector3.ONE * TOLERANCE)
 	_restart_fan()
 	_player.afflictions.burst_hit.emit(titan, 20.0, BURST)
-	assert_vector(_last_position()).is_equal_approx(anchor, Vector3.ONE * TOLERANCE)
-	_restart_fan()
-	_player.afflictions.triggered.emit(titan, FROST)
-	assert_str(_pool.get_last_spawned().get_text()).is_equal(FROST.title)
 	assert_vector(_last_position()).is_equal_approx(anchor, Vector3.ONE * TOLERANCE)
 
 
@@ -166,3 +163,26 @@ func test_ac1004_the_config_drops_spread_and_sets_the_new_fields() -> void:
 	assert_array(names).not_contains(["spread"])
 	for field: String in ["anchor_max_height", "contact_rise", "fan_step", "fan_slots", "fan_rise_step"]:
 		assert_float(float(CONFIG.get(field))).override_failure_message(field).is_greater(0.0)
+
+
+func test_ac1015_affliction_names_sit_at_chest_height() -> void:
+	var grunt: Enemy = _spawn(GRUNT_STATS, Vector3(-3.0, 0.0, -3.0))
+	var titan: Enemy = _spawn(TITAN_STATS, Vector3(3.0, 0.0, -6.0))
+	var grunt_chest: Vector3 = grunt.global_position + Vector3.UP * CONFIG.name_height * GRUNT_STATS.body_scale
+	var titan_chest: Vector3 = titan.global_position + Vector3.UP * CONFIG.name_max_height
+	_restart_fan()
+	_player.afflictions.triggered.emit(grunt, FROST)
+	assert_str(_pool.get_last_spawned().get_text()).is_equal(FROST.title)
+	assert_vector(_last_position()).is_equal_approx(grunt_chest, Vector3.ONE * TOLERANCE)
+	_restart_fan()
+	_player.afflictions.triggered.emit(titan, FROST)
+	assert_vector(_last_position()).is_equal_approx(titan_chest, Vector3.ONE * TOLERANCE)
+	_restart_fan()
+	_registry.enemy_debuff_ticked.emit(titan, 3.0, POISON)
+	assert_vector(_last_position()).is_equal_approx(_pool.anchor_spawn_point(titan), Vector3.ONE * TOLERANCE)
+
+
+func test_ac1016_names_sit_below_the_anchor_cap() -> void:
+	assert_float(CONFIG.name_height).is_greater(0.0)
+	assert_float(CONFIG.name_max_height).is_greater(0.0)
+	assert_float(CONFIG.name_max_height).is_less(CONFIG.anchor_max_height)

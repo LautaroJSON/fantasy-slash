@@ -92,6 +92,13 @@ func anchor_spawn_point(enemy: Enemy) -> Vector3:
 	return enemy.global_position + Vector3.UP * height
 
 
+## Affliction names sit lower than the other numbers, at chest height:
+## name_height grows with the body scale up to name_max_height.
+func name_spawn_point(enemy: Enemy) -> Vector3:
+	var height: float = minf(config.name_height * enemy.get_body_scale(), config.name_max_height)
+	return enemy.global_position + Vector3.UP * height
+
+
 ## Offset of the next number in the fan: slot × fan_step along the camera's
 ## right (horizontal), and |slot| × fan_rise_step up. Advances the fan.
 func next_fan_offset() -> Vector3:
@@ -146,7 +153,7 @@ func _on_affliction_burst_hit(enemy: Enemy, applied: float, type: AfflictionData
 ## Every Affliction says its name in its color each time its bar fills
 ## (docs/specs/affliction-name-popup.md §7).
 func _on_affliction_triggered(enemy: Enemy, type: AfflictionData) -> void:
-	spawn_text(type.title, anchor_spawn_point(enemy) + next_fan_offset(), type.text_material())
+	spawn_text(type.title, name_spawn_point(enemy) + next_fan_offset(), type.text_material())
 
 
 ## Italic, and in the status color when it has one (e.g. poison).
