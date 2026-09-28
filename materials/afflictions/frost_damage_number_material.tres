@@ -8,3 +8,4 @@ shading_mode = 0
 albedo_color = Color(0.45, 0.9, 0.95, 1)
 billboard_mode = 1
 billboard_keep_scale = true
+fixed_size = true

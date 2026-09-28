@@ -3,6 +3,10 @@ extends Node3D
 ## Pre-instantiated damage numbers (Principle V). Listens to the player's hits
 ## (basic attack and abilities) and to debuff ticks on enemies (e.g. bleeding).
 ## When every number is busy, the oldest one is recycled so no hit goes without feedback.
+## Where they are born keeps them in frame next to tall bosses
+## (docs/specs/readable-damage-numbers.md): a blade hit's number at the blade's
+## contact point, everything else at an anchor capped at anchor_max_height, and
+## consecutive numbers fanned out sideways along the camera's right.
 
 @export var player: Player
 ## Optional: source of debuff tick numbers.
@@ -16,17 +20,17 @@ var _free: Array[DamageNumber] = []
 ## Oldest first.
 var _active: Array[DamageNumber] = []
 var _last_spawned: DamageNumber = null
-var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## Position of the next number in the fan (see fan_slot()).
+var _fan_index: int = 0
 
 
 func _ready() -> void:
-	_rng.randomize()
 	for i: int in config.pool_size:
 		_create_number()
-	player.attack.enemy_hit.connect(_on_enemy_hit)
-	player.basic_ability.enemy_hit.connect(_on_enemy_hit)
-	player.ultimate_ability.enemy_hit.connect(_on_enemy_hit)
-	player.air_slash.enemy_hit.connect(_on_enemy_hit)
+	player.attack.enemy_hit.connect(_on_blade_hit)
+	player.basic_ability.enemy_hit.connect(_on_ability_hit.bind(player.basic_ability))
+	player.ultimate_ability.enemy_hit.connect(_on_ability_hit.bind(player.ultimate_ability))
+	player.air_slash.enemy_hit.connect(_on_anchored_hit)
 	player.afflictions.burst_hit.connect(_on_affliction_burst_hit)
 	player.afflictions.triggered.connect(_on_affliction_triggered)
 	if registry != null:
@@ -76,30 +80,75 @@ func _on_number_finished(number: DamageNumber) -> void:
 	_free.append(number)
 
 
-func _on_enemy_hit(enemy: Enemy, applied: float, is_crit: bool) -> void:
-	spawn(applied, is_crit, enemy.global_position + _spawn_offset(enemy))
+## Contact point of the blade on `enemy`, contact_rise above it.
+func contact_spawn_point(enemy: Enemy) -> Vector3:
+	return player.hit_impact_vfx.contact_point(enemy) + Vector3.UP * config.contact_rise
+
+
+## On the enemy's axis, at its head (spawn_height grows with the body scale)
+## but never above anchor_max_height, so a tall boss keeps it in frame.
+func anchor_spawn_point(enemy: Enemy) -> Vector3:
+	var height: float = minf(config.spawn_height * enemy.get_body_scale(), config.anchor_max_height)
+	return enemy.global_position + Vector3.UP * height
+
+
+## Offset of the next number in the fan: slot × fan_step along the camera's
+## right (horizontal), and |slot| × fan_rise_step up. Advances the fan.
+func next_fan_offset() -> Vector3:
+	var slot: int = fan_slot(_fan_index, config.fan_slots)
+	_fan_index = (_fan_index + 1) % config.fan_slots
+	return _camera_right() * (slot * config.fan_step) + Vector3.UP * (absi(slot) * config.fan_rise_step)
+
+
+## 0, 1, -1, 2, -2, … for index 0, 1, 2, 3, 4, …, wrapping every `slots`.
+static func fan_slot(index: int, slots: int) -> int:
+	var wrapped: int = index % slots
+	var step: int = floori((wrapped + 1) / 2.0)
+	return step if wrapped % 2 == 1 else -step
+
+
+func _camera_right() -> Vector3:
+	var camera: Camera3D = get_viewport().get_camera_3d()
+	if camera == null:
+		return Vector3.RIGHT
+	var right: Vector3 = camera.global_basis.x
+	right.y = 0.0
+	if right.is_zero_approx():
+		return Vector3.RIGHT
+	return right.normalized()
+
+
+## Basic combo: the number is born where the blade crossed the enemy.
+func _on_blade_hit(enemy: Enemy, applied: float, is_crit: bool) -> void:
+	spawn(applied, is_crit, contact_spawn_point(enemy) + next_fan_offset())
+
+
+## Abilities that show the hit impact (Sheathe, Spin) use the contact point;
+## the rest (e.g. Thrust) the anchor.
+func _on_ability_hit(enemy: Enemy, applied: float, is_crit: bool, ability: AbilityComponent) -> void:
+	var data: AbilityData = ability.get_data()
+	if data != null and data.shows_hit_impact:
+		_on_blade_hit(enemy, applied, is_crit)
+	else:
+		_on_anchored_hit(enemy, applied, is_crit)
+
+
+func _on_anchored_hit(enemy: Enemy, applied: float, is_crit: bool) -> void:
+	spawn(applied, is_crit, anchor_spawn_point(enemy) + next_fan_offset())
 
 
 ## Area damage of an Affliction burst (docs/specs/affliction.md): never critical,
 ## in the color of its bar.
 func _on_affliction_burst_hit(enemy: Enemy, applied: float, type: AfflictionData) -> void:
-	spawn(applied, false, enemy.global_position + _spawn_offset(enemy), type.damage_number_material)
+	spawn(applied, false, anchor_spawn_point(enemy) + next_fan_offset(), type.damage_number_material)
 
 
 ## Every Affliction says its name in its color each time its bar fills
 ## (docs/specs/affliction-name-popup.md §7).
 func _on_affliction_triggered(enemy: Enemy, type: AfflictionData) -> void:
-	spawn_text(type.title, enemy.global_position + _spawn_offset(enemy), type.text_material())
+	spawn_text(type.title, anchor_spawn_point(enemy) + next_fan_offset(), type.text_material())
 
 
 ## Italic, and in the status color when it has one (e.g. poison).
 func _on_enemy_debuff_ticked(enemy: Enemy, amount: float, data: DebuffData) -> void:
-	spawn(amount, false, enemy.global_position + _spawn_offset(enemy), data.damage_number_material, true)
-
-
-## Above the enemy's head: spawn_height grows with bigger bodies (bosses).
-func _spawn_offset(enemy: Enemy) -> Vector3:
-	return Vector3(
-		_rng.randf_range(-config.spread, config.spread),
-		config.spawn_height * enemy.get_body_scale(),
-		_rng.randf_range(-config.spread, config.spread))
+	spawn(amount, false, anchor_spawn_point(enemy) + next_fan_offset(), data.damage_number_material, true)

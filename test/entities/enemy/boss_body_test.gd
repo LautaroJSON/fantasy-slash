@@ -96,7 +96,9 @@ func test_ac149_the_shield_bash_reaches_a_big_body_beside_the_line() -> void:
 	assert_float(grunt.health.current_health).is_equal_approx(grunt.health.max_health, 0.0001)
 
 
-func test_ac150_damage_numbers_appear_above_a_big_body() -> void:
+## Replaces AC150 (numbers above a big body's head, out of frame on the Titan):
+## readable-damage-numbers.md, AC996.
+func test_ac996_a_combo_hit_on_a_big_body_shows_its_number_at_the_contact_point() -> void:
 	var numbers: DamageNumberPool = auto_free(DamageNumberPool.new())
 	numbers.player = _player
 	numbers.config = NUMBER_CONFIG
@@ -106,4 +108,6 @@ func test_ac150_damage_numbers_appear_above_a_big_body() -> void:
 	var big: Enemy = _spawn(BIG_STATS, Vector3(0.0, 0.0, -2.5))
 	ComboDriver.strike(_player, NO_CRIT_ROLL)
 	var number: DamageNumber = numbers.get_last_spawned()
-	assert_float(number.global_position.y).is_equal_approx(big.global_position.y + NUMBER_CONFIG.spawn_height * BIG_STATS.body_scale, 0.001)
+	var contact: Vector3 = _player.hit_impact_vfx.contact_point(big)
+	assert_float(number.global_position.y).is_equal_approx(contact.y + NUMBER_CONFIG.contact_rise, 0.001)
+	assert_float(number.global_position.y).is_less(big.global_position.y + NUMBER_CONFIG.anchor_max_height)

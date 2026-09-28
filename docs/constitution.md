@@ -47,7 +47,7 @@ El juego es un **hack and slash roguelike en tercera persona para PC, jugado con
   |---|---|---|
   | Jugador (cuerpo: torso, cabeza, manos y pies flotantes, una sola silueta) | Humanoide low-poly (`LowPolyHumanoid`) | **Blanco**: `Color(1, 1, 1)` |
   | Arma del jugador (espada y escudo del Guerrero) | Mallas generadas `knight_sword.res` y `knight_shield.res` | Colores de sus materiales en `materials/weapons/` (no reservados) |
-  | Arma del jugador (mandoble del Berserker) | Modelo `falchion.obj` | Colores de sus materiales en `materials/weapons/` (no reservados) |
+  | Arma del jugador (mandoble del Berserker) | Malla generada `knight_greatsword.res` | Colores de sus materiales en `materials/weapons/` (no reservados) |
   | Arma del jugador (katana del Samurái, con funda) | Modelo `katana.glb` (mallas derivadas) | Textura de paleta de su material en `materials/weapons/` (no reservada) |
   | Estela del arma (ataques y habilidades, todas las armas) | Ribbon procedural (`ImmediateMesh`) | **Blanco translúcido**: `Color(1, 1, 1)`, unshaded, alpha ≤ 0.5 en la cabeza y 0 en la cola |
   | Corte de viento (VFX de Envainar y del Tajo aéreo del Berserker): paredes en V, chispas y destello | `BoxMesh` / `SphereMesh`, partículas | **Blanco**: `Color(1, 1, 1)`, unshaded, blend aditivo, alpha ≤ 0.5 |
@@ -216,6 +216,7 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 ### Historial
 
+- **4.22.1** (2026-09-27): Principio II: tabla de colores: el mandoble del Berserker pasa a ser la malla generada `knight_greatsword.res`, de la familia de la espada y el escudo del Guerrero (ver `berserker-greatsword.md`).
 - **4.22.0** (2026-09-27): Principio II: chispas del bloqueo del escudo en la lista de blancos compartidos, y colores de Aturdido, Retado y Triunfo y del polvo de la Carga en el registro. Principio III: estado aturdido (`STUN`), bloqueo frontal con el atacante del golpe y buffs globales que vencen con todos sus stacks. Principio VII: hit lag de los golpes de habilidad no canalizados y estela solo mientras la hoja barre (ver `warrior-abilities-rework.md`).
 - **4.21.0** (2026-09-27): Principio II: fila nueva en la tabla de colores para el impacto de golpe (fragmento de luz, halo, destello y chispas en blanco aditivo, alpha ≤ 0.5, dibujado por encima), que comparte el blanco con los demás VFX translúcidos; el crítico usa el mismo blanco (ver `hit-impact-vfx.md`).
 - **4.20.2** (2026-09-27): Principio II: la fila de textos flotantes de Aflicción cubre el nombre de todas las Aflicciones al aplicarse (ver `affliction-name-popup.md` §7).
@@ -297,4 +298,4 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 ---
 
-**Version**: 4.22.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-27
+**Version**: 4.22.1 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-27

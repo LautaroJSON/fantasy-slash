@@ -56,8 +56,10 @@ func test_ac32_normal_hit_shows_a_plain_number_above_the_enemy() -> void:
 	assert_str(number.get_text()).is_equal("15")
 	assert_bool(number.is_crit()).is_false()
 	assert_vector(number.scale).is_equal_approx(Vector3.ONE * CONFIG.normal_scale, Vector3(0.001, 0.001, 0.001))
-	assert_float(number.global_position.y).is_equal_approx(enemy.global_position.y + CONFIG.spawn_height, 0.001)
-	assert_float(Vector2(number.global_position.x - enemy.global_position.x, number.global_position.z - enemy.global_position.z).length()).is_less_equal(CONFIG.spread * sqrt(2.0) + 0.001)
+	# readable-damage-numbers.md: born at the blade's contact point (first number
+	# of the fan: no sideways offset), no longer above the head.
+	var expected: Vector3 = _player.hit_impact_vfx.contact_point(enemy) + Vector3.UP * CONFIG.contact_rise
+	assert_vector(number.global_position).is_equal_approx(expected, Vector3.ONE * 0.001)
 
 
 func test_ac33_critical_hit_shows_a_bigger_number() -> void:
