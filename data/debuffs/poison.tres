@@ -7,7 +7,7 @@
 [resource]
 script = ExtResource("1_script")
 id = &"poison"
-duration = 5.0
+duration = 3.0
 tick_interval = 0.5
 max_stacks = 3
 stack_mode = 1

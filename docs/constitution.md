@@ -28,7 +28,7 @@ El juego es un **hack and slash roguelike en tercera persona para PC, jugado con
 - Mallas primitivas: `CapsuleMesh`, `BoxMesh` (y, si hace falta, otras `PrimitiveMesh` nativas como `SphereMesh`, `CylinderMesh`, `PlaneMesh`).
 - **Mallas procedurales solo para VFX** (desde 3.1.0): efectos visuales que siguen una trayectoria (p. ej. la estela del arma) pueden construirse con `ImmediateMesh` desde buffers preasignados (Principio V), con material `.tres` compartido y sin texturas. No se usan para entidades ni escenario.
 - **Mallas planas procedurales para avisos enemigos** (desde 4.5.0): los avisos de ataque enemigo en el piso pueden usar sectores circulares construidos como `ArrayMesh` **una vez al cargar** (cuando el pool crea el enemigo), con material `.tres` compartido y sin texturas. Círculos y franjas siguen siendo primitivas (`CylinderMesh`, `BoxMesh`). Desde 4.24.0 la regla también cubre los **VFX de habilidades del jugador**: mallas planas `ArrayMesh` construidas una vez al cargar el nodo del VFX, con material `.tres` compartido y sin texturas (hoy la media luna del corte de Envainar, ver `sheathe-visual-rework.md`).
-- **Personaje procedural** (desde 4.9.0): el cuerpo del jugador puede ser `LowPolyHumanoid`, un asset de script que vive en `assets/models/characters/low_poly_humanoid/` con su `SOURCE.md`. Construye sus mallas (`ArrayMesh` de normales planas) y su `AnimationPlayer` **una vez**, en `_ready`, y se usa solo vía su escena adaptadora (`entities/player/humanoid.tscn`), con materiales `.tres` compartidos. Sus poses y tiempos de animación son datos del asset (como los keyframes de un `.glb`); los valores de gameplay que dependen de ellos viven en Resources. Puede tener **perfiles de animación** (uno por clase, desde 4.10.1): todas sus librerías se construyen una vez al cargar, y elegir un perfil solo selecciona una librería ya construida.
+- **Personaje procedural** (desde 4.9.0): el cuerpo del jugador puede ser `LowPolyHumanoid`, un asset de script que vive en `assets/models/characters/low_poly_humanoid/` con su `SOURCE.md`. Construye sus mallas (`ArrayMesh` de normales planas) y su `AnimationPlayer` **una vez**, en `_ready`, y se usa solo vía su escena adaptadora (`entities/player/humanoid.tscn`), con materiales `.tres` compartidos. Sus poses y tiempos de animación son datos del asset (como los keyframes de un `.glb`); los valores de gameplay que dependen de ellos viven en Resources. Puede tener **perfiles de animación** (uno por clase, desde 4.10.1): todas sus librerías se construyen una vez al cargar, y elegir un perfil solo selecciona una librería ya construida. Desde 4.27.0, al construirlas puede **hornear** sus clips (claves densas por cúbica monótona, superposición y el brazo del arma resuelto por IK sobre los arcos del perfil) y sumar una capa en vivo de resortes y pies clavados que mueve solo lo que el motor no mezcla (Principio VIII y [estándar de animación](animation-standard.md)).
 - **Partículas y luces breves solo para VFX** (desde 3.4.0): `CPUParticles3D` con mallas primitivas y material `.tres` compartido, sin texturas, con sus parámetros en un Resource; y `OmniLight3D` que se enciende y apaga en décimas de segundo. No se usan para entidades ni escenario.
 - **Imágenes residuales del jugador** (desde 4.15.0): un VFX puede mostrar copias de las mallas del cuerpo del humanoide (las mismas `ArrayMesh`), con un material `.tres` translúcido compartido y un pool creado una vez al cargar. Duran décimas de segundo y no son entidades (ver `dash-feel.md`).
 - **Íconos de estado** (desde 4.16.0): los buffs y debuffs se muestran con íconos SVG monocromos importados en `assets/icons/<categoría>/`, con su `SOURCE.md` (origen, licencia y crédito) y sin fondo propio. Solo se usan en la UI 2D (`StatusIconView`) y se referencian desde los Resources de estado (`DebuffData.icon`, `BuffData.icon`), sin escena adaptadora. Se tiñen con el color del estado (`icon_color`), nunca en blanco puro (ver `status-icons.md`).
@@ -171,6 +171,21 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 **Rationale:** en un hack and slash, el peso de cada golpe hace que pelear sea una decisión: golpear al aire tiene costo, y encadenar o cortar el combo es expresivo. Un hit lag local mantiene el resto del mundo vivo y legible.
 
+### VIII. Animación
+
+Toda animación del jugador se diseña, se construye y se verifica según el **[estándar de animación](animation-standard.md)** (desde 4.27.0). Ese documento es el manual: arquitectura, timing, poses, flujo de trabajo, herramientas y checklist. Estas son sus reglas no negociables:
+
+- **Tres capas con dueño:**
+  - las **poses clave del cuerpo** y los **arcos del arma** (`SlashArc`) son datos del perfil de la clase y se **hornean** en los clips al cargar: el cuerpo con cúbica monótona y superposición, y el brazo del arma con IK de dos huesos;
+  - la **capa en vivo** (`HumanoidMotion`) solo agrega movimiento secundario (resortes) y pies clavados.
+- **Nada en vivo pisa lo que el motor mezcla.** Una pose que tiene que verse al cancelar un golpe (dash, salto, daño o habilidad) vive dentro del clip. Si se calcula, se hornea.
+- **Combos que fluyen:** cada golpe empieza donde terminó el anterior (péndulo), los pies alternan, el ritmo varía entre golpes y cada golpe termina sosteniendo su remate en vez de volver a la guardia.
+- **Timing de acción:** carga legible con tensión, golpe de 2 a 3 cuadros, follow-through largo que se pasa apenas y se asienta, y estocada como impulso en los cuadros del golpe. Los eventos del clip siguen en los tiempos del `AttackComboStep` (Principio VII).
+- **Verificación visual obligatoria:** todo cambio de animación se revisa con **video antes/después** (a velocidad real y al 30 %) de la herramienta de captura y con **escenarios de cancelación** medidos, además de sus tests y el smoke test.
+- **VFX de golpe:** siguen el lenguaje compartido del estándar (cintas con sección en cruz, niveles 1–3 por fuerza del golpe y tablas deterministas), dentro de los colores del Principio II.
+
+**Rationale:** la calidad de una animación no se ve en una pose suelta ni en un número: se ve en el movimiento y en cómo se corta. Fijar la arquitectura en capas evita los parches que se pelean con el motor, y fijar el flujo (video y escenarios) hace que cada cambio se juzgue en movimiento.
+
 ---
 
 ## Technology Stack
@@ -201,6 +216,7 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
    - [ ] **Performance (V):** sin allocations ni búsquedas de nodos por frame. Las entidades frecuentes usan pool. Capas y máscaras de colisión mínimas y explícitas.
    - [ ] **Input (VI):** solo acciones del InputMap, con bindings de teclado/mouse y de mando. Pantallas nuevas navegables con mando. Prompts desde datos.
    - [ ] **Combate (VII):** golpes comprometidos con cancel point; sin `Engine.time_scale` para feedback de impacto; auto-apuntado al enemigo más cercano salvo que los datos indiquen otra cosa.
+   - [ ] **Animación (VIII):** se cumple el checklist del [estándar de animación](animation-standard.md) (§9). Hay video antes/después y escenarios de cancelación medidos, y nada en vivo pisa articulaciones que el motor mezcla.
    - [ ] **Calidad:** el proyecto abre sin errores ni warnings de tipado nuevos. Los tests de los criterios de aceptación de la spec están en verde y la suite completa sigue en verde.
 4. **Cierre:** la spec se marca como *Implementada* y cualquier violación justificada (ver *Governance*) queda registrada en ella.
 
@@ -219,6 +235,7 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 ### Historial
 
+- **4.27.0** (2026-09-28): se agrega el Principio VIII, *Animación*, que remite al [estándar de animación](animation-standard.md): tres capas (poses y arcos horneados en los clips, capa en vivo solo de resortes y pies), nada en vivo pisa lo que el motor mezcla, combos que fluyen, timing de acción, verificación con video antes/después y escenarios de cancelación, y lenguaje compartido de los VFX de golpe. Principio II: el personaje procedural puede hornear sus clips al cargar (claves densas, IK del brazo). Se suma al checklist de review (ver `samurai-motion-poc.md` y `sheathe-vortex-vfx.md`).
 - **4.26.0** (2026-09-28): Principio II: la fila del corte circular pasa a ser el vórtice de Contragolpe (cintas en espiral y en embudo, remolino en el piso, chispas y destello en blanco aditivo, alpha ≤ 0.5, piso ≤ 0.3, con desvanecido cerca de la cámara); el tierra registrado también colorea su polvo (ver `riposte-levels.md`).
 - **4.25.0** (2026-09-28): Principio II: se registran como colores no reservados el índigo del ícono de Compensación y el naranja fuego del de Netsui; "Envainar: mejorado" pasa a otorgarlo Hosho (ver `sheathe-upgrades-rework.md`).
 - **4.24.0** (2026-09-28): Principio II: las mallas planas `ArrayMesh` construidas una vez al cargar se permiten también para VFX de habilidades del jugador (la media luna de Envainar); la fila del corte de viento suma la línea en el piso, los tramos, la media luna con su eco y el brillo de carga de Envainar, que comparte el blanco; se registra el gris muy oscuro de la grieta del corte como color no reservado (ver `sheathe-visual-rework.md`).
@@ -305,4 +322,4 @@ El combate cuerpo a cuerpo tiene peso: cada golpe compromete, avanza e impacta (
 
 ---
 
-**Version**: 4.26.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-28
+**Version**: 4.27.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-28

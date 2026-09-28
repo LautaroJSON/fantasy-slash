@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="DebuffData" format=3]
+[gd_resource type="Resource" script_class="DebuffData" format=3 uid="uid://i27iojf25rcy"]
 
-[ext_resource type="Script" path="res://resources/debuff_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/icons/status/bleeding_wound.svg" id="9_glyph"]
+[ext_resource type="Script" uid="uid://dncgyekgwjt5n" path="res://resources/debuff_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://84rxrpnjtrhm" path="res://assets/icons/status/bleeding_wound.svg" id="9_glyph"]
 [ext_resource type="Material" path="res://materials/afflictions/bleeding_damage_number_material.tres" id="10_number"]
 
 [resource]
