@@ -61,3 +61,33 @@ El combo del Samurái pasa a ser un péndulo: cada corte empieza donde terminó 
 - **Varios arcos por golpe:** carga, corte y chiburi. Cada arco manda desde el primer tiempo de su `timing`. `edge_flip` pone el lomo adelante en las cargas, `radius_timing` hace la estocada y `SlashArc.fixed()` sostiene la hoja quieta.
 - **Mezclas:** entre arcos de un mismo golpe, 0.05 s (`arc_blend`). Al salir del combo, 0.24 s (`exit_blend`).
 - **Sin la capa** (`motion_enabled = false`), el perfil arma los cinco cortes anteriores. La herramienta de captura los compara con sus tiempos originales (`tools/samurai_combo_classic.tres`).
+
+## Adenda 2: más dinámico, y la mano fuera de lugar (2026-09-28)
+
+**Ritmo.** Se aplican técnicas de animación de acción:
+- **Carga legible con tensión:** la hoja se pasa un poco de su marca y se sostiene 1–2 cuadros.
+- **Golpe en 2–3 cuadros:** la hoja cruza casi todo el arco (f 0.15 → 1.7) entre el soltado y 18 ms después del impacto. La estela hace de smear.
+- **Follow-through largo:** frena de a poco, se pasa apenas y se asienta.
+- **Poses más extremas** en la carga y el remate (torsión de hasta 74° y más inclinación).
+- **Estocada concentrada** en los cuadros del golpe: un impulso de ~35 ms, no un deslizamiento.
+- **Latigazo de la punta más marcado:** `tip_lag` 0.02.
+- **Resortes más firmes** (el cuerpo no flota) y menos superposición.
+
+La helper `_cut()` de `samurai_profile.gd` arma ese perfil de tiempos a partir de tres datos: soltado, impacto y fin.
+
+Tiempos nuevos (impacto / encadenado / fin):
+
+| Corte | Tiempos |
+|---|---|
+| 1 | 0.11–0.15 / 0.18 / 0.36 |
+| 2 | 0.065–0.10 / 0.13 / 0.28 |
+| 3 | 0.105–0.145 / 0.18 / 0.36 |
+| 4 | 0.075–0.11 / 0.12 / 0.24 |
+| 5 | 0.115–0.15 / 0.40 / 0.72 |
+
+El combo completo pasa de ~1.3 s a ~1.0 s hasta el remate.
+
+**La mano fuera de lugar.**
+- **Causa:** al salir de un golpe, el animador mezcla 0.35 s desde la última pose del clip del golpe. Los ángulos del brazo de esos clips no coinciden con dónde el arco dejaba la mano. La mezcla de salida de la capa duraba menos que ese fundido (0.24 s), así que al terminar la mano saltaba a una mezcla que apuntaba a otro lado.
+- **Arreglo:** durante `exit_hold` (0.45 s), la muñeca sigue el brazo del clip nuevo solo, encadenado sobre el torso ya mezclado (`HumanoidMotion._clip_wrist()`). Cuando termina, coincide con la animación.
+- **Verificación:** en una pelea simulada de 40 s con golpes, dashes y Envainar, el desvío después de cada golpe es 0°.

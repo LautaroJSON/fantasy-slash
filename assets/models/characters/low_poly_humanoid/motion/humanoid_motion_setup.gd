@@ -17,9 +17,12 @@ var spring_max_angle: float = deg_to_rad(16.0)
 var switch_blend: float = 0.09
 ## Seconds the grip blends back to the clip when the next clip has no arcs
 ## (leaving the combo for the guard or locomotion).
-var exit_blend: float = 0.24
+var exit_blend: float = 0.2
 ## Seconds the grip blends when one arc hands over to the next in a clip.
 var arc_blend: float = 0.05
+## Seconds the grip keeps following the new clip's own arm after leaving the
+## cuts: longer than the animator's fade out of a strike (attack_exit_blend).
+var exit_hold: float = 0.45
 ## A planted foot lets go when the body gets this far from it (metres).
 var plant_max_stretch: float = 0.8
 ## Seconds a released foot takes to step back into its pose.

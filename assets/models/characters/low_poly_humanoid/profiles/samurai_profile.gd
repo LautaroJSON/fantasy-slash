@@ -77,8 +77,8 @@ const CHARGE_SINK: Array[Dictionary] = [
 ## Succession of the body in the cuts (poc/samurai-motion): seconds each
 ## joint trails the hips. The right arm is driven by the cut arcs.
 const OVERLAP := {
-	"hips": 0.0, "torso": 0.012, "neck": 0.026,
-	"shoulder_l": 0.02, "elbow_l": 0.02, "wrist_l": 0.02,
+	"hips": 0.0, "torso": 0.008, "neck": 0.016,
+	"shoulder_l": 0.012, "elbow_l": 0.012, "wrist_l": 0.012,
 }
 
 var _h: LowPolyHumanoid
@@ -102,63 +102,62 @@ const DIR_FLICK := Vector3(0.72, -0.66, -0.1)
 ## The Nagare cuts as arcs of the grip around the right shoulder (root space:
 ## forward -Z, right +X, up +Y), with where the blade is at each moment.
 ## f = 0 start, 1 middle (the hit, for a cut), 2 end.
+##
+## Timing follows action-game practice: a readable load that pulls slightly
+## past its mark and holds a couple of frames (tension), then the blade crosses
+## the whole arc in 2-3 frames (f 0.15 -> 1.7, the trail is the smear), then a
+## long decelerating follow-through that overshoots a hair and settles.
 func build_motion() -> HumanoidMotionSetup:
 	var m := HumanoidMotionSetup.new()
-	m.springs = {"neck": Vector2(4.5, 0.42), "torso": Vector2(6.5, 0.55)}
+	m.springs = {"neck": Vector2(7.0, 0.5), "torso": Vector2(10.0, 0.65)}
 
-	# 1. Kesa-giri: the load rises up the right side (spine first), the cut
-	# falls across the front to low left.
+	# 1. Kesa-giri.
 	var load_1 := _arc(DIR_GUARD, Vector3(0.95, 0.15, 0.0), DIR_HIGH_RIGHT, 0.32, Vector3(-0.06, -0.08, 0),
-		[Vector2(0.0, 0.0), Vector2(0.05, 0.6), Vector2(0.1, 1.5), Vector2(0.125, 2.0)])
+		[Vector2(0.0, 0.0), Vector2(0.035, 0.7), Vector2(0.07, 1.85), Vector2(0.09, 2.0)])
 	load_1.edge_flip = true
-	load_1.blend_in = Vector2(0.0, 0.05)
-	var cut_1 := _arc(DIR_HIGH_RIGHT, Vector3(-0.05, 0.1, -1), DIR_LOW_LEFT, 0.34, Vector3(-0.1, -0.04, 0),
-		[Vector2(0.125, 0.0), Vector2(0.17, 1.0), Vector2(0.21, 1.65), Vector2(0.27, 1.97), Vector2(0.34, 2.02), Vector2(0.46, 2.0)])
+	load_1.blend_in = Vector2(0.0, 0.035)
+	var cut_1 := _cut(DIR_HIGH_RIGHT, Vector3(-0.05, 0.1, -1), DIR_LOW_LEFT, 0.35, Vector3(-0.1, -0.04, 0), 0.09, 0.115, 0.36)
 	m.arcs[&"attack_1"] = [load_1, cut_1]
 
-	# 2. Kiriage: back up the same line to high right.
-	m.arcs[&"attack_2"] = [_arc(DIR_LOW_LEFT, Vector3(0.05, -0.1, -1), DIR_HIGH_RIGHT, 0.33, Vector3(-0.08, -0.05, 0),
-		[Vector2(0.0, 0.0), Vector2(0.045, 0.1), Vector2(0.1, 1.0), Vector2(0.135, 1.65), Vector2(0.19, 1.97), Vector2(0.26, 2.02), Vector2(0.36, 2.0)])]
+	# 2. Kiriage: a short coil (the blade sinks a little further) and up.
+	var cut_2 := _cut(DIR_LOW_LEFT, Vector3(0.05, -0.1, -1), DIR_HIGH_RIGHT, 0.34, Vector3(-0.08, -0.05, 0), 0.045, 0.07, 0.28)
+	m.arcs[&"attack_2"] = [cut_2]
 
-	# 3. Yokogiri: drops to the right side while the hips wind, then sweeps
-	# level to far left.
-	var drop_3 := _arc(DIR_HIGH_RIGHT, Vector3(0.85, 0.45, 0.3), DIR_SIDE_RIGHT, 0.33, Vector3(-0.08, -0.08, 0),
-		[Vector2(0.0, 0.0), Vector2(0.05, 0.9), Vector2(0.1, 2.0)])
-	var sweep_3 := _arc(DIR_SIDE_RIGHT, Vector3(0.05, 0.0, -1), DIR_FAR_LEFT, 0.36, Vector3(-0.1, -0.12, 0),
-		[Vector2(0.1, 0.0), Vector2(0.13, 0.35), Vector2(0.165, 1.0), Vector2(0.2, 1.6), Vector2(0.26, 1.97), Vector2(0.34, 2.03), Vector2(0.46, 2.0)])
+	# 3. Yokogiri: the drop winds the hips, then the level sweep.
+	var drop_3 := _arc(DIR_HIGH_RIGHT, Vector3(0.85, 0.45, 0.3), DIR_SIDE_RIGHT, 0.34, Vector3(-0.08, -0.08, 0),
+		[Vector2(0.0, 0.0), Vector2(0.04, 1.3), Vector2(0.075, 1.95), Vector2(0.09, 2.0)])
+	var sweep_3 := _cut(DIR_SIDE_RIGHT, Vector3(0.05, 0.0, -1), DIR_FAR_LEFT, 0.37, Vector3(-0.1, -0.12, 0), 0.09, 0.11, 0.36)
 	m.arcs[&"attack_3"] = [drop_3, sweep_3]
 
-	# 4. Tsuki: the blade swings back to the front while the grip pulls in to
-	# the right hip, then only the radius moves: the thrust.
+	# 4. Tsuki: back to the front while the grip pulls in, then it shoots out.
 	var chamber_4 := _arc(DIR_FAR_LEFT, Vector3(-0.55, -0.05, -0.45), DIR_FORWARD, 0.36, Vector3(-0.04, -0.16, 0),
-		[Vector2(0.0, 0.0), Vector2(0.04, 0.9), Vector2(0.075, 2.0)])
-	chamber_4.radius_timing = PackedVector2Array([Vector2(0.0, 0.36), Vector2(0.075, 0.14)])
+		[Vector2(0.0, 0.0), Vector2(0.03, 1.1), Vector2(0.055, 1.95), Vector2(0.065, 2.0)])
+	chamber_4.radius_timing = PackedVector2Array([Vector2(0.0, 0.36), Vector2(0.065, 0.12)])
 	var thrust_4 := SlashArc.fixed(DIR_FORWARD, Vector3(0, -1, 0))
 	thrust_4.center_offset = Vector3(-0.04, -0.16, 0)
-	thrust_4.timing = PackedVector2Array([Vector2(0.075, 0.0), Vector2(0.3, 0.0)])
-	thrust_4.radius_timing = PackedVector2Array([Vector2(0.075, 0.14), Vector2(0.1, 0.3), Vector2(0.12, 0.44), Vector2(0.3, 0.42)])
+	thrust_4.timing = PackedVector2Array([Vector2(0.065, 0.0), Vector2(0.24, 0.0)])
+	thrust_4.radius_timing = PackedVector2Array([Vector2(0.065, 0.12), Vector2(0.07, 0.13), Vector2(0.08, 0.36),
+		Vector2(0.09, 0.47), Vector2(0.12, 0.44), Vector2(0.24, 0.43)])
 	m.arcs[&"attack_4"] = [chamber_4, thrust_4]
 
-	# 5. Karatake-wari: raise over the head (spine first), split straight down,
-	# hold the zanshin, flick the blood off to the right (chiburi) and settle
-	# into the low guard.
+	# 5. Karatake-wari: raise (spine first) with a held beat on top, split,
+	# zanshin, chiburi and back to the low guard.
 	var raise_5 := _arc(DIR_FORWARD, Vector3(0.0, 0.7, -0.7), DIR_OVERHEAD, 0.33, Vector3(-0.12, 0.0, 0),
-		[Vector2(0.0, 0.0), Vector2(0.05, 0.9), Vector2(0.1, 2.0)])
+		[Vector2(0.0, 0.0), Vector2(0.045, 1.2), Vector2(0.08, 1.9), Vector2(0.1, 2.0)])
 	raise_5.edge_flip = true
-	var split_5 := _arc(DIR_OVERHEAD, Vector3(0.0, 0.05, -1), DIR_DOWN_FRONT, 0.35, Vector3(-0.14, 0.02, 0),
-		[Vector2(0.1, 0.0), Vector2(0.125, 0.4), Vector2(0.145, 1.0), Vector2(0.17, 1.6), Vector2(0.2, 1.97), Vector2(0.26, 2.02), Vector2(0.42, 2.0)])
+	var split_5 := _cut(DIR_OVERHEAD, Vector3(0.0, 0.05, -1), DIR_DOWN_FRONT, 0.36, Vector3(-0.14, 0.02, 0), 0.1, 0.12, 0.36)
 	var chiburi_5 := _arc(DIR_DOWN_FRONT, Vector3(0.5, -0.72, -0.48), DIR_FLICK, 0.35, Vector3(-0.1, 0.0, 0),
-		[Vector2(0.44, 0.0), Vector2(0.47, 1.0), Vector2(0.51, 1.9), Vector2(0.55, 2.02), Vector2(0.6, 2.0)])
-	chiburi_5.blend_out = Vector2(0.62, 0.85)
+		[Vector2(0.38, 0.0), Vector2(0.395, 0.6), Vector2(0.41, 1.6), Vector2(0.43, 2.03), Vector2(0.48, 2.0)])
+	chiburi_5.blend_out = Vector2(0.5, 0.7)
 	m.arcs[&"attack_5"] = [raise_5, split_5, chiburi_5]
 
 	# The back foot stays on the floor while the other one steps in.
 	m.plants = {
-		&"attack_1": [["r", 0.0, 0.26]],
-		&"attack_2": [["l", 0.0, 0.2]],
-		&"attack_3": [["r", 0.0, 0.28]],
-		&"attack_4": [["l", 0.0, 0.2]],
-		&"attack_5": [["r", 0.06, 0.45]],
+		&"attack_1": [["r", 0.0, 0.2]],
+		&"attack_2": [["l", 0.0, 0.15]],
+		&"attack_3": [["r", 0.0, 0.2]],
+		&"attack_4": [["l", 0.0, 0.15]],
+		&"attack_5": [["r", 0.06, 0.36]],
 	}
 	return m
 
@@ -168,9 +167,19 @@ func _arc(start: Vector3, mid: Vector3, end: Vector3, radius: float, center_offs
 	arc.radius = radius
 	arc.center_offset = center_offset
 	arc.timing = PackedVector2Array(timing)
+	arc.tip_lag = 0.02
+	arc.max_lag = 0.75
 	return arc
 
 
+## A cut released at `from`: it crosses the front (f = 1) at `hit` and has
+## swept almost all of its arc two frames later; then a long follow-through
+## that overshoots a hair and settles by `until`.
+func _cut(start: Vector3, mid: Vector3, end: Vector3, radius: float, center_offset: Vector3, from: float, hit: float, until: float) -> SlashArc:
+	var lead: float = hit - from
+	return _arc(start, mid, end, radius, center_offset, [
+		Vector2(from, 0.0), Vector2(from + lead * 0.45, 0.15), Vector2(hit, 1.0), Vector2(hit + 0.018, 1.7),
+		Vector2(hit + 0.05, 1.93), Vector2(hit + 0.11, 2.03), Vector2(until, 2.0)])
 func build(humanoid: LowPolyHumanoid) -> AnimationLibrary:
 	_h = humanoid
 	var lib := AnimationLibrary.new()
@@ -735,71 +744,79 @@ func _flow(legs: Dictionary, yaw: float, torso: Vector3, neck: Vector3, arm: Dic
 
 
 func _nagare_end_1() -> Dictionary:
-	return _flow(_stride(0.18), 24, Vector3(-24, 38, -10), Vector3(16, -58, 8), ARM_LOW_LEFT)
+	return _flow(_stride(0.19), 28, Vector3(-30, 48, -12), Vector3(20, -66, 8), ARM_LOW_LEFT)
 
 
 func _nagare_end_2() -> Dictionary:
-	return _flow(_stride_r(0.06), -22, Vector3(6, -36, -12), Vector3(-6, 52, 10), ARM_HIGH)
+	return _flow(_stride_r(0.06), -28, Vector3(10, -46, -14), Vector3(-8, 62, 10), ARM_HIGH)
 
 
 func _nagare_end_3() -> Dictionary:
-	return _flow(_stride(0.17), 34, Vector3(-16, 62, -12), Vector3(12, -86, 10), ARM_FAR_LEFT)
+	return _flow(_stride(0.19), 40, Vector3(-22, 72, -14), Vector3(14, -88, 10), ARM_FAR_LEFT)
 
 
 func _nagare_end_4() -> Dictionary:
-	return _flow(_stride_r(0.24), -18, Vector3(-14, -26, 0), Vector3(10, 40, 0), ARM_THRUST)
+	return _flow(_stride_r(0.28), -24, Vector3(-20, -32, 0), Vector3(14, 46, 0), ARM_THRUST)
 
 
+## Poses are pushed to their extremes (big twist and lean at the load and the
+## follow-through, deep strides) and timed like the arcs: a load that keeps
+## winding for a couple of frames (tension), the strike in 2-3 frames, a long
+## settle. The body keys at the strike land just before the blade (hips lead).
 func _add_nagare(lib: AnimationLibrary) -> void:
 	# 1. Kesa-giri: from the low guard the blade rises up the right side, over
 	# the shoulder, and falls to low left; the left foot steps in.
+	var load_1 := {"hips_pos": Vector3(0, -0.08, 0), "hip_l": Vector3(18, 12, -3), "knee_l": Vector3(-28, 0, 0)}
 	lib.add_animation("attack_1", _clip([
 		[0.0, _stance()],
-		[0.1, _flow({"hips_pos": Vector3(0, -0.06, 0), "hip_l": Vector3(16, 12, -3), "knee_l": Vector3(-24, 0, 0)},
-			-28, Vector3(-2, -34, 8), Vector3(2, 56, -6), ARM_HIGH)],
-		[0.17, _flow(_stride(0.14), -2, Vector3(-18, -4, -6), Vector3(12, 6, 4), ARM_FRONT)],
-		[0.24, _flow(_stride(0.18), 24, Vector3(-26, 40, -12), Vector3(16, -60, 8), ARM_LOW_LEFT)],
-		[0.46, _nagare_end_1()],
-	], false, false, _h.strike_events(0.16, 0.21, 0.25, 0.46), OVERLAP))
+		[0.07, _flow(load_1, -40, Vector3(0, -56, 10), Vector3(0, 74, -8), ARM_HIGH)],
+		[0.09, _flow(load_1, -44, Vector3(3, -62, 12), Vector3(-2, 80, -8), ARM_HIGH)],
+		[0.112, _flow(_stride(0.16), -4, Vector3(-22, -6, -6), Vector3(14, 8, 4), ARM_FRONT)],
+		[0.15, _flow(_stride(0.2), 30, Vector3(-34, 52, -14), Vector3(22, -70, 8), ARM_LOW_LEFT)],
+		[0.36, _nagare_end_1()],
+	], false, false, _h.strike_events(0.11, 0.15, 0.18, 0.36), OVERLAP))
 
-	# 2. Kiriage: back up the same line, low left to high right; the right foot
-	# steps through.
+	# 2. Kiriage: a short coil deeper into the low left, then back up the same
+	# line to high right; the right foot steps through.
 	lib.add_animation("attack_2", _clip([
 		[0.0, _nagare_end_1()],
-		[0.05, _flow(_stride(0.22), 30, Vector3(-30, 46, -8), Vector3(18, -66, 6), ARM_LOW_LEFT)],
-		[0.1, _flow(_stride_r(0.12), -4, Vector3(-8, -6, 10), Vector3(6, 8, -8), ARM_FRONT)],
-		[0.16, _flow(_stride_r(0.06), -22, Vector3(8, -38, -14), Vector3(-6, 54, 10), ARM_HIGH)],
-		[0.36, _nagare_end_2()],
-	], false, false, _h.strike_events(0.09, 0.13, 0.17, 0.36), OVERLAP))
+		[0.045, _flow(_stride(0.24), 36, Vector3(-38, 56, -8), Vector3(24, -74, 6), ARM_LOW_LEFT)],
+		[0.068, _flow(_stride_r(0.13), -4, Vector3(-10, -6, 12), Vector3(8, 8, -8), ARM_FRONT)],
+		[0.1, _flow(_stride_r(0.05), -30, Vector3(12, -50, -16), Vector3(-10, 66, 12), ARM_HIGH)],
+		[0.28, _nagare_end_2()],
+	], false, false, _h.strike_events(0.065, 0.1, 0.13, 0.28), OVERLAP))
 
-	# 3. Yokogiri: the blade drops from high right to the right side while the
-	# hips wind, then sweeps level to far left with the whole body; left foot.
+	# 3. Yokogiri: the blade drops to the right side while the hips wind hard,
+	# then sweeps level to far left with the whole body; left foot.
 	lib.add_animation("attack_3", _clip([
 		[0.0, _nagare_end_2()],
-		[0.1, _flow(_stride_r(0.1), -38, Vector3(-6, -60, 6), Vector3(4, 86, -4), ARM_WOUND)],
-		[0.165, _flow(_stride(0.15), 0, Vector3(-14, 0, -8), Vector3(10, 0, 6), ARM_FRONT)],
-		[0.24, _flow(_stride(0.17), 34, Vector3(-18, 66, -14), Vector3(12, -88, 10), ARM_FAR_LEFT)],
-		[0.46, _nagare_end_3()],
-	], false, false, _h.strike_events(0.15, 0.2, 0.24, 0.46), OVERLAP))
+		[0.07, _flow(_stride_r(0.12), -46, Vector3(-8, -70, 8), Vector3(6, 90, -6), ARM_WOUND)],
+		[0.09, _flow(_stride_r(0.13), -50, Vector3(-9, -74, 8), Vector3(6, 92, -6), ARM_WOUND)],
+		[0.108, _flow(_stride(0.17), 0, Vector3(-18, 0, -10), Vector3(12, 0, 6), ARM_FRONT)],
+		[0.145, _flow(_stride(0.2), 42, Vector3(-24, 76, -16), Vector3(16, -92, 12), ARM_FAR_LEFT)],
+		[0.36, _nagare_end_3()],
+	], false, false, _h.strike_events(0.105, 0.145, 0.18, 0.36), OVERLAP))
 
-	# 4. Tsuki: the blade comes back to the right hip and shoots straight out,
+	# 4. Tsuki: the blade comes back to the right hip and shoots straight out
 	# with a long lunge of the right leg; chains into the finisher.
 	lib.add_animation("attack_4", _clip([
 		[0.0, _nagare_end_3()],
-		[0.075, _flow(_stride(0.12), 8, Vector3(-8, 16, 2), Vector3(6, -22, 0), ARM_THRUST)],
-		[0.12, _flow(_stride_r(0.24), -18, Vector3(-14, -26, 0), Vector3(10, 40, 0), ARM_THRUST)],
-		[0.3, _nagare_end_4()],
-	], false, false, _h.strike_events(0.1, 0.14, 0.16, 0.3), OVERLAP))
+		[0.065, _flow(_stride(0.14), 14, Vector3(-6, 24, 2), Vector3(4, -30, 0), ARM_THRUST)],
+		[0.085, _flow(_stride_r(0.28), -24, Vector3(-20, -32, 0), Vector3(14, 46, 0), ARM_THRUST)],
+		[0.24, _nagare_end_4()],
+	], false, false, _h.strike_events(0.075, 0.11, 0.12, 0.24), OVERLAP))
 
-	# 5. Karatake-wari: from the thrust the blade rises over the head and splits
-	# straight down with a stomp; zanshin, a chiburi flick to the right and
-	# back to the low guard.
+	# 5. Karatake-wari: from the thrust the blade rises over the head, holds a
+	# beat, splits straight down with a stomp; zanshin, a chiburi flick to the
+	# right and back to the low guard.
+	var raised := _flow(_stride_r(0.08), -6, Vector3(18, -12, 0), Vector3(-14, 14, 0), ARM_OVERHEAD)
 	lib.add_animation("attack_5", _clip([
 		[0.0, _nagare_end_4()],
-		[0.1, _flow(_stride_r(0.1), -6, Vector3(14, -10, 0), Vector3(-12, 12, 0), ARM_OVERHEAD)],
-		[0.145, _flow(_stride(0.2), 0, Vector3(-30, 0, 0), Vector3(22, 0, 0), ARM_FRONT)],
-		[0.2, _flow(_stride(0.25), 0, Vector3(-40, 2, 0), Vector3(30, -2, 0), ARM_DOWN)],
-		[0.42, _flow(_stride(0.23), 0, Vector3(-36, 4, 0), Vector3(26, -4, 0), ARM_DOWN)],
-		[0.5, _flow(_stride(0.2), -10, Vector3(-22, -14, 0), Vector3(14, 18, 0), LOW_BLADE)],
-		[0.9, _stance()],
-	], false, false, _h.strike_events(0.14, 0.18, 0.5, 0.9), OVERLAP))
+		[0.08, raised],
+		[0.1, _h.with(raised, {"torso": Vector3(21, -12, 0), "hips_pos": Vector3(0, -0.06, 0)})],
+		[0.118, _flow(_stride(0.22), 0, Vector3(-34, 0, 0), Vector3(24, 0, 0), ARM_FRONT)],
+		[0.16, _flow(_stride(0.28), 0, Vector3(-46, 2, 0), Vector3(32, -2, 0), ARM_DOWN)],
+		[0.36, _flow(_stride(0.26), 0, Vector3(-42, 4, 0), Vector3(30, -4, 0), ARM_DOWN)],
+		[0.42, _flow(_stride(0.22), -12, Vector3(-24, -16, 0), Vector3(16, 20, 0), LOW_BLADE)],
+		[0.72, _stance()],
+	], false, false, _h.strike_events(0.115, 0.15, 0.4, 0.72), OVERLAP))

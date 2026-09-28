@@ -41,6 +41,10 @@ var _switch_from: Transform3D = Transform3D.IDENTITY
 var _switch_left: float = 0.0
 var _switch_total: float = 1.0
 var _last_arc: int = -1
+var _exit_left: float = 0.0
+## Shoulder, elbow and wrist of the right arm, and their rotation tracks per clip.
+var _arm: Array[Node3D] = []
+var _arm_tracks: Dictionary[StringName, PackedInt32Array] = {}
 
 var _feet: Array[MeshInstance3D] = []
 var _foot_rest: Array[Transform3D] = []
@@ -54,6 +58,7 @@ func _init(humanoid: LowPolyHumanoid, feet: Array[MeshInstance3D]) -> void:
 	_h = humanoid
 	_shoulder = humanoid.get_joint("shoulder_r")
 	_wrist = humanoid.get_joint("wrist_r")
+	_arm = [_shoulder, humanoid.get_joint("elbow_r"), _wrist]
 	_feet = feet
 	for foot: MeshInstance3D in feet:
 		_foot_rest.append(foot.transform)
@@ -151,21 +156,51 @@ func _apply_grip(clip: StringName, t: float, delta: float) -> void:
 	var restarted: bool = clip != _last_clip or t < _last_time - 0.0001
 	if restarted and (_last_driven or _switch_left > 0.0):
 		_start_switch(setup.exit_blend if arcs.is_empty() else setup.switch_blend)
+		_exit_left = setup.exit_hold if arcs.is_empty() else 0.0
 	elif not restarted and arc_index != _last_arc and _last_arc >= 0 and arc_index >= 0:
 		_start_switch(setup.arc_blend)
 	_last_arc = arc_index
+	# Leaving the cuts: the mixer still fades out of the strike clip, whose arm
+	# keys are not where the arc had the hand. Follow the new clip's own arm on
+	# the blended body until that fade is over, so the hand never detours.
+	if _exit_left > 0.0:
+		_exit_left = maxf(_exit_left - delta, 0.0)
+		if arcs.is_empty():
+			desired = _clip_wrist(clip, t, root_inv, animated)
 	var out: Transform3D = desired
 	if _switch_left > 0.0:
 		_switch_left = maxf(_switch_left - delta, 0.0)
 		var s: float = 1.0 - _switch_left / _switch_total
 		out = _switch_from.interpolate_with(desired, smoothstep(0.0, 1.0, s))
-	var driven: bool = weight > 0.0 or _switch_left > 0.0
+	var driven: bool = weight > 0.0 or _switch_left > 0.0 or _exit_left > 0.0
 	if driven:
 		var scale: Vector3 = _wrist.global_basis.get_scale()
 		var world: Transform3D = root * out
 		_wrist.global_transform = Transform3D(world.basis.scaled(scale), world.origin)
 	_last_out = out
 	_last_driven = driven
+
+
+## Right wrist (root space) as `clip` alone would place it at `t`: its
+## shoulder, elbow and wrist keys chained on the current (blended) torso.
+func _clip_wrist(clip: StringName, t: float, root_inv: Transform3D, fallback: Transform3D) -> Transform3D:
+	if clip == &"" or not _h.anim.has_animation(clip):
+		return fallback
+	var a: Animation = _h.anim.get_animation(clip)
+	if not _arm_tracks.has(clip):
+		var found := PackedInt32Array()
+		for joint: Node3D in _arm:
+			found.append(a.find_track(NodePath(String(_h.get_path_to(joint)) + ":rotation"), Animation.TYPE_VALUE))
+		_arm_tracks[clip] = found
+	var tracks: PackedInt32Array = _arm_tracks[clip]
+	var size: float = _h.global_basis.get_scale().x
+	var chain: Transform3D = root_inv * _shoulder.get_parent_node_3d().global_transform.orthonormalized()
+	for i: int in _arm.size():
+		if tracks[i] < 0:
+			return fallback
+		var rot: Vector3 = a.value_track_interpolate(tracks[i], t)
+		chain = chain * Transform3D(Basis.from_euler(rot), _arm[i].position * size)
+	return chain
 
 
 func _start_switch(duration: float) -> void:
@@ -198,7 +233,7 @@ func _arc_pose(arc: SlashArc, t: float, root_inv: Transform3D) -> Transform3D:
 	var edge: Vector3 = arc.axis.cross(blade) * setup.edge_sign * (-1.0 if arc.edge_flip else 1.0)
 	var basis: Basis = _frame(blade, edge) * _weapon_frame.inverse()
 	var grip_point: Vector3 = center + dir * arc.radius_at(t)
-	return Transform3D(basis, grip_point - basis * _grip_origin)
+	return Transform3D(basis, grip_point - basis * (_grip_origin * _h.global_basis.get_scale().x))
 
 
 static func _frame(forward: Vector3, side: Vector3) -> Basis:
