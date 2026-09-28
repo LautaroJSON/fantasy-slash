@@ -179,17 +179,16 @@ func get_body_clip() -> StringName:
 	return clip if clip != &"" else ultimate_ability.get_body_clip()
 
 
-<<<<<<< HEAD
 ## Blend into get_body_clip() the ability asks for; negative = the default.
 func get_body_clip_blend() -> float:
 	return basic_ability.get_body_clip_blend() if basic_ability.get_body_clip() != &"" else ultimate_ability.get_body_clip_blend()
-=======
+
+
 ## Where the body clip is posed, in [0, 1] of its length, when an action poses
 ## it instead of playing it (the air slash's charge,
 ## docs/specs/air-slash-visual-rework.md); -1 when it plays on its own.
 func get_body_clip_ratio() -> float:
 	return air_slash.get_body_clip_ratio() if air_slash.is_active() else -1.0
->>>>>>> 75dfed6557b282d66346cbd5da8b97353cbb8990
 
 
 ## Clip the body plays while dashing: the one an ability asks for (e.g. the

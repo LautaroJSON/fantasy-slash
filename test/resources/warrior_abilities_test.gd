@@ -76,8 +76,11 @@ func test_ac847_the_clip_events_match_the_configs() -> void:
 	assert_float(_event_time(&"shield_riposte", "riposte")).is_equal_approx(PARRY_CONFIG.riposte_hit_time, TOLERANCE)
 	assert_float(_event_time(&"shield_riposte", "trail_on")).is_equal_approx(PARRY_CONFIG.riposte_trail_start, TOLERANCE)
 	assert_float(_event_time(&"shield_riposte", "trail_off")).is_equal_approx(PARRY_CONFIG.riposte_trail_end, TOLERANCE)
+	assert_float(_event_time(&"shield_riposte_empowered", "empowered")).is_equal_approx(PARRY_CONFIG.empowered_hit_time, TOLERANCE)
+	assert_float(_event_time(&"shield_riposte_empowered", "trail_on")).is_equal_approx(PARRY_CONFIG.empowered_trail_start, TOLERANCE)
+	assert_float(_event_time(&"shield_riposte_empowered", "trail_off")).is_equal_approx(PARRY_CONFIG.empowered_trail_end, TOLERANCE)
 	for clip: StringName in [CHARGE_CONFIG.charge_body_clip, CHARGE_CONFIG.bash_body_clip, PARRY_CONFIG.parry_body_clip,
-			PARRY_CONFIG.success_body_clip, PARRY_CONFIG.whiff_body_clip, PARRY_CONFIG.riposte_body_clip]:
+			PARRY_CONFIG.whiff_body_clip, PARRY_CONFIG.riposte_body_clip, PARRY_CONFIG.empowered_body_clip]:
 		assert_bool(_anim.has_animation(clip)).override_failure_message(String(clip)).is_true()
 
 

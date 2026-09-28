@@ -378,7 +378,7 @@ func _add_return_sweep(lib: AnimationLibrary) -> void:
 ## y comienzo de la carga del Tajo aéreo), con las piernas `legs`.
 func _woodcutter_raised(legs: Dictionary) -> Dictionary:
 	return _two_hands(_body(-0.04, -18, Vector3(14, -36, -8), legs), {
-		"shoulder_r": Vector3(134, -6, -30), "elbow_r": Vector3(6, 0, 0), "wrist_r": Vector3(40, -22, 0)})
+		"shoulder_r": Vector3(134, -6, -30), "elbow_r": Vector3(6, 0, 0), "wrist_r": Vector3(40, -40, 0)})  # de canto: la hoja ancha no roza la cabeza
 
 
 ## Pisotón: la hoja cae al frente (golpe 3 y caída del Tajo aéreo).
@@ -400,15 +400,8 @@ func _woodcutter_buried() -> Dictionary:
 ## izquierda con un pisotón; la hoja queda clavada en el piso un instante y
 ## vuelve a apoyarla en el hombro.
 func _add_woodcutter(lib: AnimationLibrary) -> void:
-<<<<<<< HEAD
-	var raised := _two_hands(_body(-0.04, -18, Vector3(14, -36, -8), COILED_LEGS), {
-		"shoulder_r": Vector3(134, -6, -30), "elbow_r": Vector3(6, 0, 0), "wrist_r": Vector3(40, -40, 0)})  # de canto: la hoja ancha no roza la cabeza
-	var buried := _two_hands(_body(-0.3, 22, Vector3(-44, 40, 12), HEAVY_STRIDE), {
-		"shoulder_r": Vector3(23, -47, -26), "elbow_r": Vector3(75, 0, 0), "wrist_r": Vector3(-83, -8, 0)})
-=======
 	var raised := _woodcutter_raised(COILED_LEGS)
 	var buried := _woodcutter_buried()
->>>>>>> 75dfed6557b282d66346cbd5da8b97353cbb8990
 	lib.add_animation("attack_3", _h.make_clip([
 		[0.0, _sweep_right_hold()],
 		[0.18, _two_hands(_body(-0.16, -20, Vector3(-6, -40, 0), COILED_LEGS), {  # junta las manos, lo sube por detrás

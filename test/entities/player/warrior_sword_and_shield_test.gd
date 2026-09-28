@@ -322,10 +322,11 @@ func test_ac755_the_old_sword_is_gone() -> void:
 
 # --- The Warrior abilities (warrior-abilities-rework.md)
 
-## AC848: AC751 in every sampled frame of the six ability clips (AC751 itself
+## AC848: AC751 in every sampled frame of the six ability clips (adapted by
+## parry-riposte-rework.md: the shield push became the empowered riposte; AC751 itself
 ## samples every clip, and its dash and sprint frames already failed).
 func test_ac848_the_ability_clips_keep_the_shield_and_the_sword_out() -> void:
-	for clip_name: StringName in [&"shield_charge", &"shield_bash", &"shield_parry", &"shield_parry_success", &"shield_parry_whiff", &"shield_riposte"]:
+	for clip_name: StringName in [&"shield_charge", &"shield_bash", &"shield_parry", &"shield_parry_whiff", &"shield_riposte", &"shield_riposte_empowered"]:
 		assert_bool(_humanoid.anim.has_animation(clip_name)).override_failure_message(String(clip_name)).is_true()
 		for time: float in _clip_times(clip_name):
 			_pose(clip_name, time)

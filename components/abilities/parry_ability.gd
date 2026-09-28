@@ -91,9 +91,10 @@ func get_body_clip(_ability: AbilityComponent) -> StringName:
 	return config.parry_body_clip
 
 
-## The shield snaps in front: the window's clip starts without blending.
+## The shield snaps in front, and the empowered riposte snaps into its
+## wind-up: their clips start without blending.
 func get_body_clip_blend(_ability: AbilityComponent) -> float:
-	return config.parry_enter_blend if _state == State.WINDOW else DEFAULT_BLEND
+	return config.parry_enter_blend if _state == State.WINDOW or _state == State.EMPOWERED else DEFAULT_BLEND
 
 
 ## The empowered riposte cannot be cut by a dash until its strike is over.

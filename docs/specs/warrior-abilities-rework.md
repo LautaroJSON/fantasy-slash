@@ -68,6 +68,8 @@
 
 ### 3.2 Parada (BASIC, tecla E)
 
+> **Revisada** por `parry-riposte-rework.md` (2026-09-28): la habilidad se llama Parry, toda parada exitosa responde con la estocada (sin empujón), Contragolpe pasa a la Estocada mejorada de 360°, Represalia se eliminó, y Triunfo tiene 5 stacks de 15 s.
+
 1. **Tocar E** levanta el escudo durante **0.35 s** (la ventana). El Guerrero gira hacia el enemigo más cercano y se queda quieto. El enfriamiento de **6 s** arranca al apretar.
 2. Durante la ventana, **todo golpe de frente (arco de 120°) se anula**: 0 de daño, sin parpadeo ni clip `hit`. Cada uno da una **chispa en el escudo** y una sacudida leve. Los golpes de atrás o de los costados pegan completos. Un agarre no se bloquea.
 3. **Parada exitosa** (al menos un golpe anulado): el escudo sigue arriba hasta el final de la ventana (anula los que lleguen), hace un empujón corto de **0.15 s** y el enfriamiento que queda baja a **1.5 s**.

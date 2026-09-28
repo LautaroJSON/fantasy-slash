@@ -462,7 +462,7 @@ func _add_shield_charge(lib: AnimationLibrary) -> void:
 
 
 ## Parada: el escudo sube de golpe y cubre el torso y la cabeza, el peso
-## adelante, la espada atrás y lista (escudo arriba en raise_time = 0.06 s).
+## adelante, la espada atrás y lista (escudo arriba desde el primer cuadro, raise_time = 0).
 func _block_pose(over := {}) -> Dictionary:
 	return _stance(_h.with(_h.with(SHIELD_BLOCK, {
 		"hips_pos": Vector3(0, -0.12, 0), "hips": Vector3(0, -12, 0),
@@ -477,9 +477,10 @@ func _add_parry(lib: AnimationLibrary) -> void:
 	var block := _block_pose()
 	# Parry (docs/specs/parry-riposte-rework.md §2.2): el escudo aparece al
 	# frente de golpe (el clip arranca ya en el bloqueo y se entra sin mezcla),
-	# pasado de largo con el cuerpo sobregirado, y se asienta.
+	# con el brazo del escudo pasado de largo hacia adelante, y se asienta.
 	lib.add_animation("shield_parry", _h.make_clip([
-		[0.0, _block_pose(_h.with(SHIELD_BASH, {"torso": Vector3(-20, -34, 2), "hips_pos": Vector3(0, -0.16, 0)}))],  # pasado de largo
+		[0.0, _block_pose({"shoulder_l": Vector3(90, -24, -1), "elbow_l": Vector3(30, 0, 0),
+				"torso": Vector3(-18, -22, 1), "hips_pos": Vector3(0, -0.15, 0)})],  # pasado de largo
 		[0.06, block],  # se asienta
 		[0.2, _block_pose({"hips_pos": Vector3(0, -0.13, 0), "torso": Vector3(-15, -23, 0)})],
 		[0.35, _block_pose({"torso": Vector3(-16, -24, 0), "hips_pos": Vector3(0, -0.14, 0)})],
@@ -516,8 +517,9 @@ func _add_parry(lib: AnimationLibrary) -> void:
 	_add_empowered_riposte(lib)
 
 
-## Estocada mejorada (docs/specs/parry-riposte-rework.md §2.4): mientras el
-## mundo está congelado (0.3 s) se carga inclinado, la mirada abajo y la espada
+## Estocada mejorada (docs/specs/parry-riposte-rework.md §2.4): arranca ya
+## cargado (se entra sin mezcla) y, mientras el mundo está congelado (0.3 s),
+## sostiene la carga inclinado, la mirada abajo y la espada
 ## sobre el hombro izquierdo; después barre en horizontal por delante hasta
 ## detrás del hombro derecho (el daño a 0.42 s) y vuelve al reposo. Los brazos
 ## se calcularon con el script de brazos, encadenando cada pose con la anterior.
@@ -551,8 +553,7 @@ func _add_empowered_riposte(lib: AnimationLibrary) -> void:
 		"torso": Vector3(-24, -40, 0), "neck": Vector3(0, 55, 0),
 		"shoulder_r": Vector3(249, 40, 70), "elbow_r": Vector3(-130, 0, 0), "wrist_r": Vector3(33, 1, 0)}))
 	lib.add_animation("shield_riposte_empowered", _h.make_clip([
-		[0.0, _block_pose()],
-		[0.08, windup],  # se carga: el mundo está congelado
+		[0.0, windup],  # aparece cargado (se entra sin mezcla): el mundo está congelado
 		[0.3, _h.with(windup, {"hips_pos": Vector3(0, -0.16, 0), "torso": Vector3(-28, 32, 0)})],  # tensión
 		[0.33, leaving],  # sale del hombro izquierdo, plana
 		[0.36, cross],

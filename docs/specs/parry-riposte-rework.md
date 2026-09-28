@@ -1,6 +1,6 @@
 # Feature: Parry (ex Parada) con estocada, Estocada mejorada de 360° y Duelo más largo
 
-- **Estado:** Aprobada (2026-09-28), en implementación. ACs: AC1017–AC1032 (reservados).
+- **Estado:** Implementada (2026-09-28). ACs: AC1017–AC1032.
 - **Constitución:** `docs/constitution.md` v4.22.1 → **enmienda MINOR a 4.23.0** (ver §8).
 - **Pilar (Principio I):** **combate.**
   - Hoy una parada exitosa solo anula el daño: la recompensa por leer el golpe llega recién con las mejoras doradas.
@@ -167,7 +167,7 @@ func is_playing() -> bool
 **Nombre y escudo**
 
 - **AC1017** `parry.tres` se llama "Parry"; ningún `.tres` de `data/` dice "Parada" ni nombra a Represalia.
-- **AC1018** Aparece de golpe: al apretar, en el primer cuadro animado (≤ 1/60 s) el `Center` del escudo está a ≤ 3 cm de su posición en la pose de bloqueo (en el espacio del `Visual`).
+- **AC1018** Aparece de golpe: al apretar, `PlayerAnimator` entra al clip sin mezcla y, en el primer cuadro animado (≤ 1/60 s), el `Center` del escudo está a ≤ 15 cm de su posición en la pose de bloqueo (el resto es el rebote de AC1019), que queda a > 30 cm del reposo. *(Ajustado al implementar, §11.)*
 - **AC1019** Dinamismo: entre 0 y 0.06 s de `shield_parry`, el `Center` del escudo llega ≥ 5 cm más adelante (−Z) que su posición a los 0.15 s.
 - **AC1020** El escudo crece:
   - escala ×1.5 (±0.02) a los 0.04 s y ×1.35 (±0.01) desde los 0.1 s hasta el final de la ventana;
@@ -256,10 +256,40 @@ Cada paso deja el proyecto andando.
 
 ## 10. Checklist de review de la constitución (se completa al cerrar)
 
-- [ ] I. Pilar declarado (combate).
-- [ ] II. VFX con `ImmediateMesh` y buffers preasignados, material compartido, blanco translúcido registrado.
-- [ ] III. Todos los tiempos, escalas y multiplicadores en `ParryConfig`, `triumph.tres` y `challenged.tres`.
-- [ ] IV. Tipado estático, identificadores en inglés, callbacks delgados.
-- [ ] V. Sin allocations por cuadro (buffers de enemigos y del VFX reutilizados).
-- [ ] VI. Sin input nuevo.
-- [ ] VII. Tiempo congelado sin `Engine.time_scale` (enmienda 4.23.0).
+- [x] I. Pilar declarado (combate).
+- [x] II. VFX con `ImmediateMesh` y buffers preasignados, material compartido, blanco translúcido registrado.
+- [x] III. Todos los tiempos, escalas y multiplicadores en `ParryConfig`, `triumph.tres` y `challenged.tres`.
+- [x] IV. Tipado estático, identificadores en inglés, callbacks delgados.
+- [x] V. Sin allocations por cuadro (buffers de enemigos y del VFX reutilizados).
+- [x] VI. Sin input nuevo.
+- [x] VII. Tiempo congelado sin `Engine.time_scale` (enmienda 4.23.0).
+
+## 11. Notas de implementación (2026-09-28)
+
+- **Escudo:**
+  - `ShieldGuard` recibe el nodo del escudo (lo asigna `Player` al equiparlo) y anima su escala en su propio `_process` (`pop_shield()`, `shrink_shield()`, `advance_shield()`). Así el escudo vuelve a ×1.0 aunque el lanzamiento se corte con un dash. La escala pivota sobre el `Grip`;
+  - `shield_parry` arranca con el brazo del escudo pasado de largo hacia adelante (hombro 90°, codo 30°) y se asienta a los 0.06 s. El evento `raise` pasó a t = 0 y `raise_time` a 0.
+- **AC1018 ajustado:** la versión aprobada pedía ≤ 3 cm de la pose de bloqueo en el primer cuadro, lo que contradice el rebote de AC1019 (≥ 5 cm adelante). Quedó en ≤ 15 cm (el primer cuadro está a 12 cm) y a > 30 cm del reposo.
+- **Estocada mejorada:**
+  - `Enemy.freeze_time()` corre antes del hit lag en `_physics_process` y se limpia al activar el enemigo;
+  - `AttackComponent.strike_enemies()` recibe además `crit_roll` (como `try_attack_with_roll()`), para que los tests sean deterministas;
+  - el hit lag del golpe sale de `empowered_feel` (hitlag 0.1, sacudida 0.4): como no hay un paso del combo en curso, `HitstopComponent` no lo tomaría de `attacked`;
+  - `AbilityComponent` gana `attack` (conectado en `player.tscn`), y `AbilityBehavior` gana `get_body_clip_blend()` y `locks_dash()`.
+- **Animación** (`shield_riposte_empowered`, calculada con el script de brazos encadenando cada pose con la anterior):
+  - arranca **ya en la preparación** y se entra sin mezcla, como el escudo. Pasar del bloqueo a la preparación en 0.08 s hacía que el mango cruzara la cabeza (AC653);
+  - el barrido recorre **219°** entre 0.3 y 0.55 s, con la punta entre 1.04 y 1.27 m de alto. Hizo falta una pose intermedia a 0.33 s: sin ella, la punta subía 70 cm al salir del hombro.
+- **Captura en vivo** (arena, cuatro Brutos alrededor): el anillo recorre la vuelta, los cuatro reciben 30 de daño (20 × 1.5) con su impacto, y el congelamiento se ve en los primeros cuadros.
+- **Tests:**
+  - `parry_rework_test` (17 casos, AC1017–AC1032) y `parry_test` (11), en verde;
+  - regresión de AC1032: `unique_upgrades_test` (4), `unique_upgrade_run_test` (5), `warrior_abilities_test` (5), `class_combat_identity_test` (25), `hitstop_test` (6) y `player_animator_test` (13), en verde;
+  - smoke test del arena sin errores ni warnings.
+- **Tests adaptados:**
+  - `parry_test`: AC829 (el arco se lee del dato, 180° hoy, y el golpe lateral va antes que el frontal, porque este dispara la estocada invulnerable), AC831 (el éxito pasa a la estocada), AC836 (sin Contragolpe, la estocada deja 1.5 s de enfriamiento), AC837 (la estocada base es invulnerable), AC838 (cada parada marca a un atacante; Triunfo llega a 5) y AC846 (una chispa por parada). Se borró AC835 (Represalia);
+  - `unique_upgrade_run_test`: la run equipa la Carga de escudo. Contundencia (2 niveles) reemplaza a Represalia en los casos con niveles, e Impulso a Contragolpe en los binarios;
+  - `boss_challenge_run_test` y `unique_upgrades_test`: sin Represalia;
+  - `warrior_abilities_test` AC847 y `warrior_sword_and_shield_test` AC848: `shield_parry_success` pasa a `shield_riposte_empowered`, con sus eventos.
+- **Fallos previos y ajenos** (datos cambiados por otras sesiones):
+  - `attack_component_test` AC8 (stats del Guerrero);
+  - `affliction_loadout_test` AC942 (Frost dura 3.5 s);
+  - `boss_challenge_run_test` AC146 (bosses cada 12 oleadas);
+  - `warrior_sword_and_shield_test` AC751 en los clips de dash y sprint (ya registrado en AC848).

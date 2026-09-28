@@ -76,15 +76,19 @@ func _riposte_damage() -> float:
 
 func test_ac829_a_tap_raises_the_shield_for_the_window() -> void:
 	var front: Enemy = _spawn(Vector3(0.0, 0.0, -2.0))
-	var side: Enemy = _spawn(Vector3(3.0, 0.0, -0.5))
+	# Adapted (parry-riposte-rework.md §11): the arc is read from the data (it
+	# went from 120° to 180°); the side enemy stands 10° outside it.
+	var outside: float = deg_to_rad(CONFIG.guard_arc_degrees * 0.5 + 10.0)
+	var side: Enemy = _spawn(Vector3(sin(outside), 0.0, -cos(outside)) * 3.0)
 	assert_bool(_ability.try_cast()).is_true()
 	assert_bool(_ability.is_charging()).is_false()
 	assert_bool(_guard().is_raised()).is_true()
 	assert_float(_ability.get_cooldown_remaining()).is_equal_approx(PARRY.cooldown, TOLERANCE)
 	assert_float(_ability.get_stat(AbilityData.Stat.CAST_DURATION)).is_equal_approx(0.35, TOLERANCE)
-	assert_float(_player.health.receive_hit_from(HIT, front)).is_equal(0.0)
-	# 80° from the front: outside the 120° arc.
+	# Outside the arc.
 	assert_float(_player.health.receive_hit_from(HIT, side)).is_equal_approx(HIT, TOLERANCE)
+	# Adapted (AC1022): the blocked hit starts the invulnerable thrust, so it goes last.
+	assert_float(_player.health.receive_hit_from(HIT, front)).is_equal(0.0)
 	# The player stands still during the window (no ability motion).
 	assert_bool(_ability.controls_motion()).is_false()
 

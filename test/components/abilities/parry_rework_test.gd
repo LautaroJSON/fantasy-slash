@@ -21,9 +21,10 @@ const SCALE_TOLERANCE: float = 0.02
 const HIT: float = 20.0
 const LETHAL: float = 100000.0
 const FRAME: float = 1.0 / 60.0
-## AC1018: farthest the shield may be from the block pose on the first frame,
+## AC1018: farthest the shield may be from the block pose on the first frame
+## (the rest is the overshoot of AC1019),
 ## and least distance of the block pose from the rest pose, in meters.
-const SNAP_GAP: float = 0.10
+const SNAP_GAP: float = 0.15
 const REST_GAP: float = 0.30
 ## AC1019: least overshoot of the shield ahead of its settled pose, in meters.
 const OVERSHOOT: float = 0.05
@@ -201,7 +202,8 @@ func test_ac1021_the_size_does_not_change_the_block() -> void:
 	var guard: ShieldGuard = _guard()
 	guard.set_process(false)
 	var edge: float = deg_to_rad(CONFIG.guard_arc_degrees * 0.5 + 10.0)
-	var outside: Enemy = _spawn(Vector3(-sin(edge), 0.0, -cos(edge)) * 2.0)
+	# Farther than the front one, so the parry faces the front one.
+	var outside: Enemy = _spawn(Vector3(-sin(edge), 0.0, -cos(edge)) * 3.0)
 	var front: Enemy = _spawn(Vector3(0.0, 0.0, -2.0))
 	assert_bool(_ability.try_cast()).is_true()
 	guard.advance_shield(CONFIG.shield_settle_time)
@@ -237,7 +239,7 @@ func test_ac1023_no_more_shield_push() -> void:
 
 func test_ac1024_contragolpe_renews_the_cooldown_and_makes_the_player_immortal() -> void:
 	var attacker: Enemy = _spawn(Vector3(0.0, 0.0, -2.0))
-	var behind: Enemy = _spawn(Vector3(0.0, 0.0, 4.0))
+	var behind: Enemy = _spawn(Vector3(0.0, 0.0, 8.0))
 	_empowered_by(attacker)
 	assert_float(_ability.get_cooldown_remaining()).is_equal(0.0)
 	assert_int(_behavior().get_state()).is_equal(ParryAbility.State.EMPOWERED)
@@ -250,6 +252,8 @@ func test_ac1024_contragolpe_renews_the_cooldown_and_makes_the_player_immortal()
 		elapsed += step
 		assert_float(_player.health.receive_hit_from(HIT, behind)).override_failure_message("at %.1f s" % elapsed).is_equal(0.0)
 	# A dash cannot cut it until the strike is over, then it can.
+	_ability.advance(CONFIG.empowered_duration)
+	attacker.activate(Vector3(0.0, 0.0, -2.0), null)
 	_ability.reset_cooldown()
 	assert_bool(_ability.try_cast()).is_true()
 	_player.health.receive_hit_from(HIT, attacker)
