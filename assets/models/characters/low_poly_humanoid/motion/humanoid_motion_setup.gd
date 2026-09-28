@@ -3,8 +3,9 @@ extends RefCounted
 ## What a profile asks from the motion layer (poc/samurai-motion). Built once
 ## per profile, shared by every humanoid using it.
 
-## Clip -> the arc the grip follows during it.
-var arcs: Dictionary[StringName, SlashArc] = {}
+## Clip -> the arcs the grip follows during it, in time order (a load, the
+## cut, a chiburi...): each one rules from the first time of its `timing`.
+var arcs: Dictionary[StringName, Array] = {}
 ## Clip -> [[foot "l"/"r", from, to], ...]: windows (clip seconds) in which a
 ## foot stays planted on the floor while the body moves.
 var plants: Dictionary[StringName, Array] = {}
@@ -14,6 +15,11 @@ var springs: Dictionary[String, Vector2] = {}
 var spring_max_angle: float = deg_to_rad(16.0)
 ## Seconds the grip blends from the last clip's output when the clip changes.
 var switch_blend: float = 0.09
+## Seconds the grip blends back to the clip when the next clip has no arcs
+## (leaving the combo for the guard or locomotion).
+var exit_blend: float = 0.24
+## Seconds the grip blends when one arc hands over to the next in a clip.
+var arc_blend: float = 0.05
 ## A planted foot lets go when the body gets this far from it (metres).
 var plant_max_stretch: float = 0.8
 ## Seconds a released foot takes to step back into its pose.

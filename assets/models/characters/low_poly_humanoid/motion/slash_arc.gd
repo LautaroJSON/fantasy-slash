@@ -28,6 +28,11 @@ var blend_out: Vector2
 var tip_lag: float = 0.012
 ## Cap of the lag, in radians.
 var max_lag: float = 0.6
+## (clip seconds, radius) points; when set they replace `radius` (a thrust
+## pulls the grip in, then drives it out).
+var radius_timing: PackedVector2Array
+## The spine leads instead of the edge (raising or loading the blade).
+var edge_flip: bool = false
 ## Tilt of the blade out of the arc plane, toward `axis` (radians).
 var blade_lift: float = 0.0
 
@@ -44,6 +49,26 @@ static func create(start_dir: Vector3, mid_dir: Vector3, end_dir: Vector3) -> Sl
 		second += TAU
 	arc.second_angle = second
 	return arc
+
+
+## A blade held still along `dir` (a thrust: only the radius moves), its edge
+## on `axis` x `dir`.
+static func fixed(dir: Vector3, around: Vector3) -> SlashArc:
+	var arc := SlashArc.new()
+	arc.start = dir.normalized()
+	arc.mid = arc.start
+	arc.axis = around.normalized()
+	arc.first_angle = 0.0
+	arc.second_angle = 0.0
+	return arc
+
+
+func start_time() -> float:
+	return timing[0].x if not timing.is_empty() else 0.0
+
+
+func radius_at(t: float) -> float:
+	return radius if radius_timing.is_empty() else monotone_cubic(radius_timing, t)
 
 
 ## Radial direction of the grip at progress `f`.

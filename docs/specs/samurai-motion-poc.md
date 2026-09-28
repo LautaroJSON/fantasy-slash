@@ -44,3 +44,20 @@ Los tiempos del combo (`samurai_combo.tres`), los eventos de los clips, el daño
 ## Pendiente si se adopta
 
 Ajustar los arcos a ojo en el juego, llevar los valores a Resources, pasar el enfoque a los combos del Guerrero y el Berserker y, si hace falta, sumar capas (piernas y brazos por separado).
+
+## Adenda: combo "Nagare" (2026-09-28)
+
+El combo del Samurái pasa a ser un péndulo: cada corte empieza donde terminó el anterior y vuelve por el mismo camino. Así la hoja no tiene que volver cruzando el cuerpo entre golpes, que era lo que los hacía sentir desconectados.
+
+| # | Corte | Recorrido | Pie que avanza | Tiempos (impacto / encadenado / fin) |
+|---|---|---|---|---|
+| 1 | Kesa-giri | desde la guardia baja sube por el hombro derecho (carga con el lomo adelante) y cae a abajo a la izquierda | izquierdo | 0.16–0.21 / 0.25 / 0.46 |
+| 2 | Kiriage | de abajo a la izquierda sube por la misma línea a arriba a la derecha | derecho | 0.09–0.13 / 0.17 / 0.36 |
+| 3 | Yokogiri | baja al costado derecho mientras la cadera se enrosca y barre horizontal hasta atrás a la izquierda | izquierdo | 0.15–0.20 / 0.24 / 0.46 |
+| 4 | Tsuki | la hoja vuelve al frente, el agarre se recoge en la cadera derecha y sale recto (solo cambia el radio) | derecho, zancada de 1 m | 0.10–0.14 / 0.16 (encadena solo) / 0.30 |
+| 5 | Karatake-wari + chiburi | desde la estocada sube sobre la cabeza y parte en vertical con pisotón; zanshin, sacudida a la derecha y vuelta a la guardia baja | pisotón del izquierdo | 0.14–0.18 / 0.50 / 0.90 |
+
+- **Datos:** `samurai_combo.tres`. La estocada tiene alcance ×1.3 y arco 0.3. El horizontal tiene arco 1.3. El remate tiene hit lag de 0.12 s y empuje 1.4. Los daños se mantienen.
+- **Varios arcos por golpe:** carga, corte y chiburi. Cada arco manda desde el primer tiempo de su `timing`. `edge_flip` pone el lomo adelante en las cargas, `radius_timing` hace la estocada y `SlashArc.fixed()` sostiene la hoja quieta.
+- **Mezclas:** entre arcos de un mismo golpe, 0.05 s (`arc_blend`). Al salir del combo, 0.24 s (`exit_blend`).
+- **Sin la capa** (`motion_enabled = false`), el perfil arma los cinco cortes anteriores. La herramienta de captura los compara con sus tiempos originales (`tools/samurai_combo_classic.tres`).

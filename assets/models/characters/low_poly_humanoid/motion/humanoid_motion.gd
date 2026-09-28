@@ -39,6 +39,8 @@ var _last_out: Transform3D = Transform3D.IDENTITY
 var _last_driven: bool = false
 var _switch_from: Transform3D = Transform3D.IDENTITY
 var _switch_left: float = 0.0
+var _switch_total: float = 1.0
+var _last_arc: int = -1
 
 var _feet: Array[MeshInstance3D] = []
 var _foot_rest: Array[Transform3D] = []
@@ -139,19 +141,23 @@ func _apply_grip(clip: StringName, t: float, delta: float) -> void:
 	var animated: Transform3D = root_inv * _wrist.global_transform.orthonormalized()
 	var desired: Transform3D = animated
 	var weight: float = 0.0
-	var arc: SlashArc = setup.arcs.get(clip) as SlashArc
-	if arc != null and _has_weapon_frame:
+	var arcs: Array = setup.arcs.get(clip, [])
+	var arc_index: int = _active_arc(arcs, t)
+	if arc_index >= 0 and _has_weapon_frame:
+		var arc: SlashArc = arcs[arc_index]
 		weight = arc.weight_at(t)
 		if weight > 0.0:
 			desired = animated.interpolate_with(_arc_pose(arc, t, root_inv), weight)
 	var restarted: bool = clip != _last_clip or t < _last_time - 0.0001
 	if restarted and (_last_driven or _switch_left > 0.0):
-		_switch_from = _last_out
-		_switch_left = setup.switch_blend
+		_start_switch(setup.exit_blend if arcs.is_empty() else setup.switch_blend)
+	elif not restarted and arc_index != _last_arc and _last_arc >= 0 and arc_index >= 0:
+		_start_switch(setup.arc_blend)
+	_last_arc = arc_index
 	var out: Transform3D = desired
 	if _switch_left > 0.0:
 		_switch_left = maxf(_switch_left - delta, 0.0)
-		var s: float = 1.0 - _switch_left / setup.switch_blend
+		var s: float = 1.0 - _switch_left / _switch_total
 		out = _switch_from.interpolate_with(desired, smoothstep(0.0, 1.0, s))
 	var driven: bool = weight > 0.0 or _switch_left > 0.0
 	if driven:
@@ -160,6 +166,23 @@ func _apply_grip(clip: StringName, t: float, delta: float) -> void:
 		_wrist.global_transform = Transform3D(world.basis.scaled(scale), world.origin)
 	_last_out = out
 	_last_driven = driven
+
+
+func _start_switch(duration: float) -> void:
+	_switch_from = _last_out
+	_switch_total = duration
+	_switch_left = duration
+
+
+## Index of the arc ruling at `t`: the last one already started (or the first).
+static func _active_arc(arcs: Array, t: float) -> int:
+	if arcs.is_empty():
+		return -1
+	var index: int = 0
+	for i: int in arcs.size():
+		if (arcs[i] as SlashArc).start_time() <= t:
+			index = i
+	return index
 
 
 ## Wrist pose (root space) that puts the grip on `arc` at clip time `t`.
@@ -172,9 +195,9 @@ func _arc_pose(arc: SlashArc, t: float, root_inv: Transform3D) -> Transform3D:
 	var blade: Vector3 = dir.rotated(arc.axis, -lag)
 	if arc.blade_lift != 0.0:
 		blade = blade.rotated(blade.cross(arc.axis).normalized(), arc.blade_lift)
-	var edge: Vector3 = arc.axis.cross(blade) * setup.edge_sign
+	var edge: Vector3 = arc.axis.cross(blade) * setup.edge_sign * (-1.0 if arc.edge_flip else 1.0)
 	var basis: Basis = _frame(blade, edge) * _weapon_frame.inverse()
-	var grip_point: Vector3 = center + dir * arc.radius
+	var grip_point: Vector3 = center + dir * arc.radius_at(t)
 	return Transform3D(basis, grip_point - basis * _grip_origin)
 
 

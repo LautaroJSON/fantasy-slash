@@ -10,6 +10,8 @@ extends Node
 const HUMANOID: PackedScene = preload("res://entities/player/humanoid.tscn")
 const WEAPON: WeaponData = preload("res://data/classes/samurai/katana.tres")
 const COMBO: AttackComboConfig = preload("res://data/classes/samurai/samurai_combo.tres")
+## The combo before poc/samurai-motion, played by the classic rig.
+const CLASSIC_COMBO: AttackComboConfig = preload("res://assets/models/characters/low_poly_humanoid/tools/samurai_combo_classic.tres")
 const VIEW_SIZE := Vector2i(360, 360)
 const COLUMNS: int = 10
 const FPS: float = 60.0
@@ -47,9 +49,9 @@ func _ready() -> void:
 		await _play_movie()
 		get_tree().quit()
 		return
-	await _run(&"combo", _combo_plan())
+	await _run(&"combo", _plans(true))
 	for s: int in COMBO.steps.size():
-		await _run(StringName("cut_%d" % (s + 1)), _single_plan(s))
+		await _run(StringName("cut_%d" % (s + 1)), _plans(false, s))
 	print("clip_capture: done -> ", ProjectSettings.globalize_path(_out_dir))
 	get_tree().quit()
 
@@ -93,9 +95,9 @@ func _play_movie() -> void:
 			rect.add_child(label)
 	layer.add_child(caption)
 	caption.position = Vector2(560, 330)
-	var passes: Array = [[1.0, &"combo", _combo_plan()], [0.3, &"combo", _combo_plan()]]
+	var passes: Array = [[1.0, &"combo", _plans(true)], [0.3, &"combo", _plans(true)]]
 	for s: int in COMBO.steps.size():
-		passes.append([0.3, StringName("cut_%d" % (s + 1)), _single_plan(s)])
+		passes.append([0.3, StringName("cut_%d" % (s + 1)), _plans(false, s)])
 	for p: Array in passes:
 		_slow = p[0]
 		caption.text = "%s  x%.1f" % [p[1], _slow]
@@ -163,6 +165,7 @@ func _build_rig(motion: bool, x: float) -> Dictionary:
 	var rig := {
 		"root": root, "humanoid": humanoid, "pivot": pivot, "grip": grip,
 		"tip": model.get_node("TrailTip"), "markers": [], "used": 0, "views": {},
+		"combo": COMBO if motion else CLASSIC_COMBO,
 	}
 	humanoid.anim.mixer_applied.connect(_place_weapon.bind(rig))
 	for i: int in MARKERS:
@@ -201,87 +204,118 @@ func _place_weapon(rig: Dictionary) -> void:
 
 # ---------------------------------------------------------------- PLANS
 
-## [clip, seconds to play it, lunge step or null] chained like the game: each
-## cut is cancelled into the next at its cancel point; the last one plays out.
-func _combo_plan() -> Array:
+## [clip, seconds to play it, step] chained like the game: each cut is
+## cancelled into the next at its cancel point; the last one plays out.
+func _combo_plan(combo: AttackComboConfig) -> Array:
 	var plan: Array = []
-	for s: int in COMBO.steps.size():
-		var step: AttackComboStep = COMBO.steps[s]
-		var last: bool = s == COMBO.steps.size() - 1
+	for s: int in combo.steps.size():
+		var step: AttackComboStep = combo.steps[s]
+		var last: bool = s == combo.steps.size() - 1
 		plan.append([step.animation, step.end_time + 0.3 if last else step.cancel_point + 0.02, step])
 	return plan
 
 
-func _single_plan(s: int) -> Array:
-	var step: AttackComboStep = COMBO.steps[s]
+func _single_plan(combo: AttackComboConfig, s: int) -> Array:
+	var step: AttackComboStep = combo.steps[mini(s, combo.steps.size() - 1)]
 	return [[step.animation, step.end_time + 0.3, step]]
+
+
+## One plan per rig (the classic rig plays the previous combo with its own data).
+func _plans(combo_plan: bool, s: int = 0) -> Array:
+	var plans: Array = []
+	for rig: Dictionary in _rigs:
+		var combo: AttackComboConfig = rig["combo"]
+		plans.append(_combo_plan(combo) if combo_plan else _single_plan(combo, s))
+	return plans
 
 
 # ---------------------------------------------------------------- RUN
 
-func _run(sequence: StringName, plan: Array) -> void:
+func _run(sequence: StringName, plans: Array) -> void:
 	for rig: Dictionary in _rigs:
 		_reset(rig)
 	for i: int in 20:
 		await RenderingServer.frame_post_draw
-	var total_frames: int = 0
-	for entry: Array in plan:
-		total_frames += ceili((entry[1] + (entry[2] as AttackComboStep).hitlag) * FPS / _slow)
-	var every: int = maxi(ceili(float(total_frames) / COLUMNS), 1)
-	for rig: Dictionary in _rigs:
-		rig["marking"] = true
+	var states: Array[Dictionary] = []
+	var longest: int = 0
+	for r: int in _rigs.size():
+		var frames: int = 0
+		for entry: Array in plans[r]:
+			frames += ceili((entry[1] + (entry[2] as AttackComboStep).hitlag) * FPS / _slow)
+		longest = maxi(longest, frames)
+		states.append({"entry": -1, "left": 0, "hitlag": 0.0, "hit_done": false, "base_z": 0.0, "done": false})
+		_rigs[r]["marking"] = true
+	var every: int = maxi(ceili(float(longest) / COLUMNS), 1)
 	var shots: Dictionary = {}  # "<view>/<rig>" -> Array[Image]
 	var times: PackedStringArray = []
 	var frame: int = 0
-	var base_z: float = 0.0
-	for entry: Array in plan:
-		var step: AttackComboStep = entry[2]
-		for rig: Dictionary in _rigs:
-			(rig["humanoid"] as LowPolyHumanoid).play(entry[0])
-			(rig["humanoid"] as LowPolyHumanoid).anim.speed_scale = 1.0
-		var hitlag_left: float = 0.0
-		var hitlag_done: bool = false
-		var clip_frames: int = ceili((entry[1] + step.hitlag) * FPS / _slow)
-		for f: int in clip_frames:
-			await RenderingServer.frame_post_draw
-			frame += 1
-			var anim: AnimationPlayer = (_rigs[0]["humanoid"] as LowPolyHumanoid).anim
-			var t: float = anim.current_animation_position
-			if not hitlag_done and t >= step.hit_start:
-				hitlag_done = true
-				hitlag_left = step.hitlag
-			var speed: float = 1.0
-			if hitlag_left > 0.0:
-				hitlag_left -= _slow / FPS
-				speed = 0.0
-			for rig: Dictionary in _rigs:
-				var humanoid: LowPolyHumanoid = rig["humanoid"]
-				humanoid.anim.speed_scale = speed
-				var root: Node3D = rig["root"]
-				root.position.z = -(base_z + step.lunge_covered(t))
+	while frame < longest:
+		for r: int in _rigs.size():
+			_advance(_rigs[r], states[r], plans[r])
+		await RenderingServer.frame_post_draw
+		frame += 1
+		if not _movie and frame % every == 0:
+			var anim: AnimationPlayer = (_rigs[1]["humanoid"] as LowPolyHumanoid).anim
+			times.append("%s %.2f" % [anim.current_animation, anim.current_animation_position])
+			for rig_index: int in _rigs.size():
 				for view: String in VIEWS:
-					var spec: Array = VIEWS[view]
-					(rig["views"][view][1] as Camera3D).look_at_from_position(root.position + spec[0], root.position + spec[1])
-			if not _movie and frame % every == 0:
-				times.append("%s %.2f" % [entry[0], t])
-				for rig_index: int in _rigs.size():
-					for view: String in VIEWS:
-						var key: String = "%s/%d" % [view, rig_index]
-						if not shots.has(key):
-							shots[key] = []
-						var image: Image = (_rigs[rig_index]["views"][view][0] as SubViewport).get_texture().get_image()
-						image.convert(Image.FORMAT_RGBA8)
-						shots[key].append(image)
-		base_z += step.lunge_distance
+					var key: String = "%s/%d" % [view, rig_index]
+					if not shots.has(key):
+						shots[key] = []
+					var image: Image = (_rigs[rig_index]["views"][view][0] as SubViewport).get_texture().get_image()
+					image.convert(Image.FORMAT_RGBA8)
+					shots[key].append(image)
 	if not _movie:
 		_save_sheet(sequence, shots, times)
 
+
+## One frame of a rig's plan: starts the next clip when the current one is
+## over, runs the hit lag and moves the root along the lunge.
+func _advance(rig: Dictionary, state: Dictionary, plan: Array) -> void:
+	var humanoid: LowPolyHumanoid = rig["humanoid"]
+	if state["done"]:
+		return
+	if state["left"] <= 0:
+		if state["entry"] >= 0:
+			state["base_z"] += (plan[state["entry"]][2] as AttackComboStep).lunge_distance
+		state["entry"] += 1
+		if state["entry"] >= plan.size():
+			state["done"] = true
+			humanoid.anim.speed_scale = 1.0
+			return
+		var start: Array = plan[state["entry"]]
+		humanoid.play(start[0])
+		humanoid.anim.speed_scale = 1.0
+		state["left"] = ceili((start[1] + (start[2] as AttackComboStep).hitlag) * FPS / _slow)
+		state["hitlag"] = 0.0
+		state["hit_done"] = false
+	var entry: Array = plan[state["entry"]]
+	var step: AttackComboStep = entry[2]
+	state["left"] -= 1
+	var t: float = humanoid.anim.current_animation_position
+	if not state["hit_done"] and t >= step.hit_start:
+		state["hit_done"] = true
+		state["hitlag"] = step.hitlag
+	var speed: float = 1.0
+	if state["hitlag"] > 0.0:
+		state["hitlag"] -= _slow / FPS
+		speed = 0.0
+	humanoid.anim.speed_scale = speed
+	var root: Node3D = rig["root"]
+	root.position.z = -(state["base_z"] + step.lunge_covered(t))
+	for view: String in VIEWS:
+		var spec: Array = VIEWS[view]
+		(rig["views"][view][1] as Camera3D).look_at_from_position(root.position + spec[0], root.position + spec[1])
 
 func _reset(rig: Dictionary) -> void:
 	var humanoid: LowPolyHumanoid = rig["humanoid"]
 	humanoid.anim.speed_scale = 1.0
 	humanoid.play(&"idle", 0.0)
 	(rig["root"] as Node3D).position.z = 0.0
+	for view: String in VIEWS:
+		var spec: Array = VIEWS[view]
+		var at: Vector3 = (rig["root"] as Node3D).position
+		(rig["views"][view][1] as Camera3D).look_at_from_position(at + spec[0], at + spec[1])
 	rig["marking"] = false
 	for marker: MeshInstance3D in rig["markers"]:
 		marker.visible = false
