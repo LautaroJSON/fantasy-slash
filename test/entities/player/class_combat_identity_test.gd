@@ -418,7 +418,9 @@ func test_ac653_the_weapon_never_goes_through_the_body() -> void:
 				# The charge crouch holds the katana in its sheath
 				# (sheath-socket-hand-grip.md), and so does the frame of the
 				# release (sheathe-release-animation.md: then it goes to the hand).
-				var sheathed: bool = clip_name == SHEATHE_CONFIG.charge_body_clip or (clip_name == SHEATHE_CONFIG.release_body_clip and is_zero_approx(time))
+				# Adapted (sheathe-visual-rework.md): so do the deeper charge poses.
+				var charging: bool = clip_name == SHEATHE_CONFIG.charge_body_clip or SHEATHE_CONFIG.charge_sink_clips.has(clip_name)
+				var sheathed: bool = charging or (clip_name == SHEATHE_CONFIG.release_body_clip and is_zero_approx(time))
 				mount.hold_in_sheath(sheathed)
 				humanoid.anim.seek(time, true)
 				mount.update(1.0)

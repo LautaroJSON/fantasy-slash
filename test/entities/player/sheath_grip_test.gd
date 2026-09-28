@@ -205,7 +205,9 @@ func test_ac665_every_clip_carries_its_grip_weights() -> void:
 			if id == SAMURAI.animation_profile:
 				# The sheath comes to the hand, so the left hand has no target (AC672).
 				assert_bool(left.all(func(w: float) -> bool: return is_zero_approx(w))).override_failure_message(label).is_true()
-				var right_expected: float = 1.0 if clip_name == SHEATHE_CONFIG.charge_body_clip else 0.0
+				# Adapted (sheathe-visual-rework.md): the deeper charge poses grip the hilt too.
+				var charging: bool = clip_name == SHEATHE_CONFIG.charge_body_clip or SHEATHE_CONFIG.charge_sink_clips.has(clip_name)
+				var right_expected: float = 1.0 if charging else 0.0
 				if clip_name == SHEATHE_CONFIG.release_body_clip:
 					# The release starts on the hilt and lets go to draw
 					# (sheathe-release-animation.md).

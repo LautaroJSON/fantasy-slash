@@ -23,6 +23,14 @@ var _fov_base: float = 0.0
 var _fov_kick: float = 0.0
 var _fov_kick_total: float = 0.0
 var _fov_kick_left: float = 0.0
+## Held field of view offset (e.g. a charge narrowing the view, docs/specs/
+## sheathe-visual-rework.md §2.1): eased towards _fov_hold_target over the
+## blend time, added to the base and to the kick.
+var _fov_hold: float = 0.0
+var _fov_hold_from: float = 0.0
+var _fov_hold_target: float = 0.0
+var _fov_hold_total: float = 0.0
+var _fov_hold_left: float = 0.0
 
 @onready var _spring_arm: SpringArm3D = $SpringArm3D
 @onready var _camera: Camera3D = $SpringArm3D/Camera3D
@@ -46,7 +54,7 @@ func _physics_process(_delta: float) -> void:
 func _process(delta: float) -> void:
 	_update_stick_look(delta)
 	_update_shake(delta)
-	_update_fov_kick(delta)
+	advance_fov(delta)
 
 
 ## Shakes the view; strength in [0, 1]. A new shake restarts the timer and
@@ -62,7 +70,37 @@ func kick_fov(amount_deg: float, return_time: float) -> void:
 	_fov_kick = amount_deg
 	_fov_kick_total = return_time
 	_fov_kick_left = return_time
-	_camera.fov = _fov_base + amount_deg
+	_apply_fov()
+
+
+## Eases a held offset of the view (negative narrows it) towards `offset_deg`
+## over `blend_time` seconds (0 = at once). It stays until changed and adds up
+## with a running kick.
+func hold_fov(offset_deg: float, blend_time: float) -> void:
+	_fov_hold_from = _fov_hold
+	_fov_hold_target = offset_deg
+	_fov_hold_total = blend_time
+	_fov_hold_left = blend_time
+	if blend_time <= 0.0:
+		_fov_hold = offset_deg
+	_apply_fov()
+
+
+## Eases the held offset and the kick by `delta` seconds (called every frame).
+func advance_fov(delta: float) -> void:
+	_update_fov_hold(delta)
+	_update_fov_kick(delta)
+	_apply_fov()
+
+
+## Offset the held view is easing towards, in degrees.
+func get_fov_hold_target() -> float:
+	return _fov_hold_target
+
+
+## Current held offset of the view, in degrees (0 when none).
+func get_fov_hold() -> float:
+	return _fov_hold
 
 
 func get_fov() -> float:
@@ -172,5 +210,21 @@ func _update_fov_kick(delta: float) -> void:
 	if _fov_kick_left <= 0.0:
 		return
 	_fov_kick_left = maxf(_fov_kick_left - delta, 0.0)
-	var remaining: float = _fov_kick_left / _fov_kick_total
-	_camera.fov = _fov_base + _fov_kick * remaining * remaining
+
+
+## Ease-out towards the held target.
+func _update_fov_hold(delta: float) -> void:
+	if _fov_hold_left <= 0.0:
+		return
+	_fov_hold_left = maxf(_fov_hold_left - delta, 0.0)
+	var remaining: float = _fov_hold_left / _fov_hold_total
+	_fov_hold = lerpf(_fov_hold_target, _fov_hold_from, remaining * remaining)
+
+
+## Base + held offset + what is left of the kick (ease-out).
+func _apply_fov() -> void:
+	var kick: float = 0.0
+	if _fov_kick_left > 0.0:
+		var remaining: float = _fov_kick_left / _fov_kick_total
+		kick = _fov_kick * remaining * remaining
+	_camera.fov = _fov_base + _fov_hold + kick

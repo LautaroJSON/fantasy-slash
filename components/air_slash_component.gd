@@ -225,6 +225,7 @@ func _impact() -> void:
 	body.velocity = Vector3.ZERO
 	strike_with_roll(_rng.randf())
 	_wind_cut.play(body.global_position, visual.global_rotation.y, _config.hit_length, _charge_ratio)
+	_wind_cut.burst()
 	camera.shake(_config.impact_shake)
 	_indicator.start_fade()
 	_elapsed = 0.0

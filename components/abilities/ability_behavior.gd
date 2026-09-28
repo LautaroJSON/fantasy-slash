@@ -86,6 +86,13 @@ func channel(_ability: AbilityComponent, _step: float) -> void:
 	pass
 
 
+## Called by AbilityComponent every step, casting or not, after the cast
+## advanced: for what outlives the cast (e.g. Sheathe's release pause and
+## burst, docs/specs/sheathe-visual-rework.md §2.5).
+func tick(_ability: AbilityComponent, _delta: float) -> void:
+	pass
+
+
 func controls_motion() -> bool:
 	return false
 

@@ -18,7 +18,13 @@ extends AbilityBehavior
 ##   player's CRIT_CHANCE / CRIT_DAMAGE (no damage bonus or lifesteal), and is
 ##   pushed away;
 ## - every other enemy within wave_radius is pushed away without damage;
-## - a wind cut rises along the slash, opening upwards in a V (wind-cut-v.md).
+## - a line marks the slash on the ground; strike_pause_at later the draw holds
+##   (the clip and the enemies hit pause, release_feel) and at burst_at the
+##   wind cut bursts out (docs/specs/sheathe-visual-rework.md §2.5), shaking
+##   the camera and letting go of the charge zoom with a kick, unless a dash
+##   cut the cast short (then the burst is only drawn).
+## While charging, every milestone sinks the body into a deeper pose and
+## pulses a light at the mouth of the sheath (§2.3-2.4).
 ## factor = SheatheConfig.charge_factor(charge ratio) also scales the push.
 
 ## Unique upgrade "Paso del Viento": each dash while charging adds charge.
@@ -32,6 +38,12 @@ const NUKI: StringName = &"nuki"
 const TSUBAME_GAESHI: StringName = &"tsubame_gaeshi"
 ## Blade mesh inside the weapon adapter scene (glow overlay).
 const WEAPON_MODEL: NodePath = ^"Model"
+
+enum ReleaseStage {
+	IDLE,
+	PAUSE,
+	BURST,
+}
 
 @export var config: SheatheConfig
 
@@ -49,9 +61,18 @@ var _cast_is_empowered: bool = false
 var _blade: MeshInstance3D = null
 ## Created once: swaps the gain flash for the steady glow.
 var _flash_timer: Timer = null
+## Seconds since the release while its pause or burst is pending.
+var _release_elapsed: float = 0.0
+var _release_stage: ReleaseStage = ReleaseStage.IDLE
+## Enemies the release pause freezes (the living ones among those hit).
+var _pause_buffer: Array[Enemy] = []
+var _no_enemies: Array[Enemy] = []
+## Body clip of the charge: deeper after every milestone.
+var _charge_clip: StringName = &""
 
 @onready var _indicator: AbilityRectIndicator = $Indicator
 @onready var _wind_cut: WindCutVfx = $WindCut
+@onready var _charge_glow: SheatheChargeGlow = $ChargeGlow
 
 
 func _ready() -> void:
@@ -80,7 +101,12 @@ func is_empowered() -> bool:
 ## §2.7); on the release it draws, follows through and shakes the blade
 ## (sheathe-release-animation.md). Only asked while charging or casting.
 func get_body_clip(_ability: AbilityComponent) -> StringName:
-	return config.charge_body_clip if _charging else config.release_body_clip
+	return _charge_clip if _charging else config.release_body_clip
+
+
+## Each deeper charge pose blends in slowly; the release snaps out of it.
+func get_body_clip_blend(_ability: AbilityComponent) -> float:
+	return config.charge_sink_blend if _charging else config.release_body_blend
 
 
 ## The release is drawn by the body: the katana stays in the hand.
@@ -94,6 +120,7 @@ func is_charged() -> bool:
 
 func begin_charge(ability: AbilityComponent) -> void:
 	_charging = true
+	_charge_clip = config.charge_body_clip
 	_held_yaw = ability.visual.rotation.y
 	_face_target(ability)
 	ability.weapon_mount.hold_in_sheath(true)
@@ -108,6 +135,7 @@ func begin_charge(ability: AbilityComponent) -> void:
 func charge(ability: AbilityComponent, _step: float) -> void:
 	_face_target(ability)
 	_update_reach(ability, ability.get_charge_ratio())
+	_charge_glow.follow(ability.weapon_mount.pivot.global_position)
 
 
 ## "Nuki": every dash while on cooldown makes the ability ready.
@@ -125,7 +153,10 @@ func dash_during_charge(ability: AbilityComponent) -> void:
 		ability.add_charge(ability.get_unique_value(WIND_STEP))
 
 
-func charge_milestone(_ability: AbilityComponent, _index: int, is_full: bool) -> void:
+func charge_milestone(ability: AbilityComponent, index: int, is_full: bool) -> void:
+	_charge_clip = config.charge_clip_for(index, is_full)
+	_charge_glow.follow(ability.weapon_mount.pivot.global_position)
+	_charge_glow.pulse(index, is_full)
 	if is_full:
 		_indicator.set_transparency(config.full_charge_transparency)
 	_indicator.pulse()
@@ -167,6 +198,7 @@ func _slash(ability: AbilityComponent) -> void:
 		_push_away(ability, enemy, push)
 	_indicator.start_fade()
 	_wind_cut.play(ability.visual.global_position, ability.visual.global_rotation.y, _slash_length(ability, factor), factor)
+	_start_release()
 	if killed and ability.has_unique(ZANSHIN):
 		ability.dash.reset_cooldown()
 	if _connects_full_manual_charge(ability):
@@ -189,6 +221,42 @@ func get_indicator() -> AbilityRectIndicator:
 
 func get_wind_cut() -> WindCutVfx:
 	return _wind_cut
+
+
+func get_charge_glow() -> SheatheChargeGlow:
+	return _charge_glow
+
+
+func get_release_stage() -> ReleaseStage:
+	return _release_stage
+
+
+## The line is drawn: the draw holds at strike_pause_at, then the cut bursts.
+func _start_release() -> void:
+	_pause_buffer.clear()
+	for enemy: Enemy in _hit_buffer:
+		if not enemy.health.is_dead():
+			_pause_buffer.append(enemy)
+	_release_stage = ReleaseStage.PAUSE
+	_release_elapsed = 0.0
+
+
+## The pause and the burst only reach the player and the camera while the
+## cast still runs: a dash that cut it leaves the burst only drawn.
+func tick(ability: AbilityComponent, delta: float) -> void:
+	if _release_stage == ReleaseStage.IDLE:
+		return
+	_release_elapsed += delta
+	if _release_stage == ReleaseStage.PAUSE and _release_elapsed >= config.strike_pause_at:
+		_release_stage = ReleaseStage.BURST
+		if ability.is_casting():
+			ability.report_strike(config.release_feel, _pause_buffer)
+	if _release_stage == ReleaseStage.BURST and _release_elapsed >= config.burst_at:
+		_release_stage = ReleaseStage.IDLE
+		_wind_cut.burst()
+		if ability.is_casting():
+			ability.report_strike(config.burst_feel, _no_enemies)
+			ability.report_charge_unleashed()
 
 
 func get_flash_timer() -> Timer:

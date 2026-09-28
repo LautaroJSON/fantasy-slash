@@ -298,7 +298,9 @@ func test_ac587_sweep_trail_wind_cut_shake_and_reused_nodes() -> void:
 	assert_float(camera.get_shake_strength()).is_equal_approx(CONFIG.impact_shake, 0.05)
 	await _physics_frames(12)
 	var wind_config: WindCutConfig = _air.get_wind_cut().config
-	assert_float(_air.get_wind_cut().get_wall_height()).is_equal_approx(wind_config.max_height * _air.get_charge_ratio(), 0.05)
+	# Adapted (docs/specs/sheathe-visual-rework.md): the walls are segments; the
+	# air slash draws a single one per side.
+	assert_float(_air.get_wind_cut().get_segment(WindCutVfx.WallSide.LEFT, 0).scale.y).is_equal_approx(wind_config.max_height * _air.get_charge_ratio(), 0.05)
 	await _physics_frames(30)
 	assert_bool(_air.get_indicator().is_showing()).is_false()
 	await _wait_idle()

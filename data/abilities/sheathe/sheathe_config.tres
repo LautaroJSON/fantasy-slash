@@ -3,6 +3,15 @@
 [ext_resource type="Script" uid="uid://bxime54l1m3o1" path="res://resources/sheathe_config.gd" id="1_script"]
 [ext_resource type="Material" path="res://materials/weapons/katana_empowered_overlay.tres" id="2_overlay"]
 [ext_resource type="Material" path="res://materials/weapons/katana_empowered_flash_overlay.tres" id="3_flash_overlay"]
+[ext_resource type="Script" uid="uid://yr0xb60smvkg" path="res://resources/strike_feel.gd" id="4_feel"]
+
+[sub_resource type="Resource" id="Feel_release"]
+script = ExtResource("4_feel")
+hitlag = 0.12
+
+[sub_resource type="Resource" id="Feel_burst"]
+script = ExtResource("4_feel")
+shake_strength = 0.6
 
 [resource]
 script = ExtResource("1_script")
@@ -12,8 +21,24 @@ charge_damage_reduction = 0.5
 knockback_speed = 7.0
 wave_radius = 2.5
 charge_body_clip = &"sheathe_charge"
+charge_sink_clips = Array[StringName]([&"sheathe_charge_1", &"sheathe_charge_2", &"sheathe_charge_full"])
+charge_sink_blend = 0.2
 release_body_clip = &"sheathe_release"
+release_body_blend = 0.04
 full_charge_transparency = 0.6
 empowered_overlay = ExtResource("2_overlay")
 empowered_flash_overlay = ExtResource("3_flash_overlay")
 empowered_flash_duration = 0.25
+strike_pause_at = 0.1
+release_feel = SubResource("Feel_release")
+burst_at = 0.22
+burst_feel = SubResource("Feel_burst")
+glow_energy_base = 1.0
+glow_energy_step = 1.0
+glow_energy_full = 3.0
+glow_range = 2.0
+glow_radius = 0.25
+glow_full_radius = 0.45
+glow_start_transparency = 0.4
+glow_duration = 0.2
+glow_full_duration = 0.35

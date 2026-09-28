@@ -23,6 +23,12 @@ signal trail_changed
 ## HitstopComponent pauses the clip, freezes `enemies` and shakes the camera.
 ## `enemies` is the behavior's buffer (read it, do not keep it); empty = only the shake.
 signal struck(feel: StrikeFeel, enemies: Array[Enemy])
+## Emitted when a charge is dropped without casting (cancel_charge()).
+signal charge_cancelled
+## Emitted by the behavior when the strike of a charged cast bursts out (e.g.
+## Sheathe's wind cut, docs/specs/sheathe-visual-rework.md §2.5): the camera
+## lets go of the charge zoom with a kick.
+signal charge_unleashed
 
 ## Float tolerance when comparing charge times (the steps add up only
 ## approximately). Structural, not a design value.
@@ -314,6 +320,7 @@ func cancel_charge() -> void:
 		return
 	_charging = false
 	_behavior.cancel_charge(self)
+	charge_cancelled.emit()
 
 
 func is_casting() -> bool:
@@ -414,6 +421,8 @@ func get_cooldown_ratio() -> float:
 func advance(delta: float) -> void:
 	_advance_charge(delta)
 	_advance_cast(delta)
+	if _behavior != null:
+		_behavior.tick(self, delta)
 	_cooldown_left = maxf(_cooldown_left - delta, 0.0)
 
 
@@ -425,6 +434,11 @@ func report_hit(enemy: Enemy, applied: float, is_crit: bool = false) -> void:
 ## Called by behaviors once per strike, after its report_hit() calls.
 func report_strike(feel: StrikeFeel, enemies: Array[Enemy]) -> void:
 	struck.emit(feel, enemies)
+
+
+## Called by behaviors when the strike of a charged cast bursts out.
+func report_charge_unleashed() -> void:
+	charge_unleashed.emit()
 
 
 ## Seconds left of the running cast from now on (e.g. the Parry shortens it

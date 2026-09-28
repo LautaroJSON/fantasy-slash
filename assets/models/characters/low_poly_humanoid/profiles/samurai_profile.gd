@@ -51,6 +51,29 @@ const RUN_ARMS := {
 	},
 }
 
+## Posturas de carga más hondas de Envainar (docs/specs/sheathe-visual-rework.md
+## §2.4), una por hito: la cadera baja (≈2.6, 5.2 y 8.5 cm) y el torso se
+## vuelca 4°, 8° y 12° más. Piernas resueltas para que los tobillos queden
+## donde están en _charge_pose() (posición y orientación, a menos de 1 mm).
+const CHARGE_SINK_CLIPS: Array[StringName] = [&"sheathe_charge_1", &"sheathe_charge_2", &"sheathe_charge_full"]
+const CHARGE_SINK: Array[Dictionary] = [
+	{
+		"hips_pos": Vector3(-0.04, -0.48, 0.12), "torso": Vector3(-9, 130, -15),
+		"hip_l": Vector3(-21.5, 51.1, -25.5), "knee_l": Vector3(-70, 0, 0), "ankle_l": Vector3(7.8, 67.2, 93.3),
+		"hip_r": Vector3(86.6, 35, 0), "knee_r": Vector3(-50.4, 0, 0), "ankle_r": Vector3(-36.2, 0, 0),
+	},
+	{
+		"hips_pos": Vector3(-0.04, -0.52, 0.12), "torso": Vector3(-13, 130, -15),
+		"hip_l": Vector3(-22.1, 51, -27), "knee_l": Vector3(-74.4, 0, 0), "ankle_l": Vector3(9.1, 66.7, 98.1),
+		"hip_r": Vector3(91.7, 35, 0), "knee_r": Vector3(-55.6, 0, 0), "ankle_r": Vector3(-36.1, 0, 0),
+	},
+	{
+		"hips_pos": Vector3(-0.04, -0.57, 0.12), "torso": Vector3(-17, 130, -15),
+		"hip_l": Vector3(-23.4, 51.2, -28.9), "knee_l": Vector3(-79.1, 0, 0), "ankle_l": Vector3(10.6, 65.9, 104),
+		"hip_r": Vector3(97.8, 35, 0), "knee_r": Vector3(-61, 0, 0), "ankle_r": Vector3(-36.8, 0, 0),
+	},
+]
+
 var _h: LowPolyHumanoid
 
 
@@ -335,6 +358,14 @@ func _add_sheathe_charge(lib: AnimationLibrary) -> void:
 		[1.0, _h.with(ready, {"hips_pos": Vector3(-0.04, -0.45, 0.12)})],
 		[2.0, ready],
 	], true, true))
+	for level: int in CHARGE_SINK.size():
+		var sunk := _h.with(ready, CHARGE_SINK[level])
+		var breath: Vector3 = sunk["hips_pos"]
+		lib.add_animation(CHARGE_SINK_CLIPS[level], _clip([
+			[0.0, sunk],
+			[1.0, _h.with(sunk, {"hips_pos": breath + Vector3(0, -0.01, 0)})],
+			[2.0, sunk],
+		], true, true))
 
 
 ## Suelte de Envainar (docs/specs/sheathe-release-animation.md): desde la pose

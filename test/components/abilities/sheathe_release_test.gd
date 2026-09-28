@@ -294,7 +294,9 @@ func test_ac729_without_input_the_release_finishes_as_a_free_recovery() -> void:
 	assert_str(_current_clip()).is_equal(String(SHEATHE_CONFIG.release_body_clip))
 	assert_bool(_mount().is_holding_in_sheath()).is_false()
 	assert_bool(_mount().is_hand_free()).is_true()
-	await _frames(_frames_for(CLIP_LENGTH - RELEASE_CAST) + 4)
+	# Adapted (sheathe-visual-rework.md §2.5): the draw holds release_feel.hitlag
+	# on the way, so the clip ends that much later.
+	await _frames(_frames_for(CLIP_LENGTH - RELEASE_CAST + SHEATHE_CONFIG.release_feel.hitlag) + 4)
 	assert_str(_current_clip()).is_equal("idle")
 
 

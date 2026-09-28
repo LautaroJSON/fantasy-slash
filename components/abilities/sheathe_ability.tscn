@@ -9,6 +9,8 @@
 [ext_resource type="Resource" path="res://data/abilities/sheathe/wind_cut_config.tres" id="7_wind_cut_config"]
 [ext_resource type="Material" path="res://materials/vfx/wind_cut_additive_material.tres" id="8_glow_material"]
 [ext_resource type="Material" path="res://materials/vfx/wind_dust_material.tres" id="9_dust_material"]
+[ext_resource type="Script" path="res://components/abilities/sheathe_charge_glow.gd" id="10_charge_glow"]
+[ext_resource type="Material" path="res://materials/vfx/ground_crack_material.tres" id="11_crack_material"]
 
 [node name="SheatheAbility" type="Node"]
 script = ExtResource("1_script")
@@ -26,3 +28,10 @@ script = ExtResource("6_wind_cut")
 config = ExtResource("7_wind_cut_config")
 glow_material = ExtResource("8_glow_material")
 dust_material = ExtResource("9_dust_material")
+crack_material = ExtResource("11_crack_material")
+
+[node name="ChargeGlow" type="Node3D" parent="."]
+top_level = true
+script = ExtResource("10_charge_glow")
+config = ExtResource("2_config")
+glow_material = ExtResource("8_glow_material")

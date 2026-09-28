@@ -7,6 +7,7 @@
   - se registra el color del polvo como no reservado.
 - **Pilar (Principio I):** combate. El tajo cargado tiene que *sentirse* monumental y dejar legible su alcance: la V marca la línea exacta del golpe.
 - **Reemplaza:** la V horizontal de `sheathe-feel.md` (AC265), que queda marcada como reemplazada por esta spec.
+- **Reemplazada en parte por:** `sheathe-visual-rework.md` (AC271–AC272 pasan a AC1043–AC1044: paredes por tramos; chispas, polvo y destello salen en el estallido).
 - **Referencia:** captura del usuario. Dos paredes de luz nacen del suelo sobre la línea del corte y se abren hacia el cielo, con un estallido, chispas y polvo.
 
 ## 1. Objetivo
