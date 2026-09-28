@@ -6,6 +6,8 @@ Hack and slash roguelike en tercera persona (Godot 4.7, GDScript, PC con teclado
 
 **Antes de tocar una animación o el VFX de un golpe, leé [`docs/animation-standard.md`](docs/animation-standard.md)** (Principio VIII): capas, timing, flujo con video antes/después y herramientas de captura.
 
+**Subagentes** (`.claude/agents/`): delegá los tests y smoke tests a `godot-tester` (Haiku) y los videos y hojas de captura a `godot-capture` (Sonnet). Trabajan sobre una copia y devuelven solo el resultado, así el trabajo pesado no llena esta conversación.
+
 ## Flujo de trabajo (Spec-Driven Development)
 
 1. Para cada feature o cambio de comportamiento, **no escribas GDScript todavía**. Primero presentá la spec y el plan:
