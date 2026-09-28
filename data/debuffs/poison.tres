@@ -1,14 +1,14 @@
-[gd_resource type="Resource" script_class="DebuffData" format=3 uid="uid://pnagvpnc7m4y"]
+[gd_resource type="Resource" script_class="DebuffData" format=3]
 
-[ext_resource type="Script" uid="uid://dncgyekgwjt5n" path="res://resources/debuff_data.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://dn3tliscnf40p" path="res://assets/icons/status/poison_bottle.svg" id="9_glyph"]
+[ext_resource type="Script" path="res://resources/debuff_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/icons/status/poison_bottle.svg" id="9_glyph"]
 [ext_resource type="Material" path="res://materials/afflictions/poison_damage_number_material.tres" id="10_number"]
 
 [resource]
 script = ExtResource("1_script")
 id = &"poison"
-duration = 3.0
-tick_interval = 0.5
+duration = 5.0
+tick_interval = 1.0
 max_stacks = 3
 stack_mode = 1
 damage_scaling = 1

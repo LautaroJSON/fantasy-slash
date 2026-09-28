@@ -1,12 +1,9 @@
-[gd_resource type="Resource" script_class="WindCutConfig" format=3 uid="uid://cqdk84pog1yur"]
+[gd_resource type="Resource" script_class="WindCutConfig" format=3]
 
-[ext_resource type="Script" uid="uid://d05hyl1l4hayf" path="res://resources/wind_cut_config.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/wind_cut_config.gd" id="1_script"]
 
 [resource]
 script = ExtResource("1_script")
-line_width = 0.04
-line_grow_duration = 0.05
-line_transparency = 0.2
 show_walls = false
 show_crescent = false
 max_height = 6.0
@@ -15,11 +12,33 @@ wall_thickness = 0.03
 grow_duration = 0.12
 fade_duration = 0.4
 start_transparency = 0.5
+spark_amount = 48
+spark_lifetime = 0.6
+spark_speed_min = 4.0
+spark_speed_max = 9.0
+spark_spread_degrees = 35.0
+spark_gravity = 14.0
+spark_size = 0.06
+dust_amount = 32
+dust_lifetime = 0.8
+dust_rise_speed_min = 0.6
+dust_rise_speed_max = 1.6
+dust_size = 0.35
+dust_width = 0.8
+flash_height = 1.0
+flash_radius = 1.4
+flash_duration = 0.25
+flash_energy = 4.0
+flash_range = 6.0
+line_width = 0.04
+line_grow_duration = 0.05
+line_transparency = 0.2
 segment_count = 7
 segment_fill = 0.9
 edge_height_ratio = 0.35
 wave_step = 0.02
 fade_height_ratio = 0.6
+fade_thickness_ratio = 0.0
 fade_stagger = 0.1
 crescent_arc_degrees = 150.0
 crescent_radius = 1.6
@@ -43,21 +62,3 @@ crack_offset = 0.06
 crack_open_step = 0.012
 crack_duration = 1.2
 crack_fade = 0.4
-spark_amount = 48
-spark_lifetime = 0.6
-spark_speed_min = 4.0
-spark_speed_max = 9.0
-spark_spread_degrees = 35.0
-spark_gravity = 14.0
-spark_size = 0.06
-dust_amount = 32
-dust_lifetime = 0.8
-dust_rise_speed_min = 0.6
-dust_rise_speed_max = 1.6
-dust_size = 0.35
-dust_width = 0.8
-flash_height = 1.0
-flash_radius = 1.4
-flash_duration = 0.25
-flash_energy = 4.0
-flash_range = 6.0

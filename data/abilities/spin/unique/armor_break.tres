@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="AbilityUniqueUpgradeData" format=3 uid="uid://dlco84nikc5bc"]
 
-[ext_resource type="Script" uid="uid://2tfhhxue04nf" path="res://resources/ability_unique_upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://b25xj1rf8r5xt" path="res://resources/ability_unique_upgrade_data.gd" id="1_script"]
 [ext_resource type="Resource" path="res://data/debuffs/weaken.tres" id="2_weaken"]
 [ext_resource type="Script" uid="uid://clqaknbxq40nf" path="res://resources/value_format.gd" id="3_format"]
 
