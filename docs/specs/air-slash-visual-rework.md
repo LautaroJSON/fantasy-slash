@@ -54,7 +54,8 @@ Van en `berserker_profile.gd`, con `_add_air_slash()`. Reutilizan las poses del 
   - `WeaponMount` mezcla el arma a la mano (0.1 s) y la sigue;
   - `PlayerAnimator` pide su clip.
 - **Posicionado por la carga.**
-  - Mientras `Player.get_body_clip_ratio()` ≥ 0, `PlayerAnimator` deja el clip quieto (`speed_scale` 0) y lo posiciona en `ratio × largo` en cada cuadro.
+  - Mientras `Player.get_body_clip_ratio()` ≥ 0, `PlayerAnimator` posiciona el clip en `ratio × largo` en cada cuadro.
+  - El clip mantiene su velocidad normal: con `speed_scale` en 0 también se congela la mezcla de entrada y el cuerpo queda en la pose anterior (visto en las capturas).
   - Así, el cuerpo **se tensa exactamente con la carga**: 0 % al empezar, 100 % a los 3 s.
 - Se borra el uso de `SwordSwing` en el Tajo aéreo (`hold_pose`, `swing_to` y `recover`), y con él `raise_position`, `raise_rotation`, `slam_position`, `slam_rotation` y `slam_duration` de `AirSlashConfig`.
   - `SwordSwing` queda sin usuarios en el juego. Borrarlo va en otra spec.
@@ -106,7 +107,7 @@ Van en `berserker_profile.gd`, con `_add_air_slash()`. Reutilizan las poses del 
 **Cuerpo y arma**
 - **AC1014** El perfil del Berserker tiene `air_slash_charge`, `air_slash_dive` y `air_slash_land`, sin loop. En todo cuadro de `air_slash_charge` y `air_slash_dive`, `left_grip` es 1.
 - **AC1015** En HOVER el humanoide reproduce `air_slash_charge`; en DIVE, `air_slash_dive`; en LANDING, `air_slash_land`. En las tres fases `Player.is_weapon_in_hand_cast()` es verdadero y, con la mezcla cumplida, el pivot del arma coincide con la mano (1 mm).
-- **AC1016** El cuerpo sigue la carga: con la carga en 0, 0.5 y 1, la posición del clip `air_slash_charge` es 0, 0.5 y 1 × su largo (tolerancia de un cuadro de física), y no avanza solo.
+- **AC1016** El cuerpo sigue la carga: con la carga en 0, 0.5 y 1, la posición del clip `air_slash_charge` es 0, 0.5 y 1 × su largo (tolerancia de un cuadro de física), medida después de cada paso de física.
 - **AC1017** **Se tensa:** al 100 % de la carga la punta del mandoble está más alta y más atrás (en el espacio del `Visual`) que al 0 %, y el torso está más arqueado hacia atrás.
 - **AC1018** En `air_slash_charge` y `air_slash_dive`, muestreados cada 0.05 s, la hoja no atraviesa el torso (mismo criterio que AC751).
 - **AC1019** `SwordSwing` no se activa en ningún momento del Tajo aéreo, y `AirSlashConfig` no tiene `raise_*` ni `slam_*`.

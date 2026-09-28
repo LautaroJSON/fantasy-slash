@@ -127,8 +127,11 @@ func test_ac579_attack_in_the_air_suspends_with_the_weapon_raised() -> void:
 	assert_int(_air.get_phase()).is_equal(AirSlashComponent.Phase.HOVER)
 	assert_float(_player.velocity.y).is_equal(0.0)
 	assert_float(_player.global_position.y).is_equal_approx(height, 0.02)
-	var pivot: Node3D = _player.get_node("Visual/SwordPivot") as Node3D
-	assert_vector(pivot.position).is_equal_approx(CONFIG.raise_position, Vector3.ONE * 0.001)
+	# Adapted (docs/specs/air-slash-visual-rework.md): the weapon is raised by
+	# the charge clip in the hands, no longer at a fixed pivot pose.
+	var humanoid: LowPolyHumanoid = _player.get_node("Visual/Humanoid") as LowPolyHumanoid
+	assert_str(String(humanoid.anim.current_animation)).is_equal(String(CONFIG.charge_body_clip))
+	assert_bool(_player.is_weapon_in_hand_cast()).is_true()
 	assert_bool(_air.get_indicator().is_showing()).is_true()
 	assert_int(_swings[0]).is_equal(0)
 
@@ -284,7 +287,10 @@ func test_ac587_sweep_trail_wind_cut_shake_and_reused_nodes() -> void:
 	await _physics_frames(58)
 	Input.action_release(&"attack")
 	await _physics_frames(2)
-	assert_bool(_player.sword_swing.is_swinging()).is_true()
+	# Adapted (docs/specs/air-slash-visual-rework.md): the dive clip sweeps the
+	# weapon in the hands; the trail follows the dive instead of SwordSwing.
+	assert_int(_air.get_phase()).is_equal(AirSlashComponent.Phase.DIVE)
+	assert_bool(_player.sword_swing.is_swinging()).is_false()
 	assert_bool(trail.is_emitting()).is_true()
 	while _air.get_phase() != AirSlashComponent.Phase.LANDING:
 		await get_tree().physics_frame

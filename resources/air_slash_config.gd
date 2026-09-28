@@ -31,20 +31,27 @@ extends Resource
 ## Seconds the player stays still after landing.
 @export var landing_lock: float
 
-@export_group("Weapon")
-## Weapon pivot pose while suspended (raised over the head, pointing back),
-## relative to Visual.
-@export var raise_position: Vector3
-@export var raise_rotation: Vector3
-## Weapon pivot pose at the end of the descending slash.
-@export var slam_position: Vector3
-@export var slam_rotation: Vector3
-## Seconds the blade takes to go from the raised pose to the slam pose.
-@export var slam_duration: float
+@export_group("Body")
+## Humanoid clips of each phase (docs/specs/air-slash-visual-rework.md): the
+## charge clip is posed by the charge (0 = weapon raised, 1 = fully drawn back),
+## the dive clip slashes down and holds, the land clip buries the blade and
+## returns to the guard. The weapon stays in the hands throughout.
+@export var charge_body_clip: StringName
+@export var dive_body_clip: StringName
+@export var land_body_clip: StringName
 
 @export_group("Feedback")
 ## Camera shake strength on impact, in [0, 1].
 @export var impact_shake: float
+## Charge ratio from which the weapon blinks, warning that the slash is about
+## to release itself.
+@export var blink_start_ratio: float
+## Seconds of one blink (lit + unlit) when the blinking starts...
+@export var blink_period_start: float
+## ...and at full charge: the blinking speeds up linearly in between.
+@export var blink_period_end: float
+## White additive overlay put on the weapon while lit.
+@export var blink_overlay: StandardMaterial3D
 
 @export_group("Affliction")
 ## Scale of the Affliction build-up of its hits (a basic-attack source; docs/specs/affliction.md).

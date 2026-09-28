@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="AirSlashConfig" format=3 uid="uid://lhlsvhxcm3wd"]
 
 [ext_resource type="Script" uid="uid://b3w2cbf7y4d43" path="res://resources/air_slash_config.gd" id="1_script"]
+[ext_resource type="Material" path="res://materials/vfx/weapon_charge_blink_material.tres" id="90_blink"]
 
 [resource]
 script = ExtResource("1_script")
@@ -14,10 +15,12 @@ knockback_speed = 5.0
 dive_speed = 20.0
 max_dive_duration = 1.0
 landing_lock = 0.6
-raise_position = Vector3(0, 1.8, 0.25)
-raise_rotation = Vector3(2.3, 0, -1.6)
-slam_position = Vector3(0, 0.9, -0.5)
-slam_rotation = Vector3(-1.3, 0, 0)
-slam_duration = 0.12
+charge_body_clip = &"air_slash_charge"
+dive_body_clip = &"air_slash_dive"
+land_body_clip = &"air_slash_land"
 impact_shake = 0.6
+blink_start_ratio = 0.8
+blink_period_start = 0.25
+blink_period_end = 0.08
+blink_overlay = ExtResource("90_blink")
 affliction_scale = 2.3
