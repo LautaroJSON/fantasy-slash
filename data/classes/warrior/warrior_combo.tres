@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="AttackComboConfig" format=3 uid="uid://53vjdob7jmi0"]
 
-[ext_resource type="Script" uid="uid://bgdjjgofmck7j" path="res://resources/attack_combo_config.gd" id="1_script"]
-[ext_resource type="Script" uid="uid://dvo8t42u2r21k" path="res://resources/attack_combo_step.gd" id="2_step"]
+[ext_resource type="Script" uid="uid://bd42xjcyjydfl" path="res://resources/attack_combo_config.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bwtfsiso2nc08" path="res://resources/attack_combo_step.gd" id="2_step"]
 
 [sub_resource type="Resource" id="Step_attack_1"]
 script = ExtResource("2_step")

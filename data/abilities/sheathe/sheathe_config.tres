@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="SheatheConfig" format=3 uid="uid://ccfrw462vy4wf"]
 
-[ext_resource type="Script" uid="uid://bxime54l1m3o1" path="res://resources/sheathe_config.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://pkpgqmu2o1s4" path="res://resources/sheathe_config.gd" id="1_script"]
 [ext_resource type="Material" path="res://materials/weapons/katana_empowered_overlay.tres" id="2_overlay"]
 [ext_resource type="Material" path="res://materials/weapons/katana_empowered_flash_overlay.tres" id="3_flash_overlay"]
 [ext_resource type="Script" uid="uid://yr0xb60smvkg" path="res://resources/strike_feel.gd" id="4_feel"]

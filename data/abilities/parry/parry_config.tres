@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="ParryConfig" format=3 uid="uid://clx5ruxlskr23"]
 
-[ext_resource type="Script" uid="uid://n2vbxerm33mr" path="res://resources/parry_config.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cr8s6yx6rfvay" path="res://resources/parry_config.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://yr0xb60smvkg" path="res://resources/strike_feel.gd" id="2_feel"]
 [ext_resource type="Resource" uid="uid://8frxqopdn34c" path="res://data/debuffs/challenged.tres" id="3_challenged"]
 [ext_resource type="Resource" uid="uid://bigyol4igno70" path="res://data/buffs/triumph.tres" id="4_triumph"]
