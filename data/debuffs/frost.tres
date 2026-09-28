@@ -1,12 +1,12 @@
-[gd_resource type="Resource" script_class="DebuffData" format=3]
+[gd_resource type="Resource" script_class="DebuffData" format=3 uid="uid://dtyi10wq4dwdw"]
 
-[ext_resource type="Script" path="res://resources/debuff_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/icons/status/snowflake.svg" id="9_glyph"]
+[ext_resource type="Script" uid="uid://df0rjkyc8fuph" path="res://resources/debuff_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://bds25iygahhxt" path="res://assets/icons/status/snowflake.svg" id="9_glyph"]
 
 [resource]
 script = ExtResource("1_script")
 id = &"frost"
 effect = 4
-duration = 1.5
+duration = 3.5
 icon = ExtResource("9_glyph")
 icon_color = Color(0.45, 0.9, 0.95, 1)

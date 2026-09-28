@@ -1,34 +1,35 @@
-[gd_resource type="Resource" script_class="AbilityData" format=3]
+[gd_resource type="Resource" script_class="AbilityData" format=3 uid="uid://fgf3nchpwu1v"]
 
-[ext_resource type="Script" path="res://resources/ability_data.gd" id="1_script"]
-[ext_resource type="Script" path="res://resources/ability_upgrade_data.gd" id="2_upgrade_script"]
-[ext_resource type="PackedScene" path="res://components/abilities/parry_ability.tscn" id="3_behavior"]
+[ext_resource type="Script" uid="uid://di4ltwmxxqcq0" path="res://resources/ability_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dm32h1yv4ymv1" path="res://resources/ability_upgrade_data.gd" id="2_upgrade_script"]
+[ext_resource type="PackedScene" uid="uid://rerrgg8wsaoc" path="res://components/abilities/parry_ability.tscn" id="3_behavior"]
 [ext_resource type="Resource" path="res://data/abilities/parry/upgrades/cooldown.tres" id="4_cooldown"]
 [ext_resource type="Resource" path="res://data/abilities/parry/upgrades/window.tres" id="5_window"]
-[ext_resource type="Script" path="res://resources/ability_unique_upgrade_data.gd" id="6_unique_script"]
-[ext_resource type="Resource" path="res://data/abilities/parry/unique/retribution.tres" id="7_retribution"]
+[ext_resource type="Script" uid="uid://b25xj1rf8r5xt" path="res://resources/ability_unique_upgrade_data.gd" id="6_unique_script"]
 [ext_resource type="Resource" path="res://data/abilities/parry/unique/riposte.tres" id="8_riposte"]
 [ext_resource type="Resource" path="res://data/abilities/parry/unique/duel.tres" id="9_duel"]
 
 [resource]
 script = ExtResource("1_script")
-title = "Parada"
+title = "Parry"
 description = "Levantás el escudo 0.35 s: anula los golpes de frente.
-Si parás algo, el enfriamiento baja a 1.5 s.
+Si parás algo, respondés con una estocada:
+20 + 30 % de tu daño, invulnerable,
+y el enfriamiento baja a 1.5 s.
 Si no, quedás expuesto 0.4 s.
-Enfriamiento: 6 s"
-slot = 0
+Enfriamiento: 5 s"
 behavior = ExtResource("3_behavior")
 base_damage = 20.0
 attack_scaling = 0.3
-cooldown = 6.0
+cooldown = 5.0
 hit_range = 3.0
 hit_width = 1.2
 cast_duration = 0.35
 min_cooldown = 3.0
 min_cast_duration = 0.35
+interrupts_dash = true
 dash_cancels_cast = true
 shows_hit_impact = true
 upgrades = Array[ExtResource("2_upgrade_script")]([ExtResource("4_cooldown"), ExtResource("5_window")])
-unique_upgrades = Array[ExtResource("6_unique_script")]([ExtResource("7_retribution"), ExtResource("8_riposte"), ExtResource("9_duel")])
+unique_upgrades = Array[ExtResource("6_unique_script")]([ExtResource("8_riposte"), ExtResource("9_duel")])
 affliction_scale = 2.0

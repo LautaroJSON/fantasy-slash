@@ -7,5 +7,5 @@ script = ExtResource("1_script")
 stat = 2
 amount = -0.75
 max_stacks = 4
-title = "Parada: enfriamiento"
+title = "Parry: enfriamiento"
 description = "-0.75 s de enfriamiento"

@@ -235,7 +235,11 @@ func _play_action_clip() -> void:
 		_play_dash()
 		return
 	var clip: StringName = _busy_clip()
-	_request(clip)
+	var blend: float = player.get_body_clip_blend()
+	if blend >= 0.0 and clip != _requested:
+		_request_blended(clip, blend)
+	else:
+		_request(clip)
 	if clip == CLIP_BUSY:
 		return
 	_in_strike_pose = true  # cut by locomotion, it blends out slowly

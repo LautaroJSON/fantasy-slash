@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="AfflictionConfig" format=3]
+[gd_resource type="Resource" script_class="AfflictionConfig" format=3 uid="uid://df7m2ceugrh3y"]
 
-[ext_resource type="Script" path="res://resources/affliction_config.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bl81i1w5fm5s5" path="res://resources/affliction_config.gd" id="1_script"]
 [ext_resource type="Material" path="res://materials/health_bar_background_material.tres" id="2_background"]
 [ext_resource type="Material" path="res://materials/afflictions/affliction_flash_material.tres" id="3_flash"]
 
@@ -9,8 +9,8 @@ script = ExtResource("1_script")
 max_types = 3
 threshold = 100.0
 max_resistance = 0.9
-decay_delay = 5.0
-decay_per_second = 15.0
+decay_delay = 8.0
+decay_per_second = 5.0
 flash_duration = 0.2
 bar_height = 0.04
 bar_gap = 0.02

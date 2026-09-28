@@ -388,6 +388,26 @@ func _strike() -> void:
 	attacked.emit(_hit_buffer.size(), total, is_crit)
 
 
+## Hits `enemies` as a basic-attack strike from outside the combo (e.g. the
+## Parry's empowered riposte, docs/specs/parry-riposte-rework.md §2.4):
+## damage_multiplier × the combo damage (bonus and crit), knockback and
+## lifesteal; emits enemy_hit and attacked. `crit_roll` in [0, 1) decides the
+## critical hit. Returns the total damage applied.
+func strike_enemies(enemies: Array[Enemy], damage_multiplier: float, knockback_multiplier: float, crit_roll: float) -> float:
+	var is_crit: bool = DamageMath.roll_crit(stats.get_stat(PlayerStats.Stat.CRIT_CHANCE), crit_roll)
+	var damage: float = damage_multiplier * DamageMath.outgoing(
+		stats.get_stat(PlayerStats.Stat.DAMAGE),
+		stats.get_stat(PlayerStats.Stat.DAMAGE_BONUS),
+		is_crit,
+		stats.get_stat(PlayerStats.Stat.CRIT_DAMAGE))
+	var total: float = 0.0
+	for enemy: Enemy in enemies:
+		total += _hit_enemy(enemy, damage, is_crit, knockback_multiplier)
+	health.heal(total * stats.get_stat(PlayerStats.Stat.LIFESTEAL))
+	attacked.emit(enemies.size(), total, is_crit)
+	return total
+
+
 ## Applies the hit and pushes the enemy away from the player. Returns the damage applied.
 func _hit_enemy(enemy: Enemy, damage: float, is_crit: bool, knockback_multiplier: float) -> float:
 	var applied: float = enemy.health.receive_hit(damage)

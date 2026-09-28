@@ -475,18 +475,15 @@ func _block_pose(over := {}) -> Dictionary:
 
 func _add_parry(lib: AnimationLibrary) -> void:
 	var block := _block_pose()
+	# Parry (docs/specs/parry-riposte-rework.md §2.2): el escudo aparece al
+	# frente de golpe (el clip arranca ya en el bloqueo y se entra sin mezcla),
+	# pasado de largo con el cuerpo sobregirado, y se asienta.
 	lib.add_animation("shield_parry", _h.make_clip([
-		[0.0, _stance()],
-		[0.06, block],  # escudo arriba
+		[0.0, _block_pose(_h.with(SHIELD_BASH, {"torso": Vector3(-20, -34, 2), "hips_pos": Vector3(0, -0.16, 0)}))],  # pasado de largo
+		[0.06, block],  # se asienta
+		[0.2, _block_pose({"hips_pos": Vector3(0, -0.13, 0), "torso": Vector3(-15, -23, 0)})],
 		[0.35, _block_pose({"torso": Vector3(-16, -24, 0), "hips_pos": Vector3(0, -0.14, 0)})],
-	], false, false, [[0.06, "raise"]]))
-
-	# Parada exitosa: empujón corto del escudo y vuelta al reposo.
-	lib.add_animation("shield_parry_success", _h.make_clip([
-		[0.0, block],
-		[0.08, _block_pose(_h.with(SHIELD_BASH, {"torso": Vector3(-22, -30, 2), "hips_pos": Vector3(0, -0.16, 0)}))],
-		[0.4, _stance()],
-	], false, true))
+	], false, false, [[0.0, "raise"]]))
 
 	# Parada fallida: el escudo baja pesado y el torso cae, expuesto.
 	lib.add_animation("shield_parry_whiff", _h.make_clip([
@@ -515,3 +512,53 @@ func _add_parry(lib: AnimationLibrary) -> void:
 		[0.25, _h.with(extended, {"torso": Vector3(-28, 38, -7), "shoulder_r": Vector3(100, -38, 6)})],  # sostiene
 		[0.5, _stance()],
 	], false, false, [[0.08, "trail_on"], [0.15, "riposte"], [0.25, "trail_off"]]))
+
+	_add_empowered_riposte(lib)
+
+
+## Estocada mejorada (docs/specs/parry-riposte-rework.md §2.4): mientras el
+## mundo está congelado (0.3 s) se carga inclinado, la mirada abajo y la espada
+## sobre el hombro izquierdo; después barre en horizontal por delante hasta
+## detrás del hombro derecho (el daño a 0.42 s) y vuelve al reposo. Los brazos
+## se calcularon con el script de brazos, encadenando cada pose con la anterior.
+func _add_empowered_riposte(lib: AnimationLibrary) -> void:
+	var legs := {
+		"hip_l": Vector3(40, 10, -8), "knee_l": Vector3(-50, 0, 0), "ankle_l": Vector3(10, 0, 0),
+		"hip_r": Vector3(-20, 10, 8), "knee_r": Vector3(-40, 0, 0), "ankle_r": Vector3(40, 0, 0),
+	}
+	var windup := _stance(_h.with(_h.with(legs, SHIELD_FORE), {
+		"hips_pos": Vector3(0, -0.14, 0), "hips": Vector3(0, 20, 0),
+		"torso": Vector3(-26, 30, 0), "neck": Vector3(0, -45, 0),
+		"shoulder_r": Vector3(177, 223, 59), "elbow_r": Vector3(86, 0, 0), "wrist_r": Vector3(-103, 2, 2)}))
+	var leaving := _stance(_h.with(_h.with(legs, SHIELD_FORE), {
+		"hips_pos": Vector3(0, -0.15, 0), "hips": Vector3(0, 15, 0),
+		"torso": Vector3(-26, 24, 0), "neck": Vector3(0, -35, 0),
+		"shoulder_r": Vector3(164, 196, 48), "elbow_r": Vector3(100, 0, 0), "wrist_r": Vector3(-103, 1, 1)}))
+	var cross := _stance(_h.with(_h.with(legs, SHIELD_FORE), {
+		"hips_pos": Vector3(0, -0.15, 0), "hips": Vector3(0, 10, 0),
+		"torso": Vector3(-26, 15, 0), "neck": Vector3(1, -22, 0),
+		"shoulder_r": Vector3(180, 167, 43), "elbow_r": Vector3(74, 0, 0), "wrist_r": Vector3(-101, 0, 0)}))
+	var front := _stance(_h.with(_h.with(legs, SHIELD_FORE), {
+		"hips_pos": Vector3(0, -0.16, 0), "hips": Vector3(0, 0, 0),
+		"torso": Vector3(-26, 0, 0), "neck": Vector3(2, 0, 0),
+		"shoulder_r": Vector3(194, 100, 59), "elbow_r": Vector3(-27, 0, 0), "wrist_r": Vector3(-41, 1, 0)}))
+	var right := _stance(_h.with(_h.with(legs, SHIELD_TUCK), {
+		"hips_pos": Vector3(0, -0.15, 0), "hips": Vector3(0, -10, 0),
+		"torso": Vector3(-25, -20, 0), "neck": Vector3(1, 28, 0),
+		"shoulder_r": Vector3(208, 78, 58), "elbow_r": Vector3(-78, 0, 0), "wrist_r": Vector3(7, 2, 0)}))
+	var behind := _stance(_h.with(_h.with(legs, SHIELD_TUCK), {
+		"hips_pos": Vector3(0, -0.14, 0), "hips": Vector3(0, -20, 0),
+		"torso": Vector3(-24, -40, 0), "neck": Vector3(0, 55, 0),
+		"shoulder_r": Vector3(249, 40, 70), "elbow_r": Vector3(-130, 0, 0), "wrist_r": Vector3(33, 1, 0)}))
+	lib.add_animation("shield_riposte_empowered", _h.make_clip([
+		[0.0, _block_pose()],
+		[0.08, windup],  # se carga: el mundo está congelado
+		[0.3, _h.with(windup, {"hips_pos": Vector3(0, -0.16, 0), "torso": Vector3(-28, 32, 0)})],  # tensión
+		[0.33, leaving],  # sale del hombro izquierdo, plana
+		[0.36, cross],
+		[0.42, front],  # daño
+		[0.48, right],
+		[0.55, behind],  # la espada termina detrás del hombro derecho
+		[0.64, _h.with(behind, {"torso": Vector3(-25, -42, 0)})],  # sostiene
+		[0.9, _stance()],
+	], false, false, [[0.3, "trail_on"], [0.42, "empowered"], [0.55, "trail_off"]]))

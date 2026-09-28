@@ -1,6 +1,6 @@
 # Feature: mandoble nuevo del Berserker, de la familia de caballero
 
-- **Estado:** Aprobada (2026-09-27), en implementación. ACs: AC1006–AC1013 (reservados). El falchion se borra (propuesta de §2.3).
+- **Estado:** Implementada (2026-09-28). ACs: AC1006–AC1013. El falchion se borró (propuesta de §2.3).
 - **Constitución:** `docs/constitution.md` v4.22.0 → **enmienda PATCH a 4.22.1** (ver §7).
 - **Pilar (Principio I):** **combate.** El Berserker se define por el peso de su arma: golpes lentos, alcance de 3 m y barridos amplios. Hoy el falchion es un sable curvo de pack que no comunica ese peso. Una losa de acero enorme lo dice de un vistazo y hace legible el alcance. Además, compartir la estética con la espada y el escudo del Guerrero hace que las armas se lean como un mismo mundo.
 - **Referencia del responsable (2026-09-27):** un mandoble tipo "Matadragones":
@@ -142,10 +142,31 @@ Es PATCH porque la regla de modelos generados (4.13.0) ya lo permite: solo cambi
 
 ## 9. Checklist de review de la constitución (se completa al cerrar)
 
-- [ ] I. Pilar declarado (combate).
-- [ ] II. Malla generada en `knight_set/` con su generador, escena adaptadora, materiales `.tres` compartidos, sin shaders; tabla de colores actualizada (4.22.1).
-- [ ] III. Sin valores de gameplay nuevos; `attack_range` en su `.tres`.
-- [ ] IV. Tipado estático, identificadores en inglés.
-- [ ] V. La malla se carga una vez con la escena.
-- [ ] VI. Sin input nuevo.
-- [ ] VII. Tiempos y poses del combo sin cambios, salvo retoques de muñeca anotados.
+- [x] I. Pilar declarado (combate).
+- [x] II. Malla generada en `knight_set/` con su generador, escena adaptadora, materiales `.tres` compartidos, sin shaders; tabla de colores actualizada (4.22.1).
+- [x] III. Sin valores de gameplay nuevos; `attack_range` en su `.tres`.
+- [x] IV. Tipado estático, identificadores en inglés.
+- [x] V. La malla se carga una vez con la escena.
+- [x] VI. Sin input nuevo.
+- [x] VII. Tiempos y poses del combo sin cambios, salvo retoques de muñeca anotados.
+
+## 10. Notas de implementación (2026-09-28)
+
+- **Numeración:** la spec se propuso con AC757–AC764 y la enmienda 4.13.1. Mientras tanto, otras sesiones usaron esos números (`sprint-stamina.md`) y llevaron la constitución a 4.22.0, así que pasó a **AC1006–AC1013** y a **4.22.1**.
+- **Malla** (`build_greatsword()` en `build_knight_meshes.gd`, detalle en el `SOURCE.md`):
+  - **punta:** la geometría de §2.2 estaba mal escrita. Como en la referencia, es el filo **+X** el que corta en diagonal (en los últimos 36 cm), y la punta queda **12 cm hacia −X**, cerca del otro filo. La primera versión (6 cm y 30 cm) se veía casi simétrica;
+  - el pomo de la espada se generalizó en `_disc_pommel()`: la espada y el escudo salen byte a byte iguales;
+  - la guarda tiene sección de ocho lados (bordes biselados), y sus extremos acampanados sobresalen 1.5 cm hacia la hoja.
+- **Poses:** un solo retoque. En el remate (`attack_3`), la hoja ancha rozaba la cabeza con el filo −X, cerca de la guarda, a mitad de la subida (0.30–0.37 s). La pose alzada gira la muñeca Y de −22° a −40° (la hoja queda más de canto). AC1011 pasa en todos los clips, y la hoja de capturas se lee igual.
+- **Tests:**
+  - `berserker_greatsword_test` (3 casos: AC1011–AC1013) y `weapon_model_test` (22 casos, con AC1006–AC1010 y AC745 ampliado), en verde;
+  - regresión de AC1013: `class_combat_identity_test` (25), `combat_feel_test` (30), en verde;
+  - smoke test del arena sin errores ni warnings.
+- **Tests adaptados:**
+  - AC204 → `test_ac204_the_greatsword_is_the_knight_model_with_shared_materials`;
+  - AC206 comprueba los materiales del mandoble en lugar de los del falchion;
+  - `berserker_run_test` AC185 usa `knight_greatsword.res`.
+- **Fallos previos y ajenos:**
+  - AC211 del Samurái, AC212 y AC221 (ya registrados); AC211 del Berserker pasa, lo verifica AC1012;
+  - `attack_component_test` AC8: los stats del Guerrero cambiaron en el working tree por otra sesión (daño 20, vida 200, robo de vida 0.1), y el test espera los viejos.
+- **Constitución:** además de la fila de la tabla, el ejemplo de "Scaffolding" pasó de `falchion/falchion.obj` a `katana/katana.glb`.

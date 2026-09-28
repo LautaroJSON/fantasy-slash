@@ -55,6 +55,7 @@ const WEAPON_OFF_HAND: NodePath = ^"OffHand"
 @onready var _weapon_mount: WeaponMount = $WeaponMount
 @onready var _humanoid: LowPolyHumanoid = $Visual/Humanoid
 @onready var _hitstop: HitstopComponent = $Hitstop
+@onready var _shield_guard: ShieldGuard = $ShieldGuard
 @onready var _dash_vfx: DashVfxHost = $DashVfx
 
 ## Scabbard of the class weapon, or null when the weapon has none.
@@ -172,6 +173,11 @@ func is_casting() -> bool:
 func get_body_clip() -> StringName:
 	var clip: StringName = basic_ability.get_body_clip()
 	return clip if clip != &"" else ultimate_ability.get_body_clip()
+
+
+## Blend into get_body_clip() the ability asks for; negative = the default.
+func get_body_clip_blend() -> float:
+	return basic_ability.get_body_clip_blend() if basic_ability.get_body_clip() != &"" else ultimate_ability.get_body_clip_blend()
 
 
 ## Clip the body plays while dashing: the one an ability asks for (e.g. the
@@ -547,6 +553,7 @@ func _equip_shield(weapon: WeaponData) -> void:
 	_humanoid.attach_to_joint(String(weapon.shield_joint), _shield_socket, weapon.shield_position, weapon.shield_rotation)
 	_shield = weapon.shield.instantiate() as Node3D
 	_shield_socket.add_child(_shield)
+	_shield_guard.shield = _shield
 
 
 ## The left hand grips a two-handed weapon's second-hand marker, if it has one,

@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="AfflictionUpgradeData" format=3]
+[gd_resource type="Resource" script_class="AfflictionUpgradeData" format=3 uid="uid://cts3gl7lgavd6"]
 
-[ext_resource type="Script" path="res://resources/affliction_upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://b1hhg84ryut8n" path="res://resources/affliction_upgrade_data.gd" id="1_script"]
 [ext_resource type="Resource" path="res://data/afflictions/poison.tres" id="2_affliction"]
-[ext_resource type="Script" path="res://resources/value_format.gd" id="3_format"]
+[ext_resource type="Script" uid="uid://clqaknbxq40nf" path="res://resources/value_format.gd" id="3_format"]
 
 [sub_resource type="Resource" id="Format_points"]
 script = ExtResource("3_format")
@@ -15,7 +15,13 @@ affliction = ExtResource("2_affliction")
 source = 1
 max_level = 3
 level_values = Array[float]([35.0, 50.0, 65.0])
-level_descriptions = Array[String](["Tu habilidad acumula Veneno.\nAl llenarse: Veneno, 30 % de tu daño\npor segundo durante 5 s (acumulable ×3).", "Veneno (habilidad) nv. 2:\nacumula más rápido.", "Veneno (habilidad) nv. 3:\nacumula mucho más rápido."])
+level_descriptions = Array[String](["Tu habilidad acumula Veneno.
+Al llenarse: Veneno, 30 % de tu daño
+por segundo durante 5 s (acumulable ×3).", "Veneno (habilidad) nv. 2:
+acumula más rápido.", "Veneno (habilidad) nv. 3:
+acumula mucho más rápido."])
 value_format = SubResource("Format_points")
 title = "Aflicción: Veneno"
-description = "Tu habilidad acumula Veneno.\nAl llenarse: Veneno, 30 % de tu daño\npor segundo durante 5 s (acumulable ×3)."
+description = "Tu habilidad acumula Veneno.
+Al llenarse: Veneno, 30 % de tu daño
+por segundo durante 5 s (acumulable ×3)."

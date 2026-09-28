@@ -7,5 +7,5 @@ script = ExtResource("1_script")
 stat = 5
 amount = 0.05
 max_stacks = 2
-title = "Parada: ventana"
+title = "Parry: ventana"
 description = "+0.05 s de ventana"

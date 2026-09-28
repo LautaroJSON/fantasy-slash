@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://b7jvh5hu4k1jl" path="res://resources/enemy_stats.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://bccm8umkwltgo" path="res://resources/enemy_stat_growth.gd" id="2_growth"]
 [ext_resource type="PackedScene" path="res://components/enemies/charger_behavior.tscn" id="3_behavior"]
-[ext_resource type="Resource" path="res://data/enemies/attacks/charger_charge.tres" id="4_attack"]
+[ext_resource type="Resource" uid="uid://dehqkmjjtckmw" path="res://data/enemies/attacks/charger_charge.tres" id="4_attack"]
 [ext_resource type="Script" uid="uid://djw82ehqq88oc" path="res://resources/enemy_attack_data.gd" id="5_attack_script"]
 [ext_resource type="Resource" path="res://data/enemies/hands/charger_hands.tres" id="6_hands"]
 
@@ -39,7 +39,7 @@ defense = 2.0
 max_health = 60.0
 attack_interval = 1.2
 attack_range = 6.0
-move_speed = 3.0
+move_speed = 2.0
 knockback_friction = 30.0
 level_growth = Array[ExtResource("2_growth")]([SubResource("Resource_max_health"), SubResource("Resource_damage"), SubResource("Resource_defense"), SubResource("Resource_move_speed")])
 body_scale = 1.0

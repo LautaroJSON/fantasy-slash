@@ -5,9 +5,8 @@
 [ext_resource type="Resource" path="res://data/classes/berserker/berserker_abilities.tres" id="3_abilities"]
 [ext_resource type="Resource" path="res://data/classes/berserker/greatsword.tres" id="4_weapon"]
 [ext_resource type="Resource" uid="uid://lhlsvhxcm3wd" path="res://data/classes/berserker/air_slash_config.tres" id="5_air_slash"]
-[ext_resource type="Resource" path="res://data/classes/berserker/berserker_combo.tres" id="10_combo"]
-[ext_resource type="Resource" path="res://data/classes/berserker/berserker_hitstop.tres" id="11_hitstop"]
-
+[ext_resource type="Resource" uid="uid://wjxvfn6a160n" path="res://data/classes/berserker/berserker_combo.tres" id="10_combo"]
+[ext_resource type="Resource" uid="uid://cfo2qp737u2y8" path="res://data/classes/berserker/berserker_hitstop.tres" id="11_hitstop"]
 [ext_resource type="Resource" path="res://data/classes/berserker/berserker_dash.tres" id="20_dash"]
 
 [resource]

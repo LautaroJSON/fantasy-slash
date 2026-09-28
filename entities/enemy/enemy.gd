@@ -51,6 +51,8 @@ var _body_rest_x: float = 0.0
 var _hands_rest_x: float = 0.0
 ## Hit lag (docs/specs/bdo-combat-feel.md): seconds left frozen, and the shake.
 var _hitlag_left: float = 0.0
+## Seconds left of a world freeze (docs/specs/parry-riposte-rework.md §2.5).
+var _time_freeze_left: float = 0.0
 var _hitlag_shake: ShakeState = ShakeState.new()
 var _hitlag_amplitude: float = 0.0
 var _hitlag_frequency: float = 0.0
@@ -92,6 +94,8 @@ func _physics_process(delta: float) -> void:
 	if _spawn_left > 0.0:
 		_advance_spawn_in(delta)
 		return
+	if _advance_time_freeze(delta):
+		return
 	if _advance_hitlag(delta):
 		return
 	_update_behaviour(delta)
@@ -110,6 +114,7 @@ func activate(at: Vector3, new_target: Player, new_level: int = 1) -> void:
 	_hands.reset()
 	_end_spawn_in()
 	_end_hitlag()
+	_time_freeze_left = 0.0
 	_telegraph.clear()
 	for ring: MeshInstance3D in _shockwaves:
 		ring.visible = false
@@ -169,6 +174,7 @@ func deactivate() -> void:
 	debuffs.clear()
 	afflictions.clear()
 	_end_hitlag()
+	_time_freeze_left = 0.0
 	visible = false
 	process_mode = Node.PROCESS_MODE_DISABLED
 	_collision.set_deferred(&"disabled", true)
@@ -519,6 +525,27 @@ func _advance_hitlag(delta: float) -> bool:
 	if _hitlag_left <= 0.0:
 		_end_hitlag()
 	return not stats.resists_hitlag
+
+
+## Freezes the enemy for `seconds` (behavior, push and attack timers paused),
+## bosses too and without shaking: the world freeze of a finisher
+## (docs/specs/parry-riposte-rework.md §2.5). Restarts, never adds up.
+func freeze_time(seconds: float) -> void:
+	if seconds <= 0.0 or _spawn_left > 0.0:
+		return
+	_time_freeze_left = seconds
+
+
+func is_time_frozen() -> bool:
+	return _time_freeze_left > 0.0
+
+
+## Counts down the world freeze; true while the enemy is frozen this frame.
+func _advance_time_freeze(delta: float) -> bool:
+	if not is_time_frozen():
+		return false
+	_time_freeze_left = maxf(_time_freeze_left - delta, 0.0)
+	return true
 
 
 func _end_hitlag() -> void:

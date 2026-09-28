@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CircleSlashVfxConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/circle_slash_vfx_config.gd" id="1_script"]
+[ext_resource type="Material" path="res://materials/vfx/circle_slash_material.tres" id="2_material"]
+
+[resource]
+script = ExtResource("1_script")
+segments = 64
+height = 1.05
+band_width = 0.45
+head_alpha = 0.5
+tail_degrees = 300.0
+sweep_duration = 0.25
+fade_duration = 0.2
+material = ExtResource("2_material")

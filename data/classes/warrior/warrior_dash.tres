@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="DashData" format=3]
+[gd_resource type="Resource" script_class="DashData" format=3 uid="uid://dxfkfg0k2rswf"]
 
-[ext_resource type="Script" path="res://resources/dash_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bd2nvx5n7a4c1" path="res://resources/dash_data.gd" id="1_script"]
 [ext_resource type="Resource" path="res://data/player/dash/dash_vfx_set.tres" id="2_vfx_set"]
 
 [resource]

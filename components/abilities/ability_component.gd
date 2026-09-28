@@ -56,6 +56,8 @@ const TIME_EPSILON: float = 0.0001
 @export var hitstop: HitstopConfig
 ## Lets abilities pause the player's dash clip on impact (e.g. the Spin's dash slash).
 @export var animator: PlayerAnimator
+## Lets abilities hit as the basic attack (e.g. the Parry's empowered riposte).
+@export var attack: AttackComponent
 ## Lets abilities raise the player's frontal block (e.g. the Parry).
 @export var guard: ShieldGuard
 
@@ -252,7 +254,7 @@ func can_cast() -> bool:
 
 ## True while casting an ability whose cast a dash may cut short.
 func dash_cancels_cast() -> bool:
-	return is_casting() and _data.dash_cancels_cast
+	return is_casting() and _data.dash_cancels_cast and not _behavior.locks_dash(self)
 
 
 ## Ends the running cast at once, without release(). The cooldown keeps running.
@@ -333,6 +335,13 @@ func get_body_clip() -> StringName:
 	if _behavior == null or not (is_charging() or is_casting()):
 		return &""
 	return _behavior.get_body_clip(self)
+
+
+## Seconds the body blends into get_body_clip(); negative = the default.
+func get_body_clip_blend() -> float:
+	if _behavior == null or not (is_charging() or is_casting()):
+		return AbilityBehavior.DEFAULT_BLEND
+	return _behavior.get_body_clip_blend(self)
 
 
 ## Clip that replaces the class dash clip while the ability rides a dash

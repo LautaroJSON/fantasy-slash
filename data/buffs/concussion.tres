@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dmfij0ebi3hi8" path="res://resources/buff_data.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://be3t2vttqygd2" path="res://resources/buff_modifier.gd" id="2_modifier"]
-[ext_resource type="Texture2D" path="res://assets/icons/status/whirlwind.svg" id="3_glyph"]
+[ext_resource type="Texture2D" uid="uid://cndtpytf11170" path="res://assets/icons/status/whirlwind.svg" id="3_glyph"]
 
 [sub_resource type="Resource" id="Modifier_move_speed"]
 script = ExtResource("2_modifier")

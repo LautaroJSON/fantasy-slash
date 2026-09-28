@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
-## docs/specs/warrior-abilities-rework.md §3.2 and §5.2: the Parry and its
-## golden upgrades (AC829–AC838, AC846 in part).
+## docs/specs/warrior-abilities-rework.md §3.2 and §5.2, revised by
+## docs/specs/parry-riposte-rework.md: the Parry and its golden upgrades
+## (AC829–AC838, AC846 in part; the adapted cases are listed in the new spec §11).
 
 const TestWorld := preload("res://test/helpers/test_world.gd")
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
@@ -10,7 +11,6 @@ const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
 const CONFIG: ParryConfig = preload("res://data/abilities/parry/parry_config.tres")
 const COOLDOWN_CARD: AbilityUpgradeData = preload("res://data/abilities/parry/upgrades/cooldown.tres")
 const WINDOW_CARD: AbilityUpgradeData = preload("res://data/abilities/parry/upgrades/window.tres")
-const RETRIBUTION: AbilityUniqueUpgradeData = preload("res://data/abilities/parry/unique/retribution.tres")
 const RIPOSTE: AbilityUniqueUpgradeData = preload("res://data/abilities/parry/unique/riposte.tres")
 const DUEL: AbilityUniqueUpgradeData = preload("res://data/abilities/parry/unique/duel.tres")
 const CHALLENGED: DebuffData = preload("res://data/debuffs/challenged.tres")
@@ -111,12 +111,13 @@ func test_ac831_a_frontal_hit_is_cancelled_and_shortens_the_cooldown() -> void:
 	assert_float(_player.health.receive_hit_from(HIT, front)).is_equal(0.0)
 	assert_int(damaged.size()).is_equal(0)
 	assert_float(_ability.get_cooldown_remaining()).is_equal_approx(CONFIG.success_cooldown, TOLERANCE)
+	# Adapted (parry-riposte-rework.md, AC1022): the block is answered with the
+	# thrust instead of the shield push; the player is invulnerable meanwhile.
+	assert_int(_behavior().get_state()).is_equal(ParryAbility.State.RIPOSTE)
 	assert_float(_player.health.receive_hit_from(HIT, front)).is_equal(0.0)
-	_ability.advance(0.15)
-	assert_int(_behavior().get_state()).is_equal(ParryAbility.State.SUCCESS)
-	assert_str(String(_ability.get_body_clip())).is_equal(String(CONFIG.success_body_clip))
-	assert_float(_ability.get_cast_remaining()).is_equal_approx(CONFIG.success_recovery, TOLERANCE)
-	_ability.advance(CONFIG.success_recovery)
+	assert_str(String(_ability.get_body_clip())).is_equal(String(CONFIG.riposte_body_clip))
+	assert_float(_ability.get_cast_remaining()).is_equal_approx(CONFIG.riposte_duration, TOLERANCE)
+	_ability.advance(CONFIG.riposte_duration)
 	assert_bool(_ability.is_casting()).is_false()
 
 
@@ -161,36 +162,16 @@ func test_ac834_cooldown_and_window_cards() -> void:
 	assert_float(_player.health.receive_hit_from(HIT, front)).is_equal(0.0)
 
 
-func test_ac835_retribution_returns_the_cancelled_damage() -> void:
-	assert_int(RETRIBUTION.max_level).is_equal(3)
-	assert_array(RETRIBUTION.level_values).is_equal([1.0, 1.5, 2.0])
-	var front: Enemy = _spawn(Vector3(0.0, 0.0, -2.0))
-	var hits: Array[Enemy] = []
-	_ability.enemy_hit.connect(func(enemy: Enemy, _a: float, _c: bool) -> void: hits.append(enemy))
-	_player.apply_upgrade(RETRIBUTION)
-	assert_bool(_ability.try_cast()).is_true()
-	_player.health.receive_hit_from(HIT, front)
-	assert_float(front.health.current_health).is_equal_approx(1000.0 - HIT, TOLERANCE)
-	assert_int(hits.count(front)).is_equal(1)
-	_player.apply_upgrade(RETRIBUTION)
-	_player.apply_upgrade(RETRIBUTION)
-	_player.health.receive_hit_from(HIT, front)
-	assert_float(front.health.current_health).is_equal_approx(1000.0 - HIT - HIT * 2.0, TOLERANCE)
-	var dead: Enemy = _spawn(Vector3(0.5, 0.0, -2.0))
-	dead.health.receive_hit(LETHAL)
-	_player.health.receive_hit_from(HIT, dead)
-	assert_int(hits.count(dead)).is_equal(0)
-
-
-func test_ac836_riposte_renews_the_cooldown_and_thrusts_at_the_attacker() -> void:
-	_player.apply_upgrade(RIPOSTE)
+## Adapted (AC1022): without Contragolpe every block thrusts; the cooldown drops
+## to success_cooldown instead of being renewed.
+func test_ac836_a_block_thrusts_at_the_attacker() -> void:
 	var attacker: Enemy = _spawn(Vector3(-2.0, 0.0, -1.0))
 	var hits: Array[float] = []
 	_ability.enemy_hit.connect(func(_e: Enemy, applied: float, _c: bool) -> void: hits.append(applied))
 	assert_bool(_ability.try_cast()).is_true()
 	_ability.advance(0.1)
 	_player.health.receive_hit_from(HIT, attacker)
-	assert_float(_ability.get_cooldown_remaining()).is_equal(0.0)
+	assert_float(_ability.get_cooldown_remaining()).is_equal_approx(CONFIG.success_cooldown, TOLERANCE)
 	assert_int(_behavior().get_state()).is_equal(ParryAbility.State.RIPOSTE)
 	assert_str(String(_ability.get_body_clip())).is_equal(String(CONFIG.riposte_body_clip))
 	assert_float(_ability.get_cast_remaining()).is_equal_approx(CONFIG.riposte_duration, TOLERANCE)
@@ -210,7 +191,6 @@ func test_ac836_riposte_renews_the_cooldown_and_thrusts_at_the_attacker() -> voi
 
 
 func test_ac837_the_riposte_is_invulnerable() -> void:
-	_player.apply_upgrade(RIPOSTE)
 	var attacker: Enemy = _spawn(Vector3(0.0, 0.0, -2.0))
 	assert_bool(_ability.try_cast()).is_true()
 	_player.health.receive_hit_from(HIT, attacker)
@@ -227,15 +207,16 @@ func test_ac837_the_riposte_is_invulnerable() -> void:
 	assert_bool(_behavior().get_state() == ParryAbility.State.IDLE).is_true()
 
 
+## Adapted (AC1022, AC1031): the first block of a cast lowers the shield for
+## the thrust, so each parry marks one attacker; Triumph stacks up to 5.
 func test_ac838_duel_marks_the_attacker_and_its_death_grants_triumph() -> void:
 	_player.apply_upgrade(DUEL)
 	var first: Enemy = _spawn(Vector3(0.0, 0.0, -2.0))
 	var second: Enemy = _spawn(Vector3(0.5, 0.0, -2.0))
 	var unmarked: Enemy = _spawn(Vector3(-0.5, 0.0, -2.5))
-	assert_bool(_ability.try_cast()).is_true()
-	_player.health.receive_hit_from(HIT, first)
-	_player.health.receive_hit_from(HIT, second)
-	assert_float(first.debuffs.get_remaining_seconds(CHALLENGED.id)).is_equal_approx(6.0, TOLERANCE)
+	_parry_hit_by(first)
+	assert_float(first.debuffs.get_remaining_seconds(CHALLENGED.id)).is_equal_approx(CHALLENGED.duration, TOLERANCE)
+	_parry_hit_by(second)
 	unmarked.health.receive_hit(LETHAL)
 	assert_int(_ability.buffs.get_stacks(TRIUMPH.id)).is_equal(0)
 	first.health.receive_hit(LETHAL)
@@ -244,17 +225,21 @@ func test_ac838_duel_marks_the_attacker_and_its_death_grants_triumph() -> void:
 	second.health.receive_hit(LETHAL)
 	assert_int(_ability.buffs.get_stacks(TRIUMPH.id)).is_equal(2)
 	assert_float(_ability.buffs.get_time_left(TRIUMPH.id)).is_equal_approx(TRIUMPH.stack_duration, TOLERANCE)
-	for i: int in 3:
+	for i: int in TRIUMPH.max_stacks + 1 - 2:
 		var extra: Enemy = _spawn(Vector3(0.0, 0.0, -2.0))
-		_ability.advance(1.0)
-		_ability.advance(1.0)
-		_ability.reset_cooldown()
-		assert_bool(_ability.try_cast()).is_true()
-		_player.health.receive_hit_from(HIT, extra)
+		_parry_hit_by(extra)
 		extra.health.receive_hit(LETHAL)
 	assert_int(_ability.buffs.get_stacks(TRIUMPH.id)).is_equal(TRIUMPH.max_stacks)
 	_ability.buffs.advance(TRIUMPH.stack_duration + 0.1)
 	assert_int(_ability.buffs.get_stacks(TRIUMPH.id)).is_equal(0)
+
+
+## A fresh parry blocked by `attacker` (the previous cast is let finish).
+func _parry_hit_by(attacker: Enemy) -> void:
+	_ability.advance(CONFIG.riposte_duration + CONFIG.whiff_recovery + 1.0)
+	_ability.reset_cooldown()
+	assert_bool(_ability.try_cast()).is_true()
+	_player.health.receive_hit_from(HIT, attacker)
 
 
 func test_ac838_a_mark_that_ran_out_grants_nothing() -> void:
@@ -268,6 +253,7 @@ func test_ac838_a_mark_that_ran_out_grants_nothing() -> void:
 	assert_int(_ability.buffs.get_stacks(TRIUMPH.id)).is_equal(0)
 
 
+## Adapted (AC1022): a cast blocks once (then the thrust lowers the shield).
 func test_ac846_every_block_sparks_on_the_shield() -> void:
 	var front: Enemy = _spawn(Vector3(0.0, 0.0, -2.0))
 	var sparks: BlockSparkVfx = _behavior().get_block_vfx()
@@ -276,4 +262,4 @@ func test_ac846_every_block_sparks_on_the_shield() -> void:
 	assert_bool(_ability.try_cast()).is_true()
 	_player.health.receive_hit_from(HIT, front)
 	_player.health.receive_hit_from(HIT, front)
-	assert_int(sparks.count_emitting()).is_equal(2)
+	assert_int(sparks.count_emitting()).is_equal(1)

@@ -9,7 +9,7 @@ const SPIN: AbilityData = preload("res://data/abilities/spin/spin.tres")
 const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
 const KNIGHT_SWORD_MODEL: Mesh = preload("res://assets/models/weapons/knight_set/knight_sword.res")
-const FALCHION_MODEL: Mesh = preload("res://assets/models/weapons/falchion/falchion.obj")
+const KNIGHT_GREATSWORD_MODEL: Mesh = preload("res://assets/models/weapons/knight_set/knight_greatsword.res")
 const STAT_FORMATS: AbilityStatFormats = preload("res://data/ui/ability_stat_formats.tres")
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
@@ -67,7 +67,7 @@ func test_ac185_each_class_carries_its_own_single_weapon() -> void:
 	var berserker: Player = _spawn_player(BERSERKER)
 	assert_int(_pivot(berserker).get_child_count()).is_equal(1)
 	assert_str(_pivot(berserker).get_child(0).name).is_equal("Greatsword")
-	_assert_weapon_uses_model(berserker, FALCHION_MODEL)
+	_assert_weapon_uses_model(berserker, KNIGHT_GREATSWORD_MODEL)
 
 
 func test_ac186_the_weapon_starts_at_the_class_rest_pose() -> void:

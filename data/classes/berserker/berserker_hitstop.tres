@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="HitstopConfig" format=3]
+[gd_resource type="Resource" script_class="HitstopConfig" format=3 uid="uid://cfo2qp737u2y8"]
 
-[ext_resource type="Script" path="res://resources/hitstop_config.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bksceon2y2hem" path="res://resources/hitstop_config.gd" id="1_script"]
 
 [resource]
 script = ExtResource("1_script")

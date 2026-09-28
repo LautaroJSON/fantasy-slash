@@ -1,8 +1,12 @@
-[gd_resource type="Resource" script_class="ShieldChargeConfig" format=3]
+[gd_resource type="Resource" script_class="ShieldChargeConfig" format=3 uid="uid://ci5iw78qyucot"]
 
-[ext_resource type="Script" path="res://resources/shield_charge_config.gd" id="1_script"]
-[ext_resource type="Script" path="res://resources/strike_feel.gd" id="2_feel"]
+[ext_resource type="Script" uid="uid://c814ioohlyspi" path="res://resources/shield_charge_config.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://yr0xb60smvkg" path="res://resources/strike_feel.gd" id="2_feel"]
 [ext_resource type="Resource" path="res://data/debuffs/stun.tres" id="3_stun"]
+
+[sub_resource type="Resource" id="Feel_absorb"]
+script = ExtResource("2_feel")
+shake_strength = 0.2
 
 [sub_resource type="Resource" id="Feel_bash"]
 script = ExtResource("2_feel")
@@ -13,10 +17,6 @@ shake_strength = 0.45
 script = ExtResource("2_feel")
 hitlag = 0.14
 shake_strength = 0.7
-
-[sub_resource type="Resource" id="Feel_absorb"]
-script = ExtResource("2_feel")
-shake_strength = 0.2
 
 [sub_resource type="Resource" id="Feel_impact"]
 script = ExtResource("2_feel")

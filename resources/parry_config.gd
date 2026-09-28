@@ -1,8 +1,8 @@
 class_name ParryConfig
 extends Resource
-## Tuning of the Warrior's Parry (docs/specs/warrior-abilities-rework.md §3.2
-## and §5.2). The window is CAST_DURATION; damage, range and width of the
-## riposte ("Contragolpe") and the cooldown are AbilityData stats.
+## Tuning of the Warrior's Parry (docs/specs/warrior-abilities-rework.md §3.2,
+## §5.2, and docs/specs/parry-riposte-rework.md). The window is CAST_DURATION;
+## damage, range and width of the thrust and the cooldown are AbilityData stats.
 
 @export_group("Block")
 ## Share of a frontal hit the shield cancels during the window (1 = all).
@@ -13,13 +13,11 @@ extends Resource
 @export var raise_time: float
 ## Cooldown left after the first block of a cast, in seconds.
 @export var success_cooldown: float
-## Seconds after the window of a successful parry (the shield push).
-@export var success_recovery: float
 ## Seconds after the window of a parry that blocked nothing (exposed).
 @export var whiff_recovery: float
 
 @export_group("Riposte")
-## Seconds the riposte ("Contragolpe") lasts from the block.
+## Seconds the thrust that answers a block lasts from the block.
 @export var riposte_duration: float
 ## Seconds into the riposte when the thrust hits (the clip's event).
 @export var riposte_hit_time: float
@@ -28,6 +26,43 @@ extends Resource
 @export var riposte_trail_end: float
 ## Push speed of the riposte, in m/s.
 @export var riposte_knockback_speed: float
+
+@export_group("Shield")
+## Blend into the parry clip, in seconds (0: the shield snaps in front).
+@export var parry_enter_blend: float
+## Shield size: it pops to shield_pop_scale in shield_pop_time, settles on
+## shield_hold_scale by shield_settle_time, and shrinks back in
+## shield_shrink_time once lowered. Purely visual.
+@export var shield_pop_scale: float
+@export var shield_hold_scale: float
+@export var shield_pop_time: float
+@export var shield_settle_time: float
+@export var shield_shrink_time: float
+
+@export_group("Empowered riposte")
+## "Contragolpe": seconds every active enemy stays frozen from the block.
+@export var empowered_freeze: float
+## Seconds from the block when the 360° strike hits (after the freeze).
+@export var empowered_hit_time: float
+## Seconds the whole empowered riposte lasts from the block (the player is
+## invulnerable all along).
+@export var empowered_duration: float
+## Seconds from the block during which a dash cannot cut it.
+@export var empowered_dash_lock: float
+## Radius of the strike over the player's ATTACK_RANGE.
+@export var empowered_range_scale: float
+## Damage of the strike over one combo strike (it counts as a basic attack).
+@export var empowered_damage_multiplier: float
+@export var empowered_knockback_multiplier: float
+## Camera zoom (FOV degrees taken off) and its return, and the shake, at the block.
+@export var empowered_zoom_deg: float
+@export var empowered_zoom_return: float
+@export var empowered_shake: float
+## The blade sweeps (weapon trail) between these seconds from the block.
+@export var empowered_trail_start: float
+@export var empowered_trail_end: float
+## Hit lag of the strike (it has no combo step to take it from).
+@export var empowered_feel: StrikeFeel
 
 @export_group("Duel")
 ## Mark left on the attacker whose hit was cancelled ("Duelo").
@@ -45,9 +80,9 @@ extends Resource
 @export_group("Body")
 ## Humanoid clip of the window.
 @export var parry_body_clip: StringName
-## Humanoid clip after a successful window.
-@export var success_body_clip: StringName
 ## Humanoid clip after a window that blocked nothing.
 @export var whiff_body_clip: StringName
 ## Humanoid clip of the riposte.
 @export var riposte_body_clip: StringName
+## Humanoid clip of the empowered riposte (freeze, 360° strike, recovery).
+@export var empowered_body_clip: StringName

@@ -151,7 +151,7 @@ config = ExtResource("36_animation_config")
 [node name="BuffComponent" type="Node" parent="."]
 script = ExtResource("25_buffs")
 
-[node name="BasicAbility" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "player_stats", "swing_player", "movement", "sword_swing", "health", "buffs", "dash", "weapon_mount", "camera", "animator", "guard")]
+[node name="BasicAbility" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "player_stats", "swing_player", "movement", "sword_swing", "health", "buffs", "dash", "weapon_mount", "camera", "animator", "guard", "attack")]
 script = ExtResource("17_ability")
 slot = 0
 body = NodePath("..")
@@ -170,8 +170,9 @@ camera = NodePath("../CameraRig")
 animator = NodePath("../PlayerAnimator")
 hitstop = ExtResource("39_hitstop_config")
 guard = NodePath("../ShieldGuard")
+attack = NodePath("../AttackComponent")
 
-[node name="UltimateAbility" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "player_stats", "swing_player", "movement", "sword_swing", "health", "buffs", "dash", "weapon_mount", "camera", "animator", "guard")]
+[node name="UltimateAbility" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "player_stats", "swing_player", "movement", "sword_swing", "health", "buffs", "dash", "weapon_mount", "camera", "animator", "guard", "attack")]
 script = ExtResource("17_ability")
 slot = 1
 body = NodePath("..")
@@ -190,6 +191,7 @@ camera = NodePath("../CameraRig")
 animator = NodePath("../PlayerAnimator")
 hitstop = ExtResource("39_hitstop_config")
 guard = NodePath("../ShieldGuard")
+attack = NodePath("../AttackComponent")
 
 [node name="AirSlash" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "stats", "health", "movement", "sword_swing", "camera")]
 script = ExtResource("26_air_slash")

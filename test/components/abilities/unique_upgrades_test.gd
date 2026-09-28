@@ -4,7 +4,6 @@ const TestWorld := preload("res://test/helpers/test_world.gd")
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const RIPOSTE: AbilityUniqueUpgradeData = preload("res://data/abilities/parry/unique/riposte.tres")
-const RETRIBUTION: AbilityUniqueUpgradeData = preload("res://data/abilities/parry/unique/retribution.tres")
 const DUEL: AbilityUniqueUpgradeData = preload("res://data/abilities/parry/unique/duel.tres")
 const CHALLENGED: DebuffData = preload("res://data/debuffs/challenged.tres")
 const BLEED: DebuffData = preload("res://data/debuffs/bleed.tres")
@@ -91,7 +90,5 @@ func test_ac102_every_bleed_tick_is_reported_for_a_damage_number() -> void:
 ## Parry's are checked in parry_test.gd.
 func test_ac105_levels_are_declared_in_data() -> void:
 	assert_int(RIPOSTE.max_level).is_equal(1)
-	assert_int(RETRIBUTION.max_level).is_equal(3)
-	assert_int(RETRIBUTION.level_values.size()).is_equal(RETRIBUTION.max_level)
-	assert_int(RETRIBUTION.level_descriptions.size()).is_equal(RETRIBUTION.max_level)
+	assert_int(DUEL.max_level).is_equal(1)
 	assert_object(DUEL.debuff).is_same(CHALLENGED)

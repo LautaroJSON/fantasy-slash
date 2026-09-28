@@ -37,3 +37,19 @@ Espacio del escudo: +Y arriba, la cara exterior (convexa) mira a −Z y el dorso
 - **Marcadores de la escena:** `Grip` (centro de la empuñadura, y = −0.05), `Center`, `Top`, `Bottom`, `Left` (−X) y `Right` (+X).
 
 El escudo cuelga de `wrist_l` con `shield_position` = (−0.0437, −0.0033, 0) y `shield_rotation` = (0, π/2, 0): así el `Grip` queda en el centro de la mano izquierda, la empuñadura atraviesa el puño y la cara mira hacia afuera con el brazo colgando. Si se mueve el `Grip`, se recalcula `shield_position`.
+
+## Mandoble
+
+Mandoble del Berserker (`entities/player/weapons/greatsword.tscn`, `docs/specs/berserker-greatsword.md`), de la misma familia: se hizo a partir de una referencia del responsable (un mandoble tipo "Matadragones"). Mismo espacio que la espada. Superficies: 0 acero oscuro (las caras de la hoja), 1 acero (los biseles), 2 latón (guarda, marca, anillos y pomo), 3 cuero (mango).
+
+| Parte | Medida |
+|---|---|
+| Punta (`TrailTip`) | z = −2.21, corrida 12 cm hacia −X: el filo +X corta en diagonal durante los últimos 36 cm |
+| Hoja | 30 cm de ancho y filos paralelos. Sección hexagonal: una losa de 3 cm de espesor y 22 cm de ancho (acero oscuro) y un bisel de 4 cm por filo, que cierra a espesor cero (acero) |
+| Marca de forja | la cruz de Santiago del escudo a 0.3×, 18 cm de alto, 8 cm delante de la guarda, con relieve de 3 mm en las dos caras |
+| Guarda | bloque de latón de 36 cm × 7 cm × 6 cm, sección de ocho lados; los extremos se ensanchan y cierran en punta de lanza |
+| Mango | cuero octogonal de 42 cm (z de −0.19 a +0.23), con anillos de latón en los extremos y entre las manos (z = +0.02) |
+| Pomo | disco de latón de 8 cm |
+| Largo total | ≈ 2.5 m |
+
+El puño derecho cae en z = +0.133 (`grip_position` (0, −0.04, −0.1) de `greatsword.tres`) y la mano izquierda en `OffHand` (z = −0.1). La estela va de `TrailBase` (−0.77) a la punta.

@@ -8,5 +8,7 @@ id = &"riposte"
 max_level = 1
 title = "Contragolpe"
 description = "La primera parada de cada uso renueva el enfriamiento
-y responde con una estocada: 20 + 30 % de tu daño (con crítico).
-Sos invulnerable durante la estocada"
+y la estocada pasa a ser la Estocada mejorada:
+el tiempo se congela y barrés a todos a tu alrededor
+(360°, +30 % de alcance, 150 % de un golpe básico).
+Sos inmortal durante el golpe"

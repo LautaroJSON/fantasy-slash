@@ -98,13 +98,54 @@ const STRAP_Y: float = 0.16
 const STRAP_HALF_WIDTH: float = 0.11
 const STRAP_SIZE: Vector2 = Vector2(0.025, 0.008)
 
+# ------------------------------------------------------------------ GREATSWORD
+# The Berserker's greatsword (docs/specs/berserker-greatsword.md): a wide, thick
+# slab with bevelled edges, a brass block guard, a long two-handed leather grip
+# and a small cross of Santiago near the guard. Same space as the sword.
+
+const GREATSWORD_OUT: String = "res://assets/models/weapons/knight_set/knight_greatsword.res"
+const GS_TIP_Z: float = -2.21
+## Grip from the guard back to the pommel; both hands fit (right fist at
+## +0.133, OffHand at -0.1) with a brass ring between them.
+const GS_GRIP_FRONT_Z: float = -0.19
+const GS_GRIP_BACK_Z: float = 0.23
+const GS_GRIP_MIDDLE_RING_Z: float = 0.02
+const GS_GRIP_RADIUS: float = 0.021
+const GS_GRIP_RING_RADIUS: float = 0.026
+const GS_GRIP_RING_LENGTH: float = 0.012
+const GS_GUARD_LENGTH: float = 0.07
+const GS_GUARD_HALF_WIDTH: float = 0.18
+const GS_GUARD_HALF_THICKNESS: float = 0.03
+## Guard ends: where they flare, how much, and the lance tip beyond.
+const GS_GUARD_FLARE_X: float = 0.14
+const GS_GUARD_FLARE_HALF_LENGTH: float = 0.05
+const GS_GUARD_TIP_LENGTH: float = 0.02
+const GS_BLADE_HALF_WIDTH: float = 0.15
+## Flat of the blade (dark steel): half width and half thickness; the bevels
+## (steel) close from there to the edge, whose thickness is zero.
+const GS_FLAT_HALF_WIDTH: float = 0.11
+const GS_FLAT_HALF_THICKNESS: float = 0.015
+## Oblique point: over its last stretch the +X edge cuts across to a point
+## shifted toward -X.
+const GS_POINT_LENGTH: float = 0.36
+const GS_POINT_X: float = -0.12
+## Forge mark: the shield's cross, scaled, its blade arm toward the tip.
+const GS_MARK_HEIGHT: float = 0.18
+const GS_MARK_GAP: float = 0.08
+const GS_MARK_LIFT: float = 0.003
+const GS_POMMEL_RADIUS: float = 0.04
+const GS_POMMEL_HALF_THICKNESS: float = 0.016
+const GS_POMMEL_BEVEL: float = 0.009
+
 enum SwordSurface { STEEL, BRASS, LEATHER }
 enum ShieldSurface { DARK_STEEL, BRASS, LEATHER, STEEL }
+enum GreatswordSurface { DARK_STEEL, STEEL, BRASS, LEATHER }
 
 
 func _init() -> void:
 	_save(build_sword(), SWORD_OUT)
 	_save(build_shield(), SHIELD_OUT)
+	_save(build_greatsword(), GREATSWORD_OUT)
 	quit()
 
 
@@ -199,13 +240,18 @@ static func _ring_z(z: float, radius: float, sides: int) -> PackedVector3Array:
 ## Wheel pommel: a bevelled disc in the XZ plane, behind the grip.
 static func _add_pommel(st: SurfaceTool) -> void:
 	var center := Vector3(0, 0, FIST_Z + GRIP_LENGTH * 0.5 + POMMEL_RADIUS - 0.004)
+	_disc_pommel(st, center, POMMEL_RADIUS, POMMEL_HALF_THICKNESS, POMMEL_BEVEL)
+
+
+## Bevelled disc in the XZ plane (wheel pommel), with octagonal rims.
+static func _disc_pommel(st: SurfaceTool, center: Vector3, radius: float, half_thickness: float, bevel: float) -> void:
 	var sides: int = 8
 	var rings: Array[PackedVector3Array] = []
 	var profile: Array[Vector2] = [  # (y, radius)
-		Vector2(-POMMEL_HALF_THICKNESS, POMMEL_RADIUS - POMMEL_BEVEL),
-		Vector2(-POMMEL_HALF_THICKNESS + POMMEL_BEVEL * 0.6, POMMEL_RADIUS),
-		Vector2(POMMEL_HALF_THICKNESS - POMMEL_BEVEL * 0.6, POMMEL_RADIUS),
-		Vector2(POMMEL_HALF_THICKNESS, POMMEL_RADIUS - POMMEL_BEVEL),
+		Vector2(-half_thickness, radius - bevel),
+		Vector2(-half_thickness + bevel * 0.6, radius),
+		Vector2(half_thickness - bevel * 0.6, radius),
+		Vector2(half_thickness, radius - bevel),
 	]
 	for p: Vector2 in profile:
 		var ring := PackedVector3Array()
@@ -219,6 +265,120 @@ static func _add_pommel(st: SurfaceTool) -> void:
 ## Weapon z of the pommel's back end (the sword's rear end).
 static func pommel_end_z() -> float:
 	return FIST_Z + GRIP_LENGTH * 0.5 + POMMEL_RADIUS * 2.0 - 0.004
+
+
+# ================================================================== GREATSWORD
+
+static func build_greatsword() -> ArrayMesh:
+	var surfaces: Array[SurfaceTool] = _tools(4)
+	_add_gs_blade(surfaces[GreatswordSurface.DARK_STEEL], surfaces[GreatswordSurface.STEEL])
+	var brass: SurfaceTool = surfaces[GreatswordSurface.BRASS]
+	_add_gs_guard(brass)
+	for side: float in [1.0, -1.0]:
+		_add_gs_mark(brass, side)
+	_add_gs_grip(surfaces[GreatswordSurface.LEATHER], brass)
+	var pommel := Vector3(0, 0, GS_GRIP_BACK_Z + GS_POMMEL_RADIUS - 0.005)
+	_disc_pommel(brass, pommel, GS_POMMEL_RADIUS, GS_POMMEL_HALF_THICKNESS, GS_POMMEL_BEVEL)
+	return _commit(surfaces)
+
+
+## Weapon z of the guard's front face (where the blade starts).
+static func gs_guard_front_z() -> float:
+	return GS_GRIP_FRONT_Z - GS_GUARD_LENGTH
+
+
+## Hexagonal blade section at z: edge +X, flat top, edge -X, flat bottom.
+## Vertices 1-2 and 4-5 bound the flats; the other quads are the bevels.
+static func _gs_ring(z: float, edge_px: float, edge_nx: float, flat_px: float, flat_nx: float, half_thickness: float) -> PackedVector3Array:
+	return PackedVector3Array([
+		Vector3(edge_px, 0, z), Vector3(flat_px, half_thickness, z), Vector3(flat_nx, half_thickness, z),
+		Vector3(edge_nx, 0, z), Vector3(flat_nx, -half_thickness, z), Vector3(flat_px, -half_thickness, z),
+	])
+
+
+## The slab: full width from the guard to the start of the point, then the
+## +X edge cuts obliquely to a point shifted toward -X.
+static func _add_gs_blade(flat: SurfaceTool, bevel: SurfaceTool) -> void:
+	var base_z: float = gs_guard_front_z()
+	var shoulder_z: float = GS_TIP_Z + GS_POINT_LENGTH
+	var w: float = GS_BLADE_HALF_WIDTH
+	var f: float = GS_FLAT_HALF_WIDTH
+	var rings: Array[PackedVector3Array] = [
+		_gs_ring(base_z, w, -w, f, -f, GS_FLAT_HALF_THICKNESS),
+		_gs_ring(shoulder_z, w, -w, f, -f, GS_FLAT_HALF_THICKNESS),
+		_gs_ring(GS_TIP_Z, GS_POINT_X, GS_POINT_X, GS_POINT_X, GS_POINT_X, 0.0),
+	]
+	for r: int in rings.size() - 1:
+		var a: PackedVector3Array = rings[r]
+		var b: PackedVector3Array = rings[r + 1]
+		var mid: Vector3 = (_center(a) + _center(b)) * 0.5
+		for i: int in a.size():
+			var j: int = (i + 1) % a.size()
+			var st: SurfaceTool = flat if i == 1 or i == 4 else bevel
+			var face_mid: Vector3 = (a[i] + a[j] + b[i] + b[j]) * 0.25
+			_quad(st, a[i], a[j], b[j], b[i], face_mid - mid)
+
+
+## Brass block guard, its ends flaring into the sword's lance tip.
+static func _add_gs_guard(st: SurfaceTool) -> void:
+	var zc: float = gs_guard_front_z() + GS_GUARD_LENGTH * 0.5
+	var t: float = GS_GUARD_HALF_THICKNESS
+	var half: float = GS_GUARD_LENGTH * 0.5
+	var tip_x: float = GS_GUARD_HALF_WIDTH
+	var flare_x: float = tip_x - GS_GUARD_TIP_LENGTH
+	# Stations along X (from -X to +X): x, half length along Z, half thickness.
+	var stations: Array[Vector3] = [
+		Vector3(-tip_x, 0.0, t * 0.4),
+		Vector3(-flare_x, GS_GUARD_FLARE_HALF_LENGTH, t * 0.8),
+		Vector3(-GS_GUARD_FLARE_X, half * 0.85, t * 0.9),
+		Vector3(0.0, half, t),
+		Vector3(GS_GUARD_FLARE_X, half * 0.85, t * 0.9),
+		Vector3(flare_x, GS_GUARD_FLARE_HALF_LENGTH, t * 0.8),
+		Vector3(tip_x, 0.0, t * 0.4),
+	]
+	var rings: Array[PackedVector3Array] = []
+	for s: Vector3 in stations:
+		# Octagonal section with bevelled corners, so the block reads chunky.
+		rings.append(PackedVector3Array([
+			Vector3(s.x, s.z * 0.55, zc - s.y), Vector3(s.x, s.z, zc - s.y * 0.55),
+			Vector3(s.x, s.z, zc + s.y * 0.55), Vector3(s.x, s.z * 0.55, zc + s.y),
+			Vector3(s.x, -s.z * 0.55, zc + s.y), Vector3(s.x, -s.z, zc + s.y * 0.55),
+			Vector3(s.x, -s.z, zc - s.y * 0.55), Vector3(s.x, -s.z * 0.55, zc - s.y),
+		]))
+	_loft(st, rings, false, false)
+
+
+## The shield's cross of Santiago, small, raised on one flat of the blade
+## (side +1 on +Y, -1 on -Y), its blade arm pointing to the tip.
+static func _add_gs_mark(st: SurfaceTool, side: float) -> void:
+	var cross: PackedVector2Array = cross_outline()
+	var k: float = GS_MARK_HEIGHT / (CROSS_TOP_Y - CROSS_POINT_Y)
+	var top_z: float = gs_guard_front_z() - GS_MARK_GAP
+	var up := Vector3(0, side, 0)
+	var tris: PackedInt32Array = Geometry2D.triangulate_polygon(cross)
+	for t: int in tris.size() / 3:
+		_tri(st, _gs_mark_point(cross[tris[t * 3]], GS_MARK_LIFT, k, top_z, side), _gs_mark_point(cross[tris[t * 3 + 1]], GS_MARK_LIFT, k, top_z, side),
+				_gs_mark_point(cross[tris[t * 3 + 2]], GS_MARK_LIFT, k, top_z, side), up)
+	var n: int = cross.size()
+	for i: int in n:
+		var p: Vector2 = cross[i]
+		var q: Vector2 = cross[(i + 1) % n]
+		var out := Vector3(q.y - p.y, 0.0, p.x - q.x)  # outward in the XZ plane (Z grows with y)
+		_quad(st, _gs_mark_point(p, GS_MARK_LIFT, k, top_z, side), _gs_mark_point(q, GS_MARK_LIFT, k, top_z, side),
+				_gs_mark_point(q, -RELIEF_SINK, k, top_z, side), _gs_mark_point(p, -RELIEF_SINK, k, top_z, side), out)
+
+
+## A point of the forge mark outline, raised `lift` over the flat of one side.
+static func _gs_mark_point(p: Vector2, lift: float, k: float, top_z: float, side: float) -> Vector3:
+	return Vector3(p.x * k, side * (GS_FLAT_HALF_THICKNESS + lift), top_z + (p.y - CROSS_TOP_Y) * k)
+
+
+## Long octagonal leather grip with brass rings at both ends and between the hands.
+static func _add_gs_grip(leather: SurfaceTool, brass: SurfaceTool) -> void:
+	var sides: int = 8
+	_loft(leather, [_ring_z(GS_GRIP_FRONT_Z, GS_GRIP_RADIUS, sides), _ring_z(GS_GRIP_BACK_Z, GS_GRIP_RADIUS, sides)], true, true)
+	for z: float in [GS_GRIP_FRONT_Z, GS_GRIP_MIDDLE_RING_Z - GS_GRIP_RING_LENGTH * 0.5, GS_GRIP_BACK_Z - GS_GRIP_RING_LENGTH]:
+		_loft(brass, [_ring_z(z, GS_GRIP_RING_RADIUS, sides), _ring_z(z + GS_GRIP_RING_LENGTH, GS_GRIP_RING_RADIUS, sides)], true, true)
 
 
 # ================================================================== SHIELD

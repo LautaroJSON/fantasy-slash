@@ -11,7 +11,8 @@ max_level = 1
 debuff = ExtResource("2_challenged")
 buff = ExtResource("3_triumph")
 title = "Duelo"
-description = "Quien golpea tu Parada queda Retado 6 s.
+description = "Quien golpea tu Parry queda Retado 10 s,
+y también quien alcanza la Estocada mejorada.
 Si muere Retado, ganás un stack de Triunfo:
 +10 % de velocidad y +10 % de daño por stack
-(máx. 3, 8 s; cada muerte reinicia el tiempo)"
+(máx. 5, 15 s; cada muerte reinicia el tiempo)"

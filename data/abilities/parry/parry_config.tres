@@ -1,13 +1,18 @@
-[gd_resource type="Resource" script_class="ParryConfig" format=3]
+[gd_resource type="Resource" script_class="ParryConfig" format=3 uid="uid://clx5ruxlskr23"]
 
-[ext_resource type="Script" path="res://resources/parry_config.gd" id="1_script"]
-[ext_resource type="Script" path="res://resources/strike_feel.gd" id="2_feel"]
-[ext_resource type="Resource" path="res://data/debuffs/challenged.tres" id="3_challenged"]
-[ext_resource type="Resource" path="res://data/buffs/triumph.tres" id="4_triumph"]
+[ext_resource type="Script" uid="uid://n2vbxerm33mr" path="res://resources/parry_config.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://yr0xb60smvkg" path="res://resources/strike_feel.gd" id="2_feel"]
+[ext_resource type="Resource" uid="uid://8frxqopdn34c" path="res://data/debuffs/challenged.tres" id="3_challenged"]
+[ext_resource type="Resource" uid="uid://bigyol4igno70" path="res://data/buffs/triumph.tres" id="4_triumph"]
 
 [sub_resource type="Resource" id="Feel_block"]
 script = ExtResource("2_feel")
 shake_strength = 0.2
+
+[sub_resource type="Resource" id="Feel_empowered"]
+script = ExtResource("2_feel")
+hitlag = 0.1
+shake_strength = 0.4
 
 [sub_resource type="Resource" id="Feel_riposte"]
 script = ExtResource("2_feel")
@@ -17,22 +22,40 @@ shake_strength = 0.5
 [resource]
 script = ExtResource("1_script")
 block_reduction = 1.0
-guard_arc_degrees = 120.0
+guard_arc_degrees = 180.0
 raise_time = 0.06
 success_cooldown = 1.5
-success_recovery = 0.15
 whiff_recovery = 0.4
 riposte_duration = 0.5
 riposte_hit_time = 0.15
 riposte_trail_start = 0.08
 riposte_trail_end = 0.25
 riposte_knockback_speed = 10.0
+parry_enter_blend = 0.0
+shield_pop_scale = 1.5
+shield_hold_scale = 1.35
+shield_pop_time = 0.04
+shield_settle_time = 0.1
+shield_shrink_time = 0.12
+empowered_freeze = 0.3
+empowered_hit_time = 0.42
+empowered_duration = 0.9
+empowered_dash_lock = 0.55
+empowered_range_scale = 1.3
+empowered_damage_multiplier = 1.5
+empowered_knockback_multiplier = 1.5
+empowered_zoom_deg = 8.0
+empowered_zoom_return = 0.3
+empowered_shake = 0.6
+empowered_trail_start = 0.3
+empowered_trail_end = 0.55
+empowered_feel = SubResource("Feel_empowered")
 challenged = ExtResource("3_challenged")
 triumph = ExtResource("4_triumph")
 block_feel = SubResource("Feel_block")
 riposte_feel = SubResource("Feel_riposte")
 block_spark_scale = 1.0
 parry_body_clip = &"shield_parry"
-success_body_clip = &"shield_parry_success"
 whiff_body_clip = &"shield_parry_whiff"
 riposte_body_clip = &"shield_riposte"
+empowered_body_clip = &"shield_riposte_empowered"

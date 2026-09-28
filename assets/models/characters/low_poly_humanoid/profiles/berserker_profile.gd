@@ -1,6 +1,6 @@
 @tool
 extends HumanoidProfile
-## Berserker (falchion, mandoble): furia y peso (docs/specs/class-combat-identity.md
+## Berserker (mandoble de caballero): furia y peso (docs/specs/class-combat-identity.md
 ## §3.2, revisión 2026-09-27). Guardia erguida y confiada con el mandoble
 ## apoyado en el hombro derecho, sostenido solo con la mano derecha (referencias:
 ## Siegfried de Soul Calibur y bocetos del responsable); camina y corre con el
@@ -380,7 +380,7 @@ func _add_return_sweep(lib: AnimationLibrary) -> void:
 ## vuelve a apoyarla en el hombro.
 func _add_woodcutter(lib: AnimationLibrary) -> void:
 	var raised := _two_hands(_body(-0.04, -18, Vector3(14, -36, -8), COILED_LEGS), {
-		"shoulder_r": Vector3(134, -6, -30), "elbow_r": Vector3(6, 0, 0), "wrist_r": Vector3(40, -22, 0)})
+		"shoulder_r": Vector3(134, -6, -30), "elbow_r": Vector3(6, 0, 0), "wrist_r": Vector3(40, -40, 0)})  # de canto: la hoja ancha no roza la cabeza
 	var buried := _two_hands(_body(-0.3, 22, Vector3(-44, 40, 12), HEAVY_STRIDE), {
 		"shoulder_r": Vector3(23, -47, -26), "elbow_r": Vector3(75, 0, 0), "wrist_r": Vector3(-83, -8, 0)})
 	lib.add_animation("attack_3", _h.make_clip([

@@ -8,7 +8,7 @@ const KNIGHT_SWORD_MODEL: Mesh = preload("res://assets/models/weapons/knight_set
 const KNIGHT_SHIELD_MODEL: Mesh = preload("res://assets/models/weapons/knight_set/knight_shield.res")
 const KnightBuilder := preload("res://assets/models/weapons/knight_set/tools/build_knight_meshes.gd")
 const SPARTAN_SWORD_MODEL: Mesh = preload("res://assets/models/weapons/spartan_sword/spartan_sword.obj")
-const FALCHION_MODEL: Mesh = preload("res://assets/models/weapons/falchion/falchion.obj")
+const KNIGHT_GREATSWORD_MODEL: Mesh = preload("res://assets/models/weapons/knight_set/knight_greatsword.res")
 const KATANA_SCENE: PackedScene = preload("res://entities/player/weapons/katana.tscn")
 const KATANA_SHEATH_SCENE: PackedScene = preload("res://entities/player/weapons/katana_sheath.tscn")
 const KATANA_BLADE_MODEL: Mesh = preload("res://assets/models/weapons/katana/katana_blade.res")
@@ -25,15 +25,11 @@ const KNIGHT_BRASS: Material = preload("res://materials/weapons/knight_brass_mat
 const KNIGHT_LEATHER: Material = preload("res://materials/weapons/knight_leather_material.tres")
 const KNIGHT_SWORD_MATERIALS: Array[Material] = [KNIGHT_STEEL, KNIGHT_BRASS, KNIGHT_LEATHER]
 const KNIGHT_SHIELD_MATERIALS: Array[Material] = [KNIGHT_DARK_STEEL, KNIGHT_BRASS, KNIGHT_LEATHER, KNIGHT_STEEL]
+const KNIGHT_GREATSWORD_MATERIALS: Array[Material] = [KNIGHT_DARK_STEEL, KNIGHT_STEEL, KNIGHT_BRASS, KNIGHT_LEATHER]
 const SPARTAN_MATERIALS: Array[Material] = [
 	preload("res://materials/weapons/spartan_iron_material.tres"),
 	preload("res://materials/weapons/spartan_handle_material.tres"),
 	preload("res://materials/weapons/spartan_trim_material.tres"),
-]
-const FALCHION_MATERIALS: Array[Material] = [
-	preload("res://materials/weapons/falchion_iron_material.tres"),
-	preload("res://materials/weapons/falchion_handle_material.tres"),
-	preload("res://materials/weapons/falchion_trim_material.tres"),
 ]
 const SWORD_TIP_Z: float = -1.26
 const SPARTAN_TIP_Z: float = -1.47
@@ -107,8 +103,8 @@ func test_ac203_the_sword_is_the_knight_model_with_shared_materials() -> void:
 	_assert_model(SWORD_SCENE, KNIGHT_SWORD_MODEL, KNIGHT_SWORD_MATERIALS)
 
 
-func test_ac204_the_greatsword_is_the_falchion_model_with_shared_materials() -> void:
-	_assert_model(GREATSWORD_SCENE, FALCHION_MODEL, FALCHION_MATERIALS)
+func test_ac204_the_greatsword_is_the_knight_model_with_shared_materials() -> void:
+	_assert_model(GREATSWORD_SCENE, KNIGHT_GREATSWORD_MODEL, KNIGHT_GREATSWORD_MATERIALS)
 
 
 func test_ac205_the_models_keep_the_previous_reach() -> void:
@@ -118,7 +114,7 @@ func test_ac205_the_models_keep_the_previous_reach() -> void:
 
 func test_ac206_weapon_materials_are_flat_colors() -> void:
 	_assert_flat_materials(SPARTAN_MATERIALS)
-	_assert_flat_materials(FALCHION_MATERIALS)
+	_assert_flat_materials(KNIGHT_GREATSWORD_MATERIALS)
 
 
 func test_ac208_the_spartan_sword_stays_available_as_its_own_scene() -> void:
@@ -432,6 +428,8 @@ func _assert_same_build(built: ArrayMesh, saved: Mesh) -> void:
 func test_ac745_the_generator_reproduces_the_knight_meshes() -> void:
 	_assert_same_build(KnightBuilder.build_sword(), KNIGHT_SWORD_MODEL)
 	_assert_same_build(KnightBuilder.build_shield(), KNIGHT_SHIELD_MODEL)
+	# AC1010: and the greatsword (docs/specs/berserker-greatsword.md).
+	_assert_same_build(KnightBuilder.build_greatsword(), KNIGHT_GREATSWORD_MODEL)
 
 
 func test_ac746_the_knight_sword_measures() -> void:
@@ -444,3 +442,118 @@ func test_ac746_the_knight_sword_measures() -> void:
 	assert_float(box.size.x).is_between(GUARD_WIDTH_MIN, GUARD_WIDTH_MAX)
 	var grip: AABB = _bounds(_vertices(KNIGHT_SWORD_MODEL, KnightBuilder.SwordSurface.LEATHER))
 	assert_float(grip.size.z).is_between(GRIP_LENGTH_MIN, GRIP_LENGTH_MAX)
+
+
+# --- Knight greatsword (docs/specs/berserker-greatsword.md)
+
+## AC1006: trail and off-hand markers.
+const GS_TRAIL_BASE_Z: float = -0.77
+const GS_OFF_HAND_Z: float = -0.1
+const GS_TIP_TOLERANCE: float = 0.03
+const MARKER_TOLERANCE: float = 0.001
+## AC1007: forge mark height and its span in front of the guard, in meters.
+const GS_MARK_HEIGHT_MIN: float = 0.15
+const GS_MARK_HEIGHT_MAX: float = 0.22
+const GS_MARK_NEAR: float = 0.03
+const GS_MARK_FAR: float = 0.30
+## AC1008: blade width, flat thickness, edge thickness, bevel band and the
+## least shift of the point, in meters.
+const GS_WIDTH_MIN: float = 0.28
+const GS_WIDTH_MAX: float = 0.32
+const GS_WIDTH_TOLERANCE: float = 0.01
+const GS_THICKNESS_MIN: float = 0.025
+const GS_THICKNESS_MAX: float = 0.035
+const GS_EDGE_MAX: float = 0.002
+const GS_BEVEL_MIN: float = 0.03
+const GS_BEVEL_MAX: float = 0.05
+const GS_POINT_SHIFT: float = 0.04
+## AC1009: grip length, right fist, guard width and total length, in meters.
+const GS_GRIP_MIN: float = 0.38
+const GS_GRIP_MAX: float = 0.46
+const GS_RIGHT_FIST_Z: float = 0.133
+const GS_GUARD_MIN: float = 0.33
+const GS_GUARD_MAX: float = 0.39
+const GS_LENGTH_MIN: float = 2.4
+const GS_LENGTH_MAX: float = 2.6
+## Vertices this close to the blade edge are on the edge.
+const EDGE_EPSILON: float = 0.001
+
+
+func _greatsword_vertices(surface: int) -> PackedVector3Array:
+	return _vertices(KNIGHT_GREATSWORD_MODEL, surface)
+
+
+func test_ac1006_the_greatsword_scene_uses_the_knight_materials_and_markers() -> void:
+	_assert_model(GREATSWORD_SCENE, KNIGHT_GREATSWORD_MODEL, KNIGHT_GREATSWORD_MATERIALS)
+	var greatsword: Node3D = auto_free(GREATSWORD_SCENE.instantiate())
+	assert_float((greatsword.get_node("TrailBase") as Node3D).position.z).is_equal_approx(GS_TRAIL_BASE_Z, MARKER_TOLERANCE)
+	assert_float((greatsword.get_node("TrailTip") as Node3D).position.z).is_equal_approx(GREATSWORD_TIP_Z, GS_TIP_TOLERANCE)
+	assert_float((greatsword.get_node("OffHand") as Node3D).position.z).is_equal_approx(GS_OFF_HAND_Z, MARKER_TOLERANCE)
+
+
+func test_ac1007_the_greatsword_bears_the_forge_mark_on_both_flats() -> void:
+	var guard_front: float = KnightBuilder.gs_guard_front_z()
+	for side: float in [1.0, -1.0]:
+		var mark := PackedVector3Array()
+		for p: Vector3 in _greatsword_vertices(KnightBuilder.GreatswordSurface.BRASS):
+			if p.z < guard_front - EDGE_EPSILON and absf(p.x) < KnightBuilder.GS_FLAT_HALF_WIDTH and p.y * side > KnightBuilder.GS_FLAT_HALF_THICKNESS * 0.5:
+				mark.append(p)
+		assert_bool(mark.is_empty()).override_failure_message("side %d" % side).is_false()
+		if mark.is_empty():
+			continue
+		var box: AABB = _bounds(mark)
+		assert_float(box.size.z).is_between(GS_MARK_HEIGHT_MIN, GS_MARK_HEIGHT_MAX)
+		assert_float(guard_front - box.end.z).is_greater_equal(GS_MARK_NEAR)
+		assert_float(guard_front - box.position.z).is_less_equal(GS_MARK_FAR)
+
+
+func test_ac1008_the_greatsword_blade_is_a_wide_bevelled_slab() -> void:
+	var shoulder_z: float = GREATSWORD_TIP_Z + KnightBuilder.GS_POINT_LENGTH
+	var flat: PackedVector3Array = _greatsword_vertices(KnightBuilder.GreatswordSurface.DARK_STEEL)
+	var bevel: PackedVector3Array = _greatsword_vertices(KnightBuilder.GreatswordSurface.STEEL)
+	# Width along the straight part (guard to the start of the point).
+	var widths: Dictionary = {}
+	for p: Vector3 in bevel:
+		if p.z >= shoulder_z - EDGE_EPSILON:
+			var key: int = roundi(p.z * 1000.0)
+			var span: Vector2 = widths.get(key, Vector2(INF, -INF))
+			widths[key] = Vector2(minf(span.x, p.x), maxf(span.y, p.x))
+	var least: float = INF
+	var most: float = -INF
+	for span: Vector2 in widths.values():
+		least = minf(least, span.y - span.x)
+		most = maxf(most, span.y - span.x)
+	assert_float(least).is_between(GS_WIDTH_MIN, GS_WIDTH_MAX)
+	assert_float(most - least).is_less_equal(GS_WIDTH_TOLERANCE)
+	var flat_box: AABB = _bounds(flat)
+	assert_float(flat_box.size.y).is_between(GS_THICKNESS_MIN, GS_THICKNESS_MAX)
+	var edge_x: float = _bounds(bevel).end.x
+	for p: Vector3 in bevel:
+		if absf(absf(p.x) - edge_x) < EDGE_EPSILON:
+			assert_float(absf(p.y) * 2.0).override_failure_message(str(p)).is_less_equal(GS_EDGE_MAX)
+	assert_float(edge_x - flat_box.end.x).is_between(GS_BEVEL_MIN, GS_BEVEL_MAX)
+	var tip := Vector3(0, 0, INF)
+	for p: Vector3 in bevel:
+		if p.z < tip.z:
+			tip = p
+	assert_float(tip.x).is_less_equal(-GS_POINT_SHIFT)
+
+
+func test_ac1009_the_greatsword_hilt_fits_both_hands() -> void:
+	var grip: AABB = _bounds(_greatsword_vertices(KnightBuilder.GreatswordSurface.LEATHER))
+	assert_float(grip.size.z).is_between(GS_GRIP_MIN, GS_GRIP_MAX)
+	for z: float in [GS_RIGHT_FIST_Z, GS_OFF_HAND_Z]:
+		assert_float(z).is_between(grip.position.z, grip.end.z)
+	var guard_front: float = KnightBuilder.gs_guard_front_z()
+	var guard := PackedVector3Array()
+	var brass: PackedVector3Array = _greatsword_vertices(KnightBuilder.GreatswordSurface.BRASS)
+	for p: Vector3 in brass:
+		if p.z >= guard_front - EDGE_EPSILON and p.z <= grip.position.z + EDGE_EPSILON:
+			guard.append(p)
+	assert_float(_bounds(guard).size.x).is_between(GS_GUARD_MIN, GS_GUARD_MAX)
+	var rear: float = -INF
+	for surface: int in KNIGHT_GREATSWORD_MODEL.get_surface_count():
+		if surface != KnightBuilder.GreatswordSurface.BRASS:
+			rear = maxf(rear, _bounds(_greatsword_vertices(surface)).end.z)
+	assert_float(_bounds(brass).end.z).is_greater(rear)
+	assert_float(KNIGHT_GREATSWORD_MODEL.get_aabb().size.z).is_between(GS_LENGTH_MIN, GS_LENGTH_MAX)

@@ -9,6 +9,9 @@ extends Node
 ## Behaviors that move the player while charging or casting return true from
 ## controls_motion() and implement move_body(); the others keep the player still.
 
+## get_body_clip_blend() value that keeps the animator's default blend.
+const DEFAULT_BLEND: float = -1.0
+
 
 func begin(_ability: AbilityComponent) -> void:
 	pass
@@ -144,6 +147,19 @@ func hit_damage(ability: AbilityComponent) -> float:
 ## (docs/specs/sheath-socket-hand-grip.md §2.7).
 func get_body_clip(_ability: AbilityComponent) -> StringName:
 	return &""
+
+
+## Seconds the body blends into get_body_clip(); a negative value keeps the
+## animator's default blend. E.g. the Parry snaps into its block pose
+## (docs/specs/parry-riposte-rework.md §2.2).
+func get_body_clip_blend(_ability: AbilityComponent) -> float:
+	return DEFAULT_BLEND
+
+
+## True while a dash may not cut this cast even if AbilityData.dash_cancels_cast
+## (e.g. the Parry's empowered riposte until its strike is over).
+func locks_dash(_ability: AbilityComponent) -> bool:
+	return false
 
 
 ## True while this ability's cast leaves the weapon in the humanoid's hand
