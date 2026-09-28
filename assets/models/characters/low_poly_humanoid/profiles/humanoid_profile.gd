@@ -12,3 +12,9 @@ extends RefCounted
 ## jump_land, hit y attack_1 … attack_N.
 func build(_humanoid: LowPolyHumanoid) -> AnimationLibrary:
 	return AnimationLibrary.new()
+
+
+## Procedural motion layer of the profile (poc/samurai-motion), or null.
+## Called after build().
+func build_motion() -> HumanoidMotionSetup:
+	return null

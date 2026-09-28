@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="SheatheVortexConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/sheathe_vortex_config.gd" id="1_script"]
+[ext_resource type="Material" path="res://materials/vfx/circle_slash_material.tres" id="2_material"]
+
+[resource]
+script = ExtResource("1_script")
+sweep_duration = 0.22
+fade_duration = 0.3
+segments_per_meter = 14
+axis_height = 1.0
+turns = 1.5
+band_radius = 0.75
+band_tail_ratio = 0.35
+band_width_by_level = Array[float]([0.3, 0.4, 0.5])
+band_tail_width_ratio = 0.3
+band_tail_length = 0.85
+head_alpha = 0.5
+streak_count_by_level = Array[int]([4, 7, 10])
+streak_radius_min = 0.2
+streak_radius_max = 0.95
+streak_width_min = 0.05
+streak_width_max = 0.12
+streak_tail_min = 0.3
+streak_tail_max = 0.7
+streak_speed_min = 1.0
+streak_speed_max = 1.5
+streak_turns_min = 0.8
+streak_turns_max = 2.2
+streak_spiral_ratio = 0.55
+streak_alpha = 0.45
+floor_width = 0.5
+floor_height = 0.02
+floor_alpha = 0.3
+light_energy_by_level = Array[float]([1.5, 2.5, 3.5])
+light_range = 3.0
+burst_scale_by_level = Array[float]([1.0, 1.6, 2.4])
+material = ExtResource("2_material")

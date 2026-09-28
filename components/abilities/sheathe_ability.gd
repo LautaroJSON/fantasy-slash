@@ -206,6 +206,7 @@ func _slash(ability: AbilityComponent) -> void:
 		_push_away(ability, enemy, push)
 	_indicator.start_fade()
 	_wind_cut.play(ability.visual.global_position, ability.visual.global_rotation.y, _slash_length(ability, factor), factor)
+	_wind_cut.set_level(_vortex_level(ability.get_released_charge_ratio()))
 	_start_release()
 
 
@@ -366,3 +367,11 @@ func _hit_enemy(ability: AbilityComponent, enemy: Enemy, damage: float, is_crit:
 
 func _push_away(ability: AbilityComponent, enemy: Enemy, push: float) -> void:
 	enemy.apply_knockback(enemy.global_position - ability.visual.global_position, push)
+
+
+## Level of the cut vortex (docs/specs/sheathe-vortex-vfx.md): 3 at full
+## charge or empowered, 2 from half a charge, 1 below.
+func _vortex_level(charge_ratio: float) -> int:
+	if _cast_is_empowered or charge_ratio >= 1.0:
+		return 3
+	return 2 if charge_ratio >= 0.5 else 1

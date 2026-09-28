@@ -10,6 +10,8 @@
 [ext_resource type="Material" path="res://materials/vfx/wind_cut_additive_material.tres" id="8_glow_material"]
 [ext_resource type="Material" path="res://materials/vfx/wind_dust_material.tres" id="9_dust_material"]
 [ext_resource type="Script" path="res://components/abilities/sheathe_charge_glow.gd" id="10_charge_glow"]
+[ext_resource type="Script" path="res://components/abilities/sheathe_vortex_vfx.gd" id="12_vortex"]
+[ext_resource type="Resource" path="res://data/abilities/sheathe/sheathe_vortex_config.tres" id="13_vortex_config"]
 [ext_resource type="Material" path="res://materials/vfx/ground_crack_material.tres" id="11_crack_material"]
 
 [node name="SheatheAbility" type="Node"]
@@ -22,16 +24,22 @@ script = ExtResource("3_indicator")
 config = ExtResource("4_indicator_config")
 material = ExtResource("5_indicator_material")
 
-[node name="WindCut" type="Node3D" parent="."]
+[node name="WindCut" type="Node3D" parent="." node_paths=PackedStringArray("vortex")]
 top_level = true
 script = ExtResource("6_wind_cut")
 config = ExtResource("7_wind_cut_config")
 glow_material = ExtResource("8_glow_material")
 dust_material = ExtResource("9_dust_material")
 crack_material = ExtResource("11_crack_material")
+vortex = NodePath("../Vortex")
 
 [node name="ChargeGlow" type="Node3D" parent="."]
 top_level = true
 script = ExtResource("10_charge_glow")
 config = ExtResource("2_config")
 glow_material = ExtResource("8_glow_material")
+
+[node name="Vortex" type="MeshInstance3D" parent="."]
+top_level = true
+script = ExtResource("12_vortex")
+config = ExtResource("13_vortex_config")

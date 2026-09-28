@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://assets/models/characters/low_poly_humanoid/tools/clip_capture.gd" id="1_script"]
+
+[node name="ClipCapture" type="Node"]
+script = ExtResource("1_script")

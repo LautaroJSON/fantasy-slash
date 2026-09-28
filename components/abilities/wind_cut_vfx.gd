@@ -39,6 +39,8 @@ const CRACK_OVERLAP: float = 1.1
 @export var dust_material: StandardMaterial3D
 ## Very dark grey crack on the ground.
 @export var crack_material: StandardMaterial3D
+## Optional cut vortex launched with the burst (docs/specs/sheathe-vortex-vfx.md).
+@export var vortex: SheatheVortexVfx
 
 ## Segment i of a side is at side * segment_count + i; i = 0 is the one
 ## nearest to the player.
@@ -59,6 +61,9 @@ var _crescent_size: float = 1.0
 ## Seconds since play() and since burst().
 var _elapsed: float = 0.0
 var _burst_elapsed: float = 0.0
+## Vortex level of the next burst, and how much it scales the sparks and light.
+var _level: int = 1
+var _burst_scale: float = 1.0
 
 
 func _ready() -> void:
@@ -86,6 +91,7 @@ func play(origin: Vector3, yaw: float, length: float, factor: float) -> void:
 	_length = length
 	_height = config.max_height * factor
 	_crescent_size = maxf(factor, config.crescent_min_scale)
+	_level = 1
 	_elapsed = 0.0
 	_stage = Stage.LINE
 	_layout_crack()
@@ -101,7 +107,11 @@ func burst() -> void:
 	_stage = Stage.BURST
 	_burst_elapsed = 0.0
 	_line.hide()
+	_burst_scale = vortex.config.get_burst_scale(_level) if vortex != null else 1.0
+	_sparks.amount = maxi(roundi(config.spark_amount * _burst_scale), 1)
 	_burst(_sparks, Vector3(0.0, 0.0, _length / 2.0))
+	if vortex != null:
+		vortex.play(global_position, global_rotation.y, _length, _level)
 	_burst(_dust, Vector3(config.dust_width / 2.0, 0.0, _length / 2.0))
 	_flash.position = Vector3(0.0, config.flash_height, -_length)
 	_flash_light.position = _flash.position
@@ -207,7 +217,7 @@ func _update_burst() -> void:
 	var flash: float = minf(_burst_elapsed / config.flash_duration, 1.0)
 	_flash.scale = Vector3.ONE * maxf(config.flash_radius * flash, MIN_SIZE)
 	_flash.transparency = lerpf(config.start_transparency, 1.0, flash)
-	_flash_light.light_energy = config.flash_energy * (1.0 - flash)
+	_flash_light.light_energy = config.flash_energy * _burst_scale * (1.0 - flash)
 	if flash >= 1.0:
 		_flash.hide()
 		_flash_light.hide()
@@ -229,7 +239,7 @@ func _update_segment(index: int) -> void:
 	for side: int in WallSide.size():
 		var tilt: float = half_angle if side == WallSide.LEFT else -half_angle
 		var segment: MeshInstance3D = _segments[side * config.segment_count + index]
-		segment.visible = visible_now
+		segment.visible = visible_now and config.show_walls
 		var up: Vector3 = Basis(Vector3.BACK, tilt) * Vector3.UP
 		segment.rotation = Vector3(0.0, 0.0, tilt)
 		segment.position = up * height / 2.0 + Vector3(0.0, 0.0, centre)
@@ -240,7 +250,7 @@ func _update_segment(index: int) -> void:
 ## `age` in seconds since this crescent left; `size` relative to the crescent.
 func _update_crescent(crescent: MeshInstance3D, age: float, size: float, start_transparency: float) -> void:
 	var life: float = config.crescent_travel + config.crescent_fade
-	crescent.visible = crescent.mesh != null and age >= 0.0 and age < life
+	crescent.visible = config.show_crescent and crescent.mesh != null and age >= 0.0 and age < life
 	if not crescent.visible:
 		return
 	var travel: float = minf(age / config.crescent_travel, 1.0)
@@ -429,3 +439,9 @@ func _stop() -> void:
 	_flash.hide()
 	_flash_light.hide()
 	set_process(false)
+
+
+## Vortex level of the burst after the next play() (1 to 3; the vortex and
+## how much the sparks and flash light grow).
+func set_level(level: int) -> void:
+	_level = level

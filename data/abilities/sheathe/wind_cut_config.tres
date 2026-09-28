@@ -4,6 +4,8 @@
 
 [resource]
 script = ExtResource("1_script")
+show_walls = false
+show_crescent = false
 max_height = 6.0
 half_angle_degrees = 25.0
 wall_thickness = 0.03

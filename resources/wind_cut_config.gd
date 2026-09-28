@@ -15,6 +15,11 @@ extends Resource
 ## Transparency of the line (0 = opaque).
 @export var line_transparency: float
 
+## Draws the V walls and the crescent with its echo (the Sheathe replaces
+## them with its vortex, docs/specs/sheathe-vortex-vfx.md).
+@export var show_walls: bool = true
+@export var show_crescent: bool = true
+
 @export_group("Walls")
 ## Height of the walls at full charge, in meters (scaled by the charge factor).
 @export var max_height: float

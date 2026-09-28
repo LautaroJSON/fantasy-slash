@@ -41,10 +41,26 @@ func setup(weapon: WeaponData, sheath_socket: Node3D) -> void:
 	_in_sheath = false
 	_hand = humanoid.get_right_hand()
 	_grip = Transform3D(Basis.from_euler(weapon.grip_rotation), weapon.grip_position)
+	_send_weapon_frame()
 	_mounted = false
 	if not humanoid.anim.mixer_applied.is_connected(_on_mixer_applied):
 		humanoid.anim.mixer_applied.connect(_on_mixer_applied)
 	set_process(true)
+
+
+## Tells the humanoid's motion layer where the blade and its edge point in
+## the wrist's frame (poc/samurai-motion): TrailBase -> TrailTip is the blade,
+## and the model's -X is the edge side (the katana's tip curves toward +X).
+func _send_weapon_frame() -> void:
+	for child: Node in pivot.get_children():
+		var model := child as Node3D
+		if model == null or not model.has_node("TrailTip") or not model.has_node("TrailBase"):
+			continue
+		var tip: Vector3 = model.transform * (model.get_node("TrailTip") as Node3D).position
+		var base: Vector3 = model.transform * (model.get_node("TrailBase") as Node3D).position
+		var grip_basis: Basis = _grip.basis.orthonormalized()
+		humanoid.set_weapon_frame(grip_basis * (tip - base).normalized(), grip_basis * -model.transform.basis.x.normalized(), _grip.origin)
+		return
 
 
 ## Places the weapon pivot, then brings the hands back onto their targets on
