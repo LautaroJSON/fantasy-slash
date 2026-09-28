@@ -21,6 +21,8 @@
 | `knocked_out_stars.svg` | Delapouite | https://game-icons.net/1x1/delapouite/knocked-out-stars.html | Aturdido (`stun`) |
 | `crossed_swords.svg` | Lorc | https://game-icons.net/1x1/lorc/crossed-swords.html | Retado (`challenged`, Duelo de la Parada) |
 | `laurels.svg` | Lorc | https://game-icons.net/1x1/lorc/laurels.html | Triunfo (`triumph`, Duelo de la Parada) |
+| `sword_array.svg` | Lorc | https://game-icons.net/1x1/lorc/sword-array.html | Compensación (`compensation`, Hosho de Envainar) |
+| `lightning_frequency.svg` | Lorc | https://game-icons.net/1x1/lorc/lightning-frequency.html | Netsui (`netsui`, Zen de Envainar) |
 
 ## Cómo agregar un ícono
 

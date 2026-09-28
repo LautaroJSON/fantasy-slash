@@ -5,7 +5,16 @@
 [resource]
 script = ExtResource("1_script")
 id = &"riposte"
-max_level = 1
+max_level = 3
+level_descriptions = Array[String](["La primera parada de cada uso renueva el enfriamiento
+y la estocada pasa a ser la Estocada mejorada:
+el tiempo se congela y barrés a todos a tu alrededor
+(360°, +30 % de alcance, 150 % de un golpe básico).
+Sos inmortal durante el golpe", "La Estocada mejorada alcanza +30 % más lejos
+y hace +50 % más daño
+(×1.69 de alcance, 225 % de un golpe básico)", "La Estocada mejorada alcanza +40 % más lejos
+y hace +75 % más daño
+(×2.37 de alcance, 394 % de un golpe básico)"])
 title = "Contragolpe"
 description = "La primera parada de cada uso renueva el enfriamiento
 y la estocada pasa a ser la Estocada mejorada:

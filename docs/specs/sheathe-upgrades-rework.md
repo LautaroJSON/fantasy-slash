@@ -1,7 +1,7 @@
 # Feature: rework de las mejoras únicas de Envainar (Hosho, Nuki y Zen)
 
-- **Estado:** Propuesta (2026-09-28). ACs reservados: AC1071–AC1090.
-- **Constitución:** `docs/constitution.md` v4.24.0 → **enmienda MINOR** (la siguiente libre al implementar: 4.26.0 si `riposte-levels.md` toma 4.25.0; ver §8).
+- **Estado:** Implementada (2026-09-28). ACs: AC1071–AC1090.
+- **Constitución:** `docs/constitution.md` v4.24.0 → **enmienda MINOR 4.25.0** (ver §8; `riposte-levels.md` pasa a proponer 4.26.0).
 - **Pilar (Principio I):** **combate.**
   - Hoy las mejoras doradas de Envainar giran alrededor del dash y del propio Envainar (Paso del Viento, Zanshin, Tsubame Gaeshi). El combo básico del Samurái no alimenta a su habilidad.
   - **Hosho** une el combo con Envainar: pegar construye un remate ×4 que sale con un toque.
@@ -218,10 +218,35 @@ Cada paso deja el proyecto andando.
 
 ## 10. Checklist de review de la constitución (se completa al cerrar)
 
-- [ ] I. Pilar declarado (combate).
-- [ ] II. Íconos SVG con fuente y colores registrados.
-- [ ] III. Cargas, ×4, duración y ×2 en datos (`HoshoConfig`, `netsui.tres`, `compensation.tres`).
-- [ ] IV. Tipado estático, identificadores en inglés, callbacks delgados.
-- [ ] V. Sin allocations por cuadro.
-- [ ] VI. Sin input nuevo (el toque del Envainar mejorado ya existe).
-- [ ] VII. Sin tocar `Engine.time_scale`.
+- [x] I. Pilar declarado (combate).
+- [x] II. Íconos SVG con fuente (`sword_array.svg` y `lightning_frequency.svg`, Lorc) y colores registrados (4.25.0).
+- [x] III. Cargas, ×4, duración y ×2 en datos (`HoshoConfig`, `netsui.tres`, `compensation.tres`).
+- [x] IV. Tipado estático, identificadores en inglés, callbacks delgados.
+- [x] V. Sin allocations por cuadro.
+- [x] VI. Sin input nuevo (el toque del Envainar mejorado ya existe).
+- [x] VII. Sin tocar `Engine.time_scale`.
+
+## 11. Notas de implementación (2026-09-28)
+
+- **Código:**
+  - `SheatheAbility` se conecta a `AttackComponent.attacked` en `_ready()` (su padre es el `AbilityComponent`) y se desconecta en `_exit_tree()`, donde también quita Compensación. Así, un Envainar reemplazado no deja cargas;
+  - `_hit_enemy()` ya no devuelve si mató (solo lo usaba Zanshin);
+  - el hook `AbilityBehavior.dash_during_charge()` queda en la base, sin uso, como punto de extensión.
+- **Desvío menor:** `BuffData` no tiene `is_beneficial` (solo `DebuffData` lo tiene), porque los buffs siempre llevan marco verde. Compensación y Netsui no lo necesitan.
+- `StatusIconView.update_buff_time()`: un buff permanente no muestra reloj (antes dividía por `stack_duration`).
+- **AC1085:** se verifica con `AttackComponent.get_clip_speed()`, que da la velocidad de todos los clips y tiempos del combo. No se mide un combo completo cuadro a cuadro.
+- **AC1073:** lo cubre `nuki_test`.
+- **Tests:**
+  - `sheathe_upgrades_rework_test` (20 casos) y `nuki_test` (8), en verde;
+  - `unique_upgrades_test` (4), `unique_upgrade_run_test` (5) y `status_icons_test` (11), en verde.
+- **Tests adaptados:** `nuki_test` AC311 comprobaba que Envainar ofreciera Paso del Viento, Zanshin y Nuki; ahora solo exige Nuki, porque las otras dos se borraron.
+- **Tests borrados:** `wind_step_test`, `zanshin_test` y `tsubame_gaeshi_test`. Sus casos del estado mejorado (toque al 100 %, brillo, marco dorado, gasto al lanzar, carta en el pool) están en `sheathe_upgrades_rework_test`.
+- **Fallos previos y ajenos:** idénticos sobre `HEAD` limpio (5a5ff55), por datos cambiados en otros commits:
+  - `ability_component_test`: AC47 (×3) y AC50 (×2), por el daño del Guerrero;
+  - `sheathe_test` AC241;
+  - `buff_component_test` AC285/AC298 (Conmoción);
+  - `stats_component_test` AC5 (×2).
+- Import y smoke tests (proyecto y arena) sin errores ni warnings.
+- **Íconos (paso 6, con permiso del responsable):**
+  - `lorc/sword-array` → `sword_array.svg` (Compensación) y `lorc/lightning-frequency` → `lightning_frequency.svg` (Netsui), bajados del repo `game-icons/icons` con el procedimiento de `SOURCE.md`, con su fila en la tabla;
+  - AC1088 verifica el glifo y la fila.

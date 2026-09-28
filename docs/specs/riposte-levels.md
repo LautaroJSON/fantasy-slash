@@ -1,7 +1,7 @@
 # Feature: Contragolpe con 3 niveles y vórtice blanco
 
-- **Estado:** Propuesta (2026-09-28). ACs reservados: AC1056–AC1070.
-- **Constitución:** `docs/constitution.md` v4.24.0 → **enmienda MINOR a 4.25.0** (ver §8).
+- **Estado:** Implementada (2026-09-28). ACs: AC1056–AC1070.
+- **Constitución:** `docs/constitution.md` v4.25.0 → **enmienda MINOR 4.26.0** (ver §8).
 - **Pilar (Principio I):** **combate.**
   - Contragolpe es el remate culminante del Guerrero, pero hoy no crece: la run no lo hace más fuerte.
   - Con dos niveles más, el alcance y el daño de la Estocada mejorada escalan con la build.
@@ -138,14 +138,14 @@ Cada paso deja el proyecto andando.
 2. **Niveles:** `ParryConfig` con los pasos y sus helpers; `ParryAbility` lee el nivel de Contragolpe (`get_unique_level(RIPOSTE)`); `riposte.tres` con 3 niveles. `parry_rework_test` adaptado. Tests de AC1056–AC1060 en `test/components/abilities/riposte_levels_test.gd`.
 3. **Vórtice:** `CircleSlashVfxConfig` nuevo, `CircleSlashVfx` reescrito (hoja en espiral, trazos, piso, `burst()`), materiales y nodos en `parry_ability.tscn`. Tests de AC1061–AC1067.
 4. **Capturas:** hoja del vórtice cuadro a cuadro en los niveles 1, 2 y 3 desde la cámara del juego. **Te la muestro** y ajusto los datos.
-5. **Cierre:** suites de AC1068, import y smoke test, constitución 4.25.0, notas, `CLAUDE.md` (mapa: Parry) y estado **Implementada**.
+5. **Cierre:** suites de AC1068, import y smoke test, constitución 4.26.0, notas, `CLAUDE.md` (mapa: Parry) y estado **Implementada**.
 
 ## 7. Tests que cambian
 
 - `parry_rework_test` AC1026/AC1027 usan `CONFIG.empowered_range_scale` y `CONFIG.empowered_damage_multiplier`: pasan a `get_empowered_range_scale(1)` y `get_empowered_damage_multiplier(1)`. Verifican lo mismo (nivel 1).
 - `parry_rework_test` AC1030 (el VFX): si lee `band_width` u otros campos borrados, pasa a los nuevos del nivel 1; sigue verificando 360° en 0.25 s, radio, material y un solo nodo.
 
-## 8. Constitución: enmienda MINOR 4.25.0
+## 8. Constitución: enmienda MINOR 4.26.0
 
 **Principio II, tabla de colores:** la fila del corte circular pasa a:
 
@@ -161,10 +161,31 @@ Y en los colores no reservados: el tierra `Color(0.62, 0.52, 0.4)` también colo
 
 ## 10. Checklist de review de la constitución (se completa al cerrar)
 
-- [ ] I. Pilar declarado (combate).
-- [ ] II. VFX con `ImmediateMesh` y partículas prearmadas, materiales compartidos, blanco y tierra registrados (4.25.0).
-- [ ] III. Pasos de nivel, cantidades por nivel, tiempos y alphas en `ParryConfig` y `CircleSlashVfxConfig`.
-- [ ] IV. Tipado estático, identificadores en inglés.
-- [ ] V. Sin allocations por cuadro (trazos precalculados, una `ImmediateMesh`).
-- [ ] VI. Sin input nuevo.
-- [ ] VII. Sin cambios en el tiempo congelado.
+- [x] I. Pilar declarado (combate).
+- [x] II. VFX con `ImmediateMesh` y partículas prearmadas, materiales compartidos, blanco y tierra registrados (4.26.0).
+- [x] III. Pasos de nivel, cantidades por nivel, tiempos y alphas en `ParryConfig` y `CircleSlashVfxConfig`.
+- [x] IV. Tipado estático, identificadores en inglés.
+- [x] V. Sin allocations por cuadro (trazos precalculados, una `ImmediateMesh`).
+- [x] VI. Sin input nuevo.
+- [x] VII. Sin cambios en el tiempo congelado.
+
+## 11. Notas de implementación (2026-09-28)
+
+- **Niveles:**
+  - `ParryConfig.get_empowered_range_scale(level)` y `get_empowered_damage_multiplier(level)` multiplican los pasos;
+  - `ParryAbility` lee `get_unique_level(RIPOSTE)` para el radio, el daño y el nivel del VFX.
+- **Vórtice, desvíos de la spec tras la primera hoja de capturas:**
+  - **Embudo:** vistas desde la cámara baja del juego, las cintas horizontales quedaban de canto (líneas finas). Ahora el borde exterior de la hoja sube `band_lift` (0.7 m) y el de cada trazo `streak_lift` (0.35 m). La hoja bajó a 0.7 m (`height`), así va de la cintura al hombro;
+  - **Desvanecido cerca de la cámara:** en el nivel 3 el radio (≈ 4.7 m con el Guerrero) pasa por la cámara y dibujaba placas blancas enormes. Los tres materiales (`circle_slash_*_material.tres`) usan `distance_fade` de 1 a 3 m;
+  - el polvo quedó más chico (radio 0.09 m);
+  - todo sigue en datos (`circle_slash_vfx_config.tres`).
+- **Trazos:** la tabla fija usa pasos de la razón áurea (sin azar) y se llena una vez en `_ready()` para el máximo de trazos (10). Las cintas van en una sola superficie `PRIMITIVE_TRIANGLES`.
+- **Estallido:** `burst()` lo dispara `ParryAbility._empowered_hit()`, aunque el golpe no alcance a nadie. Chispas (0.35 s) y polvo (0.45 s) salen del anillo del radio, y el destello se apaga en 0.15 s. Todo termina ≤ 0.6 s después del arranque (AC1061).
+- **AC1070:** la hoja de capturas del arena (5 Brutos, niveles 1, 2 y 3, a 0.34–0.62 s del bloqueo) se le mostró al responsable. Los ajustes posteriores quedan en datos.
+- **Tests:**
+  - `riposte_levels_test` (18 casos), `parry_rework_test` (17), `unique_upgrades_test` (4), `unique_upgrade_run_test` (5) y `warrior_abilities_test` (5), en verde;
+  - import y smoke test del arena sin errores ni warnings.
+- **Tests adaptados:**
+  - `parry_rework_test` AC1026 y AC1027 usan `get_empowered_range_scale(1)` y `get_empowered_damage_multiplier(1)`;
+  - `unique_upgrades_test` AC105 pasa de `max_level` 1 a 3 en Contragolpe.
+- **`parry_test`:** con el working tree fallan AC829, AC830, AC832 y AC834, por los ajustes de datos sin commitear del responsable en `parry.tres`, `parry_config.tres` y `upgrades/cooldown.tres` (ventana 0.4 s, arco 190°, recuperación 0.3 s). Con esos tres archivos como en `HEAD`, y con los cambios de esta spec, pasa 11/11.

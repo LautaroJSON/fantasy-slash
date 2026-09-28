@@ -131,9 +131,9 @@ func get_slash_vfx() -> CircleSlashVfx:
 	return _slash_vfx
 
 
-## Radius of the empowered riposte's 360° strike.
+## Radius of the empowered riposte's 360° strike at the current "Contragolpe" level.
 func get_empowered_radius(ability: AbilityComponent) -> float:
-	return ability.player_stats.get_stat(PlayerStats.Stat.ATTACK_RANGE) * config.empowered_range_scale
+	return ability.player_stats.get_stat(PlayerStats.Stat.ATTACK_RANGE) * config.get_empowered_range_scale(ability.get_unique_level(RIPOSTE))
 
 
 func _advance_window(ability: AbilityComponent) -> void:
@@ -151,7 +151,7 @@ func _advance_riposte(ability: AbilityComponent, before: float) -> void:
 
 func _advance_empowered(ability: AbilityComponent, before: float) -> void:
 	if _crossed(before, config.empowered_trail_start):
-		_slash_vfx.play(ability.visual, get_empowered_radius(ability))
+		_slash_vfx.play(ability.visual, get_empowered_radius(ability), ability.get_unique_level(RIPOSTE))
 	if _crossed(before, config.empowered_hit_time):
 		_empowered_hit(ability)
 	if _crossed(before, config.empowered_trail_start) or _crossed(before, config.empowered_trail_end):
@@ -245,12 +245,13 @@ func _riposte_hit(ability: AbilityComponent) -> void:
 ## The 360° strike: a basic attack on every enemy around. "Duelo" marks them
 ## first, so one the strike kills dies marked and grants Triumph.
 func _empowered_hit(ability: AbilityComponent) -> void:
+	_slash_vfx.burst()
 	_collect_empowered_hits(ability)
 	if _hit_buffer.is_empty():
 		return
 	for enemy: Enemy in _hit_buffer:
 		_challenge(ability, enemy)
-	ability.attack.strike_enemies(_hit_buffer, config.empowered_damage_multiplier, config.empowered_knockback_multiplier, randf())
+	ability.attack.strike_enemies(_hit_buffer, config.get_empowered_damage_multiplier(ability.get_unique_level(RIPOSTE)), config.empowered_knockback_multiplier, randf())
 	ability.report_strike(config.empowered_feel, _hit_buffer)
 
 

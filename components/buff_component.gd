@@ -41,6 +41,17 @@ func add_stack(data: BuffData) -> void:
 	changed.emit()
 
 
+## Removes the buff at once, with all its stacks (nothing when it is not active).
+func remove(id: StringName) -> void:
+	var buff: ActiveBuff = _find(id)
+	if buff == null:
+		return
+	_active.erase(buff)
+	if _active.is_empty():
+		set_physics_process(false)
+	changed.emit()
+
+
 func clear() -> void:
 	if _active.is_empty():
 		return
@@ -54,6 +65,8 @@ func advance(delta: float) -> void:
 	var lost: bool = false
 	for i: int in range(_active.size() - 1, -1, -1):
 		var buff: ActiveBuff = _active[i]
+		if buff.data.is_permanent():
+			continue
 		buff.time_left -= delta
 		if buff.time_left <= 0.0 and buff.data.expires_all_stacks:
 			buff.stacks = 0

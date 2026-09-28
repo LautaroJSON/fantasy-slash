@@ -1,6 +1,6 @@
 # Feature: Mejora única "Tsubame Gaeshi" (Envainar)
 
-- **Estado:** Implementada (2026-09-26). Los 82 tests del samurái pasaron 3 corridas seguidas; import y smoke test sin errores. La suite completa (444 tests) tiene **4 fallos ajenos** a esta spec: tests del Giro y de Conmoción (AC188, AC288, AC298 y AC285/AC298) que fallan por un cambio de datos en curso de otra sesión (`data/buffs/concussion.tres`, modificado después de sus tests).
+- **Estado:** Parcialmente reemplazada por `sheathe-upgrades-rework.md` (2026-09-28): la carta Tsubame Gaeshi se eliminó; el estado "Envainar: mejorado" (toque al 100 %, brillo y marco dorado) sigue vigente y ahora lo otorga Hosho. Estado anterior: Implementada (2026-09-26). Los 82 tests del samurái pasaron 3 corridas seguidas; import y smoke test sin errores. La suite completa (444 tests) tiene **4 fallos ajenos** a esta spec: tests del Giro y de Conmoción (AC188, AC288, AC298 y AC285/AC298) que fallan por un cambio de datos en curso de otra sesión (`data/buffs/concussion.tres`, modificado después de sus tests).
 - **Constitución:** `docs/constitution.md` v4.0.0 → enmienda **PATCH 4.0.1** (el dorado ya registrado como no reservado suma dos usos: el brillo de la katana y el marco del HUD).
 - **Pilares (Principio I):**
   - **Combate:** premia el tajo perfecto (cargado al máximo y que conecta) con un segundo tajo instantáneo, como el contragolpe de la golondrina de Kojirō.

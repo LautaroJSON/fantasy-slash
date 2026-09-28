@@ -12,6 +12,9 @@ enum Stat {
 	CRIT_CHANCE,
 	## Fraction added to the player's DAMAGE (global buffs only; docs/specs/warrior-abilities-rework.md).
 	DAMAGE,
+	## Fraction added to the player's ATTACK_SPEED, with no cap (global buffs
+	## only; e.g. Netsui, docs/specs/sheathe-upgrades-rework.md §2.4).
+	ATTACK_SPEED,
 }
 
 @export var stat: Stat

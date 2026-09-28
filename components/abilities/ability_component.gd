@@ -14,7 +14,7 @@ signal charge_started
 signal charge_milestone_reached(index: int, is_full: bool)
 ## Emitted once per enemy hit, with the damage actually applied to it.
 signal enemy_hit(enemy: Enemy, applied: float, is_crit: bool)
-## Emitted when the ability gains or spends an empowered cast (e.g. Tsubame Gaeshi).
+## Emitted when the ability gains or spends an empowered cast (e.g. Sheathe's Hosho).
 signal empowered_changed(active: bool)
 ## Emitted when is_trailing() may have changed outside the cast (e.g. the
 ## Spin's dash slash starts or ends).

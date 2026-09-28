@@ -4,12 +4,14 @@ extends AbilityBehavior
 ## katana rests in its sheath, the player keeps facing the nearest enemy (or
 ## its last facing when there is none) while walking slowly (the dash is still
 ## allowed), and takes reduced damage. Every charge milestone pulses the ground
-## outline. With the unique upgrade "Paso del Viento" (wind_step), each dash
-## while charging adds charge at once; with "Zanshin" (zanshin), a slash that
-## kills makes the dash ready; with "Nuki" (nuki), a dash while on cooldown makes
-## the ability ready; with "Tsubame Gaeshi" (tsubame_gaeshi), a manual full charge
-## that connects stores an empowered Sheathe (glowing katana), cast at once at
-## full charge on the next press. On the release the player draws with a
+## outline. Unique upgrades (docs/specs/sheathe-upgrades-rework.md): with "Nuki"
+## (nuki), a dash while on cooldown makes the ability ready; with "Hosho"
+## (hosho), every combo strike that hits builds a Compensation charge, and
+## enough of them make the ability ready and store an empowered Sheathe
+## (glowing katana), cast at once at full charge on the next press with
+## HoshoConfig.damage_multiplier times the damage; with "Zen" (zen), casting
+## a full manual charge or an empowered Sheathe grants Netsui (double attack
+## speed). On the release the player draws with a
 ## rising diagonal cut (gyaku kesa-giri) drawn by the body clip, with the katana
 ## in the hand (docs/specs/sheathe-release-animation.md); the slash lands on the
 ## release (the cast that follows is a recovery a dash may cut short):
@@ -27,15 +29,12 @@ extends AbilityBehavior
 ## pulses a light at the mouth of the sheath (§2.3-2.4).
 ## factor = SheatheConfig.charge_factor(charge ratio) also scales the push.
 
-## Unique upgrade "Paso del Viento": each dash while charging adds charge.
-const WIND_STEP: StringName = &"wind_step"
-## Unique upgrade "Zanshin": a kill with the slash makes the dash ready.
-const ZANSHIN: StringName = &"zanshin"
 ## Unique upgrade "Nuki": every dash resets the cooldown.
 const NUKI: StringName = &"nuki"
-## Unique upgrade "Tsubame Gaeshi": a full manual charge that connects stores an
-## empowered Sheathe, cast at once at full charge.
-const TSUBAME_GAESHI: StringName = &"tsubame_gaeshi"
+## Unique upgrade "Hosho": combo strikes that hit build the empowered Sheathe.
+const HOSHO: StringName = &"hosho"
+## Unique upgrade "Zen": a full or empowered Sheathe grants Netsui.
+const ZEN: StringName = &"zen"
 ## Blade mesh inside the weapon adapter scene (glow overlay).
 const WEAPON_MODEL: NodePath = ^"Model"
 
@@ -53,10 +52,14 @@ var _held_yaw: float = 0.0
 ## Reused every cast: enemies may leave the registry while damage is applied.
 var _hit_buffer: Array[Enemy] = []
 var _wave_buffer: Array[Enemy] = []
-## An empowered Sheathe is stored (Tsubame Gaeshi).
+## An empowered Sheathe is stored (Hosho).
 var _empowered: bool = false
-## The running cast spent the empowered Sheathe: it cannot store another.
+## The running cast spent the empowered Sheathe (its slash deals Hosho's multiplier).
 var _cast_is_empowered: bool = false
+## Hosho's Compensation charges (below HoshoConfig.charges_needed).
+var _charges: int = 0
+## Slot that equipped this behavior (its parent): the combo strikes reach it.
+var _slot: AbilityComponent = null
 ## Katana blade, found once on the first glow.
 var _blade: MeshInstance3D = null
 ## Created once: swaps the gain flash for the steady glow.
@@ -80,12 +83,21 @@ func _ready() -> void:
 	_flash_timer.one_shot = true
 	add_child(_flash_timer)
 	_flash_timer.timeout.connect(_on_flash_timeout)
+	_slot = get_parent() as AbilityComponent
+	if _slot != null and _slot.attack != null:
+		_slot.attack.attacked.connect(_on_attacked)
 
 
-## A replaced ability leaves no glow on the katana.
+## A replaced ability leaves no glow on the katana and no Compensation charges.
 func _exit_tree() -> void:
 	if is_instance_valid(_blade):
 		_blade.material_overlay = null
+	if _slot == null:
+		return
+	if _slot.attack != null and _slot.attack.attacked.is_connected(_on_attacked):
+		_slot.attack.attacked.disconnect(_on_attacked)
+	if _slot.buffs != null:
+		_slot.buffs.remove(config.hosho.charge_buff.id)
 
 
 ## An empowered Sheathe skips the charge: it is cast at once at full charge.
@@ -147,12 +159,6 @@ func dash_started(ability: AbilityComponent) -> void:
 	ability.reset_cooldown()
 
 
-## "Paso del Viento": the dash adds its level value, in seconds, to the charge.
-func dash_during_charge(ability: AbilityComponent) -> void:
-	if ability.has_unique(WIND_STEP):
-		ability.add_charge(ability.get_unique_value(WIND_STEP))
-
-
 func charge_milestone(ability: AbilityComponent, index: int, is_full: bool) -> void:
 	_charge_clip = config.charge_clip_for(index, is_full)
 	_charge_glow.follow(ability.weapon_mount.pivot.global_position)
@@ -174,6 +180,8 @@ func begin(ability: AbilityComponent) -> void:
 	_cast_is_empowered = _empowered
 	if _empowered:
 		_spend_empowered(ability)
+	if ability.has_unique(ZEN) and (_cast_is_empowered or ability.get_released_charge_ratio() >= 1.0):
+		ability.buffs.add_stack(config.netsui)
 	_end_charge(ability)
 	face_nearest_enemy(ability)
 	_update_reach(ability, ability.get_released_charge_ratio())
@@ -189,20 +197,16 @@ func _slash(ability: AbilityComponent) -> void:
 	var factor: float = config.charge_factor(ability.get_released_charge_ratio())
 	_collect_hits(ability, factor)
 	var is_crit: bool = DamageMath.roll_crit(ability.player_stats.get_stat(PlayerStats.Stat.CRIT_CHANCE), randf())
-	var damage: float = DamageMath.apply_crit(hit_damage(ability) * factor, is_crit, ability.player_stats.get_stat(PlayerStats.Stat.CRIT_DAMAGE))
+	var multiplier: float = config.hosho.damage_multiplier if _cast_is_empowered else 1.0
+	var damage: float = DamageMath.apply_crit(hit_damage(ability) * factor * multiplier, is_crit, ability.player_stats.get_stat(PlayerStats.Stat.CRIT_DAMAGE))
 	var push: float = config.knockback_speed * factor
-	var killed: bool = false
 	for enemy: Enemy in _hit_buffer:
-		killed = _hit_enemy(ability, enemy, damage, is_crit, push) or killed
+		_hit_enemy(ability, enemy, damage, is_crit, push)
 	for enemy: Enemy in _wave_buffer:
 		_push_away(ability, enemy, push)
 	_indicator.start_fade()
 	_wind_cut.play(ability.visual.global_position, ability.visual.global_rotation.y, _slash_length(ability, factor), factor)
 	_start_release()
-	if killed and ability.has_unique(ZANSHIN):
-		ability.dash.reset_cooldown()
-	if _connects_full_manual_charge(ability):
-		_grant_empowered(ability)
 
 
 func controls_motion() -> bool:
@@ -263,11 +267,23 @@ func get_flash_timer() -> Timer:
 	return _flash_timer
 
 
-## Tsubame Gaeshi: a manual charge released at 100 % whose slash hit someone.
-func _connects_full_manual_charge(ability: AbilityComponent) -> bool:
-	if _cast_is_empowered or not ability.has_unique(TSUBAME_GAESHI):
-		return false
-	return ability.get_released_charge_ratio() >= 1.0 and not _hit_buffer.is_empty()
+func get_compensation_charges() -> int:
+	return _charges
+
+
+## "Hosho": a combo strike that hit someone adds a charge (none while one
+## empowered Sheathe is already stored); the last one makes it ready and empowered.
+func _on_attacked(hit_count: int, _total_damage: float, _was_crit: bool) -> void:
+	if hit_count <= 0 or _empowered or not _slot.has_unique(HOSHO):
+		return
+	_charges += 1
+	if _charges < config.hosho.charges_needed:
+		_slot.buffs.add_stack(config.hosho.charge_buff)
+		return
+	_charges = 0
+	_slot.buffs.remove(config.hosho.charge_buff.id)
+	_slot.reset_cooldown()
+	_grant_empowered(_slot)
 
 
 ## Stores the empowered Sheathe: the katana flashes, then keeps a steady glow.
@@ -342,12 +358,10 @@ func _collect_hits(ability: AbilityComponent, factor: float) -> void:
 			_wave_buffer.append(enemy)
 
 
-## Returns true when the hit killed the enemy.
-func _hit_enemy(ability: AbilityComponent, enemy: Enemy, damage: float, is_crit: bool, push: float) -> bool:
+func _hit_enemy(ability: AbilityComponent, enemy: Enemy, damage: float, is_crit: bool, push: float) -> void:
 	var applied: float = enemy.health.receive_hit(damage)
 	ability.report_hit(enemy, applied, is_crit)
 	_push_away(ability, enemy, push)
-	return enemy.health.is_dead()
 
 
 func _push_away(ability: AbilityComponent, enemy: Enemy, push: float) -> void:

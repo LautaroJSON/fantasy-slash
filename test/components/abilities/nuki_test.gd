@@ -6,8 +6,6 @@ const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const SAMURAI: CharacterClassData = preload("res://data/classes/samurai/samurai.tres")
 const SHEATHE: AbilityData = preload("res://data/abilities/sheathe/sheathe.tres")
 const NUKI: AbilityUniqueUpgradeData = preload("res://data/abilities/sheathe/unique/nuki.tres")
-const WIND_STEP: AbilityUniqueUpgradeData = preload("res://data/abilities/sheathe/unique/wind_step.tres")
-const ZANSHIN: AbilityUniqueUpgradeData = preload("res://data/abilities/sheathe/unique/zanshin.tres")
 const STEP: float = 0.05
 const TOLERANCE: float = 0.0001
 
@@ -63,7 +61,8 @@ func test_ac311_the_nuki_card_is_a_binary_sheathe_unique_without_value() -> void
 	assert_str(NUKI.title).is_equal("Nuki")
 	assert_int(NUKI.max_level).is_equal(1)
 	assert_array(NUKI.level_values).is_empty()
-	assert_array(SHEATHE.unique_upgrades).contains([WIND_STEP, ZANSHIN, NUKI])
+	# Adapted (sheathe-upgrades-rework.md): Paso del Viento and Zanshin are gone.
+	assert_array(SHEATHE.unique_upgrades).contains([NUKI])
 
 
 func test_ac312_a_dash_on_cooldown_makes_sheathe_ready() -> void:

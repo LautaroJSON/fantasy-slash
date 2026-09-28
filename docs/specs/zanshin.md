@@ -1,6 +1,6 @@
 # Feature: Mejora única "Zanshin" (Envainar)
 
-- **Estado:** Implementada (2026-09-25, 388 tests GdUnit4 en verde, 0 orphans; `zanshin_test` y `wind_step_test` pasaron 3 corridas seguidas; import y smoke test sin errores ni warnings). ACs renumerados dos veces (AC284 → AC297 → AC305) porque `spin-golden-upgrades.md` y `spin-tornado.md` tomaron esos números en paralelo.
+- **Estado:** Reemplazada por `sheathe-upgrades-rework.md` (2026-09-28): la mejora se eliminó. Estado anterior: Implementada (2026-09-25, 388 tests GdUnit4 en verde, 0 orphans; `zanshin_test` y `wind_step_test` pasaron 3 corridas seguidas; import y smoke test sin errores ni warnings). ACs renumerados dos veces (AC284 → AC297 → AC305) porque `spin-golden-upgrades.md` y `spin-tornado.md` tomaron esos números en paralelo.
 - **Constitución:** `docs/constitution.md` v3.4.0 (sin enmienda).
 - **Pilares (Principio I):**
   - **Combate:** matar con el tajo te deja listo para moverte de nuevo, y premia rematar con Envainar.

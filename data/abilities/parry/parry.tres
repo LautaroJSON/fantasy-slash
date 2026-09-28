@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://di4ltwmxxqcq0" path="res://resources/ability_data.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://dm32h1yv4ymv1" path="res://resources/ability_upgrade_data.gd" id="2_upgrade_script"]
 [ext_resource type="PackedScene" uid="uid://rerrgg8wsaoc" path="res://components/abilities/parry_ability.tscn" id="3_behavior"]
-[ext_resource type="Resource" path="res://data/abilities/parry/upgrades/cooldown.tres" id="4_cooldown"]
+[ext_resource type="Resource" uid="uid://btcj4gwq3tyeu" path="res://data/abilities/parry/upgrades/cooldown.tres" id="4_cooldown"]
 [ext_resource type="Resource" path="res://data/abilities/parry/upgrades/window.tres" id="5_window"]
 [ext_resource type="Script" uid="uid://b25xj1rf8r5xt" path="res://resources/ability_unique_upgrade_data.gd" id="6_unique_script"]
 [ext_resource type="Resource" path="res://data/abilities/parry/unique/riposte.tres" id="8_riposte"]
@@ -20,12 +20,12 @@ Si no, quedás expuesto 0.4 s.
 Enfriamiento: 5 s"
 behavior = ExtResource("3_behavior")
 base_damage = 20.0
-attack_scaling = 0.3
+attack_scaling = 1.0
 cooldown = 5.0
 hit_range = 3.0
 hit_width = 1.2
-cast_duration = 0.35
-min_cooldown = 3.0
+cast_duration = 0.4
+min_cooldown = 0.1
 min_cast_duration = 0.35
 interrupts_dash = true
 dash_cancels_cast = true

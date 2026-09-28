@@ -288,7 +288,7 @@ func test_ac1025_the_world_freezes_without_time_scale() -> void:
 
 func test_ac1026_the_strike_hits_all_around() -> void:
 	var attacker: Enemy = _spawn(Vector3(0.0, 0.0, -1.5))
-	var radius: float = _player.stats.get_stat(PlayerStats.Stat.ATTACK_RANGE) * CONFIG.empowered_range_scale
+	var radius: float = _player.stats.get_stat(PlayerStats.Stat.ATTACK_RANGE) * CONFIG.get_empowered_range_scale(1)
 	var near: Array[Enemy] = [
 		_spawn(Vector3(-(radius - INSIDE), 0.0, 0.0)),
 		_spawn(Vector3(0.0, 0.0, radius - INSIDE)),
@@ -320,9 +320,9 @@ func test_ac1027_the_strike_counts_as_a_basic_attack() -> void:
 	var health_before: float = _player.health.current_health
 	_ability.advance(CONFIG.empowered_hit_time)
 	var stats: StatsComponent = _player.stats
-	var base: float = CONFIG.empowered_damage_multiplier * DamageMath.outgoing(
+	var base: float = CONFIG.get_empowered_damage_multiplier(1) * DamageMath.outgoing(
 		stats.get_stat(PlayerStats.Stat.DAMAGE), stats.get_stat(PlayerStats.Stat.DAMAGE_BONUS), false, stats.get_stat(PlayerStats.Stat.CRIT_DAMAGE))
-	var crit: float = CONFIG.empowered_damage_multiplier * DamageMath.outgoing(
+	var crit: float = CONFIG.get_empowered_damage_multiplier(1) * DamageMath.outgoing(
 		stats.get_stat(PlayerStats.Stat.DAMAGE), stats.get_stat(PlayerStats.Stat.DAMAGE_BONUS), true, stats.get_stat(PlayerStats.Stat.CRIT_DAMAGE))
 	assert_int(applied.size()).is_equal(1)
 	assert_bool(is_equal_approx(applied[0], base) or is_equal_approx(applied[0], crit)).override_failure_message("%f vs %f / %f" % [applied[0], base, crit]).is_true()

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BuffData" format=3 uid="uid://wbg44dfo82oi"]
+
+[ext_resource type="Script" uid="uid://dmfij0ebi3hi8" path="res://resources/buff_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://be3t2vttqygd2" path="res://resources/buff_modifier.gd" id="2_modifier"]
+[ext_resource type="Texture2D" uid="uid://d35qxxpr0d7rh" path="res://assets/icons/status/lightning_frequency.svg" id="3_glyph"]
+
+[sub_resource type="Resource" id="Modifier_attack_speed"]
+script = ExtResource("2_modifier")
+stat = 4
+per_stack = 1.0
+
+[resource]
+script = ExtResource("1_script")
+id = &"netsui"
+title = "Netsui"
+max_stacks = 1
+stack_duration = 3.0
+icon_color = Color(1, 0.45, 0.2, 1)
+icon = ExtResource("3_glyph")
+modifiers = Array[ExtResource("2_modifier")]([SubResource("Modifier_attack_speed")])
+global = true

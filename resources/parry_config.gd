@@ -49,10 +49,12 @@ extends Resource
 @export var empowered_duration: float
 ## Seconds from the block during which a dash cannot cut it.
 @export var empowered_dash_lock: float
-## Radius of the strike over the player's ATTACK_RANGE.
-@export var empowered_range_scale: float
-## Damage of the strike over one combo strike (it counts as a basic attack).
-@export var empowered_damage_multiplier: float
+## "Contragolpe" levels: the radius of the strike over the player's ATTACK_RANGE
+## is the product of the first `level` steps (docs/specs/riposte-levels.md).
+@export var empowered_range_steps: Array[float]
+## Damage of the strike over one combo strike (it counts as a basic attack):
+## the product of the first `level` steps.
+@export var empowered_damage_steps: Array[float]
 @export var empowered_knockback_multiplier: float
 ## Camera zoom (FOV degrees taken off) and its return, and the shake, at the block.
 @export var empowered_zoom_deg: float
@@ -86,3 +88,21 @@ extends Resource
 @export var riposte_body_clip: StringName
 ## Humanoid clip of the empowered riposte (freeze, 360° strike, recovery).
 @export var empowered_body_clip: StringName
+
+
+## Radius of the 360° strike over ATTACK_RANGE at "Contragolpe" `level`
+## (clamped to 1..the number of steps).
+func get_empowered_range_scale(level: int) -> float:
+	return _product(empowered_range_steps, level)
+
+
+## Damage of the 360° strike over one combo strike at "Contragolpe" `level`.
+func get_empowered_damage_multiplier(level: int) -> float:
+	return _product(empowered_damage_steps, level)
+
+
+static func _product(steps: Array[float], level: int) -> float:
+	var total: float = 1.0
+	for i: int in clampi(level, 1, steps.size()):
+		total *= steps[i]
+	return total

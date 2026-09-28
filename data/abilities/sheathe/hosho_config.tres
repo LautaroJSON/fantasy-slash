@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="HoshoConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/hosho_config.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/buffs/compensation.tres" id="2_buff"]
+
+[resource]
+script = ExtResource("1_script")
+charges_needed = 5
+damage_multiplier = 4.0
+charge_buff = ExtResource("2_buff")

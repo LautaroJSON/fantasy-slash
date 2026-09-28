@@ -85,6 +85,9 @@ func update_debuff_time(debuff: DebuffComponent.ActiveDebuff) -> void:
 
 
 func update_buff_time(buff: BuffComponent.ActiveBuff) -> void:
+	if buff.data.is_permanent():
+		set_remaining(0.0, false)
+		return
 	set_remaining(buff.time_left / buff.data.stack_duration, true)
 
 

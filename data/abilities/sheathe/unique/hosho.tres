@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AbilityUniqueUpgradeData" format=3]
+
+[ext_resource type="Script" path="res://resources/ability_unique_upgrade_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"hosho"
+max_level = 1
+title = "Hosho"
+description = "Cada ataque básico que golpea da una carga
+de Compensación. Con 5, Envainar se recarga
+y queda mejorado: sale al tocar, al 100 %,
+con +300 % de daño"

@@ -89,6 +89,7 @@ func test_ac102_every_bleed_tick_is_reported_for_a_damage_number() -> void:
 ## removed with their unique upgrades (warrior-abilities-rework.md §10); the
 ## Parry's are checked in parry_test.gd.
 func test_ac105_levels_are_declared_in_data() -> void:
-	assert_int(RIPOSTE.max_level).is_equal(1)
+	# Adapted (riposte-levels.md): Contragolpe now has 3 levels.
+	assert_int(RIPOSTE.max_level).is_equal(3)
 	assert_int(DUEL.max_level).is_equal(1)
 	assert_object(DUEL.debuff).is_same(CHALLENGED)

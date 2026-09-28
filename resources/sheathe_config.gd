@@ -62,13 +62,20 @@ extends Resource
 ## Seconds the full charge pulse lasts.
 @export var glow_full_duration: float
 
-@export_group("Empowered (Tsubame Gaeshi)")
+@export_group("Empowered (Hosho)")
 ## Glow laid over the katana while an empowered Sheathe is stored.
 @export var empowered_overlay: Material
 ## Brighter glow shown for empowered_flash_duration when it is gained.
 @export var empowered_flash_overlay: Material
 ## Seconds the gain flash lasts before the steady glow.
 @export var empowered_flash_duration: float
+
+@export_group("Unique upgrades")
+## "Hosho": combo strikes build the empowered Sheathe
+## (docs/specs/sheathe-upgrades-rework.md §2.2).
+@export var hosho: HoshoConfig
+## "Zen": buff gained by casting a full or empowered Sheathe (§2.4).
+@export var netsui: BuffData
 
 
 ## Multiplier of damage, knockback and reach for a charge ratio in [0, 1].

@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="AbilityUpgradeData" format=3]
+[gd_resource type="Resource" script_class="AbilityUpgradeData" format=3 uid="uid://btcj4gwq3tyeu"]
 
-[ext_resource type="Script" path="res://resources/ability_upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dm32h1yv4ymv1" path="res://resources/ability_upgrade_data.gd" id="1_script"]
 
 [resource]
 script = ExtResource("1_script")
 stat = 2
-amount = -0.75
+amount = -1.0
 max_stacks = 4
 title = "Parry: enfriamiento"
 description = "-0.75 s de enfriamiento"

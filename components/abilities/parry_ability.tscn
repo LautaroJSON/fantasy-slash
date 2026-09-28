@@ -8,8 +8,24 @@
 [ext_resource type="Script" uid="uid://bxxkv708hinaf" path="res://components/abilities/block_spark_vfx.gd" id="6_block_vfx"]
 [ext_resource type="Resource" path="res://data/abilities/parry/block_spark_config.tres" id="7_block_config"]
 [ext_resource type="Material" path="res://materials/vfx/block_spark_material.tres" id="8_spark_material"]
-[ext_resource type="Script" path="res://components/abilities/circle_slash_vfx.gd" id="9_slash_vfx"]
+[ext_resource type="Script" uid="uid://ciu5mfluo2afu" path="res://components/abilities/circle_slash_vfx.gd" id="9_slash_vfx"]
 [ext_resource type="Resource" path="res://data/abilities/parry/circle_slash_vfx_config.tres" id="10_slash_config"]
+[ext_resource type="Material" path="res://materials/vfx/circle_slash_spark_material.tres" id="11_spark"]
+[ext_resource type="Material" path="res://materials/vfx/circle_slash_dust_material.tres" id="12_dust"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_spark"]
+material = ExtResource("11_spark")
+size = Vector3(0.03, 0.35, 0.03)
+
+[sub_resource type="Gradient" id="Gradient_fade"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="SphereMesh" id="SphereMesh_dust"]
+material = ExtResource("12_dust")
+radius = 0.09
+height = 0.18
+radial_segments = 8
+rings = 4
 
 [node name="ParryAbility" type="Node" unique_id=1216955682]
 script = ExtResource("1_script")
@@ -27,8 +43,70 @@ script = ExtResource("6_block_vfx")
 config = ExtResource("7_block_config")
 spark_material = ExtResource("8_spark_material")
 
-[node name="SlashVfx" type="MeshInstance3D" parent="."]
+[node name="SlashVfx" type="MeshInstance3D" parent="." unique_id=705773873]
 top_level = true
 cast_shadow = 0
 script = ExtResource("9_slash_vfx")
 config = ExtResource("10_slash_config")
+
+[node name="Sparks" type="CPUParticles3D" parent="SlashVfx" unique_id=87866176]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+cast_shadow = 0
+emitting = false
+amount = 16
+lifetime = 0.35
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("BoxMesh_spark")
+emission_shape = 6
+emission_ring_axis = Vector3(0, 1, 0)
+emission_ring_height = 0.2
+emission_ring_radius = 2.0
+emission_ring_inner_radius = 1.7
+emission_ring_cone_angle = 90.0
+particle_flag_align_y = true
+direction = Vector3(0, 1, 0)
+spread = 30.0
+gravity = Vector3(0, -4, 0)
+initial_velocity_min = 1.0
+initial_velocity_max = 3.0
+radial_accel_min = 6.0
+radial_accel_max = 10.0
+tangential_accel_min = 25.0
+tangential_accel_max = 40.0
+color_ramp = SubResource("Gradient_fade")
+
+[node name="Dust" type="CPUParticles3D" parent="SlashVfx" unique_id=1915810082]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+cast_shadow = 0
+emitting = false
+amount = 14
+lifetime = 0.45
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("SphereMesh_dust")
+emission_shape = 6
+emission_ring_axis = Vector3(0, 1, 0)
+emission_ring_height = 0.05
+emission_ring_radius = 2.0
+emission_ring_inner_radius = 1.7
+emission_ring_cone_angle = 90.0
+direction = Vector3(0, 1, 0)
+spread = 60.0
+gravity = Vector3(0, -1, 0)
+initial_velocity_min = 0.8
+initial_velocity_max = 1.6
+radial_accel_min = 2.0
+radial_accel_max = 2.0
+tangential_accel_min = 8.0
+tangential_accel_max = 8.0
+damping_min = 1.0
+damping_max = 1.0
+scale_amount_min = 0.6
+scale_amount_max = 1.3
+color_ramp = SubResource("Gradient_fade")
+
+[node name="Flash" type="OmniLight3D" parent="SlashVfx" unique_id=2107985478]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+visible = false
+omni_range = 2.0

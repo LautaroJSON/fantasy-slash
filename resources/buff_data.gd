@@ -10,6 +10,7 @@ extends Resource
 ## Highest stack count.
 @export var max_stacks: int
 ## Seconds until one stack is lost; adding a stack restarts the countdown.
+## 0 = the stacks never expire (e.g. Compensation): only remove() takes them.
 @export var stack_duration: float
 ## Color of the HUD icon: tints its glyph and background.
 @export var icon_color: Color
@@ -31,3 +32,8 @@ func get_modifier(stat: BuffModifier.Stat, stacks: int) -> float:
 		if modifier.stat == stat:
 			total += modifier.per_stack * stacks
 	return total
+
+
+## True when the stacks never expire (stack_duration 0).
+func is_permanent() -> bool:
+	return stack_duration <= 0.0

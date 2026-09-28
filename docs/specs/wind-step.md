@@ -1,6 +1,6 @@
 # Feature: Mejora única "Paso del Viento" (Envainar)
 
-- **Estado:** Implementada (2026-09-25, 350 tests GdUnit4 en verde, 0 orphans; `wind_step_test` pasó 3 corridas seguidas; import y smoke test sin errores ni warnings)
+- **Estado:** Reemplazada por `sheathe-upgrades-rework.md` (2026-09-28): la mejora se eliminó. Estado anterior: Implementada (2026-09-25, 350 tests GdUnit4 en verde, 0 orphans; `wind_step_test` pasó 3 corridas seguidas; import y smoke test sin errores ni warnings)
 - **Constitución:** `docs/constitution.md` v3.4.0 (sin enmienda).
 - **Pilares (Principio I):**
   - **Combate:** premia reposicionarse con el dash mientras cargás, en lugar de quedarse quieto esperando la carga.

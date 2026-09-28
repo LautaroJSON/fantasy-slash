@@ -4,14 +4,16 @@
 [ext_resource type="Material" path="res://materials/weapons/katana_empowered_overlay.tres" id="2_overlay"]
 [ext_resource type="Material" path="res://materials/weapons/katana_empowered_flash_overlay.tres" id="3_flash_overlay"]
 [ext_resource type="Script" uid="uid://yr0xb60smvkg" path="res://resources/strike_feel.gd" id="4_feel"]
-
-[sub_resource type="Resource" id="Feel_release"]
-script = ExtResource("4_feel")
-hitlag = 0.12
+[ext_resource type="Resource" path="res://data/abilities/sheathe/hosho_config.tres" id="5_hosho"]
+[ext_resource type="Resource" uid="uid://wbg44dfo82oi" path="res://data/buffs/netsui.tres" id="6_netsui"]
 
 [sub_resource type="Resource" id="Feel_burst"]
 script = ExtResource("4_feel")
 shake_strength = 0.6
+
+[sub_resource type="Resource" id="Feel_release"]
+script = ExtResource("4_feel")
+hitlag = 0.12
 
 [resource]
 script = ExtResource("1_script")
@@ -26,9 +28,6 @@ charge_sink_blend = 0.2
 release_body_clip = &"sheathe_release"
 release_body_blend = 0.04
 full_charge_transparency = 0.6
-empowered_overlay = ExtResource("2_overlay")
-empowered_flash_overlay = ExtResource("3_flash_overlay")
-empowered_flash_duration = 0.25
 strike_pause_at = 0.1
 release_feel = SubResource("Feel_release")
 burst_at = 0.22
@@ -42,3 +41,8 @@ glow_full_radius = 0.45
 glow_start_transparency = 0.4
 glow_duration = 0.2
 glow_full_duration = 0.35
+empowered_overlay = ExtResource("2_overlay")
+empowered_flash_overlay = ExtResource("3_flash_overlay")
+empowered_flash_duration = 0.25
+hosho = ExtResource("5_hosho")
+netsui = ExtResource("6_netsui")

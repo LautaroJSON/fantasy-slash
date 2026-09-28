@@ -6,10 +6,9 @@
 [ext_resource type="Resource" path="res://data/abilities/sheathe/upgrades/damage.tres" id="4_damage"]
 [ext_resource type="Resource" path="res://data/abilities/sheathe/upgrades/charge_speed.tres" id="5_charge_speed"]
 [ext_resource type="Script" uid="uid://b25xj1rf8r5xt" path="res://resources/ability_unique_upgrade_data.gd" id="6_unique_script"]
-[ext_resource type="Resource" uid="uid://qyag5c2j3mho" path="res://data/abilities/sheathe/unique/wind_step.tres" id="7_wind_step"]
-[ext_resource type="Resource" path="res://data/abilities/sheathe/unique/zanshin.tres" id="8_zanshin"]
+[ext_resource type="Resource" path="res://data/abilities/sheathe/unique/hosho.tres" id="7_hosho"]
 [ext_resource type="Resource" path="res://data/abilities/sheathe/unique/nuki.tres" id="9_nuki"]
-[ext_resource type="Resource" path="res://data/abilities/sheathe/unique/tsubame_gaeshi.tres" id="10_tsubame"]
+[ext_resource type="Resource" path="res://data/abilities/sheathe/unique/zen.tres" id="8_zen"]
 
 [resource]
 script = ExtResource("1_script")
@@ -35,5 +34,5 @@ interrupts_dash = true
 dash_cancels_cast = true
 shows_hit_impact = true
 upgrades = Array[ExtResource("2_upgrade_script")]([ExtResource("4_damage"), ExtResource("5_charge_speed")])
-unique_upgrades = Array[ExtResource("6_unique_script")]([ExtResource("7_wind_step"), ExtResource("8_zanshin"), ExtResource("9_nuki"), ExtResource("10_tsubame")])
+unique_upgrades = Array[ExtResource("6_unique_script")]([ExtResource("7_hosho"), ExtResource("9_nuki"), ExtResource("8_zen")])
 affliction_scale = 2.0
