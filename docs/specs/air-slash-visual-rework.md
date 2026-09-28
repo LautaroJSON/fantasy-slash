@@ -1,6 +1,6 @@
 # Feature: re-work visual del Tajo aéreo
 
-- **Estado:** Propuesta (2026-09-28). ACs **AC1014–AC1030**.
+- **Estado:** **Implementada** (2026-09-28). ACs **AC1014–AC1025** en verde (`air_slash_visual_rework_test` 13/13); AC1028–AC1030 sin usar. La suite completa no se corrió (a pedido del responsable, §10).
 - **Constitución:** `docs/constitution.md` v4.22.1. Propone una enmienda **MINOR** (§7).
 - **Pilar (Principio I):** **combate.** El Tajo aéreo carga de ×0.8 a ×4 del daño en 3 s de suspensión, pero hoy nada de eso se ve:
   - el cuerpo queda en `idle` en el aire;
@@ -170,3 +170,26 @@ Además, en la lista de elementos que comparten el blanco se suma el titileo del
    - capturas con Forward+ de la carga, el titileo, la caída y el aterrizaje;
    - smoke test y, si la querés, la suite completa;
    - checklist de la constitución, estado **Implementada** y el próximo AC libre en `CLAUDE.md`.
+
+
+## 10. Cierre
+
+**Resultados:**
+- `air_slash_visual_rework_test`: 13/13 en verde.
+- `air_slash_test`: AC579 y AC587 adaptados y en verde. AC578, AC581, AC584 y AC586 (×2) ya fallaban antes por datos desfasados (`spin-visual-rework.md` §11).
+- **AC1026/AC1027 sin verificar del todo:** la suite completa se cortó a pedido del responsable.
+- Import y smoke test sin errores nuevos.
+
+**Diferencias con el diseño:**
+- **El clip de carga mantiene su velocidad normal** y se reposiciona en cada paso. Con `speed_scale` en 0 se congelaba también la mezcla de entrada y el cuerpo quedaba en la pose de reposo (visto en las capturas).
+- **Brazo derecho del tensado:** se buscó con la sonda de poses (la mano 5 cm más alta y 30 cm más atrás, y la hoja hacia atrás y arriba). La punta sube ≈ 0.7 m y queda apenas más atrás, porque el brazo no llega más lejos con el torso arqueado.
+
+**Capturas (Forward+):** el torso se arquea y el mandoble sube con la carga; el titileo se alterna desde el 80 %; siguen la caída con estela, la hoja clavada y la vuelta a la guardia.
+
+**Checklist de la constitución:**
+- **II:** el overlay blanco aditivo compartido está registrado en 4.23.0.
+- **III:** clips y titileo en `air_slash_config.tres`. Única excepción: el titileo prende la mitad de cada período (0.5, estructural).
+- **IV:** tipado completo.
+- **V:** el titileo solo asigna o quita un material compartido.
+- **VI:** sin input nuevo.
+- **VII:** sin `Engine.time_scale`.
