@@ -59,6 +59,7 @@ func build(humanoid: LowPolyHumanoid) -> AnimationLibrary:
 	_add_hit(lib)
 	_add_attacks(lib)
 	_add_spin(lib)
+	_add_air_slash(lib)
 	return lib
 
 
@@ -373,16 +374,41 @@ func _add_return_sweep(lib: AnimationLibrary) -> void:
 	], false, false, _h.strike_events(0.4, 0.54, 0.66, 1.0)))
 
 
+## Mandoble alzado a dos manos sobre la cabeza, arqueado hacia atrás (golpe 3
+## y comienzo de la carga del Tajo aéreo), con las piernas `legs`.
+func _woodcutter_raised(legs: Dictionary) -> Dictionary:
+	return _two_hands(_body(-0.04, -18, Vector3(14, -36, -8), legs), {
+		"shoulder_r": Vector3(134, -6, -30), "elbow_r": Vector3(6, 0, 0), "wrist_r": Vector3(40, -22, 0)})
+
+
+## Pisotón: la hoja cae al frente (golpe 3 y caída del Tajo aéreo).
+func _woodcutter_fall() -> Dictionary:
+	return _two_hands(_body(-0.24, 4, Vector3(-28, 8, 8), HEAVY_STRIDE), {
+		"shoulder_r": Vector3(136, -73, -14), "elbow_r": Vector3(66, 0, 0), "wrist_r": Vector3(-148, -48, 0)})
+
+
+## La hoja clavada en el piso, el cuerpo volcado adelante (golpe 3 y aterrizaje
+## del Tajo aéreo).
+func _woodcutter_buried() -> Dictionary:
+	return _two_hands(_body(-0.3, 22, Vector3(-44, 40, 12), HEAVY_STRIDE), {
+		"shoulder_r": Vector3(23, -47, -26), "elbow_r": Vector3(75, 0, 0), "wrist_r": Vector3(-83, -8, 0)})
+
+
 ## 3. Remate: "tajo de leñador". Arranca donde terminó el golpe 2: sube el
 ## mandoble desde atrás a la derecha, lo alza a dos manos sobre la cabeza,
 ## arqueado hacia atrás, y lo baja en diagonal del hombro derecho a la cadera
 ## izquierda con un pisotón; la hoja queda clavada en el piso un instante y
 ## vuelve a apoyarla en el hombro.
 func _add_woodcutter(lib: AnimationLibrary) -> void:
+<<<<<<< HEAD
 	var raised := _two_hands(_body(-0.04, -18, Vector3(14, -36, -8), COILED_LEGS), {
 		"shoulder_r": Vector3(134, -6, -30), "elbow_r": Vector3(6, 0, 0), "wrist_r": Vector3(40, -40, 0)})  # de canto: la hoja ancha no roza la cabeza
 	var buried := _two_hands(_body(-0.3, 22, Vector3(-44, 40, 12), HEAVY_STRIDE), {
 		"shoulder_r": Vector3(23, -47, -26), "elbow_r": Vector3(75, 0, 0), "wrist_r": Vector3(-83, -8, 0)})
+=======
+	var raised := _woodcutter_raised(COILED_LEGS)
+	var buried := _woodcutter_buried()
+>>>>>>> 75dfed6557b282d66346cbd5da8b97353cbb8990
 	lib.add_animation("attack_3", _h.make_clip([
 		[0.0, _sweep_right_hold()],
 		[0.18, _two_hands(_body(-0.16, -20, Vector3(-6, -40, 0), COILED_LEGS), {  # junta las manos, lo sube por detrás
@@ -390,8 +416,7 @@ func _add_woodcutter(lib: AnimationLibrary) -> void:
 		[0.36, raised],
 		[0.5, _two_hands(_body(-0.02, -20, Vector3(18, -40, -10), COILED_LEGS), {  # tensión
 			"shoulder_r": Vector3(130, -3, -30), "elbow_r": Vector3(2, 0, 0), "wrist_r": Vector3(58, -30, 0)})],
-		[0.62, _two_hands(_body(-0.24, 4, Vector3(-28, 8, 8), HEAVY_STRIDE), {  # pisotón, la hoja cae
-			"shoulder_r": Vector3(136, -73, -14), "elbow_r": Vector3(66, 0, 0), "wrist_r": Vector3(-148, -48, 0)})],
+		[0.62, _woodcutter_fall()],  # pisotón, la hoja cae
 		[0.68, _two_hands(_body(-0.27, 14, Vector3(-36, 24, 10), HEAVY_STRIDE), {
 			"shoulder_r": Vector3(55, -48, -17), "elbow_r": Vector3(111, 0, 0), "wrist_r": Vector3(-147, -17, 0)})],
 		[0.74, buried],
@@ -448,4 +473,53 @@ func _add_spin(lib: AnimationLibrary) -> void:
 		[0.08, _sweep_front_cross()],
 		[0.15, _sweep_left_hold()],
 		[0.3, _sprint_contact(1)],
+	], false, true))
+
+
+# ---------------------------------------------------------------- TAJO AÉREO
+
+## Piernas en el aire (las de jump_air).
+const AIR_LEGS := {
+	"hip_r": Vector3(60, 0, 0), "knee_r": Vector3(-100, 0, 0), "ankle_r": Vector3(20, 0, 0),
+	"hip_l": Vector3(40, 0, 0), "knee_l": Vector3(-80, 0, 0), "ankle_l": Vector3(20, 0, 0),
+}
+## Piernas recogidas del todo, como un arco tensado.
+const AIR_LEGS_TUCKED := {
+	"hip_r": Vector3(84, 0, 0), "knee_r": Vector3(-128, 0, 0), "ankle_r": Vector3(30, 0, 0),
+	"hip_l": Vector3(66, 0, 0), "knee_l": Vector3(-112, 0, 0), "ankle_l": Vector3(28, 0, 0),
+}
+
+
+## Tajo aéreo tensado al máximo: el torso arqueado atrás, el mandoble más alto
+## y más atrás detrás de la cabeza y las rodillas recogidas. La pose del brazo
+## derecho sale de buscar la mano 5 cm más alta y 30 cm más atrás que en la
+## pose alzada, con la hoja apuntando atrás y arriba (docs/specs/air-slash-visual-rework.md).
+func _air_slash_drawn() -> Dictionary:
+	return _two_hands(_body(0.02, -20, Vector3(30, -40, -10), AIR_LEGS_TUCKED), {
+		"shoulder_r": Vector3(114, -19, -46), "elbow_r": Vector3(-34, 0, 0), "wrist_r": Vector3(56, -56, -7)})
+
+
+## Tajo aéreo (docs/specs/air-slash-visual-rework.md): la carga se posiciona
+## por la carga del ataque (0 = alzado, 1 = tensado), la caída baja la hoja y
+## la sostiene, y el aterrizaje la clava y vuelve a la guardia.
+func _add_air_slash(lib: AnimationLibrary) -> void:
+	var drawn := _air_slash_drawn()
+	lib.add_animation("air_slash_charge", _h.make_clip([
+		[0.0, _woodcutter_raised(AIR_LEGS)],
+		[1.0, drawn],
+	], false, true))
+
+	var fall := _woodcutter_fall()
+	lib.add_animation("air_slash_dive", _h.make_clip([
+		[0.0, drawn],
+		[0.08, fall],
+		[0.15, fall],
+	], false, true))
+
+	var buried := _woodcutter_buried()
+	lib.add_animation("air_slash_land", _h.make_clip([
+		[0.0, buried],
+		[0.25, _h.with(buried, {"torso": Vector3(-42, 38, 12), "shoulder_r": Vector3(24, -47, -30)})],  # clavado
+		[0.45, _h.with(_stance(RAISED_UPRIGHT), {"hips_pos": Vector3(0, -0.1, 0)})],
+		[0.6, _stance()],
 	], false, true))

@@ -28,6 +28,8 @@ const WEAPON_HILT: NodePath = ^"Hilt"
 ## Optional second-hand marker on a two-handed weapon's handle: the left hand
 ## grips it when a clip asks (docs/specs/class-combat-identity.md §3.2).
 const WEAPON_OFF_HAND: NodePath = ^"OffHand"
+## Mesh of every weapon scene (the air slash makes it blink).
+const WEAPON_MODEL: NodePath = ^"Model"
 
 ## Assigned by the level; handed to the attack auto-aim and the abilities.
 @export var enemy_registry: EnemyRegistry
@@ -171,13 +173,23 @@ func is_casting() -> bool:
 ## Humanoid clip an ability asks the body to play while it charges or casts;
 ## &"" = the default (docs/specs/sheath-socket-hand-grip.md §2.7).
 func get_body_clip() -> StringName:
+	if air_slash.is_active():
+		return air_slash.get_body_clip()
 	var clip: StringName = basic_ability.get_body_clip()
 	return clip if clip != &"" else ultimate_ability.get_body_clip()
 
 
+<<<<<<< HEAD
 ## Blend into get_body_clip() the ability asks for; negative = the default.
 func get_body_clip_blend() -> float:
 	return basic_ability.get_body_clip_blend() if basic_ability.get_body_clip() != &"" else ultimate_ability.get_body_clip_blend()
+=======
+## Where the body clip is posed, in [0, 1] of its length, when an action poses
+## it instead of playing it (the air slash's charge,
+## docs/specs/air-slash-visual-rework.md); -1 when it plays on its own.
+func get_body_clip_ratio() -> float:
+	return air_slash.get_body_clip_ratio() if air_slash.is_active() else -1.0
+>>>>>>> 75dfed6557b282d66346cbd5da8b97353cbb8990
 
 
 ## Clip the body plays while dashing: the one an ability asks for (e.g. the
@@ -193,7 +205,7 @@ func get_dash_clip() -> StringName:
 ## True while an ability's cast keeps the weapon in the humanoid's hand, so
 ## WeaponMount keeps following it (docs/specs/sheathe-release-animation.md).
 func is_weapon_in_hand_cast() -> bool:
-	return basic_ability.holds_weapon_in_hand() or ultimate_ability.holds_weapon_in_hand()
+	return air_slash.is_active() or basic_ability.holds_weapon_in_hand() or ultimate_ability.holds_weapon_in_hand()
 
 
 func is_sprinting() -> bool:
@@ -524,6 +536,7 @@ func _equip_weapon(weapon: WeaponData) -> void:
 	hit_impact_vfx.attach(model.get_node(WEAPON_TRAIL_BASE) as Node3D, model.get_node(WEAPON_TRAIL_TIP) as Node3D)
 	_grip_with_right_hand(model)
 	_grip_with_left_hand(model)
+	air_slash.set_weapon_model(model.get_node_or_null(WEAPON_MODEL) as MeshInstance3D)
 	_equip_sheath(weapon)
 	_equip_shield(weapon)
 	_weapon_mount.setup(weapon, _sheath_socket)

@@ -7,10 +7,15 @@ extends Node
 ## landing every enemy in a band in front takes the basic attack damage x the
 ## charge factor, then LANDING (the player stays still for landing_lock).
 ## Disabled (no config) for classes without an air slash.
+## The body plays a clip per phase with the weapon in its hands; while
+## suspended, the charge clip follows the charge (the body draws back) and the
+## weapon blinks as the charge nears full (docs/specs/air-slash-visual-rework.md).
 
 signal struck(hit_count: int, total_damage: float, was_crit: bool)
 ## Emitted once per enemy hit, with the damage actually applied to it.
 signal enemy_hit(enemy: Enemy, applied: float, is_crit: bool)
+## Emitted when the phase changes (e.g. the weapon trail follows the dive).
+signal phase_changed(phase: Phase)
 
 enum Phase {
 	IDLE,
@@ -24,7 +29,6 @@ enum Phase {
 @export var stats: StatsComponent
 @export var health: HealthComponent
 @export var movement: MovementComponent
-@export var sword_swing: SwordSwing
 @export var camera: ThirdPersonCamera
 ## Assigned by Player.
 var registry: EnemyRegistry = null
@@ -42,6 +46,7 @@ var _hit_buffer: Array[Enemy] = []
 
 @onready var _indicator: AbilityRectIndicator = $Indicator
 @onready var _wind_cut: WindCutVfx = $WindCut
+@onready var _blink: WeaponChargeBlink = $Blink
 
 
 ## Tracks the floor while idle (the jump starts from it).
@@ -53,6 +58,13 @@ func _physics_process(_delta: float) -> void:
 func setup(config: AirSlashConfig) -> void:
 	_config = config
 	cancel()
+	if config != null:
+		_blink.configure(config.blink_start_ratio, config.blink_period_start, config.blink_period_end, config.blink_overlay)
+
+
+## The weapon's mesh, which blinks as the charge nears full.
+func set_weapon_model(model: MeshInstance3D) -> void:
+	_blink.set_model(model)
 
 
 func is_enabled() -> bool:
@@ -80,9 +92,8 @@ func try_start() -> bool:
 	_elapsed = 0.0
 	_charge_ratio = 0.0
 	body.velocity = Vector3(body.velocity.x, 0.0, body.velocity.z)
-	sword_swing.hold_pose(_config.raise_position, _config.raise_rotation)
 	_indicator.show_rect(_feet_on_ground(), visual.global_rotation.y, _config.hit_length, _config.hit_width)
-	_phase = Phase.HOVER
+	_set_phase(Phase.HOVER)
 	return true
 
 
@@ -92,18 +103,17 @@ func release() -> void:
 		return
 	_charge_ratio = minf(_elapsed / _config.hover_duration, 1.0)
 	_elapsed = 0.0
-	sword_swing.swing_to(_config.slam_position, _config.slam_rotation, _config.slam_duration)
-	_phase = Phase.DIVE
+	_blink.stop()
+	_set_phase(Phase.DIVE)
 
 
 ## Drops the slash without a hit (e.g. a boss grab); the player falls normally.
 func cancel() -> void:
 	if _phase == Phase.IDLE:
 		return
-	if _phase == Phase.HOVER:
-		sword_swing.recover()
+	_blink.stop()
 	_indicator.start_fade()
-	_phase = Phase.IDLE
+	_set_phase(Phase.IDLE)
 
 
 func is_active() -> bool:
@@ -141,6 +151,28 @@ func get_damage_factor() -> float:
 	return lerpf(_config.min_damage_factor, _config.max_damage_factor, get_charge_ratio())
 
 
+## Humanoid clip of the current phase; &"" when idle.
+func get_body_clip() -> StringName:
+	match _phase:
+		Phase.HOVER:
+			return _config.charge_body_clip
+		Phase.DIVE:
+			return _config.dive_body_clip
+		Phase.LANDING:
+			return _config.land_body_clip
+	return &""
+
+
+## Where the body clip is posed, in [0, 1] of its length: the charge while
+## suspended; -1 in the other phases (the clip plays on its own).
+func get_body_clip_ratio() -> float:
+	return get_charge_ratio() if _phase == Phase.HOVER else -1.0
+
+
+func get_blink() -> WeaponChargeBlink:
+	return _blink
+
+
 func is_used_this_jump() -> bool:
 	return _used_this_jump
 
@@ -174,6 +206,7 @@ func strike_with_roll(crit_roll: float) -> void:
 func _hover(delta: float, wish_direction: Vector3) -> void:
 	movement.hover_move(wish_direction, delta, _config.hover_move_speed_factor)
 	_elapsed += delta
+	_blink.update(get_charge_ratio(), delta)
 	_indicator.resize(_feet_on_ground(), visual.global_rotation.y, _config.hit_length, _config.hit_width)
 	if _elapsed >= _config.hover_duration:
 		release()
@@ -195,14 +228,14 @@ func _impact() -> void:
 	camera.shake(_config.impact_shake)
 	_indicator.start_fade()
 	_elapsed = 0.0
-	_phase = Phase.LANDING
+	_set_phase(Phase.LANDING)
 
 
 func _land(delta: float) -> void:
 	movement.hold(delta)
 	_elapsed += delta
 	if _elapsed >= _config.landing_lock:
-		_phase = Phase.IDLE
+		_set_phase(Phase.IDLE)
 
 
 func _collect_hits() -> void:
@@ -228,3 +261,8 @@ func _hit_enemy(enemy: Enemy, damage: float, is_crit: bool) -> float:
 func _feet_on_ground() -> Vector3:
 	var position: Vector3 = body.global_position
 	return Vector3(position.x, _ground_y, position.z)
+
+
+func _set_phase(next: Phase) -> void:
+	_phase = next
+	phase_changed.emit(next)

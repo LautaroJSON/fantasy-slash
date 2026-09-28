@@ -242,6 +242,7 @@ func _play_action_clip() -> void:
 		_request(clip)
 	if clip == CLIP_BUSY:
 		return
+	_pose_by_ratio(clip)
 	_in_strike_pose = true  # cut by locomotion, it blends out slowly
 	if humanoid.anim.get_animation(clip).loop_mode == Animation.LOOP_NONE:
 		_tail_clip = clip
@@ -357,6 +358,17 @@ func _play_dash() -> void:
 	humanoid.anim.speed_scale = humanoid.anim.get_animation(clip).length / dash.get_duration()
 	_requested = clip
 	_in_strike_pose = false
+
+
+## An action that poses its clip instead of playing it (the air slash's charge
+## follows the charge, docs/specs/air-slash-visual-rework.md): the clip is put
+## back at the ratio the player gives every step. It keeps its normal speed so
+## the blend into it still runs (a paused player also pauses its blends).
+func _pose_by_ratio(clip: StringName) -> void:
+	var ratio: float = player.get_body_clip_ratio()
+	if ratio < 0.0:
+		return
+	humanoid.anim.seek(ratio * humanoid.anim.get_animation(clip).length, true)
 
 
 ## After a pause, the rest of the dash clip plays in the rest of the dash.

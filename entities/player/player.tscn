@@ -23,6 +23,7 @@
 [ext_resource type="Resource" path="res://data/player/charge_feedback_config.tres" id="24_charge_feedback_config"]
 [ext_resource type="Script" path="res://components/buff_component.gd" id="25_buffs"]
 [ext_resource type="Script" path="res://components/air_slash_component.gd" id="26_air_slash"]
+[ext_resource type="Script" path="res://components/weapon_charge_blink.gd" id="91_blink"]
 [ext_resource type="Script" path="res://components/abilities/ability_rect_indicator.gd" id="27_rect_indicator"]
 [ext_resource type="Resource" path="res://data/classes/berserker/air_slash_indicator_config.tres" id="28_air_slash_indicator_config"]
 [ext_resource type="Material" path="res://materials/attack_indicator_material.tres" id="29_indicator_material"]
@@ -193,14 +194,13 @@ hitstop = ExtResource("39_hitstop_config")
 guard = NodePath("../ShieldGuard")
 attack = NodePath("../AttackComponent")
 
-[node name="AirSlash" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "stats", "health", "movement", "sword_swing", "camera")]
+[node name="AirSlash" type="Node" parent="." node_paths=PackedStringArray("body", "visual", "stats", "health", "movement", "camera")]
 script = ExtResource("26_air_slash")
 body = NodePath("..")
 visual = NodePath("../Visual")
 stats = NodePath("../StatsComponent")
 health = NodePath("../HealthComponent")
 movement = NodePath("../MovementComponent")
-sword_swing = NodePath("../SwordSwing")
 camera = NodePath("../CameraRig")
 
 [node name="Indicator" type="Node3D" parent="AirSlash"]
@@ -216,12 +216,16 @@ config = ExtResource("31_air_slash_wind_cut_config")
 glow_material = ExtResource("32_glow_material")
 dust_material = ExtResource("33_dust_material")
 
-[node name="WeaponTrail" type="MeshInstance3D" parent="." node_paths=PackedStringArray("sword_swing", "attack", "abilities")]
+[node name="Blink" type="Node" parent="AirSlash"]
+script = ExtResource("91_blink")
+
+[node name="WeaponTrail" type="MeshInstance3D" parent="." node_paths=PackedStringArray("sword_swing", "attack", "abilities", "air_slash")]
 top_level = true
 script = ExtResource("14_trail")
 sword_swing = NodePath("../SwordSwing")
 attack = NodePath("../AttackComponent")
 abilities = [NodePath("../BasicAbility"), NodePath("../UltimateAbility")]
+air_slash = NodePath("../AirSlash")
 config = ExtResource("15_trail_config")
 material = ExtResource("16_trail_material")
 

@@ -11,6 +11,8 @@ extends MeshInstance3D
 ## Basic attack combo: the trail emits during each strike. Optional.
 @export var attack: AttackComponent
 @export var abilities: Array[AbilityComponent] = []
+## The Berserker's air slash: the trail emits during its dive. Optional.
+@export var air_slash: AirSlashComponent
 @export var config: WeaponTrailConfig
 @export var material: StandardMaterial3D
 
@@ -90,6 +92,8 @@ func _connect_sources() -> void:
 		ability.cast_started.connect(_refresh_emitting)
 		ability.cast_released.connect(_refresh_emitting)
 		ability.trail_changed.connect(_refresh_emitting)
+	if air_slash != null:
+		air_slash.phase_changed.connect(_refresh_emitting.unbind(1))
 
 
 ## Emits during a combo strike, while the weapon sweeps or any ability is being
@@ -103,6 +107,8 @@ func _refresh_emitting() -> void:
 
 func _is_weapon_attacking() -> bool:
 	if sword_swing.is_swinging() or (attack != null and attack.is_attacking()):
+		return true
+	if air_slash != null and air_slash.get_phase() == AirSlashComponent.Phase.DIVE:
 		return true
 	for ability: AbilityComponent in abilities:
 		if ability.is_trailing():
