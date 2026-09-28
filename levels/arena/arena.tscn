@@ -9,9 +9,8 @@
 [ext_resource type="Script" uid="uid://bnhwb07jsp6av" path="res://systems/enemy_pool.gd" id="7_pool"]
 [ext_resource type="Script" uid="uid://b013addpxrxxf" path="res://systems/run_state.gd" id="8_run_state"]
 [ext_resource type="Script" uid="uid://bo6f8jpgex76d" path="res://systems/wave_manager.gd" id="9_wave_manager"]
-[ext_resource type="Resource" path="res://data/waves/wave_config.tres" id="10_wave_config"]
-[ext_resource type="Resource" path="res://data/upgrades/upgrade_catalog.tres" id="11_catalog"]
-[ext_resource type="Resource" path="res://data/afflictions/affliction_catalog.tres" id="90_affliction_catalog"]
+[ext_resource type="Resource" uid="uid://c71syk6dr2h5i" path="res://data/waves/wave_config.tres" id="10_wave_config"]
+[ext_resource type="Resource" uid="uid://demi3amr1pkx4" path="res://data/upgrades/upgrade_catalog.tres" id="11_catalog"]
 [ext_resource type="PackedScene" path="res://ui/upgrade_picker.tscn" id="12_picker"]
 [ext_resource type="PackedScene" path="res://ui/game_over_screen.tscn" id="13_game_over"]
 [ext_resource type="PackedScene" path="res://ui/pause_menu.tscn" id="14_pause_menu"]
@@ -26,16 +25,17 @@
 [ext_resource type="Script" uid="uid://csh0f8g7c2cj1" path="res://effects/enemy_hit_feedback.gd" id="24_enemy_hit_feedback"]
 [ext_resource type="Resource" path="res://data/enemies/boss_challenges/titan.tres" id="25_titan"]
 [ext_resource type="Resource" path="res://data/enemies/boss_challenges/colmena.tres" id="26_colmena"]
-[ext_resource type="Resource" path="res://data/enemies/rage/rage_config.tres" id="27_rage_config"]
+[ext_resource type="Resource" uid="uid://2qvhp5opox7i" path="res://data/enemies/rage/rage_config.tres" id="27_rage_config"]
 [ext_resource type="Resource" path="res://data/enemies/spawn/grunt_spawn.tres" id="28_grunt_spawn"]
 [ext_resource type="Resource" path="res://data/enemies/spawn/charger_spawn.tres" id="29_charger_spawn"]
 [ext_resource type="Resource" path="res://data/enemies/spawn/harasser_spawn.tres" id="30_harasser_spawn"]
 [ext_resource type="Resource" path="res://data/enemies/spawn/leaper_spawn.tres" id="31_leaper_spawn"]
 [ext_resource type="Resource" path="res://data/enemies/spawn/shieldbearer_spawn.tres" id="32_shieldbearer_spawn"]
-[ext_resource type="Script" path="res://systems/attack_coordinator.gd" id="33_attack_coordinator"]
+[ext_resource type="Script" uid="uid://bd7vexxsykwwd" path="res://systems/attack_coordinator.gd" id="33_attack_coordinator"]
 [ext_resource type="Resource" path="res://data/enemies/group_ai_config.tres" id="34_group_ai_config"]
 [ext_resource type="Resource" path="res://data/enemies/boss_challenges/verdugo.tres" id="35_verdugo"]
 [ext_resource type="Resource" path="res://data/enemies/enemy_pace_config.tres" id="36_pace"]
+[ext_resource type="Resource" path="res://data/afflictions/affliction_catalog.tres" id="90_affliction_catalog"]
 
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 1
@@ -83,6 +83,7 @@ collision_mask = 0
 shape = SubResource("BoxShape3D_floor")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=1428720964]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002219677, 0.008473635, -0.004062414)
 mesh = SubResource("BoxMesh_floor")
 
 [node name="WallNorth" type="StaticBody3D" parent="." unique_id=124634923]
@@ -151,7 +152,7 @@ registry = NodePath("../EnemyRegistry")
 coordinator = NodePath("../AttackCoordinator")
 spawn_entry = ExtResource("28_grunt_spawn")
 
-[node name="EnemyPoolCharger" type="Node" parent="." node_paths=PackedStringArray("registry", "coordinator")]
+[node name="EnemyPoolCharger" type="Node" parent="." unique_id=1406922997 node_paths=PackedStringArray("registry", "coordinator")]
 script = ExtResource("7_pool")
 enemy_scene = ExtResource("5_enemy")
 config = ExtResource("10_wave_config")
@@ -159,7 +160,7 @@ registry = NodePath("../EnemyRegistry")
 coordinator = NodePath("../AttackCoordinator")
 spawn_entry = ExtResource("29_charger_spawn")
 
-[node name="EnemyPoolHarasser" type="Node" parent="." node_paths=PackedStringArray("registry", "coordinator")]
+[node name="EnemyPoolHarasser" type="Node" parent="." unique_id=1805969017 node_paths=PackedStringArray("registry", "coordinator")]
 script = ExtResource("7_pool")
 enemy_scene = ExtResource("5_enemy")
 config = ExtResource("10_wave_config")
@@ -167,7 +168,7 @@ registry = NodePath("../EnemyRegistry")
 coordinator = NodePath("../AttackCoordinator")
 spawn_entry = ExtResource("30_harasser_spawn")
 
-[node name="EnemyPoolLeaper" type="Node" parent="." node_paths=PackedStringArray("registry", "coordinator")]
+[node name="EnemyPoolLeaper" type="Node" parent="." unique_id=523795878 node_paths=PackedStringArray("registry", "coordinator")]
 script = ExtResource("7_pool")
 enemy_scene = ExtResource("5_enemy")
 config = ExtResource("10_wave_config")
@@ -175,7 +176,7 @@ registry = NodePath("../EnemyRegistry")
 coordinator = NodePath("../AttackCoordinator")
 spawn_entry = ExtResource("31_leaper_spawn")
 
-[node name="EnemyPoolShieldbearer" type="Node" parent="." node_paths=PackedStringArray("registry", "coordinator")]
+[node name="EnemyPoolShieldbearer" type="Node" parent="." unique_id=136807664 node_paths=PackedStringArray("registry", "coordinator")]
 script = ExtResource("7_pool")
 enemy_scene = ExtResource("5_enemy")
 config = ExtResource("10_wave_config")
@@ -199,7 +200,7 @@ registry = NodePath("../EnemyRegistry")
 coordinator = NodePath("../AttackCoordinator")
 challenge = ExtResource("26_colmena")
 
-[node name="BossPoolVerdugo" type="Node" parent="." node_paths=PackedStringArray("registry", "coordinator")]
+[node name="BossPoolVerdugo" type="Node" parent="." unique_id=898740117 node_paths=PackedStringArray("registry", "coordinator")]
 script = ExtResource("7_pool")
 enemy_scene = ExtResource("5_enemy")
 config = ExtResource("10_wave_config")
@@ -207,7 +208,7 @@ registry = NodePath("../EnemyRegistry")
 coordinator = NodePath("../AttackCoordinator")
 challenge = ExtResource("35_verdugo")
 
-[node name="AttackCoordinator" type="Node" parent="." node_paths=PackedStringArray("registry", "run_state", "player")]
+[node name="AttackCoordinator" type="Node" parent="." unique_id=1989867789 node_paths=PackedStringArray("registry", "run_state", "player")]
 script = ExtResource("33_attack_coordinator")
 config = ExtResource("34_group_ai_config")
 registry = NodePath("../EnemyRegistry")
@@ -251,8 +252,8 @@ config = ExtResource("10_wave_config")
 catalog = ExtResource("11_catalog")
 affliction_catalog = ExtResource("90_affliction_catalog")
 ban_rules = ExtResource("21_ban_rules")
-rage = ExtResource("27_rage_config")
 pace = ExtResource("36_pace")
+rage = ExtResource("27_rage_config")
 pools = [NodePath("../EnemyPool"), NodePath("../EnemyPoolCharger"), NodePath("../EnemyPoolHarasser"), NodePath("../EnemyPoolLeaper"), NodePath("../EnemyPoolShieldbearer")]
 boss_pools = [NodePath("../BossPoolTitan"), NodePath("../BossPoolColmena"), NodePath("../BossPoolVerdugo")]
 registry = NodePath("../EnemyRegistry")

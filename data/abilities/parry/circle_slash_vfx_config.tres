@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="CircleSlashVfxConfig" format=3]
+[gd_resource type="Resource" script_class="CircleSlashVfxConfig" format=3 uid="uid://c6lgn3awj2j66"]
 
-[ext_resource type="Script" path="res://resources/circle_slash_vfx_config.gd" id="1_script"]
-[ext_resource type="Material" path="res://materials/vfx/circle_slash_material.tres" id="2_material"]
+[ext_resource type="Script" uid="uid://cbictest2iocj" path="res://resources/circle_slash_vfx_config.gd" id="1_script"]
+[ext_resource type="Material" uid="uid://bhvko5g40y2mo" path="res://materials/vfx/circle_slash_material.tres" id="2_material"]
 
 [resource]
 script = ExtResource("1_script")

@@ -3,13 +3,6 @@
 [ext_resource type="Script" uid="uid://cde232v20bjvc" path="res://resources/stat_display_table.gd" id="1_table"]
 [ext_resource type="Script" uid="uid://n5oxyfmnlkkb" path="res://resources/stat_display.gd" id="2_row"]
 
-[sub_resource type="Resource" id="Row_stamina_max"]
-script = ExtResource("2_row")
-stat = 15
-label = "Estamina máxima"
-format = "%.0f"
-multiplier = 1.0
-
 [sub_resource type="Resource" id="Row_attack_speed"]
 script = ExtResource("2_row")
 stat = 5
@@ -77,6 +70,13 @@ script = ExtResource("2_row")
 stat = 1
 label = "Defensa"
 format = "%.1f"
+multiplier = 1.0
+
+[sub_resource type="Resource" id="Row_stamina_max"]
+script = ExtResource("2_row")
+stat = 15
+label = "Estamina máxima"
+format = "%.0f"
 multiplier = 1.0
 
 [sub_resource type="Resource" id="Row_affliction_buildup"]

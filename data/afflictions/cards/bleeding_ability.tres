@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="AfflictionUpgradeData" format=3]
+[gd_resource type="Resource" script_class="AfflictionUpgradeData" format=3 uid="uid://ci2oilclyld80"]
 
-[ext_resource type="Script" path="res://resources/affliction_upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://b1hhg84ryut8n" path="res://resources/affliction_upgrade_data.gd" id="1_script"]
 [ext_resource type="Resource" path="res://data/afflictions/bleeding.tres" id="2_affliction"]
-[ext_resource type="Script" path="res://resources/value_format.gd" id="3_format"]
+[ext_resource type="Script" uid="uid://clqaknbxq40nf" path="res://resources/value_format.gd" id="3_format"]
 
 [sub_resource type="Resource" id="Format_points"]
 script = ExtResource("3_format")
@@ -15,7 +15,13 @@ affliction = ExtResource("2_affliction")
 source = 1
 max_level = 3
 level_values = Array[float]([35.0, 50.0, 65.0])
-level_descriptions = Array[String](["Tu habilidad acumula Sangrado.\nAl llenarse: Sangrado, 1 % de la vida\npor segundo durante 5 s; cada stack lo sube (3 %, 6 %).", "Sangrado (habilidad) nv. 2:\nacumula más rápido.", "Sangrado (habilidad) nv. 3:\nacumula mucho más rápido."])
+level_descriptions = Array[String](["Tu habilidad acumula Sangrado.
+Al llenarse: Sangrado, 1 % de la vida
+por segundo durante 5 s; cada stack lo sube (3 %, 6 %).", "Sangrado (habilidad) nv. 2:
+acumula más rápido.", "Sangrado (habilidad) nv. 3:
+acumula mucho más rápido."])
 value_format = SubResource("Format_points")
 title = "Aflicción: Sangrado"
-description = "Tu habilidad acumula Sangrado.\nAl llenarse: Sangrado, 1 % de la vida\npor segundo durante 5 s; cada stack lo sube (3 %, 6 %)."
+description = "Tu habilidad acumula Sangrado.
+Al llenarse: Sangrado, 1 % de la vida
+por segundo durante 5 s; cada stack lo sube (3 %, 6 %)."
