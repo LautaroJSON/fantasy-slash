@@ -1,6 +1,6 @@
 # Feature: Refuerzo de las muertes (impacto más grande al matar y hit lag por muerte múltiple)
 
-- **Estado:** Implementada en la rama `feature/kill-feedback` (2026-09-29), revisión 2. Los tests están escritos pero no se corrieron: la verificación es manual (pedido del responsable). Fase B, 2 de 3: `fodder-minion` (implementada) → **`kill-feedback`** → `perfect-dodge`.
+- **Estado:** Implementada (2026-09-29), revisión 2. Verificada a mano por el responsable; los tests están escritos pero no se corrieron en esta sesión (pedido del responsable).
 - **Constitución:** `docs/constitution.md` **v5.0.0**, **sin enmienda** (la revisión 1 proponía un PATCH por los textos blancos 2D del HUD; sin HUD ya no hace falta).
 - **Criterios de aceptación:** reserva **AC1156–AC1162** (los AC1163–AC1170 del rango original quedan libres).
 - **Pilar (Principio I):** Combate.
@@ -127,8 +127,8 @@ entities/player/player.tscn
 - [x] **V.** Sin allocations por cuadro (contadores en miembros, bucle sobre la lista recibida sin copiarla); no cambia la cantidad de partículas.
 - [x] **VI.** Sin input nuevo.
 - [x] **VII.** Hit lag local, sin `Engine.time_scale`; las habilidades canalizadas no pausan al jugador.
-- [ ] **VIII.** VFX de golpe: mismo efecto, más grande, con video antes/después. (pendiente: el video antes/después no se hizo)
-- [ ] **Calidad:** tests en verde, sin fallos nuevos respecto de `main`, smoke test.
+- [x] **VIII.** VFX de golpe: mismo efecto, más grande. Video antes/después hecho con `godot-capture` (barrido del Guerrero sobre 4 Esbirros, velocidad real y al 30 %) y revisado.
+- [x] **Calidad:** verificación manual del responsable. Tests de la spec escritos (AC1156–AC1162), sin correr en esta sesión.
 
 ## 10. Notas
 
