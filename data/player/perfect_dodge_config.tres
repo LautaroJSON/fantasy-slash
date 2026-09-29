@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="PerfectDodgeConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/perfect_dodge_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+perfect_window = 0.2
+min_interval = 0.5
+enemy_time_scale = 0.25
+slow_duration = 0.3
+popup_text = "¡Esquive perfecto!"
+popup_height = 2.4

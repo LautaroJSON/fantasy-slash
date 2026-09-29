@@ -2,7 +2,7 @@
 
 > Rangos de ACs usados o reservados por cada spec. El próximo número libre está en `CLAUDE.md`: al cerrar una spec, se actualiza allí y se agrega su rango acá.
 
-- AC1141–AC1190 reservados por la Fase B de la curva de poder: `fodder-minion.md` (AC1141–AC1155), `kill-feedback.md` (usa AC1156–AC1162; AC1163–AC1170 quedan libres) y `perfect-dodge.md` (desde AC1171).
+- AC1141–AC1190 reservados por la Fase B de la curva de poder: `fodder-minion.md` (AC1141–AC1155), `kill-feedback.md` (usa AC1156–AC1162; AC1163–AC1170 quedan libres) y `perfect-dodge.md` (usa AC1171–AC1182; AC1183–AC1190 quedan libres).
 - AC1121–AC1140 reservados por `early-power-curve.md` (Fase A).
 - AC1091–AC1120 los usa `mobile-touch-controls.md` (renumerados desde AC698–AC727 al fusionar su rama, que chocaban con `sprint-stamina.md` y `sheathe-release-animation.md`).
 - AC1071–AC1090 los usa `sheathe-upgrades-rework.md`.

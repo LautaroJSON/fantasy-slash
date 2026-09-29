@@ -180,6 +180,11 @@ func get_duration() -> float:
 	return _duration
 
 
+## Seconds into the running (or last) dash.
+func get_elapsed() -> float:
+	return _elapsed
+
+
 func is_airborne() -> bool:
 	return not body.is_on_floor()
 

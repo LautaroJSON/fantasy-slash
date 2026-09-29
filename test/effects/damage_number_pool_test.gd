@@ -293,3 +293,13 @@ func test_ac965_bleeding_ticks_are_crimson_and_italic() -> void:
 	assert_object(number.material_override).is_same(BLEEDING.damage_number_material)
 	assert_str(number.get_text()).is_equal("10")
 	assert_bool(number.is_over_time()).is_true()
+
+
+## perfect-dodge (docs/specs/perfect-dodge.md, AC1180).
+func test_ac1180_a_perfect_dodge_floats_its_text_over_the_player_once() -> void:
+	var dodge: PerfectDodgeConfig = _player.perfect_dodge.config
+	var before: int = _pool.active_count()
+	_player.perfect_dodge.perfect_dodged.emit(null)
+	assert_int(_pool.active_count()).is_equal(before + 1)
+	var number: DamageNumber = _pool.get_last_spawned()
+	assert_vector(number.global_position).is_equal_approx(_player.global_position + Vector3.UP * dodge.popup_height, Vector3.ONE * 0.5)

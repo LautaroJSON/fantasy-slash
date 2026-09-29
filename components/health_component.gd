@@ -6,6 +6,8 @@ signal health_changed(current: float, maximum: float)
 signal died
 ## Emitted by every hit that actually removes health, with the amount removed.
 signal damaged(amount: float)
+## A hit of an enemy reached the owner while invulnerable (docs/specs/perfect-dodge.md).
+signal hit_evaded(raw: float, attacker: Enemy)
 
 @export var rules: CombatRules
 ## Frontal block of the owner (docs/specs/warrior-abilities-rework.md); optional:
@@ -50,11 +52,14 @@ func receive_hit(raw: float) -> float:
 	return _apply_damage(mitigated * (1.0 - damage_reduction))
 
 
-## A hit of an enemy on the owner: the guard, when raised and facing the
+## A hit of an enemy on the owner (invulnerable owners emit hit_evaded): the guard, when raised and facing the
 ## attacker, absorbs its share first. A hit absorbed whole removes nothing
 ## and emits no `damaged` (no flicker, no hit clip). Returns the damage applied.
 func receive_hit_from(raw: float, attacker: Enemy) -> float:
-	if is_invulnerable or _is_dead:
+	if _is_dead:
+		return 0.0
+	if is_invulnerable:
+		hit_evaded.emit(raw, attacker)
 		return 0.0
 	var left: float = raw if guard == null else guard.absorb(raw, attacker)
 	if left <= 0.0:
