@@ -1,6 +1,6 @@
 # Feature: Esquive perfecto (tiempo lento de los enemigos)
 
-- **Estado:** Implementada (2026-09-29), revisión 2, en la rama `feature/perfect-dodge`. Los tests están escritos pero no se corrieron en esta sesión: la verificación es manual (pedido del responsable). Fase B, 3 de 3: `fodder-minion` (implementada) → `kill-feedback` (implementada) → **`perfect-dodge`**.
+- **Estado:** Implementada (2026-09-29), revisión 2, en la rama `feature/perfect-dodge`. Verificada a mano por el responsable (2026-09-29); los tests están escritos pero no se corrieron en esta sesión. Fase B, 3 de 3: `fodder-minion` (implementada) → `kill-feedback` (implementada) → **`perfect-dodge`**.
 - **Constitución:** `docs/constitution.md` **v5.0.0** → **MINOR 5.1.0** aplicada con esta spec (Principio VII, viñeta "Tiempo lento"; ver `constitution-history.md`). Sin cambios en el anexo de colores.
 - **Criterios de aceptación:** reserva **AC1171–AC1183** (los AC1184–AC1190 del rango original quedan libres).
 - **Pilar (Principio I):** Combate.
@@ -159,8 +159,8 @@ Todo en miembros `bool`/`float`: sin allocations por cuadro (Principio V). Con l
 - [x] **V.** Sin allocations por cuadro; el tiempo lento recorre la lista viva del registro sin copiarla.
 - [x] **VI.** Sin acciones nuevas: el esquive perfecto sale del `dash` de siempre (teclado, mando y táctil).
 - [x] **VII.** Sin `Engine.time_scale`: solo los enemigos se ralentizan, con la enmienda del §10. El golpe del jugador no cambia.
-- [ ] **VIII.** No hay clips nuevos del cuerpo. Video antes/después del tiempo lento.
-- [ ] **Calidad:** tests en verde, suite sin fallos nuevos respecto de `main`, smoke test.
+- [ ] **VIII.** No hay clips nuevos del cuerpo. El video antes/después no se hizo (el responsable verificó el tiempo lento jugando).
+- [x] **Calidad:** verificación manual del responsable; tests escritos, sin correr en esta sesión.
 
 ## 10. Enmienda de la constitución (MINOR → 5.1.0)
 

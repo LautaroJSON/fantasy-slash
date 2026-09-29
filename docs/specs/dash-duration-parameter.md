@@ -1,7 +1,7 @@
 # Feature: La duración del dash como parámetro
 
 > **Nota (2026-09-29):** la invulnerabilidad del dash tiene ahora su propio parámetro (`dash-invulnerability-parameter.md`); la duración del movimiento sigue siendo `DASH_DURATION`.
-- **Estado:** Implementada (2026-09-29), en la rama `feature/perfect-dodge`. Los tests adaptados están escritos pero no se corrieron en esta sesión: la verificación es manual (pedido del responsable).
+- **Estado:** Implementada (2026-09-29), en la rama `feature/perfect-dodge`. Verificada a mano por el responsable (2026-09-29); los tests están escritos pero no se corrieron en esta sesión.
 - **Constitución:** `docs/constitution.md` **v5.1.0** → **PATCH 5.1.1** (Principio III: la invulnerabilidad del dash dura `DASH_DURATION`, ya no `DASH_DISTANCE / DASH_SPEED`).
 - **Criterios de aceptación:** sin números nuevos: adapta AC395–AC398, AC547, AC549 y AC550 (`dash_component_test.gd` y `stats_component_test.gd`), sin cambiar lo que verifican.
 - **Pilar (Principio I):** Combate. La invulnerabilidad del dash es la base del esquive y del esquive perfecto (`perfect-dodge.md`); pasa a ser un número que se ajusta directamente por clase.
@@ -41,4 +41,4 @@ Antes, una mejora de `DASH_DISTANCE` alargaba el dash y con él la invulnerabili
 - [x] **III.** El valor vive en los `.tres`; el único literal en código es `MIN_DURATION`, estructural.
 - [x] **IV.** Tipado estático.
 - [x] **V.** Sin costo por cuadro: una división por dash.
-- [ ] **Calidad:** verificación manual del responsable; tests sin correr en esta sesión.
+- [x] **Calidad:** verificación manual del responsable; tests escritos, sin correr en esta sesión.
