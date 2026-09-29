@@ -61,3 +61,20 @@ extends Resource
 @export var crit_scale: float
 ## Angle of the second shard of a critical hit, around the surface normal, in degrees.
 @export var crit_cross_angle: float
+
+@export_group("Kill")
+## Scale of the whole effect when the hit leaves the enemy dead
+## (docs/specs/kill-feedback.md).
+@export var kill_scale: float
+## Ceiling of the scale of a hit that is both critical and a kill.
+@export var max_kill_crit_scale: float
+
+
+## Pure: scale of the whole effect. Critical and kill scales combine, up to
+## max_kill_crit_scale.
+func scale_for(is_crit: bool, is_kill: bool) -> float:
+	if is_crit and is_kill:
+		return minf(crit_scale * kill_scale, max_kill_crit_scale)
+	if is_kill:
+		return kill_scale
+	return crit_scale if is_crit else 1.0

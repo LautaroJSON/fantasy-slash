@@ -16,6 +16,9 @@ extends Node
 ## Its clip is the one paused. Optional: without it only enemies and camera react.
 @export var humanoid: LowPolyHumanoid
 @export var config: HitstopConfig
+## Extra hit lag and shake of a strike that leaves several enemies dead
+## (docs/specs/kill-feedback.md). Optional: without it nothing is added.
+@export var multi_kill: MultiKillFeelConfig
 ## Ability slots whose strikes pause the clip (channelled ones never emit `struck`).
 @export var abilities: Array[AbilityComponent]
 
@@ -24,6 +27,8 @@ var _left: float = 0.0
 ## The running hit lag comes from an ability: it resumes the clip at _resume_speed.
 var _from_ability: bool = false
 var _resume_speed: float = 1.0
+## Enemies left dead so far by the strike being resolved (docs/specs/kill-feedback.md).
+var _kills_in_strike: int = 0
 
 
 func _ready() -> void:
@@ -77,14 +82,18 @@ func _resume() -> void:
 
 
 func _on_attacked(hit_count: int, _total_damage: float, _was_crit: bool) -> void:
+	var kills: int = _kills_in_strike
+	_kills_in_strike = 0
 	var step: AttackComboStep = attack.get_current_step()
 	if hit_count <= 0 or step == null:
 		return
-	start(step.hitlag)
-	camera.shake(step.shake_strength)
+	start(step.hitlag + _hitlag_bonus(kills))
+	camera.shake(step.shake_strength + _shake_bonus(kills))
 
 
 func _on_enemy_hit(enemy: Enemy, _applied: float, _is_crit: bool) -> void:
+	if enemy.health.is_dead():
+		_kills_in_strike += 1
 	var step: AttackComboStep = attack.get_current_step()
 	if step == null:
 		return
@@ -92,8 +101,11 @@ func _on_enemy_hit(enemy: Enemy, _applied: float, _is_crit: bool) -> void:
 
 
 func _on_struck(feel: StrikeFeel, enemies: Array[Enemy]) -> void:
-	if feel.shake_strength > 0.0:
-		camera.shake(feel.shake_strength)
+	# The multi-kill bonus only reaches a strike that already pauses.
+	var kills: int = _count_dead(enemies) if feel.hitlag > 0.0 else 0
+	var shake: float = feel.shake_strength + _shake_bonus(kills)
+	if shake > 0.0:
+		camera.shake(shake)
 	if feel.hitlag <= 0.0:
 		return
 	for enemy: Enemy in enemies:
@@ -102,10 +114,26 @@ func _on_struck(feel: StrikeFeel, enemies: Array[Enemy]) -> void:
 		return
 	if not is_active():
 		_resume_speed = humanoid.anim.speed_scale
-	start(feel.hitlag)
+	start(feel.hitlag + _hitlag_bonus(kills))
 	_from_ability = true
 
 
 func _on_cast_released() -> void:
 	if is_active() and _from_ability:
 		_resume()
+
+
+func _count_dead(enemies: Array[Enemy]) -> int:
+	var dead: int = 0
+	for enemy: Enemy in enemies:
+		if enemy.health.is_dead():
+			dead += 1
+	return dead
+
+
+func _hitlag_bonus(kills: int) -> float:
+	return multi_kill.hitlag_bonus_for(kills) if multi_kill != null else 0.0
+
+
+func _shake_bonus(kills: int) -> float:
+	return multi_kill.shake_bonus_for(kills) if multi_kill != null else 0.0

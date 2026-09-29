@@ -47,12 +47,13 @@ func _process(delta: float) -> void:
 
 
 ## Plays at `point` on the enemy's surface, facing `normal` (towards the camera);
-## `slash_dir` is the cut direction, already perpendicular to `normal`.
-func play(point: Vector3, normal: Vector3, slash_dir: Vector3, is_crit: bool) -> void:
+## `slash_dir` is the cut direction, already perpendicular to `normal`. A hit that
+## leaves the enemy dead (`is_kill`) is bigger (docs/specs/kill-feedback.md).
+func play(point: Vector3, normal: Vector3, slash_dir: Vector3, is_crit: bool, is_kill: bool = false) -> void:
 	_is_crit = is_crit
 	_elapsed = 0.0
 	_playing = true
-	var effect_scale: float = config.crit_scale if is_crit else 1.0
+	var effect_scale: float = config.scale_for(is_crit, is_kill)
 	global_transform = Transform3D(_basis_for(normal, slash_dir).scaled(Vector3.ONE * effect_scale), point)
 	_cross_shard.rotation = Vector3(0.0, 0.0, deg_to_rad(config.crit_cross_angle))
 	_shard.show()

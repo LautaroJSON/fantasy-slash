@@ -229,3 +229,49 @@ func test_ac941_the_material_is_white_unshaded_additive_and_translucent() -> voi
 	assert_int(GLOW.transparency).is_equal(BaseMaterial3D.TRANSPARENCY_ALPHA)
 	assert_float(GLOW.albedo_color.a).is_less_equal(0.5)
 	assert_bool(GLOW.albedo_color.is_equal_approx(Color(1, 1, 1, 0.5))).is_true()
+
+
+## kill-feedback (docs/specs/kill-feedback.md, AC1156–AC1158).
+func test_ac1156_scale_for_combines_critical_and_kill_up_to_the_ceiling() -> void:
+	assert_float(CONFIG.scale_for(false, false)).is_equal(1.0)
+	assert_float(CONFIG.scale_for(true, false)).is_equal_approx(CONFIG.crit_scale, TOLERANCE)
+	assert_float(CONFIG.scale_for(false, true)).is_equal_approx(CONFIG.kill_scale, TOLERANCE)
+	assert_float(CONFIG.scale_for(true, true)).is_equal_approx(minf(CONFIG.crit_scale * CONFIG.kill_scale, CONFIG.max_kill_crit_scale), TOLERANCE)
+	assert_float(CONFIG.scale_for(true, true)).is_less_equal(CONFIG.max_kill_crit_scale)
+
+
+func test_ac1157_the_combo_hit_that_kills_shows_the_bigger_impact() -> void:
+	var survivor: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.2))
+	ComboDriver.strike(_player, NO_CRIT_ROLL)
+	assert_int(_playing().size()).is_equal(1)
+	assert_float(_playing()[0].global_transform.basis.x.length()).is_equal_approx(1.0, TOLERANCE)
+	survivor.deactivate()
+	var victim: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.2))
+	victim.health.setup(1.0, 0.0)
+	for effect: HitImpactVfx in _host.get_pool():
+		effect.advance(CONFIG.duration)
+	ComboDriver.finish(_player)
+	ComboDriver.strike(_player, NO_CRIT_ROLL)
+	var playing: Array[HitImpactVfx] = _playing()
+	assert_int(playing.size()).is_equal(1)
+	assert_float(playing[0].global_transform.basis.x.length()).is_equal_approx(CONFIG.kill_scale, TOLERANCE)
+	assert_bool(playing[0].get_cross_shard().visible).is_false()
+
+
+func test_ac1157_a_critical_kill_is_capped_at_the_ceiling() -> void:
+	var victim: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.2))
+	victim.health.setup(1.0, 0.0)
+	ComboDriver.strike(_player, CRIT_ROLL)
+	var playing: Array[HitImpactVfx] = _playing()
+	assert_int(playing.size()).is_equal(1)
+	assert_float(playing[0].global_transform.basis.x.length()).is_equal_approx(CONFIG.scale_for(true, true), TOLERANCE)
+	assert_bool(playing[0].get_cross_shard().visible).is_true()
+
+
+func test_ac1158_show_impact_of_a_dead_enemy_uses_the_kill_scale() -> void:
+	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5))
+	enemy.health.receive_hit(100000.0)
+	_host.show_impact(enemy, false)
+	var playing: Array[HitImpactVfx] = _playing()
+	assert_int(playing.size()).is_equal(1)
+	assert_float(playing[0].global_transform.basis.x.length()).is_equal_approx(CONFIG.kill_scale, TOLERANCE)

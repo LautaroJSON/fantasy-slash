@@ -45,13 +45,14 @@ func attach(base: Node3D, tip: Node3D) -> void:
 	_sample_tip()
 
 
-## Plays the next free effect (or the oldest) where the blade crosses `enemy`.
+## Plays the next free effect (or the oldest) where the blade crosses `enemy`;
+## bigger when the hit left it dead.
 func show_impact(enemy: Enemy, is_crit: bool) -> void:
 	var blade_b: Vector3 = _blade_end()
 	var point: Vector3 = contact_point(enemy)
 	var facing: Vector3 = _facing(point, impact_normal(enemy.global_position, _blade_start(), blade_b, visual.global_position))
 	var slash_dir: Vector3 = cut_direction(blade_b - _last_tip, facing, config.min_tip_speed)
-	_next_effect().play(point, facing, slash_dir, is_crit)
+	_next_effect().play(point, facing, slash_dir, is_crit, enemy.health.is_dead())
 
 
 ## Where the blade crosses `enemy` right now; also where the damage number of

@@ -48,6 +48,7 @@
 [ext_resource type="Resource" path="res://data/player/hit_impact_vfx_config.tres" id="48_hit_impact_config"]
 [ext_resource type="Material" path="res://materials/vfx/hit_impact_material.tres" id="49_hit_impact_material"]
 [ext_resource type="Script" path="res://components/shield_guard.gd" id="50_shield_guard"]
+[ext_resource type="Resource" path="res://data/player/multi_kill_feel_config.tres" id="51_multi_kill_feel"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -272,6 +273,7 @@ health = NodePath("../HealthComponent")
 camera = NodePath("../CameraRig")
 humanoid = NodePath("../Visual/Humanoid")
 config = ExtResource("39_hitstop_config")
+multi_kill = ExtResource("51_multi_kill_feel")
 abilities = [NodePath("../BasicAbility"), NodePath("../UltimateAbility")]
 
 [node name="Afflictions" type="Node" parent="." node_paths=PackedStringArray("stats", "attack", "air_slash", "basic_ability")]
