@@ -10,6 +10,7 @@ mouse_sensitivity = 0.003
 min_pitch_deg = -60.0
 max_pitch_deg = 30.0
 invert_y = false
+touch_look_sensitivity = 0.006
 stick_yaw_speed = 3.0
 stick_pitch_speed = 2.0
 shake_duration = 0.25

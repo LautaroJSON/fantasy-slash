@@ -80,3 +80,30 @@ func test_ac369_centered_stick_does_not_turn() -> void:
 func test_ac370_stick_speeds_are_set() -> void:
 	assert_float(CAMERA_CONFIG.stick_yaw_speed).is_greater(0.0)
 	assert_float(CAMERA_CONFIG.stick_pitch_speed).is_greater(0.0)
+
+
+func test_ac1103_touch_drag_turns_by_the_touch_sensitivity() -> void:
+	var camera: ThirdPersonCamera = _make_camera()
+	camera.apply_touch_look(Vector2(20.0, 10.0))
+	assert_float(camera.get_yaw()).is_equal_approx(-20.0 * CAMERA_CONFIG.touch_look_sensitivity, 0.0001)
+	assert_float(camera.get_pitch()).is_equal_approx(-10.0 * CAMERA_CONFIG.touch_look_sensitivity, 0.0001)
+
+
+func test_ac1103_touch_drag_respects_invert_y_and_the_pitch_limits() -> void:
+	var camera: ThirdPersonCamera = _make_camera()
+	var inverted: CameraConfig = CAMERA_CONFIG.duplicate() as CameraConfig
+	inverted.invert_y = true
+	camera.config = inverted
+	camera.apply_touch_look(Vector2(0.0, 10.0))
+	assert_float(camera.get_pitch()).is_equal_approx(10.0 * CAMERA_CONFIG.touch_look_sensitivity, 0.0001)
+	camera.apply_touch_look(Vector2(0.0, 100000.0))
+	assert_float(camera.get_pitch()).is_equal_approx(deg_to_rad(CAMERA_CONFIG.max_pitch_deg), 0.0001)
+
+
+func test_ac1114_emulated_mouse_motion_never_turns_the_camera() -> void:
+	var motion := InputEventMouseMotion.new()
+	motion.device = InputEvent.DEVICE_ID_EMULATION
+	assert_bool(ThirdPersonCamera.is_look_motion(motion, true)).is_false()
+	motion.device = InputEvent.DEVICE_ID_MOUSE
+	assert_bool(ThirdPersonCamera.is_look_motion(motion, true)).is_true()
+	assert_bool(ThirdPersonCamera.is_look_motion(motion, false)).is_false()

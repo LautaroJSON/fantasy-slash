@@ -63,7 +63,7 @@ func open() -> void:
 	_refresh()
 	_setup_sandbox_panel()
 	get_tree().paused = true
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	PointerMode.release_for_ui()
 	show()
 	_resume_button.grab_focus()
 
@@ -73,7 +73,7 @@ func close() -> void:
 		return
 	hide()
 	get_tree().paused = false
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	PointerMode.capture_for_gameplay()
 
 
 func go_to_main_menu() -> void:

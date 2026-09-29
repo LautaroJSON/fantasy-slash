@@ -27,7 +27,7 @@ const ACTION_BACK: StringName = &"ui_cancel"
 
 
 func _ready() -> void:
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	PointerMode.release_for_ui()
 	_play_button.pressed.connect(show_modes)
 	_back_button.pressed.connect(show_main)
 	_class_back_button.pressed.connect(show_modes)

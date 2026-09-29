@@ -14,6 +14,7 @@
 [ext_resource type="Resource" path="res://data/ui/player_stamina_bar_style.tres" id="13_stamina_bar_style"]
 [ext_resource type="Script" path="res://ui/enemy_status_overlay.gd" id="14_enemy_status_overlay"]
 [ext_resource type="Resource" path="res://data/ui/enemy_status_overlay_config.tres" id="15_enemy_status_overlay_config"]
+[ext_resource type="PackedScene" path="res://ui/touch/touch_controls.tscn" id="16_touch_controls"]
 
 [node name="Hud" type="Control"]
 layout_mode = 3
@@ -116,6 +117,7 @@ config = ExtResource("5_boss_bar_config")
 bar_scene = ExtResource("6_boss_bar_scene")
 
 [node name="AbilitySlots" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -213,6 +215,10 @@ grow_vertical = 0
 alignment = 1
 script = ExtResource("8_buff_bar")
 config = ExtResource("9_buff_bar_config")
+
+[node name="TouchControls" parent="." instance=ExtResource("16_touch_controls")]
+unique_name_in_owner = true
+layout_mode = 1
 
 [node name="InputDeviceMonitor" type="Node" parent="."]
 unique_name_in_owner = true

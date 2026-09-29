@@ -5,6 +5,7 @@
 - **Pilares (Principio I):**
   - **Combate:** el esquema de control define cómo se ataca, se esquiva y se encadenan habilidades. Con mando el stick analógico da movimiento de 360° con intensidad, la cámara se maneja con el otro pulgar, y atacar, esquivar y lanzar habilidades quedan en los gatillos y los botones (layout estilo souls).
 - **Dependencias:** ninguna. Se toca input, cámara, HUD y las pantallas de UI.
+- **Nota (constitución 5.0.0, `mobile-touch-controls.md`):** el Principio VI suma la pantalla táctil como tercer esquema. Las reglas de esta spec siguen valiendo; `InputDeviceMonitor` tiene un tercer dispositivo (`TOUCH`) y los bindings de mouse de `attack`/`dash` pasaron a `device = DEVICE_ID_MOUSE`.
 
 ## 1. Objetivo
 

@@ -34,6 +34,6 @@ func go_to_main_menu() -> void:
 func _on_player_died() -> void:
 	_summary.text = "Oleada %d · %d enemigos eliminados" % [run_state.wave, run_state.kills]
 	get_tree().paused = true
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	PointerMode.release_for_ui()
 	show()
 	_retry_button.grab_focus()

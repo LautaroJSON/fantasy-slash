@@ -9,7 +9,7 @@
 
 ### I. Identidad de género
 
-El juego es un **hack and slash roguelike en tercera persona para PC, jugado con teclado y mouse o mando**. Toda mecánica, sistema o feature nueva debe poder responder **"sí"** al menos a una de estas preguntas antes de especificarse:
+El juego es un **hack and slash roguelike en tercera persona para PC y Android, jugado con teclado y mouse, mando o pantalla táctil**. Toda mecánica, sistema o feature nueva debe poder responder **"sí"** al menos a una de estas preguntas antes de especificarse:
 
 1. **Combate:** ¿hace más interesante, legible o expresivo el acto de pelear (atacar, esquivar, posicionarse, encadenar)?
 2. **Supervivencia:** ¿crea presión, riesgo o decisiones tácticas dentro de una run (salud, recursos, oleadas, amenazas)?
@@ -118,22 +118,25 @@ Cada frame se diseña para escalar con la cantidad de enemigos en pantalla, que 
   - Formas simples (`CapsuleShape3D`, `BoxShape3D`, `SphereShape3D`). Prohibidas las formas trimesh o convex en entidades dinámicas.
   - `Area3D` con `monitoring`/`monitorable` desactivados cuando no se usan.
   - No se usan cuerpos físicos donde basta un cálculo de distancia. Raycasts y queries por frame, solo si son imprescindibles.
-- **Render:** materiales compartidos (ver Principio II), sin luces dinámicas ni sombras innecesarias.
+- **Render:** materiales compartidos (ver Principio II), sin luces dinámicas ni sombras innecesarias. Android usa el renderer Mobile; un ajuste de calidad para móvil se decide con mediciones en el dispositivo, no por las dudas.
 
 **Rationale:** las allocations por frame provocan picos del recolector y stutter. Instanciar y liberar en combate genera hitches justo cuando hay más acción. La física innecesaria es el costo oculto que más escala con la cantidad de enemigos.
 
-### VI. Input: teclado y mouse, o mando
+### VI. Input: teclado y mouse, mando o pantalla táctil
 
-- El juego se controla con **teclado y mouse** o con **mando** (layout Xbox; otros mandos vía el mapeo SDL de Godot). No hay controles táctiles, salvo los **botones de acción del HUD** (ver excepciones).
-- Todo input pasa por el **InputMap** con acciones nombradas (`move_forward`, `attack`, `dash`…). **Toda acción de juego tiene binding en los dos esquemas.** Prohibido leer teclas o botones físicos directamente en la lógica de juego.
-- **Toda pantalla de UI se puede usar con mando:** foco inicial al mostrarse, foco visible, `ui_accept` para confirmar y `ui_cancel` para volver donde haya "volver".
-- Los textos de teclas y botones que muestra la UI (prompts) salen de datos (`InputPromptConfig`), nunca de literales en escenas o scripts.
+- El juego se controla con **teclado y mouse**, con **mando** (layout Xbox; otros mandos vía el mapeo SDL de Godot) o con **pantalla táctil** (Android, en horizontal).
+- Todo input pasa por el **InputMap** con acciones nombradas (`move_forward`, `attack`, `dash`…). **Toda acción de juego tiene binding de teclado/mouse y de mando, y un control táctil** que la dispara como `InputEventAction` (salvo `camera_*`, que en táctil es el arrastre de la mitad derecha). Prohibido leer teclas o botones físicos directamente en la lógica de juego.
+- Los bindings de mouse de acciones de juego se limitan al mouse real (`device = InputEvent.DEVICE_ID_MOUSE`, nunca `-1`): un toque genera clics de mouse emulados con `device = -1`, que de otro modo dispararían esas acciones.
+- **Toda pantalla de UI se puede usar con mando y al tacto:** foco inicial al mostrarse, foco visible, `ui_accept` para confirmar, `ui_cancel` para volver donde haya "volver", y botones de al menos 44 px de alto en la resolución base.
+- Los textos de teclas y botones que muestra la UI (prompts, también los de los botones táctiles) salen de datos (`InputPromptConfig`), nunca de literales en escenas o scripts.
 - Excepciones:
-  - El movimiento relativo del mouse para la cámara (`InputEventMouseMotion`), que el InputMap no puede representar. Se lee solo dentro del nodo de cámara.
-  - `InputDeviceMonitor` clasifica los eventos **por tipo** (teclado/mouse o mando) solo para elegir qué prompts mostrar. No lee botones concretos ni decide gameplay.
-  - **Botones táctiles del HUD** (desde 4.14.0): un botón de acción del HUD puede aceptar toques de pantalla (`InputEventScreenTouch`). Un toque aprieta **su acción del InputMap** (`Input.action_press`/`action_release`) y nada más: la lógica de juego sigue leyendo solo acciones. Qué botones son táctiles es un dato del botón (`touch_action`). Moverse, la cámara y el ataque táctiles necesitan su propia spec.
+  - El movimiento relativo del mouse para la cámara (`InputEventMouseMotion`), que el InputMap no puede representar. Se lee solo dentro del nodo de cámara, que ignora el movimiento emulado desde un toque.
+  - `InputDeviceMonitor` clasifica los eventos **por tipo** (teclado/mouse, mando o táctil) solo para elegir qué prompts y qué HUD mostrar. No lee botones concretos ni decide gameplay.
+  - `TouchControls` lee `InputEventScreenTouch`/`InputEventScreenDrag` **por posición** (en una pantalla táctil no hay botones físicos que mapear) y los traduce a acciones del InputMap y a un giro de cámara.
+  - **Botones táctiles del HUD** (desde 4.14.0): un botón de acción del HUD puede aceptar toques de pantalla (`InputEventScreenTouch`). Un toque aprieta **su acción del InputMap** (`Input.action_press`/`action_release`) y nada más: la lógica de juego sigue leyendo solo acciones. Qué botones son táctiles es un dato del botón (`touch_action`). Fuera de `TouchControls`, son los únicos nodos que leen eventos táctiles.
+  - La captura del mouse pasa por `PointerMode`, que no captura en móvil.
 
-**Rationale:** el combate de un hack and slash se juega cómodo con mando. Mantener todo en el InputMap y los prompts en datos hace que sumar el mando no duplique la lógica de juego.
+**Rationale:** el combate de un hack and slash se juega cómodo con mando, y en el teléfono con dos pulgares. Mantener todo en el InputMap y los prompts en datos hace que sumar un esquema de control no duplique la lógica de juego: los controles táctiles son una fuente más de las mismas acciones.
 
 ### VII. Sensación del combate
 
@@ -172,10 +175,10 @@ Toda animación del jugador se diseña, se construye y se verifica según el **[
 |---|---|
 | Motor | **Godot 4.x** (actualmente 4.7) |
 | Lenguaje | **GDScript** con tipado estático (Principio IV). Sin C# ni GDExtension en el prototipo. |
-| Renderer | **Forward+** |
+| Renderer | **Forward+** (PC), **Mobile** (Android) |
 | Física | Jolt Physics (3D) |
-| Plataforma | **PC (Windows)** |
-| Input | **Teclado y mouse, o mando**, vía InputMap (Principio VI) |
+| Plataforma | **PC (Windows)** y **Android** (arm64-v8a, horizontal) |
+| Input | **Teclado y mouse, mando o pantalla táctil**, vía InputMap (Principio VI) |
 | Arte | Primitivas de Godot + `StandardMaterial3D` por defecto; assets importados en `assets/` con escena adaptadora (Principio II) |
 | Datos | Resources personalizados en `.tres` (Principio III) |
 | Tests | GdUnit4 |
@@ -192,7 +195,7 @@ Toda animación del jugador se diseña, se construye y se verifica según el **[
    - [ ] **Datos (III):** ningún valor tuneable quedó como literal en un script de comportamiento. Los nuevos stats y mejoras están en Resources `.tres`, los stats del jugador son mejorables y ningún Resource compartido se muta en runtime. Las mejoras únicas declaran `max_level` y guardan sus valores por nivel en datos.
    - [ ] **GDScript (IV):** nombres según convención. Todas las firmas y variables miembro tipadas. `_ready` / `_process` / `_physics_process` delgados y delegando en métodos con nombre.
    - [ ] **Performance (V):** sin allocations ni búsquedas de nodos por frame. Las entidades frecuentes usan pool. Capas y máscaras de colisión mínimas y explícitas.
-   - [ ] **Input (VI):** solo acciones del InputMap, con bindings de teclado/mouse y de mando. Pantallas nuevas navegables con mando. Prompts desde datos.
+   - [ ] **Input (VI):** solo acciones del InputMap, con bindings de teclado/mouse y de mando y control táctil. Los bindings de mouse de juego usan `device = DEVICE_ID_MOUSE`, nunca `-1`. Pantallas nuevas navegables con mando y usables al tacto (botones de 44 px de alto o más). Prompts desde datos.
    - [ ] **Combate (VII):** golpes comprometidos con cancel point; sin `Engine.time_scale` para feedback de impacto; auto-apuntado al enemigo más cercano salvo que los datos indiquen otra cosa.
    - [ ] **Animación (VIII):** se cumple el checklist del [estándar de animación](animation-standard.md) (§9). Hay video antes/después y escenarios de cancelación medidos, y nada en vivo pisa articulaciones que el motor mezcla.
    - [ ] **Calidad:** el proyecto abre sin errores ni warnings de tipado nuevos. Los tests de los criterios de aceptación de la spec están en verde y la suite completa sigue en verde.
@@ -217,4 +220,4 @@ Las versiones y enmiendas están en [`constitution-history.md`](constitution-his
 
 ---
 
-**Version**: 4.27.1 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-28
+**Version**: 5.0.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-28

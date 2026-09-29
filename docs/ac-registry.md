@@ -2,6 +2,7 @@
 
 > Rangos de ACs usados o reservados por cada spec. El próximo número libre está en `CLAUDE.md`: al cerrar una spec, se actualiza allí y se agrega su rango acá.
 
+- AC1091–AC1120 los usa `mobile-touch-controls.md` (renumerados desde AC698–AC727 al fusionar su rama, que chocaban con `sprint-stamina.md` y `sheathe-release-animation.md`).
 - AC1071–AC1090 los usa `sheathe-upgrades-rework.md`.
 - AC1056–AC1070 los usa `riposte-levels.md`.
 - AC1034–AC1052 los usa `sheathe-visual-rework.md`, AC1053–AC1055 de reserva.

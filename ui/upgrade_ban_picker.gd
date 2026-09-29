@@ -41,7 +41,7 @@ func show_choices(cards: Array[UpgradeCard], bans_used: int, max_bans: int) -> v
 	_title.text = "Elegí una mejora para bloquear (%d/%d)" % [bans_used + 1, max_bans]
 	_rebuild_cards()
 	get_tree().paused = true
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	PointerMode.release_for_ui()
 	show()
 	_focus_first_card()
 
@@ -51,7 +51,7 @@ func choose(card: UpgradeCard) -> void:
 	hide()
 	_offered = []
 	get_tree().paused = false
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	PointerMode.capture_for_gameplay()
 	ban_chosen.emit(card)
 
 

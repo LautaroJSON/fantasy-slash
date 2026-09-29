@@ -20,6 +20,8 @@ extends Control
 @export var touch_action: StringName
 
 var _source: SlotSource = null
+## Radius set by setup() for the touch cluster; below 0 the config radius of the slot is used.
+var _radius_override: float = -1.0
 var _drawn_ratio: float = -1.0
 var _drawn_charge: float = 0.0
 var _drawn_charging: bool = false
@@ -55,7 +57,9 @@ func _notification(what: int) -> void:
 		_release_touch()
 
 
-func setup(ability: AbilityComponent) -> void:
+## `radius_override` > 0 replaces the config radius (the touch cluster uses it).
+func setup(ability: AbilityComponent, radius_override: float = -1.0) -> void:
+	_radius_override = radius_override
 	_setup_source(AbilitySlotSource.new(ability))
 
 
@@ -82,6 +86,8 @@ func advance(delta: float) -> void:
 
 
 func get_radius() -> float:
+	if _radius_override > 0.0:
+		return _radius_override
 	return config.get_radius(_slot_kind())
 
 

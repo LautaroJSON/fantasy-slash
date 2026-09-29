@@ -19,7 +19,7 @@ func show_choices(abilities: Array[AbilityData]) -> void:
 	_offered = abilities
 	_rebuild_cards()
 	get_tree().paused = true
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	PointerMode.release_for_ui()
 	show()
 	_focus_first_card()
 
@@ -29,7 +29,7 @@ func choose(ability: AbilityData) -> void:
 	hide()
 	_offered = []
 	get_tree().paused = false
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	PointerMode.capture_for_gameplay()
 	ability_chosen.emit(ability)
 
 

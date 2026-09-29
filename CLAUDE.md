@@ -1,6 +1,6 @@
 # fantasy-slash: manual operativo
 
-Hack and slash roguelike en tercera persona (Godot 4.7, GDScript, PC con teclado y mouse).
+Hack and slash roguelike en tercera persona (Godot 4.7, GDScript; PC con teclado y mouse o mando, y Android con pantalla táctil).
 
 **Antes de tocar código, leé [`docs/constitution.md`](docs/constitution.md).** Ahí están las reglas no negociables. Este archivo es el manual operativo: flujo, mapa, comandos y trampas conocidas.
 
@@ -19,7 +19,7 @@ Hack and slash roguelike en tercera persona (Godot 4.7, GDScript, PC con teclado
 5. Al cerrar: suite completa en verde, smoke test, checklist de review de la constitución en la spec y estado **Implementada**. Si un test viejo tenía valores fijos, adaptalo sin cambiar lo que verifica y anotalo en la spec.
 6. Respondé en **español**. Código, identificadores y comentarios en **inglés**.
 
-**Próximo criterio de aceptación libre: AC1091.** Los rangos usados o reservados por cada spec están en [`docs/ac-registry.md`](docs/ac-registry.md). Al cerrar cada spec, actualizá este número y agregá su rango al registro.
+**Próximo criterio de aceptación libre: AC1121.** Los rangos usados o reservados por cada spec están en [`docs/ac-registry.md`](docs/ac-registry.md). Al cerrar cada spec, actualizá este número y agregá su rango al registro.
 
 ## Mapa del proyecto
 
@@ -36,6 +36,7 @@ Hack and slash roguelike en tercera persona (Godot 4.7, GDScript, PC con teclado
 | `assets/icons/status/` | Íconos SVG de buffs y debuffs (UI 2D), con su `SOURCE.md` (créditos CC BY 3.0). |
 | `assets/models/<categoría>/<asset>/` | Assets importados con su `SOURCE.md`. Siempre usados vía escena adaptadora. |
 | `materials/` | `StandardMaterial3D` compartidos (`materials/weapons/` para las armas). |
+| `ui/touch/` | Controles táctiles (`TouchControls`, `VirtualStick`, `TouchActionButton`), instanciados en `hud.tscn`. |
 | `docs/specs/` | Historial de features: una spec por cambio, con sus ACs y notas. |
 | `test/` | GdUnit4, en espejo de la estructura del código. |
 
@@ -64,6 +65,8 @@ tar --exclude=./.godot --exclude='./*.exe' -cf - . | (cd "$DEST" && tar -xf -)
   - Pasá `-c` a `GdUnitCmdTool` para que no corte cada suite en la primera falla.
   - Para capturas, el renderer de compatibilidad ignora `GeometryInstance3D.transparency`: usá Forward+ con Vulkan por software (`mesa-vulkan-drivers` extraído con `dpkg-deb -x`, `VK_ICD_FILENAMES` apuntando a `lvp_icd.json`) bajo `xvfb-run`.
 - Las herramientas del MCP `godot` que generan scripts fallan (el proyecto exige tipado estricto).
+- **GdUnit en worktrees:** `addons/gdUnit4/bin/` no está en git (el `.gitignore` ignora `bin/`). En una copia hecha desde un worktree, copiá `addons/gdUnit4` entero del checkout principal (`D:/user/Documentos/godot/fantasy-slash/addons/gdUnit4`).
+- **Exportar a Android:** en la copia, `"$G" --headless --path "$DEST" --export-debug "Android" out.apk`. Necesita la plantilla Gradle `android/build/` (no versionada): copiala del checkout principal. Instalar en un teléfono: `adb install -r out.apk` (`adb` en `C:\Users\Admin\AppData\Local\Android\Sdk\platform-tools`).
 
 ## Trampas conocidas
 
