@@ -33,6 +33,7 @@ func _ready() -> void:
 	player.air_slash.enemy_hit.connect(_on_anchored_hit)
 	player.afflictions.burst_hit.connect(_on_affliction_burst_hit)
 	player.afflictions.triggered.connect(_on_affliction_triggered)
+	player.perfect_dodge.perfect_dodged.connect(_on_perfect_dodged)
 	if registry != null:
 		registry.enemy_debuff_ticked.connect(_on_enemy_debuff_ticked)
 
@@ -159,3 +160,9 @@ func _on_affliction_triggered(enemy: Enemy, type: AfflictionData) -> void:
 ## Italic, and in the status color when it has one (e.g. poison).
 func _on_enemy_debuff_ticked(enemy: Enemy, amount: float, data: DebuffData) -> void:
 	spawn(amount, false, anchor_spawn_point(enemy) + next_fan_offset(), data.damage_number_material, true)
+
+
+## "Perfect dodge" over the player's head (docs/specs/perfect-dodge.md).
+func _on_perfect_dodged(_attacker: Enemy) -> void:
+	var dodge: PerfectDodgeConfig = player.perfect_dodge.config
+	spawn_text(dodge.popup_text, player.global_position + Vector3.UP * dodge.popup_height)

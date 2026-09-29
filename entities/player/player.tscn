@@ -49,6 +49,8 @@
 [ext_resource type="Material" path="res://materials/vfx/hit_impact_material.tres" id="49_hit_impact_material"]
 [ext_resource type="Script" path="res://components/shield_guard.gd" id="50_shield_guard"]
 [ext_resource type="Resource" path="res://data/player/multi_kill_feel_config.tres" id="51_multi_kill_feel"]
+[ext_resource type="Script" path="res://components/perfect_dodge_component.gd" id="52_perfect_dodge"]
+[ext_resource type="Resource" path="res://data/player/perfect_dodge_config.tres" id="53_perfect_dodge_config"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -107,6 +109,13 @@ body = NodePath("..")
 visual = NodePath("../Visual")
 health = NodePath("../HealthComponent")
 stats = NodePath("../StatsComponent")
+
+[node name="PerfectDodge" type="Node" parent="." node_paths=PackedStringArray("dash", "health", "camera")]
+script = ExtResource("52_perfect_dodge")
+dash = NodePath("../DashComponent")
+health = NodePath("../HealthComponent")
+camera = NodePath("../CameraRig")
+config = ExtResource("53_perfect_dodge_config")
 
 [node name="StaminaComponent" type="Node" parent="." node_paths=PackedStringArray("stats")]
 script = ExtResource("41_stamina")

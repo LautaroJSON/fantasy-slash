@@ -68,14 +68,24 @@ func test_ac6_attack_arc_is_capped() -> void:
 func test_ac6_ac550_dash_cooldown_never_drops_below_dash_duration_plus_gap() -> void:
 	var stats: StatsComponent = _make_stats()
 	_add_many(stats, PlayerStats.Stat.DASH_COOLDOWN, -0.15, 20)
-	var floor_value: float = PLAYER_STATS.dash_distance / PLAYER_STATS.dash_speed + COMBAT_RULES.min_dash_cooldown_gap
+	var floor_value: float = PLAYER_STATS.dash_duration + COMBAT_RULES.min_dash_cooldown_gap
 	assert_float(stats.get_stat(PlayerStats.Stat.DASH_COOLDOWN)).is_equal_approx(floor_value, 0.0001)
 
 
 ## Replaces "the floor follows iframe upgrades" (docs/specs/dash-iframes.md).
-func test_ac550_dash_cooldown_floor_follows_dash_distance_upgrades() -> void:
+func test_ac550_dash_cooldown_floor_follows_dash_duration_upgrades() -> void:
 	var stats: StatsComponent = _make_stats()
 	_add_many(stats, PlayerStats.Stat.DASH_COOLDOWN, -0.15, 20)
-	stats.add_upgrade(_make_upgrade(PlayerStats.Stat.DASH_DISTANCE, PLAYER_STATS.dash_distance))
-	var floor_value: float = 2.0 * PLAYER_STATS.dash_distance / PLAYER_STATS.dash_speed + COMBAT_RULES.min_dash_cooldown_gap
+	stats.add_upgrade(_make_upgrade(PlayerStats.Stat.DASH_DURATION, PLAYER_STATS.dash_duration))
+	var floor_value: float = 2.0 * PLAYER_STATS.dash_duration + COMBAT_RULES.min_dash_cooldown_gap
+	assert_float(stats.get_stat(PlayerStats.Stat.DASH_COOLDOWN)).is_equal_approx(floor_value, 0.0001)
+
+
+## The floor is the longer of the dash movement and its invulnerability plus the gap
+## (docs/specs/dash-invulnerability-parameter.md).
+func test_ac550_dash_cooldown_floor_follows_dash_invulnerability_upgrades() -> void:
+	var stats: StatsComponent = _make_stats()
+	_add_many(stats, PlayerStats.Stat.DASH_COOLDOWN, -0.15, 20)
+	stats.add_upgrade(_make_upgrade(PlayerStats.Stat.DASH_INVULNERABILITY, 1.0))
+	var floor_value: float = PLAYER_STATS.dash_invulnerability + 1.0 + COMBAT_RULES.min_dash_cooldown_gap
 	assert_float(stats.get_stat(PlayerStats.Stat.DASH_COOLDOWN)).is_equal_approx(floor_value, 0.0001)

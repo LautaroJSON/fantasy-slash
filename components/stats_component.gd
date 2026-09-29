@@ -85,8 +85,8 @@ func _apply_limits() -> void:
 	var crit_damage: int = PlayerStats.Stat.CRIT_DAMAGE
 	var arc: int = PlayerStats.Stat.ATTACK_ARC
 	var cooldown: int = PlayerStats.Stat.DASH_COOLDOWN
-	var dash_duration: float = _cache[PlayerStats.Stat.DASH_DISTANCE] / _cache[PlayerStats.Stat.DASH_SPEED]
+	var dash_invulnerability: float = maxf(_cache[PlayerStats.Stat.DASH_DURATION], _cache[PlayerStats.Stat.DASH_INVULNERABILITY])
 	_cache[crit] = minf(_cache[crit], rules.max_crit_chance)
 	_cache[crit_damage] = minf(_cache[crit_damage], rules.max_crit_damage)
 	_cache[arc] = minf(_cache[arc], rules.max_attack_arc_degrees)
-	_cache[cooldown] = maxf(_cache[cooldown], dash_duration + rules.min_dash_cooldown_gap)
+	_cache[cooldown] = maxf(_cache[cooldown], dash_invulnerability + rules.min_dash_cooldown_gap)

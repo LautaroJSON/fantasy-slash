@@ -18,12 +18,13 @@ enum Stat {
 	DASH_DISTANCE,
 	DASH_COOLDOWN,
 	ATTACK_ARC,
-	DASH_SPEED,
+	DASH_DURATION,
 	STAMINA_MAX,
 	STAMINA_REGEN,
 	SPRINT_STAMINA_COST,
 	SPRINT_SPEED_FACTOR,
 	AFFLICTION_BUILDUP,
+	DASH_INVULNERABILITY,
 }
 
 @export var damage: float
@@ -52,8 +53,9 @@ enum Stat {
 @export var dash_cooldown: float
 ## Width of the attack hitbox, in degrees.
 @export var attack_arc_degrees: float
-## Dash speed in m/s. The dash lasts dash_distance / dash_speed.
-@export var dash_speed: float
+## Seconds the dash movement lasts. Its speed is dash_distance / dash_duration.
+## The invulnerability has its own parameter, dash_invulnerability.
+@export var dash_duration: float
 ## Stamina of a full bar (docs/specs/sprint-stamina.md).
 @export var stamina_max: float
 ## Stamina regained per second once the regen delay has passed.
@@ -64,6 +66,9 @@ enum Stat {
 @export var sprint_speed_factor: float
 ## Extra Affliction build-up per hit, as a fraction (0.1 = +10 %; docs/specs/affliction.md).
 @export var affliction_buildup: float
+## Seconds the player is invulnerable from the start of a dash; it may outlast
+## the dash movement (dash_duration). The dash cooldown never drops below it.
+@export var dash_invulnerability: float
 
 
 func get_base(stat: Stat) -> float:
@@ -96,8 +101,8 @@ func get_base(stat: Stat) -> float:
 			return dash_cooldown
 		Stat.ATTACK_ARC:
 			return attack_arc_degrees
-		Stat.DASH_SPEED:
-			return dash_speed
+		Stat.DASH_DURATION:
+			return dash_duration
 		Stat.STAMINA_MAX:
 			return stamina_max
 		Stat.STAMINA_REGEN:
@@ -108,4 +113,6 @@ func get_base(stat: Stat) -> float:
 			return sprint_speed_factor
 		Stat.AFFLICTION_BUILDUP:
 			return affliction_buildup
+		Stat.DASH_INVULNERABILITY:
+			return dash_invulnerability
 	return 0.0

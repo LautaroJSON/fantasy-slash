@@ -1,11 +1,15 @@
 class_name DashComponent
 extends Node
-## Short horizontal dash. The player is invulnerable exactly while it lasts
+## Short horizontal dash. The player is invulnerable from its start for DASH_INVULNERABILITY seconds
 ## (docs/specs/dash-iframes.md). The cooldown always exceeds the dash
 ## (guaranteed by StatsComponent), so invulnerability cannot be chained.
 ## The body turns to the dash direction when it starts. A class dash (DashData,
 ## docs/specs/dash-feel.md) sets its clip, its VFX and an optional DashBehavior
-## whose hooks add rules; without one it is the standard dash.
+## whose hooks add rules; without one it is the standard dash. Its duration is the
+## DASH_DURATION stat and its speed is DASH_DISTANCE / DASH_DURATION.
+
+## Shortest dash duration, in seconds: keeps the speed finite if data says 0. Structural.
+const MIN_DURATION: float = 0.001
 
 signal dash_started
 signal dash_ready
@@ -27,6 +31,12 @@ var _cooldown_total: float = 0.0
 ## Seconds the running (or last) dash lasts, and how far into it we are.
 var _duration: float = 0.0
 var _elapsed: float = 0.0
+## Invulnerability of the running (or last) dash: seconds left, its total and how
+## far into it we are. It starts with the dash and may outlast its movement
+## (docs/specs/dash-invulnerability-parameter.md).
+var _invulnerability_left: float = 0.0
+var _invulnerability_total: float = 0.0
+var _invulnerability_elapsed: float = 0.0
 var _data: DashData = null
 var _behavior: DashBehavior = null
 
@@ -63,10 +73,13 @@ func try_dash(direction: Vector3) -> bool:
 		return false
 	_direction = _resolve_direction(direction)
 	_face_direction()
-	_speed = stats.get_stat(PlayerStats.Stat.DASH_SPEED)
-	_dash_time_left = stats.get_stat(PlayerStats.Stat.DASH_DISTANCE) / _speed
-	_duration = _dash_time_left
+	_duration = maxf(stats.get_stat(PlayerStats.Stat.DASH_DURATION), MIN_DURATION)
+	_dash_time_left = _duration
+	_speed = stats.get_stat(PlayerStats.Stat.DASH_DISTANCE) / _duration
 	_elapsed = 0.0
+	_invulnerability_total = maxf(stats.get_stat(PlayerStats.Stat.DASH_INVULNERABILITY), MIN_DURATION)
+	_invulnerability_left = _invulnerability_total
+	_invulnerability_elapsed = 0.0
 	_cooldown_total = stats.get_stat(PlayerStats.Stat.DASH_COOLDOWN)
 	_cooldown_left = _cooldown_total
 	health.is_invulnerable = true
@@ -93,6 +106,7 @@ func move_body(delta: float) -> void:
 	body.move_and_slide()
 	_dash_time_left -= step
 	_elapsed += step
+	_advance_invulnerability(step)
 	dash_step.emit(step)
 	if _behavior != null:
 		_behavior.step(self, step)
@@ -132,14 +146,32 @@ func get_cooldown_ratio() -> float:
 
 func advance_timers(delta: float) -> void:
 	_advance_cooldown(delta)
+	# While the dash moves, move_body advances the invulnerability in step with it.
+	if not is_dashing():
+		_advance_invulnerability(delta)
 
 
 func _end_dash(cancelled: bool) -> void:
 	_dash_time_left = 0.0
-	health.is_invulnerable = false
+	# A cut dash ends its invulnerability with it; a finished one keeps what is left.
+	if cancelled:
+		_invulnerability_left = 0.0
+	if _invulnerability_left <= 0.0:
+		health.is_invulnerable = false
 	if _behavior != null:
 		_behavior.ended(self, cancelled)
 	dash_ended.emit(cancelled)
+
+
+## Counts the invulnerability down and ends it when it runs out.
+func _advance_invulnerability(step: float) -> void:
+	if _invulnerability_left <= 0.0:
+		return
+	_invulnerability_elapsed += step
+	_invulnerability_left -= step
+	if _invulnerability_left <= 0.0:
+		_invulnerability_left = 0.0
+		health.is_invulnerable = false
 
 
 func _advance_cooldown(delta: float) -> void:
@@ -178,6 +210,26 @@ func get_progress() -> float:
 ## Seconds the running (or last) dash lasts.
 func get_duration() -> float:
 	return _duration
+
+
+## Seconds into the running (or last) dash.
+func get_elapsed() -> float:
+	return _elapsed
+
+
+## The dash is making the player invulnerable now (this can outlast the movement).
+func is_invulnerable_by_dash() -> bool:
+	return _invulnerability_left > 0.0
+
+
+## Seconds into the running (or last) dash's invulnerability.
+func get_invulnerability_elapsed() -> float:
+	return _invulnerability_elapsed
+
+
+## Seconds the running (or last) dash's invulnerability lasts.
+func get_invulnerability_total() -> float:
+	return _invulnerability_total
 
 
 func is_airborne() -> bool:

@@ -39,6 +39,7 @@ const WEAPON_MODEL: NodePath = ^"Model"
 @onready var health: HealthComponent = $HealthComponent
 @onready var stats: StatsComponent = $StatsComponent
 @onready var dash: DashComponent = $DashComponent
+@onready var perfect_dodge: PerfectDodgeComponent = $PerfectDodge
 @onready var attack: AttackComponent = $AttackComponent
 @onready var basic_ability: AbilityComponent = $BasicAbility
 @onready var ultimate_ability: AbilityComponent = $UltimateAbility
@@ -80,6 +81,7 @@ func _ready() -> void:
 	ultimate_ability.registry = enemy_registry
 	air_slash.registry = enemy_registry
 	afflictions.registry = enemy_registry
+	perfect_dodge.registry = enemy_registry
 	_apply_character_class()
 	_setup_health()
 	stamina.refill()

@@ -59,6 +59,9 @@ var _hitlag_frequency: float = 0.0
 ## Speed the behavior runs at this frame (SLOW statuses, docs/specs/affliction.md):
 ## its delta and the walking speed are scaled, gravity is not.
 var _speed_scale: float = 1.0
+## Time dilation (docs/specs/perfect-dodge.md): seconds left and the speed factor.
+var _dilation_left: float = 0.0
+var _dilation_scale: float = 1.0
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var debuffs: DebuffComponent = $DebuffComponent
@@ -91,6 +94,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_advance_time_dilation(delta)
 	if _spawn_left > 0.0:
 		_advance_spawn_in(delta)
 		return
@@ -115,6 +119,7 @@ func activate(at: Vector3, new_target: Player, new_level: int = 1) -> void:
 	_end_spawn_in()
 	_end_hitlag()
 	_time_freeze_left = 0.0
+	_dilation_left = 0.0
 	_telegraph.clear()
 	for ring: MeshInstance3D in _shockwaves:
 		ring.visible = false
@@ -175,6 +180,7 @@ func deactivate() -> void:
 	afflictions.clear()
 	_end_hitlag()
 	_time_freeze_left = 0.0
+	_dilation_left = 0.0
 	visible = false
 	process_mode = Node.PROCESS_MODE_DISABLED
 	_collision.set_deferred(&"disabled", true)
@@ -440,10 +446,11 @@ func _apply_body_scale() -> void:
 
 
 func _update_behaviour(delta: float) -> void:
+	var dilation: float = get_time_dilation()
 	if is_knocked_back():
-		_slide_back(delta)
+		_slide_back(delta, dilation)
 		return
-	_speed_scale = debuffs.get_speed_scale()
+	_speed_scale = debuffs.get_speed_scale() * dilation
 	if _speed_scale <= 0.0:
 		stand_still(delta)
 		return
@@ -460,12 +467,13 @@ func _unscaled(delta: float) -> float:
 
 
 ## While pushed the enemy only slides; its behavior (and its timers) is paused.
-func _slide_back(delta: float) -> void:
-	velocity.x = _knockback.x
-	velocity.z = _knockback.z
+## The push slides at `dilation` of its speed (gravity keeps the real delta).
+func _slide_back(delta: float, dilation: float = 1.0) -> void:
+	velocity.x = _knockback.x * dilation
+	velocity.z = _knockback.z * dilation
 	_apply_gravity(delta)
 	move_and_slide()
-	_knockback = _knockback.move_toward(Vector3.ZERO, _scaled.knockback_friction * delta)
+	_knockback = _knockback.move_toward(Vector3.ZERO, _scaled.knockback_friction * delta * dilation)
 
 
 func _apply_gravity(delta: float) -> void:
@@ -538,6 +546,31 @@ func freeze_time(seconds: float) -> void:
 
 func is_time_frozen() -> bool:
 	return _time_freeze_left > 0.0
+
+
+## Slows the enemy to `scale` of its speed for `seconds` of real time: its
+## behavior, walking, push and attack timers (docs/specs/perfect-dodge.md).
+## Multiplies with the slow of debuffs; a freeze, hit lag or spawn-in wins over
+## it. Restarts, never adds up. Gravity is not scaled.
+func dilate_time(scale: float, seconds: float) -> void:
+	if seconds <= 0.0:
+		return
+	_dilation_scale = clampf(scale, 0.0, 1.0)
+	_dilation_left = seconds
+
+
+func is_time_dilated() -> bool:
+	return _dilation_left > 0.0
+
+
+## Speed factor of the time dilation; 1 when none runs.
+func get_time_dilation() -> float:
+	return _dilation_scale if _dilation_left > 0.0 else 1.0
+
+
+func _advance_time_dilation(delta: float) -> void:
+	if _dilation_left > 0.0:
+		_dilation_left = maxf(_dilation_left - delta, 0.0)
 
 
 ## Counts down the world freeze; true while the enemy is frozen this frame.
