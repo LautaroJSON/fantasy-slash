@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
-## El Titán (docs/specs/boss-titan.md). Level 1: 920 health, 22 damage,
-## 2 defense, 70 % armour; each hand 30 % of the health (276). Values from
-## boss-health-tuning (AC555).
+## El Titán (docs/specs/boss-titan.md). Level 1: 333 health, 22 damage,
+## no defense, 70 % armour; each hand 30 % of the health (99.9). Values from
+## early-power-curve (§6.2).
 ## Single-move tests use a copy of its stats whose config keeps one move.
 
 const TestWorld := preload("res://test/helpers/test_world.gd")
@@ -13,10 +13,12 @@ const RAGE: RageConfig = preload("res://data/enemies/rage/rage_config.tres")
 const SLAM: int = 0
 const SWEEP: int = 1
 const STOMP: int = 2
-## Raw hit that removes 100 with no armour (100 + 2 defense).
-const HIT: float = 102.0
-## Breaks a full hand (276) without taking the Titán below its phase-2 threshold.
-const BREAK_HIT: float = 290.0
+## Raw hit that removes 100 with no armour (the Titán has no defense at level 1).
+const HIT: float = 100.0
+## Breaks a full hand (99.9) without taking the Titán below its phase-2 threshold.
+const BREAK_HIT: float = 110.0
+## Health of a hand at level 1.
+const HAND_HEALTH: float = 99.9
 
 var _registry: EnemyRegistry
 var _player: Player
@@ -81,9 +83,9 @@ func test_ac479_the_body_is_armoured() -> void:
 
 func test_ac480_hits_near_a_resting_hand_skip_the_armour_and_hurt_it() -> void:
 	var enemy: Enemy = await _rest_right_hand()
-	assert_float(enemy.health.receive_hit(HIT)).is_equal_approx(100.0, 0.001)
-	assert_float(_titan(enemy).get_hand_health(false)).is_equal_approx(176.0, 0.001)
-	assert_float(_titan(enemy).get_hand_health(true)).is_equal_approx(276.0, 0.001)
+	assert_float(enemy.health.receive_hit(HAND_HEALTH / 2.0)).is_equal_approx(HAND_HEALTH / 2.0, 0.001)
+	assert_float(_titan(enemy).get_hand_health(false)).is_equal_approx(HAND_HEALTH / 2.0, 0.001)
+	assert_float(_titan(enemy).get_hand_health(true)).is_equal_approx(HAND_HEALTH, 0.001)
 
 
 func test_ac480_a_raised_hand_is_not_a_weak_point() -> void:
@@ -91,19 +93,19 @@ func test_ac480_a_raised_hand_is_not_a_weak_point() -> void:
 	var enemy: Enemy = _spawn(SLAM, Vector3(0.0, 0.0, -6.0))
 	await _physics_frames(40)
 	assert_float(enemy.health.receive_hit(HIT)).is_equal_approx(30.0, 0.001)
-	assert_float(_titan(enemy).get_hand_health(false)).is_equal_approx(276.0, 0.001)
+	assert_float(_titan(enemy).get_hand_health(false)).is_equal_approx(HAND_HEALTH, 0.001)
 
 
 func test_ac481_each_hand_has_a_share_of_the_health() -> void:
 	var enemy: Enemy = _spawn(SLAM, Vector3(0.0, 0.0, -30.0))
-	assert_float(_titan(enemy).get_hand_health(true)).is_equal_approx(TITAN.hand_health_fraction * 920.0, 0.001)
-	assert_float(_titan(enemy).get_hand_health(false)).is_equal_approx(276.0, 0.001)
+	assert_float(_titan(enemy).get_hand_health(true)).is_equal_approx(TITAN.hand_health_fraction * TITAN_STATS.max_health, 0.001)
+	assert_float(_titan(enemy).get_hand_health(false)).is_equal_approx(HAND_HEALTH, 0.001)
 
 
 func test_ac482_a_hurt_hand_shrinks_and_shakes() -> void:
 	var enemy: Enemy = await _rest_right_hand()
-	# 140 raw → 138 applied: half the hand's health.
-	enemy.health.receive_hit(140.0)
+	# Half the hand's health.
+	enemy.health.receive_hit(HAND_HEALTH / 2.0)
 	var expected: float = TITAN_STATS.hands_config.hand_scale * TITAN.hand_size_for(0.5)
 	assert_float(_hand_scale(enemy, false)).is_equal_approx(expected, 0.0001)
 	assert_bool(enemy.get_hands().is_hand_shaking(false)).is_true()
@@ -256,5 +258,5 @@ func test_ac493_activate_restores_the_hands_and_the_armour() -> void:
 	assert_bool(_titan(enemy).is_hand_broken(false)).is_false()
 	assert_bool(enemy.get_hands().is_hand_visible(false)).is_true()
 	assert_float(_hand_scale(enemy, false)).is_equal_approx(TITAN_STATS.hands_config.hand_scale, 0.0001)
-	assert_float(_titan(enemy).get_hand_health(false)).is_equal_approx(276.0, 0.001)
+	assert_float(_titan(enemy).get_hand_health(false)).is_equal_approx(HAND_HEALTH, 0.001)
 	assert_float(enemy.health.receive_hit(HIT)).is_equal_approx(30.0, 0.001)

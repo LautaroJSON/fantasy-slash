@@ -4,6 +4,8 @@
 
 [resource]
 script = ExtResource("1_script")
+early_attackers = 1
+early_attackers_max_level = 4
 base_attackers = 2
 rage_levels_per_extra_attacker = 3
 max_attackers_cap = 4

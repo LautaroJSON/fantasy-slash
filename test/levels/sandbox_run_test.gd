@@ -60,7 +60,7 @@ func test_ac110_cleared_waves_skip_the_cards() -> void:
 	assert_bool(get_tree().paused).is_false()
 	await get_tree().process_frame
 	assert_int(_run_state.wave).is_equal(2)
-	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_per_wave)
+	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
 
 
 func test_ac111_the_player_cannot_die() -> void:

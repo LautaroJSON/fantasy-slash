@@ -43,6 +43,8 @@ var _spawned_enemies: Array[Enemy] = []
 var _type_counts: Array[int] = []
 ## Pool of each WaveConfig.enemy_types entry, same order (filled in _ready).
 var _type_pools: Array[EnemyPool] = []
+## Cards still to pick after the current wave (WaveConfig.picks_for_wave).
+var _picks_left: int = 0
 
 
 func _ready() -> void:
@@ -72,7 +74,7 @@ func start_wave() -> void:
 		start_boss_wave(config.boss_challenges[index])
 		return
 	run_state.set_challenge("")
-	_spawn_mix(config.enemies_per_wave)
+	_spawn_mix(config.enemies_for_wave(run_state.wave))
 
 
 ## Seeds the draw of the wave mix (tests).
@@ -228,12 +230,28 @@ func _on_all_dead() -> void:
 		run_state.start_rage()
 		_advance_wave.call_deferred()
 		return
+	_picks_left = config.picks_for_wave(run_state.wave)
 	picker.show_offer(offer, ban_rules.is_offered(run_state.wave, run_state.ban_count()))
 
 
 func _on_upgrade_chosen(upgrade: UpgradeCard) -> void:
 	player.apply_upgrade(upgrade)
-	_advance_wave()
+	_finish_pick()
+
+
+## One pick is spent: the next one opens a fresh offer (without the ban card),
+## and the wave advances when none is left or nothing can be offered
+## (Rage only starts on the first offer, docs/specs/early-power-curve.md).
+func _finish_pick() -> void:
+	_picks_left -= 1
+	if _picks_left <= 0:
+		_advance_wave()
+		return
+	var offer: Array[UpgradeCard] = build_offer()
+	if offer.is_empty():
+		_advance_wave()
+		return
+	picker.show_offer(offer, false)
 
 
 func _on_ban_requested() -> void:
@@ -244,10 +262,10 @@ func _on_ban_cancelled() -> void:
 	picker.reopen()
 
 
-## Banning replaces this wave's upgrade.
+## Banning replaces one of this wave's picks.
 func _on_ban_chosen(card: UpgradeCard) -> void:
 	run_state.ban(card)
-	_advance_wave()
+	_finish_pick()
 
 
 func _advance_wave() -> void:

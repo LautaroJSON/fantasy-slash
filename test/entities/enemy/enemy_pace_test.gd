@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## Pace of the enemies (docs/specs/enemy-pace.md, enemy-level-pace.md). At level 1
-## without Rage every windup lasts ×1.8 and attack_interval ×2.5; the grunt punch:
+## without Rage every windup lasts ×2.2 and attack_interval ×3.0; the grunt punch:
 ## 0.5 s windup (0.9 s paced), 0.15 s active, 0.45 s recovery, 0.4 s interval (1.0 s paced).
 
 const TestWorld := preload("res://test/helpers/test_world.gd")
@@ -55,9 +55,9 @@ func _physics_frames(count: int) -> void:
 
 func test_ac518_ac558_paced_grunt_waits_the_longer_windup() -> void:
 	_spawn(GRUNT, Vector3(0.0, 0.0, -1.5))
-	await _physics_frames(50)
+	await _physics_frames(60)
 	assert_float(_player.health.current_health).is_equal_approx(100.0, 0.0001)
-	await _physics_frames(10)
+	await _physics_frames(12)
 	assert_float(_player.health.current_health).is_equal_approx(91.0, 0.0001)
 
 
@@ -66,7 +66,7 @@ func test_ac519_ac558_paced_attacks_are_further_apart() -> void:
 	var punch: EnemyAttackData = GRUNT.attacks[0]
 	var hits: Array[int] = []
 	var last_health: float = _player.health.current_health
-	for frame: int in 280:
+	for frame: int in 360:
 		await get_tree().physics_frame
 		if _player.health.current_health < last_health:
 			hits.append(frame)
@@ -81,7 +81,7 @@ func test_ac520_the_floor_warning_lasts_the_paced_windup() -> void:
 	await _physics_frames(3)
 	var telegraph: GroundTelegraph = enemy.get_telegraph()
 	assert_float(telegraph.get_duration()).is_equal_approx(GRUNT.attacks[0].windup_time * PACE.windup_scale_for(1, 0), 0.0001)
-	await _physics_frames(24)
+	await _physics_frames(30)
 	assert_float(telegraph.get_fill_ratio()).is_between(0.35, 0.6)
 
 

@@ -10,19 +10,11 @@
 [sub_resource type="Resource" id="Resource_max_health"]
 script = ExtResource("2_growth")
 stat = 2
-amount = 0.2
+amount = 0.08
 
 [sub_resource type="Resource" id="Resource_damage"]
 script = ExtResource("2_growth")
 amount = 0.1
-
-[sub_resource type="Resource" id="Resource_defense"]
-script = ExtResource("2_growth")
-stat = 1
-mode = 1
-amount = 0.5
-has_cap = true
-cap = 5.0
 
 [sub_resource type="Resource" id="Resource_move_speed"]
 script = ExtResource("2_growth")
@@ -35,13 +27,12 @@ cap = 4.2
 [resource]
 script = ExtResource("1_script")
 damage = 9.0
-defense = 1.0
 max_health = 50.0
 attack_interval = 1.5
 attack_range = 6.0
 move_speed = 3.0
 knockback_friction = 25.0
-level_growth = Array[ExtResource("2_growth")]([SubResource("Resource_max_health"), SubResource("Resource_damage"), SubResource("Resource_defense"), SubResource("Resource_move_speed")])
+level_growth = Array[ExtResource("2_growth")]([SubResource("Resource_max_health"), SubResource("Resource_damage"), SubResource("Resource_move_speed")])
 body_scale = 1.0
 health_bar_scale = 1.0
 behavior = ExtResource("3_behavior")

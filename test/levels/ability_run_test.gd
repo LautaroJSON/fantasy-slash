@@ -72,7 +72,7 @@ func test_ac53_choosing_the_shield_charge_equips_it_and_starts_wave_one() -> voi
 	assert_object(_player.basic_ability.get_data()).is_same(SHIELD_CHARGE)
 	assert_bool(_player.ultimate_ability.is_equipped()).is_false()
 	assert_int(_run_state.wave).is_equal(1)
-	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_per_wave)
+	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
 
 
 func test_ac54_card_pool_holds_player_and_equipped_ability_upgrades() -> void:
@@ -99,13 +99,16 @@ func test_ac55_choosing_an_ability_card_upgrades_the_slot_only() -> void:
 	_kill_all_active()
 	assert_bool(_picker.is_open()).is_true()
 	_picker.choose(SHIELD_CHARGE.upgrades[0])
+	# Wave 1 gives two picks: the second one (a stat of the same ability) ends the wave.
+	assert_int(_run_state.wave).is_equal(1)
+	_picker.choose(SHIELD_CHARGE.upgrades[1])
 	assert_float(_player.basic_ability.get_stat(AbilityData.Stat.BASE_DAMAGE)).is_equal_approx(SHIELD_CHARGE.base_damage + SHIELD_CHARGE.upgrades[0].amount, 0.0001)
 	assert_int(_player.stats.get_upgrades().size()).is_equal(0)
 	for i: int in PlayerStats.Stat.size():
 		var stat: PlayerStats.Stat = i as PlayerStats.Stat
 		assert_float(_player.stats.get_stat(stat)).is_equal_approx(PLAYER_STATS.get_base(stat), 0.0001)
 	assert_int(_run_state.wave).is_equal(2)
-	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_per_wave)
+	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
 
 
 func test_ac56_ability_cards_are_light_blue() -> void:

@@ -1,12 +1,17 @@
 extends GdUnitTestSuite
-## Boss health and defense for ~90 s fights (docs/specs/boss-health-tuning.md).
+## Boss health and defense for a ~60 s first boss at wave 10 (level 5), with the
+## DPS measured in class_dps_reference_test (docs/specs/early-power-curve.md §6.2;
+## replaces docs/specs/boss-health-tuning.md, AC552-AC553).
 
 const VERDUGO: EnemyStats = preload("res://data/enemies/verdugo_stats.tres")
 const TITAN: EnemyStats = preload("res://data/enemies/titan_stats.tres")
 const COLMENA: EnemyStats = preload("res://data/enemies/colmena_stats.tres")
-## Reference average hit and effective health for 90 s at wave 4 (level 2).
-const AVERAGE_HIT: float = 20.0
-const TARGET_WAVE_4: float = 1680.0
+## Average of the measured class DPS (18.732, 13.44, 28.235).
+const DPS_REF: float = 20.1357
+## Average hit of the first waves (docs/specs/early-power-curve.md §5).
+const AVERAGE_HIT: float = 8.0
+const GROWTH: float = 0.095
+const BASES: Dictionary = {"verdugo": 499.0, "titan": 333.0, "colmena": 227.0}
 
 
 func _at(stats: EnemyStats, level: int) -> EnemyStats:
@@ -15,27 +20,25 @@ func _at(stats: EnemyStats, level: int) -> EnemyStats:
 	return out
 
 
-func _assert_row(stats: EnemyStats, level: int, health: float, defense: float) -> void:
-	var out: EnemyStats = _at(stats, level)
-	assert_float(out.max_health).override_failure_message("%s lv %d health" % [stats.display_name, level]).is_equal_approx(health, 1.0)
-	assert_float(out.defense).override_failure_message("%s lv %d defense" % [stats.display_name, level]).is_equal_approx(defense, 0.01)
+func test_ac1132_health_grows_from_the_base_and_defense_stays_low() -> void:
+	var stats_by_key: Dictionary = {"verdugo": VERDUGO, "titan": TITAN, "colmena": COLMENA}
+	for key: String in stats_by_key:
+		var stats: EnemyStats = stats_by_key[key]
+		for level: int in [5, 10, 15, 25]:
+			var expected: float = float(BASES[key]) * (1.0 + GROWTH * float(level - 1))
+			assert_float(_at(stats, level).max_health).override_failure_message("%s lv %d health" % [key, level]).is_equal_approx(expected, 1.0)
+		assert_float(_at(stats, 1).defense).override_failure_message(key + " lv 1 defense").is_equal_approx(0.0, 0.01)
+		assert_float(_at(stats, 5).defense).override_failure_message(key + " lv 5 defense").is_equal_approx(0.4, 0.01)
+		assert_float(_at(stats, 25).defense).override_failure_message(key + " lv 25 defense").is_equal_approx(2.0, 0.01)
 
 
-func test_ac552_health_and_defense_by_level() -> void:
-	for row: Array in [[2, 1511.0, 2.25], [4, 1773.0, 2.75], [10, 2560.0, 4.25], [25, 4526.0, 8.0]]:
-		_assert_row(VERDUGO, row[0], row[1], row[2])
-	for row: Array in [[2, 1007.0, 2.25], [4, 1182.0, 2.75], [10, 1707.0, 4.25], [25, 3018.0, 8.0]]:
-		_assert_row(TITAN, row[0], row[1], row[2])
-	for row: Array in [[2, 690.0, 2.25], [4, 810.0, 2.75], [10, 1169.0, 4.25], [25, 2066.0, 8.0]]:
-		_assert_row(COLMENA, row[0], row[1], row[2])
-
-
-func test_ac553_every_boss_lasts_about_ninety_seconds_at_wave_4() -> void:
-	# Effort multipliers: Verdugo 1, Titán 1.5 (armour), Colmena 2.2 (exposure).
+## Effort multipliers: Verdugo 1, Titán 1.5 (armour), Colmena 2.2 (exposure).
+func test_ac1133_every_boss_lasts_about_a_minute_at_wave_10() -> void:
+	var target: float = 36.0 * DPS_REF
 	for pair: Array in [[VERDUGO, 1.0], [TITAN, 1.5], [COLMENA, 2.2]]:
-		var out: EnemyStats = _at(pair[0], 2)
+		var out: EnemyStats = _at(pair[0], 5)
 		var effective: float = out.max_health / (1.0 - out.defense / AVERAGE_HIT) * float(pair[1])
-		assert_float(effective).override_failure_message(pair[0].display_name).is_between(TARGET_WAVE_4 * 0.95, TARGET_WAVE_4 * 1.05)
+		assert_float(effective).override_failure_message(pair[0].display_name).is_between(target * 0.95, target * 1.05)
 
 
 func test_ac554_other_stats_are_unchanged() -> void:

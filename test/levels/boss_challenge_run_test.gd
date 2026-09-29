@@ -54,12 +54,19 @@ func _kill_all_active() -> void:
 		enemy.health.receive_hit(LETHAL_HIT)
 
 
-## Clears waves 1-3 (choosing damage) so wave 4, a boss wave, is running.
-func _reach_wave_4() -> void:
-	for i: int in 3:
-		_kill_all_active()
-		_picker.choose(DAMAGE_UPGRADE)
-	assert_int(_run_state.wave).is_equal(4)
+## Jumps to wave 9 and clears it so wave 10, a boss wave, is running.
+func _reach_boss_wave() -> void:
+	for i: int in 8:
+		_run_state.next_wave()
+	_kill_all_active()
+	_picker.choose(DAMAGE_UPGRADE)
+	assert_int(_run_state.wave).is_equal(10)
+
+
+## Picks every card of the wave (waves 1-3 give two).
+func _choose_all(upgrade: UpgradeData) -> void:
+	while _picker.is_open():
+		_picker.choose(upgrade)
 
 
 ## Clears the running wave and forces `challenge` as the next one (the offer of
@@ -73,15 +80,15 @@ func _count_unique(cards: Array[UpgradeCard]) -> int:
 	return UpgradeOffer.only_unique(cards).size()
 
 
-func test_ac146_boss_waves_are_every_fourth() -> void:
-	for wave: int in [4, 8, 12]:
+func test_ac146_boss_waves_are_every_tenth() -> void:
+	for wave: int in [10, 20, 30]:
 		assert_bool(WAVE_CONFIG.is_boss_wave(wave)).is_true()
-	for wave: int in [1, 3, 5]:
+	for wave: int in [1, 4, 12, 24]:
 		assert_bool(WAVE_CONFIG.is_boss_wave(wave)).is_false()
 
 
-func test_ac151_wave_4_spawns_only_level_2_bosses() -> void:
-	_reach_wave_4()
+func test_ac151_wave_10_spawns_only_level_5_bosses() -> void:
+	_reach_boss_wave()
 	var active: Array[Enemy] = _registry.get_active()
 	# boss-verdugo: any challenge of the list, with its own count.
 	var challenge: BossChallengeData = null
@@ -92,23 +99,22 @@ func test_ac151_wave_4_spawns_only_level_2_bosses() -> void:
 	assert_int(active.size()).is_equal(challenge.count)
 	for enemy: Enemy in active:
 		assert_object(enemy.stats).is_same(challenge.stats)
-		assert_int(enemy.level).is_equal(2)
+		assert_int(enemy.level).is_equal(5)
 	assert_bool(_run_state.is_boss_wave()).is_true()
 
 
 func test_ac151_waves_3_and_5_are_regular_waves() -> void:
 	for i: int in 2:
 		_kill_all_active()
-		_picker.choose(DAMAGE_UPGRADE)
+		_choose_all(DAMAGE_UPGRADE)
 	assert_int(_run_state.wave).is_equal(3)
 	for enemy: Enemy in _registry.get_active():
 		assert_bool(_is_regular_type(enemy.stats)).is_true()
-	_kill_all_active()
-	_picker.choose(DAMAGE_UPGRADE)
-	_kill_all_active()
-	_picker.choose(DAMAGE_UPGRADE)
+	for i: int in 2:
+		_kill_all_active()
+		_choose_all(DAMAGE_UPGRADE)
 	assert_int(_run_state.wave).is_equal(5)
-	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_per_wave)
+	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(5))
 	for enemy: Enemy in _registry.get_active():
 		assert_bool(_is_regular_type(enemy.stats)).is_true()
 	assert_bool(_run_state.is_boss_wave()).is_false()
@@ -152,11 +158,11 @@ func test_ac155_boss_offer_is_normal_without_golden_cards_left() -> void:
 
 func test_ac156_hud_names_the_boss_challenge() -> void:
 	assert_str(_wave_label.text).is_equal("Oleada 1")
-	_reach_wave_4()
-	assert_str(_wave_label.text).is_equal("Oleada 4 · %s" % _run_state.challenge_title)
+	_reach_boss_wave()
+	assert_str(_wave_label.text).is_equal("Oleada 10 · %s" % _run_state.challenge_title)
 	_kill_all_active()
 	_picker.choose(DAMAGE_UPGRADE)
-	assert_str(_wave_label.text).is_equal("Oleada 5")
+	assert_str(_wave_label.text).is_equal("Oleada 11")
 
 
 ## enemy-types: regular waves mix the types of WaveConfig.enemy_types.

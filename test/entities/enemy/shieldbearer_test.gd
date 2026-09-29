@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## Escudero (docs/specs/enemy-types.md). A raw hit of 56 minus its 6 defense
+## Escudero (docs/specs/enemy-types.md). A raw hit of 53 minus its 3 defense
 ## is 50; blocked, 80 % less: 10. The enemy spawns at +Z so its initial
 ## facing (−Z) already points at the player at the origin.
 
@@ -8,7 +8,7 @@ const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
 const STATS: EnemyStats = preload("res://data/enemies/shieldbearer_stats.tres")
 const GUARD: GuardConfig = preload("res://data/enemies/configs/shieldbearer_guard.tres")
-const RAW_HIT: float = 56.0
+const RAW_HIT: float = 53.0
 const FULL: float = 50.0
 const BLOCKED: float = 10.0
 

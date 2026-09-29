@@ -10,8 +10,8 @@ const COLMENA_STATS: EnemyStats = preload("res://data/enemies/colmena_stats.tres
 const COLMENA: ColmenaConfig = preload("res://data/enemies/configs/colmena_boss.tres")
 const RAGE: RageConfig = preload("res://data/enemies/rage/rage_config.tres")
 const LETHAL_HIT: float = 100000.0
-## Removes 100 (100 + 2 defense; boss-health-tuning, AC555).
-const HIT: float = 102.0
+## Removes 100 (the Colmena has no defense at level 1).
+const HIT: float = 100.0
 
 var _registry: EnemyRegistry
 var _player: Player

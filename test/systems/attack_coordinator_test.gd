@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## AttackCoordinator tokens and places (docs/specs/enemy-group-ai.md).
-## Wave 1 (no RunState): 2 attackers, 0.35 s between grants.
+## No RunState: 2 attackers from level 5 on (1 before), 0.35 s between grants.
 
 const TestWorld := preload("res://test/helpers/test_world.gd")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
@@ -29,14 +29,15 @@ func before_test() -> void:
 
 
 ## Enemies without a target: they stand still, so only the coordinator acts.
-func _enemy(at: Vector3 = Vector3(10.0, 0.0, 10.0), stats: EnemyStats = null) -> Enemy:
+## Level 5 by default: from there the base attackers apply (two at once); levels 1-4 allow one.
+func _enemy(at: Vector3 = Vector3(10.0, 0.0, 10.0), stats: EnemyStats = null, level: int = 5) -> Enemy:
 	var enemy: Enemy = auto_free(ENEMY_SCENE.instantiate())
 	if stats != null:
 		enemy.stats = stats
 	enemy.registry = _registry
 	enemy.coordinator = _coordinator
 	add_child(enemy)
-	enemy.activate(at, null)
+	enemy.activate(at, null, level)
 	return enemy
 
 
@@ -172,3 +173,19 @@ func test_ac562_an_unused_token_does_not_rest() -> void:
 	a.end_attack()
 	assert_int(_coordinator.get_resting_count()).is_equal(0)
 	assert_bool(_coordinator.request_token(c)).is_true()
+
+
+## early-power-curve (AC1129): the first levels allow a single attacker.
+func test_ac1129_early_levels_allow_one_attacker_and_later_ones_two() -> void:
+	var early_a: Enemy = _enemy(Vector3(10.0, 0.0, 10.0), null, 1)
+	var early_b: Enemy = _enemy(Vector3(10.0, 0.0, 10.0), null, 1)
+	assert_bool(_coordinator.request_token(early_a)).is_true()
+	_coordinator.advance(CONFIG.token_gap)
+	assert_bool(_coordinator.request_token(early_b)).is_false()
+	_coordinator.forget(early_a)
+	_coordinator.forget(early_b)
+	var late_a: Enemy = _enemy(Vector3(10.0, 0.0, 10.0), null, 5)
+	var late_b: Enemy = _enemy(Vector3(10.0, 0.0, 10.0), null, 5)
+	assert_bool(_coordinator.request_token(late_a)).is_true()
+	_coordinator.advance(CONFIG.token_gap)
+	assert_bool(_coordinator.request_token(late_b)).is_true()

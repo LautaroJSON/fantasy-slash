@@ -5,6 +5,10 @@ extends Resource
 
 ## Enemies allowed to attack at once without Rage.
 @export var base_attackers: int
+## Enemies allowed to attack at once up to early_attackers_max_level.
+@export var early_attackers: int
+## Last enemy level that uses early_attackers instead of base_attackers.
+@export var early_attackers_max_level: int
 ## Rage levels per extra simultaneous attacker (docs/specs/enemy-pace.md).
 @export var rage_levels_per_extra_attacker: int
 ## Most simultaneous attackers, whatever the Rage.
@@ -46,10 +50,11 @@ extends Resource
 @export var spawn_marker_grow_time: float
 
 
-## Pure: simultaneous attackers allowed at `rage_level`.
-func max_attackers_for(rage_level: int) -> int:
+## Pure: simultaneous attackers allowed to enemies of `level` at `rage_level`.
+func max_attackers_for(level: int, rage_level: int) -> int:
+	var base: int = early_attackers if level <= early_attackers_max_level else base_attackers
 	var extra: int = floori(float(maxi(rage_level, 0)) / rage_levels_per_extra_attacker) if rage_levels_per_extra_attacker > 0 else 0
-	return mini(base_attackers + extra, max_attackers_cap)
+	return mini(base + extra, max_attackers_cap)
 
 
 ## Pure: flat unit direction of place `index` around the player.

@@ -6,12 +6,21 @@ const CONFIG: GroupAIConfig = preload("res://data/enemies/group_ai_config.tres")
 
 ## enemy-pace (AC517, replaces AC444): attackers grow with the Rage level, not the wave.
 func test_ac517_attackers_grow_with_the_rage_up_to_the_cap() -> void:
-	assert_int(CONFIG.max_attackers_for(0)).is_equal(2)
-	assert_int(CONFIG.max_attackers_for(1)).is_equal(2)
-	assert_int(CONFIG.max_attackers_for(2)).is_equal(2)
-	assert_int(CONFIG.max_attackers_for(3)).is_equal(3)
-	assert_int(CONFIG.max_attackers_for(6)).is_equal(4)
-	assert_int(CONFIG.max_attackers_for(20)).is_equal(4)
+	assert_int(CONFIG.max_attackers_for(5, 0)).is_equal(2)
+	assert_int(CONFIG.max_attackers_for(5, 2)).is_equal(2)
+	assert_int(CONFIG.max_attackers_for(5, 3)).is_equal(3)
+	assert_int(CONFIG.max_attackers_for(5, 6)).is_equal(4)
+	assert_int(CONFIG.max_attackers_for(5, 20)).is_equal(4)
+
+
+## early-power-curve (AC1128): a single attacker up to level 4; Rage adds on top of it.
+func test_ac1128_early_levels_allow_one_attacker() -> void:
+	assert_int(CONFIG.max_attackers_for(1, 0)).is_equal(1)
+	assert_int(CONFIG.max_attackers_for(4, 0)).is_equal(1)
+	assert_int(CONFIG.max_attackers_for(5, 0)).is_equal(2)
+	assert_int(CONFIG.max_attackers_for(25, 0)).is_equal(2)
+	assert_int(CONFIG.max_attackers_for(1, 3)).is_equal(2)
+	assert_int(CONFIG.max_attackers_for(5, 20)).is_equal(4)
 
 
 func test_ac444_slots_are_spread_evenly_around() -> void:

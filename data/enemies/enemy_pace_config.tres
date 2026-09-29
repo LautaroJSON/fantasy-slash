@@ -4,9 +4,9 @@
 
 [resource]
 script = ExtResource("1_script")
-windup_scale_first_level = 1.8
+windup_scale_first_level = 2.2
 windup_scale_last_level = 1.2
-interval_scale_first_level = 2.5
+interval_scale_first_level = 3.0
 interval_scale_last_level = 1.4
 last_level = 25
 windup_scale_per_rage = 0.1

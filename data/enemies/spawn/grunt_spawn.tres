@@ -8,4 +8,4 @@ script = ExtResource("1_script")
 stats = ExtResource("2_stats")
 weight = 4.0
 first_wave = 1
-max_per_wave = 5
+max_per_wave = 7

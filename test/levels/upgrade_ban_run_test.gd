@@ -50,12 +50,15 @@ func _kill_all_active() -> void:
 		enemy.health.receive_hit(LETHAL_HIT)
 
 
-## Clears waves 1 and 2 (choosing damage) and wave 3, leaving its offer open.
+## Clears waves 1 and 2 (choosing damage twice) and wave 3, leaving its first offer open.
 func _reach_third_offer() -> void:
 	for i: int in 2:
 		_kill_all_active()
 		assert_bool(_picker.has_ban_card()).is_false()
 		assert_int(_picker.get_card_buttons().size()).is_equal(WAVE_CONFIG.cards_per_offer)
+		_picker.choose(DAMAGE_UPGRADE)
+		# Waves 1-3 give two picks; the extra offer never has the red card.
+		assert_bool(_picker.has_ban_card()).is_false()
 		_picker.choose(DAMAGE_UPGRADE)
 	_kill_all_active()
 
@@ -99,13 +102,16 @@ func test_ac71_banning_replaces_the_upgrade_and_removes_the_card() -> void:
 	assert_float(_player.stats.get_stat(PlayerStats.Stat.DAMAGE)).is_equal(damage_before)
 	assert_int(_player.stats.get_upgrades().size()).is_equal(upgrades_before)
 	assert_float(_player.health.max_health).is_equal_approx(PLAYER_STATS.max_health, 0.0001)
-	assert_int(_run_state.wave).is_equal(4)
-	assert_bool(get_tree().paused).is_false()
-	# Wave 4 is a boss challenge (docs/specs/boss-challenge.md): it still starts.
-	assert_bool(_run_state.is_boss_wave()).is_true()
-	assert_int(_registry.alive_count()).is_greater(0)
+	# Banning spent one of the two picks of wave 3: a fresh offer without the red card opens.
+	assert_int(_run_state.wave).is_equal(3)
+	assert_bool(_picker.is_open()).is_true()
+	assert_bool(_picker.has_ban_card()).is_false()
 	assert_bool(_wave_manager.get_available_pool().has(HEALTH_UPGRADE)).is_false()
 	assert_int(_wave_manager.get_available_pool().size()).is_equal(_wave_manager.get_card_pool().size() - 1)
+	_picker.choose(DAMAGE_UPGRADE)
+	assert_int(_run_state.wave).is_equal(4)
+	assert_bool(get_tree().paused).is_false()
+	assert_bool(_run_state.is_boss_wave()).is_false()
 
 
 func test_ac71_banned_card_is_missing_from_the_next_ban_menu() -> void:

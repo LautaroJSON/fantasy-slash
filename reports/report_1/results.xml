@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2026-09-28" name="report_1" tests="3" failures="4" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="class_dps_reference_test" package="test/levels" timestamp="2026-09-29T01:26:04" hostname="localhost" tests="3" failures="4" errors="0" skipped="0" flaky="0" time="1.148">
+		<testcase name="test_measure_class_dps" classname="class_dps_reference_test" time="0.225">
+		</testcase>
+		<testcase name="test_ac1136_class_dps_matches_the_reference_table" classname="class_dps_reference_test" time="0.189">
+			<failure message="FAILED: res://test/levels/class_dps_reference_test.gd:104" type="FAILURE">
+<![CDATA[
+res://data/classes/warrior/warrior.tres dps
+	at 'test_ac1136_class_dps_matches_the_reference_table' in res://test/levels/class_dps_reference_test.gd:104
+]]>
+			</failure>
+			<failure message="FAILED: res://test/levels/class_dps_reference_test.gd:104" type="FAILURE">
+<![CDATA[
+res://data/classes/berserker/berserker.tres dps
+	at 'test_ac1136_class_dps_matches_the_reference_table' in res://test/levels/class_dps_reference_test.gd:104
+]]>
+			</failure>
+			<failure message="FAILED: res://test/levels/class_dps_reference_test.gd:104" type="FAILURE">
+<![CDATA[
+res://data/classes/samurai/samurai.tres dps
+	at 'test_ac1136_class_dps_matches_the_reference_table' in res://test/levels/class_dps_reference_test.gd:104
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_ac1137_a_level_one_grunt_dies_in_two_seconds" classname="class_dps_reference_test" time="0.130">
+			<failure message="FAILED: res://test/levels/class_dps_reference_test.gd:110" type="FAILURE">
+<![CDATA[
+res://data/classes/berserker/berserker.tres kill time
+	at 'test_ac1137_a_level_one_grunt_dies_in_two_seconds' in res://test/levels/class_dps_reference_test.gd:110
+]]>
+			</failure>
+		</testcase>
+	</testsuite>
+</testsuites>

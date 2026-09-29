@@ -51,7 +51,7 @@ func _kill_all_active() -> void:
 
 
 func test_ac19_first_wave_spawns_exactly_five_enemies_away_from_the_player() -> void:
-	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_per_wave)
+	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
 	for enemy: Enemy in _registry.get_active():
 		var offset := Vector2(enemy.global_position.x - _player.global_position.x, enemy.global_position.z - _player.global_position.z)
 		assert_float(offset.length()).is_greater_equal(WAVE_CONFIG.min_spawn_distance)
@@ -71,10 +71,14 @@ func test_ac20_clearing_the_wave_pauses_and_offers_three_cards() -> void:
 func test_ac22_choosing_damage_applies_it_and_starts_the_next_wave() -> void:
 	_kill_all_active()
 	_picker.choose(DAMAGE_UPGRADE)
+	# Waves 1-3 give two picks: the wave only advances after the second.
+	assert_int(_run_state.wave).is_equal(1)
+	assert_bool(_picker.is_open()).is_true()
+	_picker.choose(HEALTH_UPGRADE)
 	assert_float(_player.stats.get_stat(PlayerStats.Stat.DAMAGE)).is_equal_approx(19.0, 0.0001)
-	assert_int(_player.stats.get_upgrades().size()).is_equal(1)
+	assert_int(_player.stats.get_upgrades().size()).is_equal(2)
 	assert_int(_run_state.wave).is_equal(2)
-	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_per_wave)
+	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
 	assert_bool(get_tree().paused).is_false()
 	assert_bool(_picker.is_open()).is_false()
 
@@ -82,13 +86,13 @@ func test_ac22_choosing_damage_applies_it_and_starts_the_next_wave() -> void:
 func test_ac134_wave_5_spawns_level_3_enemies() -> void:
 	for enemy: Enemy in _registry.get_active():
 		assert_int(enemy.level).is_equal(1)
-	_kill_all_active()
-	# Jump to wave 4: choosing a card advances to wave 5 and spawns it.
+	# Jump to wave 4 (one pick): choosing a card advances to wave 5 and spawns it.
 	for i: int in 3:
 		_run_state.next_wave()
+	_kill_all_active()
 	_picker.choose(DAMAGE_UPGRADE)
 	assert_int(_run_state.wave).is_equal(5)
-	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_per_wave)
+	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
 	for enemy: Enemy in _registry.get_active():
 		assert_int(enemy.level).is_equal(3)
 		assert_str(enemy.health_bar.get_level_text()).is_equal("lv. 3")
@@ -104,12 +108,18 @@ func test_ac23_choosing_health_raises_max_and_current_health() -> void:
 
 func test_ac24_kills_accumulate_across_waves() -> void:
 	_kill_all_active()
-	_picker.choose(DAMAGE_UPGRADE)
+	_choose_all(DAMAGE_UPGRADE)
 	var active: Array[Enemy] = []
 	active.assign(_registry.get_active())
 	active[0].health.receive_hit(LETHAL_HIT)
 	active[1].health.receive_hit(LETHAL_HIT)
-	assert_int(_run_state.kills).is_equal(WAVE_CONFIG.enemies_per_wave + 2)
+	assert_int(_run_state.kills).is_equal(WAVE_CONFIG.enemies_for_wave(1) + 2)
+
+
+## Picks every card of the wave (waves 1-3 give two).
+func _choose_all(upgrade: UpgradeData) -> void:
+	while _picker.is_open():
+		_picker.choose(upgrade)
 
 
 ## Empties the card pool: same as every card being maxed or banned.
@@ -130,17 +140,17 @@ func test_ac268_without_upgrades_the_next_wave_starts_on_its_own() -> void:
 	_kill_all_active()
 	await get_tree().process_frame
 	assert_int(_run_state.wave).is_equal(2)
-	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_per_wave)
+	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
 
 
 func test_ac269_without_upgrades_boss_waves_still_come() -> void:
 	_exhaust_upgrades()
-	# Jump to wave 3: clearing it advances to wave 4, a boss wave.
-	for i: int in 2:
+	# Jump to wave 9: clearing it advances to wave 10, a boss wave.
+	for i: int in 8:
 		_run_state.next_wave()
 	_kill_all_active()
 	await get_tree().process_frame
-	assert_int(_run_state.wave).is_equal(4)
+	assert_int(_run_state.wave).is_equal(10)
 	assert_bool(_run_state.is_boss_wave()).is_true()
 	assert_int(_registry.alive_count()).is_greater(0)
 
@@ -160,7 +170,7 @@ func _rage_aura(enemy: Enemy) -> StatusAura:
 
 func test_ac341_with_upgrades_left_enemies_have_no_rage() -> void:
 	_kill_all_active()
-	_picker.choose(DAMAGE_UPGRADE)
+	_choose_all(DAMAGE_UPGRADE)
 	assert_int(_run_state.get_rage_level()).is_equal(0)
 	for enemy: Enemy in _registry.get_active():
 		assert_bool(enemy.debuffs.has_debuff(RAGE.status.id)).is_false()
@@ -171,7 +181,7 @@ func test_ac342_without_upgrades_the_next_wave_comes_enraged() -> void:
 	_exhaust_upgrades()
 	_kill_all_active()
 	await get_tree().process_frame
-	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_per_wave)
+	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
 	for enemy: Enemy in _registry.get_active():
 		assert_bool(enemy.debuffs.has_debuff(RAGE.status.id)).is_true()
 		assert_float(enemy.debuffs.get_active()[0].potency).is_equal(1.0)
@@ -228,7 +238,7 @@ func test_ac25_a_new_run_starts_from_base_state() -> void:
 		assert_float(_player.stats.get_stat(stat)).is_equal_approx(PLAYER_STATS.get_base(stat), 0.0001)
 
 
-## Regular waves 1 to 8 (seeded): full size, only types already allowed and
+## Regular waves 1 to 8 (seeded): their size, only types already allowed and
 ## none over its max_per_wave (docs/specs/enemy-types.md).
 func test_ac415_regular_waves_mix_the_allowed_types() -> void:
 	var wave_manager: WaveManager = _arena.get_node("WaveManager") as WaveManager
@@ -236,7 +246,7 @@ func test_ac415_regular_waves_mix_the_allowed_types() -> void:
 	for wave: int in range(1, 9):
 		assert_int(_run_state.wave).is_equal(wave)
 		if not _run_state.is_boss_wave():
-			assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_per_wave)
+			assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
 			for entry: EnemySpawnEntry in WAVE_CONFIG.enemy_types:
 				var count: int = 0
 				for enemy: Enemy in _registry.get_active():
@@ -246,11 +256,11 @@ func test_ac415_regular_waves_mix_the_allowed_types() -> void:
 				if wave < entry.first_wave:
 					assert_int(count).is_equal(0)
 		_kill_all_active()
-		_picker.choose(DAMAGE_UPGRADE)
+		_choose_all(DAMAGE_UPGRADE)
 
 
 func test_ac456_wave_enemies_come_out_of_the_floor() -> void:
-	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_per_wave)
+	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
 	for enemy: Enemy in _registry.get_active():
 		assert_bool(enemy.is_spawning_in()).is_true()
 		assert_object(enemy.coordinator).is_not_null()
@@ -262,11 +272,11 @@ func _expected_interval(enemy: Enemy, scale: float) -> float:
 	return out.attack_interval * scale
 
 
-## enemy-level-pace (AC560): the pace depends on the level (wave 1: level 1, ×1.8).
+## enemy-level-pace (AC560): the pace depends on the level (wave 1: level 1, ×2.2).
 func test_ac524_ac560_wave_enemies_come_at_the_slow_pace() -> void:
 	for enemy: Enemy in _registry.get_active():
 		assert_float(enemy.get_windup_scale()).is_equal_approx(PACE.windup_scale_for(enemy.level, 0), 0.0001)
-		assert_float(enemy.get_windup_scale()).is_equal_approx(1.8, 0.0001)
+		assert_float(enemy.get_windup_scale()).is_equal_approx(2.2, 0.0001)
 		assert_float(enemy.get_scaled_stats().attack_interval).is_equal_approx(_expected_interval(enemy, PACE.interval_scale_for(enemy.level, 0)), 0.0001)
 
 
@@ -281,8 +291,8 @@ func test_ac525_rage_speeds_up_the_pace_and_adds_attackers() -> void:
 	for enemy: Enemy in _registry.get_active():
 		assert_float(enemy.get_windup_scale()).is_equal_approx(PACE.windup_scale_for(enemy.level, 2), 0.0001)
 		assert_float(enemy.get_scaled_stats().attack_interval).is_equal_approx(_expected_interval(enemy, PACE.interval_scale_for(enemy.level, 2)), 0.0001)
-	assert_int(coordinator.get_max_attackers()).is_equal(2)
+	assert_int(coordinator.get_max_attackers(1)).is_equal(1)
 	_kill_all_active()
 	await get_tree().process_frame
 	assert_int(_run_state.get_rage_level()).is_equal(3)
-	assert_int(coordinator.get_max_attackers()).is_equal(3)
+	assert_int(coordinator.get_max_attackers(1)).is_equal(2)

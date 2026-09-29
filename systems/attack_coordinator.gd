@@ -1,7 +1,7 @@
 class_name AttackCoordinator
 extends Node
 ## Group behaviour of the regular enemies (docs/specs/enemy-group-ai.md):
-## - Attack tokens: at most max_attackers_for(rage level) enemies may attack at once,
+## - Attack tokens: at most max_attackers_for(level, rage level) enemies may attack at once,
 ##   grants are token_gap apart and go first-come first-served. A request not
 ##   renewed for a couple of frames leaves the queue; a token not used to start
 ##   a windup within token_approach_timeout is taken back. A token given back
@@ -42,8 +42,9 @@ func _physics_process(delta: float) -> void:
 	advance(delta)
 
 
-func get_max_attackers() -> int:
-	return config.max_attackers_for(_rage_level())
+## Simultaneous attackers allowed to enemies of `level` (they share the wave's level).
+func get_max_attackers(level: int) -> int:
+	return config.max_attackers_for(level, _rage_level())
 
 
 func _rage_level() -> int:
@@ -62,7 +63,7 @@ func request_token(enemy: Enemy) -> bool:
 		index = _queue.size() - 1
 	else:
 		_queue_frame[index] = frame
-	if index != 0 or _gap_left > 0.0 or _holders.size() + _resting.size() >= get_max_attackers():
+	if index != 0 or _gap_left > 0.0 or _holders.size() + _resting.size() >= get_max_attackers(enemy.level):
 		return false
 	_queue.remove_at(0)
 	_queue_frame.remove_at(0)

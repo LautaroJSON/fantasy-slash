@@ -33,24 +33,25 @@ func before_test() -> void:
 	add_child(_coordinator)
 
 
-func _spawn(stats: EnemyStats, at: Vector3, with_coordinator: bool = true) -> Enemy:
+func _spawn(stats: EnemyStats, at: Vector3, with_coordinator: bool = true, level: int = 1) -> Enemy:
 	var enemy: Enemy = auto_free(ENEMY_SCENE.instantiate())
 	enemy.stats = stats
 	enemy.registry = _registry
 	if with_coordinator:
 		enemy.coordinator = _coordinator
 	add_child(enemy)
-	enemy.activate(at, _player)
+	enemy.activate(at, _player, level)
 	return enemy
 
 
+## Level 5: two tokens can be held at once (level 1-4 allow a single attacker).
 func _block_tokens() -> void:
 	for i: int in 2:
 		var blocker: Enemy = auto_free(ENEMY_SCENE.instantiate())
 		blocker.registry = _registry
 		blocker.coordinator = _coordinator
 		add_child(blocker)
-		blocker.activate(Vector3(30.0 + 3.0 * i, 0.0, 30.0), null)
+		blocker.activate(Vector3(30.0 + 3.0 * i, 0.0, 30.0), null, 5)
 		_coordinator.advance(CONFIG.token_gap)
 		assert_bool(_coordinator.request_token(blocker)).is_true()
 		blocker.begin_attack()
@@ -73,7 +74,7 @@ func _bearing(enemy: Enemy) -> float:
 func test_ac446_never_more_attackers_than_tokens() -> void:
 	var grunts: Array[Enemy] = []
 	for at: Vector3 in [Vector3(0, 0, -3), Vector3(3, 0, 0), Vector3(0, 0, 3), Vector3(-3, 0, 0)]:
-		grunts.append(_spawn(GRUNT, at))
+		grunts.append(_spawn(GRUNT, at, true, 5))
 	var attacked: Array[bool] = [false, false, false, false]
 	for frame: int in 360:
 		await get_tree().physics_frame
@@ -83,7 +84,7 @@ func test_ac446_never_more_attackers_than_tokens() -> void:
 			if phase == MeleeBehavior.Phase.WINDUP or phase == MeleeBehavior.Phase.ACTIVE:
 				swinging += 1
 				attacked[i] = true
-		assert_int(swinging).is_less_equal(CONFIG.max_attackers_for(0))
+		assert_int(swinging).is_less_equal(CONFIG.max_attackers_for(5, 0))
 	for i: int in attacked.size():
 		assert_bool(attacked[i]).is_true()
 
@@ -121,7 +122,7 @@ func test_ac450_waiting_grunts_spread_around_the_player() -> void:
 	_block_tokens()
 	var grunts: Array[Enemy] = []
 	for at: Vector3 in [Vector3(-1, 0, -8), Vector3(0, 0, -8), Vector3(1, 0, -8), Vector3(0.5, 0, -9.5)]:
-		grunts.append(_spawn(GRUNT, at))
+		grunts.append(_spawn(GRUNT, at, true, 5))
 	await _physics_frames(240)
 	var min_gap: float = TAU
 	for i: int in grunts.size():
@@ -144,7 +145,7 @@ func test_ac452_walking_enemies_push_apart() -> void:
 func test_ac563_the_next_pair_waits_for_the_rest() -> void:
 	var grunts: Array[Enemy] = []
 	for at: Vector3 in [Vector3(0, 0, -3), Vector3(3, 0, 0), Vector3(0, 0, 3)]:
-		grunts.append(_spawn(GRUNT, at))
+		grunts.append(_spawn(GRUNT, at, true, 5))
 	var attacked: Array[bool] = [false, false, false]
 	var first_end: int = -1
 	var third_start: int = -1

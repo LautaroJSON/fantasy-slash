@@ -37,7 +37,7 @@ func _physics_frames(count: int) -> void:
 func test_ac130_level_5_enemy_has_scaled_health_and_damage() -> void:
 	var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.5), 5)
 	assert_int(enemy.level).is_equal(5)
-	assert_float(enemy.health.max_health).is_equal_approx(72.0, 0.0001)
+	assert_float(enemy.health.max_health).is_equal_approx(52.8, 0.0001)
 	assert_float(enemy.get_scaled_stats().damage).is_equal_approx(11.2, 0.0001)
 	await _physics_frames(65)
 	# One telegraphed punch in 65 frames: 11.2 × 1.5 damage - 3 player defense = 13.8.
@@ -83,3 +83,26 @@ func test_ac133_pooled_enemies_do_not_share_the_label_text() -> void:
 	var second: Enemy = _spawn_enemy(Vector3(3.0, 0.0, -8.0), 7)
 	assert_str(first.health_bar.get_level_text()).is_equal("lv. 2")
 	assert_str(second.health_bar.get_level_text()).is_equal("lv. 7")
+
+
+## early-power-curve (AC1131): the common types grow +8 % health per level, and
+## their defense stays at the base value. The Bruto's 40 is 2 s of the reference
+## DPS (docs/specs/early-power-curve.md §6.1); the others keep their proportion.
+func test_ac1131_common_types_grow_softly() -> void:
+	var rows: Array = [
+		["grunt", 40.0, 0.0],
+		["charger", 60.0, 1.0],
+		["harasser", 35.0, 0.0],
+		["leaper", 50.0, 0.0],
+		["shieldbearer", 90.0, 3.0],
+	]
+	for row: Array in rows:
+		var stats: EnemyStats = load("res://data/enemies/%s_stats.tres" % row[0]) as EnemyStats
+		var base: float = row[1]
+		for level: int in [1, 5, 25]:
+			var out := EnemyStats.new()
+			stats.write_scaled(level, out)
+			var name: String = "%s lv %d" % [row[0], level]
+			assert_float(out.max_health).override_failure_message(name + " health").is_equal_approx(base * (1.0 + 0.08 * float(level - 1)), 0.5)
+			assert_float(out.defense).override_failure_message(name + " defense").is_equal_approx(row[2], 0.0001)
+	assert_float(GRUNT_STATS.max_health).is_equal(roundf(2.0 * 20.1357))
