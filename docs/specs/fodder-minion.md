@@ -1,6 +1,6 @@
 # Feature: Esbirro (carne de cañón) y oleadas de horda
 
-- **Estado:** Propuesta (2026-09-28). Fase B, 1 de 3: **`fodder-minion`** → `kill-feedback` → `perfect-dodge`.
+- **Estado:** Implementada en la rama `feat/fodder-minion` (2026-09-29), con pendientes: la medición en el teléfono (§3.3), el smoke test con las tres clases y la captura de una oleada 1 (ver Notas). El rango AC1141–AC1155 ya está reservado en `docs/ac-registry.md` (rama principal): no se toca acá.
 - **Constitución:** `docs/constitution.md` **v5.0.0**, sin enmienda (ver *Arte* y *Performance*).
 - **Criterios de aceptación:** reserva **AC1141–AC1155** (dentro del rango AC1141–AC1190 de la Fase B).
 - **Pilar (Principio I):** Combate + Supervivencia.
@@ -43,7 +43,7 @@ Valores iniciales de los `.tres`, a nivel 1.
 | Campo | Valor | Por qué |
 |---|---|---|
 | `damage_multiplier` | 1.0 | 6 de daño: el Guerrero recibe 1 (piso), el Samurái 5, el Berserker 1. |
-| `windup_time` | 0.9 s | Con el ritmo de nivel 1 (×1.8) son **1.62 s** de aviso: sobra para reaccionar en el teléfono (~250 ms de reacción + latencia táctil). |
+| `windup_time` | 0.9 s | Con el ritmo de nivel 1 (×1.8 hoy, ×2.2 con la Fase A) son **1.62 s** (**1.98 s** con la Fase A) de aviso: sobra para reaccionar en el teléfono (~250 ms de reacción + latencia táctil). |
 | `active_time` / `recovery_time` | 0.15 s / 0.8 s | Recuperación larga: ventana de castigo. |
 | `trigger_range` / `hit_range` | 1.6 m / 1.7 m | Tiene que estar pegado para pegar. |
 | `hit_arc_degrees` | 70° | Un paso al costado lo esquiva sin dash. |
@@ -51,7 +51,7 @@ Valores iniciales de los `.tres`, a nivel 1.
 | `interruptible` | `true` | Cualquier golpe con empuje lo cancela (y de paso lo mata). |
 | `hands` | `RIGHT` | Un manotazo con una mano. |
 
-- `attack_interval`: 2.0 s (×2.5 a nivel 1 = 5 s entre ataques de un mismo Esbirro).
+- `attack_interval`: 2.0 s (×2.5 a nivel 1 = 5 s entre ataques de un mismo Esbirro; ×3.0 = 6 s con la Fase A).
 - `affliction_resistance` 0, `stun_duration_scale` 1, sin `resists_*`.
 - **Aviso en el piso:** el sector rojo anaranjado de siempre (`GroundTelegraph.show_sector`), sin cambios.
 
@@ -93,7 +93,7 @@ Valores iniciales de los `.tres`, a nivel 1.
   - `total_for(wave: int, is_boss_wave: bool) -> int`: 0 antes de `first_wave` y en oleadas de boss; si no, `mini(base_total + total_per_wave × (wave − first_wave), max_total)`.
   - `group_size(roll: float) -> int`: entre `group_size_min` y `group_size_max`, con `roll` en [0, 1).
   - `member_offset(index: int) -> Vector3`: punto `index` de un disco de Vogel (ángulo áureo) de radio `group_radius`; determinista, sin azar ni allocations.
-- **`data/enemies/spawn/fodder_spawn.tres`** (`EnemySpawnEntry`): `stats` = `fodder_stats.tres`, `max_per_wave` = 16 (igual a `max_alive`; AC1152 lo verifica), `weight` 0 y `first_wave` 1. **No se agrega a `WaveConfig.enemy_types`**: la mezcla ponderada no lo sortea; lo maneja solo la horda.
+- **`data/enemies/spawn/fodder_spawn.tres`** (`EnemySpawnEntry`): `stats` = `fodder_stats.tres`, `max_per_wave` = 20 (`max_alive` + 4 de margen para los cuerpos que todavía estén volando cuando entre `kill-feedback`; AC1152 verifica que cubre `max_alive`), `weight` 0 y `first_wave` 1. **No se agrega a `WaveConfig.enemy_types`**: la mezcla ponderada no lo sortea; lo maneja solo la horda.
 - **`data/enemies/configs/fodder_config.tres`** (`FodderConfig`: `swarm_distance`), en `EnemyStats.behavior_config`.
 
 ### 3.2 Flujo de una oleada normal
@@ -171,7 +171,7 @@ levels/arena/arena.tscn
 - **AC1149:** `member_offset(i)` queda dentro de `group_radius` para `i` < `group_size_max`, y dos miembros de un mismo grupo quedan a ≥ `member_separation`.
 - **AC1150:** en la arena (semilla fija), al empezar la oleada 1 hay `enemies_per_wave` enemigos de la mezcla (igual que sin horda) más `min(initial_groups × tamaño, total, max_alive)` Esbirros; el centro de cada grupo está a ≥ `min_spawn_distance` del jugador y todos quedan dentro del cuadrado de aparición.
 - **AC1151:** al matar Esbirros hasta dejar `refill_below`, aparece un grupo nuevo a los `refill_delay` (± 1 cuadro), y los Esbirros vivos nunca superan `max_alive`.
-- **AC1152:** en una oleada con `total_for` = 30, salen exactamente 30 Esbirros en total; el pool nunca se agota (sin `push_error`), y `fodder_spawn.tres` tiene `max_per_wave` = `horde_config.max_alive`.
+- **AC1152:** en una oleada con `total_for` = 30, salen exactamente 30 Esbirros en total; el pool nunca se agota (sin `push_error`), y `fodder_spawn.tres` tiene `max_per_wave` ≥ `horde_config.max_alive`.
 - **AC1153:** si el jugador mata a todos (mezcla y Esbirros) antes de que salga la tanda siguiente, no se ofrecen cartas: sale el próximo grupo. Las cartas aparecen solo cuando `get_horde_remaining()` = 0 y no queda nadie vivo.
 - **AC1154:** una oleada de boss no saca Esbirros, y la invocación de la Colmena sigue usando sus tipos.
 
@@ -207,3 +207,9 @@ levels/arena/arena.tscn
 - Los números son punto de partida. El balance fino (cuántos Esbirros por oleada, cuándo entran los tipos molestos) se hace junto con la Fase A, en `horde_config.tres` y `wave_config.tres`, sin tocar código.
 - El Esbirro no cuenta para la mezcla ponderada ni para el respaldo (`enemy_types[0]` sigue siendo el Bruto).
 - Idea para después (fuera de alcance): que la Colmena invoque Esbirros; que el Rage sume Esbirros por oleada en vez de solo fuerza.
+- **Fusión con la Fase A (2026-09-29):** integrada en `main`. `get_max_attackers(level, group)` y `max_attackers_for_group(group, level, rage)` reciben el nivel; AC1150 usa `enemies_for_wave(1)`.
+- **Números de la horda:** los valores de `horde_config.tres` son los de partida. Se recalibran cuando la Fase A publique el DPS medido (§6.1 de `early-power-curve.md`); hoy esa tabla está vacía. La vida del Esbirro no depende de ella (muere de un golpe).
+- **Estado de la verificación (2026-09-29):** tests nuevos en verde (`fodder_stats_test`, `horde_config_test`, `fodder_test`, `arena_horde_test`, caso AC1147 en `attack_coordinator_test`). Comparando la corrida de `test/resources`, `test/entities/enemy`, `test/systems`, `test/levels` y dos de `test/ui` contra `main` limpio (`1f7b458`): ningún test falla en la rama y no en `main`. Los 49 fallos restantes ya fallaban en `main` (p. ej. `enemy_attack_test`, `charger_test`, `affliction_data_test`); cinco tests que fallaban en `main` (AC19, AC24, AC53, AC415, AC456) pasan porque `grunt_spawn.tres` tenía `max_per_wave = 5` con 7 enemigos por oleada.
+- **Adaptación de tests (AC1135 de la Fase A, mismo criterio):** los tests de arena que cuentan enemigos o limpian una oleada (`ability_run`, `affliction_run`, `arena_waves`, `berserker_run`, `boss_challenge_run`, `character_class_run`, `samurai_run`, `sandbox_run`, `unique_upgrade_run`, `upgrade_ban_run` y `pause_menu`) llaman a `TestWorld.without_horde(arena)` (deja `WaveManager.horde_pool` vacío) y verifican lo mismo que antes sobre la mezcla común. La horda se prueba en `arena_horde_test`.
+- **Desviación del AC1144:** el barrido de prueba usa el primer golpe del Guerrero (arco 0.35× ≈ 42°) con un grupo apretado (±9°, como un grupo de la horda) y no el segundo golpe: el driver de combos no encadena el segundo paso sin agregar helpers. Verifica lo mismo (un golpe, `hit_count` 4, todos mueren).
+- **Pendiente antes de dar la spec por cerrada:** (1) medir el tiempo de cuadro en el teléfono con 16 Esbirros + oleada; (2) smoke test manual en la arena con las tres clases; (3) captura con `godot-capture` de la oleada 1; (4) al fusionar con la Fase A: firma de `get_max_attackers`/`max_attackers_for_group` con nivel, `enemies_for_wave` en AC1150, `grunt_spawn.max_per_wave = 7` (igual en las dos ramas), y actualizar `CLAUDE.md`/`ac-registry.md`.

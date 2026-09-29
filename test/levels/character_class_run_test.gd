@@ -22,6 +22,7 @@ func after_test() -> void:
 func _load_arena() -> void:
 	_arena = auto_free(ARENA_SCENE.instantiate())
 	add_child(_arena)
+	preload("res://test/helpers/test_world.gd").without_horde(_arena)
 	await get_tree().process_frame
 
 

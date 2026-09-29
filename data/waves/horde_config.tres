@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="HordeConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/horde_config.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/enemies/spawn/fodder_spawn.tres" id="2_entry"]
+
+[resource]
+script = ExtResource("1_script")
+entry = ExtResource("2_entry")
+first_wave = 1
+base_total = 10
+total_per_wave = 2
+max_total = 30
+group_size_min = 4
+group_size_max = 6
+initial_groups = 2
+max_alive = 16
+refill_below = 4
+refill_delay = 0.6
+group_radius = 1.6
+member_separation = 0.9

@@ -9,6 +9,8 @@ extends Resource
 @export var early_attackers: int
 ## Last enemy level that uses early_attackers instead of base_attackers.
 @export var early_attackers_max_level: int
+## Fodder attackers at once, whatever the Rage (their own pool of tokens).
+@export var fodder_max_attackers: int
 ## Rage levels per extra simultaneous attacker (docs/specs/enemy-pace.md).
 @export var rage_levels_per_extra_attacker: int
 ## Most simultaneous attackers, whatever the Rage.
@@ -69,3 +71,10 @@ func rest_for(level: int, rage_level: int) -> float:
 	if last_level > 1:
 		progress = clampf(float(level - 1) / float(last_level - 1), 0.0, 1.0)
 	return maxf(min_rest, lerpf(rest_first_level, rest_last_level, progress) - rest_per_rage * float(maxi(rage_level, 0)))
+
+
+## Pure: simultaneous attackers of a token `group` for enemies of `level` at `rage_level`.
+func max_attackers_for_group(group: EnemyStats.AttackTokenGroup, level: int, rage_level: int) -> int:
+	if group == EnemyStats.AttackTokenGroup.FODDER:
+		return fodder_max_attackers
+	return max_attackers_for(level, rage_level)

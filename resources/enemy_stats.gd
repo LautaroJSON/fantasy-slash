@@ -4,6 +4,8 @@ extends Resource
 ## enemy writes its level-scaled values into its own duplicate.
 
 enum Stat { DAMAGE, DEFENSE, MAX_HEALTH, ATTACK_INTERVAL, ATTACK_RANGE, MOVE_SPEED, KNOCKBACK_FRICTION }
+## Attack-turn pool the enemy asks (docs/specs/fodder-minion.md): FODDER has its own tokens.
+enum AttackTokenGroup { MAIN, FODDER }
 
 @export var damage: float
 @export var defense: float
@@ -48,6 +50,8 @@ enum Stat { DAMAGE, DEFENSE, MAX_HEALTH, ATTACK_INTERVAL, ATTACK_RANGE, MOVE_SPE
 ## Fraction of every Affliction build-up it resists, in [0, AfflictionConfig.max_resistance]
 ## (docs/specs/affliction.md). 0 = none.
 @export var affliction_resistance: float
+## Which pool of attack tokens the enemy asks (MAIN unless it is fodder).
+@export var token_group: AttackTokenGroup
 
 
 func get_stat(stat: Stat) -> float:

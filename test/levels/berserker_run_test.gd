@@ -132,6 +132,7 @@ func test_ac193_the_berserker_run_offers_only_spin_cards() -> void:
 	Session.character_class = BERSERKER
 	var arena: Node3D = auto_free(ARENA_SCENE.instantiate())
 	add_child(arena)
+	preload("res://test/helpers/test_world.gd").without_horde(arena)
 	await get_tree().process_frame
 	var picker: AbilityPicker = arena.get_node("UI/AbilityPicker") as AbilityPicker
 	assert_array(picker.get_offered()).is_equal([SPIN])

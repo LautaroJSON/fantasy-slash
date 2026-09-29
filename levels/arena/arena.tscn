@@ -35,6 +35,7 @@
 [ext_resource type="Resource" path="res://data/enemies/group_ai_config.tres" id="34_group_ai_config"]
 [ext_resource type="Resource" path="res://data/enemies/boss_challenges/verdugo.tres" id="35_verdugo"]
 [ext_resource type="Resource" path="res://data/enemies/enemy_pace_config.tres" id="36_pace"]
+[ext_resource type="Resource" path="res://data/enemies/spawn/fodder_spawn.tres" id="37_fodder_spawn"]
 [ext_resource type="Resource" path="res://data/afflictions/affliction_catalog.tres" id="90_affliction_catalog"]
 
 [sub_resource type="Environment" id="Environment_arena"]
@@ -184,6 +185,14 @@ registry = NodePath("../EnemyRegistry")
 coordinator = NodePath("../AttackCoordinator")
 spawn_entry = ExtResource("32_shieldbearer_spawn")
 
+[node name="EnemyPoolFodder" type="Node" parent="." node_paths=PackedStringArray("registry", "coordinator")]
+script = ExtResource("7_pool")
+enemy_scene = ExtResource("5_enemy")
+config = ExtResource("10_wave_config")
+registry = NodePath("../EnemyRegistry")
+coordinator = NodePath("../AttackCoordinator")
+spawn_entry = ExtResource("37_fodder_spawn")
+
 [node name="BossPoolTitan" type="Node" parent="." unique_id=84886701 node_paths=PackedStringArray("registry", "coordinator")]
 script = ExtResource("7_pool")
 enemy_scene = ExtResource("5_enemy")
@@ -246,7 +255,7 @@ ban_picker = NodePath("../UpgradeBanPicker")
 game_over = NodePath("../GameOverScreen")
 wave_manager = NodePath("../../WaveManager")
 
-[node name="WaveManager" type="Node" parent="." unique_id=414700449 node_paths=PackedStringArray("pools", "boss_pools", "registry", "coordinator", "player", "run_state", "picker", "ability_picker", "ban_picker")]
+[node name="WaveManager" type="Node" parent="." unique_id=414700449 node_paths=PackedStringArray("pools", "horde_pool", "boss_pools", "registry", "coordinator", "player", "run_state", "picker", "ability_picker", "ban_picker")]
 script = ExtResource("9_wave_manager")
 config = ExtResource("10_wave_config")
 catalog = ExtResource("11_catalog")
@@ -255,6 +264,7 @@ ban_rules = ExtResource("21_ban_rules")
 pace = ExtResource("36_pace")
 rage = ExtResource("27_rage_config")
 pools = [NodePath("../EnemyPool"), NodePath("../EnemyPoolCharger"), NodePath("../EnemyPoolHarasser"), NodePath("../EnemyPoolLeaper"), NodePath("../EnemyPoolShieldbearer")]
+horde_pool = NodePath("../EnemyPoolFodder")
 boss_pools = [NodePath("../BossPoolTitan"), NodePath("../BossPoolColmena"), NodePath("../BossPoolVerdugo")]
 registry = NodePath("../EnemyRegistry")
 coordinator = NodePath("../AttackCoordinator")

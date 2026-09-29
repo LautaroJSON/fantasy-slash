@@ -20,3 +20,9 @@ static func make_box(size: Vector3, position: Vector3) -> StaticBody3D:
 	collision.shape = shape
 	body.add_child(collision)
 	return body
+
+
+## The arena's waves without the horde of fodder (docs/specs/fodder-minion.md):
+## the run tests that count enemies or clear a wave verify the regular mix.
+static func without_horde(arena: Node) -> void:
+	(arena.get_node("WaveManager") as WaveManager).horde_pool = null

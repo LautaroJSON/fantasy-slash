@@ -31,6 +31,8 @@ extends Resource
 ## Enemy types of the regular waves and their mix; entry 0 (the Bruto) is the
 ## fallback when no other type qualifies (docs/specs/enemy-types.md).
 @export var enemy_types: Array[EnemySpawnEntry]
+## Horde of fodder on top of the regular mix; none when empty (docs/specs/fodder-minion.md).
+@export var horde: HordeConfig
 
 
 ## Pure: whether `wave` (1-based) is a boss challenge.
