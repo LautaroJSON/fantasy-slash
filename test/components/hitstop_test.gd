@@ -141,3 +141,84 @@ func test_ac623_a_boss_only_shakes() -> void:
 	assert_bool(grunt._advance_hitlag(ENEMY_STEP)).is_true()
 	assert_bool(boss.is_in_hitlag()).is_true()
 	assert_float(absf(_body_x(boss) - boss_rest_x)).is_greater(0.0)
+
+
+## kill-feedback (docs/specs/kill-feedback.md, AC1160–AC1161). The driver may
+## already have advanced the hit lag by one step, so the pause is read inside
+## a one-step window.
+const MULTI_KILL: MultiKillFeelConfig = preload("res://data/player/multi_kill_feel_config.tres")
+
+
+## `total` enemies in a tight group ahead of the player; the first `kills` die to one hit.
+func _spawn_group(total: int, kills: int) -> void:
+	for i: int in total:
+		var angle: float = deg_to_rad(lerpf(-10.0, 10.0, float(i) / float(maxi(total - 1, 1))))
+		var enemy: Enemy = _spawn_enemy(Vector3(0.0, 0.0, -1.0).rotated(Vector3.UP, angle) * 1.2)
+		if i < kills:
+			enemy.health.setup(1.0, 0.0)
+
+
+func _assert_pause(expected: float) -> void:
+	var step_time: float = ComboDriver.STEP
+	assert_float(_hitstop._left).is_between(expected - step_time - TOLERANCE, expected + TOLERANCE)
+
+
+func test_ac1160_a_strike_that_kills_several_pauses_and_shakes_more() -> void:
+	var base: float = COMBO.steps[0].hitlag
+	_spawn_group(1, 1)
+	_strike()
+	_assert_pause(base)
+	assert_float(Engine.time_scale).is_equal(1.0)
+
+
+func test_ac1160_three_kills_add_the_third_bonus() -> void:
+	_spawn_group(3, 3)
+	_strike()
+	_assert_pause(COMBO.steps[0].hitlag + MULTI_KILL.hitlag_bonus_for(3))
+	var camera: ThirdPersonCamera = _player.get_node("CameraRig") as ThirdPersonCamera
+	assert_float(camera.get_shake_strength()).is_equal_approx(COMBO.steps[0].shake_strength + MULTI_KILL.shake_bonus_for(3), TOLERANCE)
+
+
+func test_ac1160_six_kills_use_the_last_bonus() -> void:
+	_spawn_group(6, 6)
+	_strike()
+	_assert_pause(COMBO.steps[0].hitlag + MULTI_KILL.hitlag_bonus_for(6))
+	assert_float(MULTI_KILL.hitlag_bonus_for(6)).is_equal_approx(0.05, TOLERANCE)
+
+
+func test_ac1160_hitting_several_without_killing_adds_nothing() -> void:
+	_spawn_group(3, 0)
+	_strike()
+	_assert_pause(COMBO.steps[0].hitlag)
+	var camera: ThirdPersonCamera = _player.get_node("CameraRig") as ThirdPersonCamera
+	assert_float(camera.get_shake_strength()).is_equal_approx(COMBO.steps[0].shake_strength, TOLERANCE)
+
+
+func test_ac1161_an_ability_strike_with_two_dead_adds_the_bonus_without_touching_the_feel() -> void:
+	var feel := StrikeFeel.new()
+	feel.hitlag = 0.1
+	feel.shake_strength = 0.2
+	var dead: Array[Enemy] = []
+	for i: int in 2:
+		var enemy: Enemy = _spawn_enemy(Vector3(float(i), 0.0, -3.0))
+		enemy.health.receive_hit(100000.0)
+		dead.append(enemy)
+	var ability: AbilityComponent = _player.get_node("BasicAbility") as AbilityComponent
+	ability.struck.emit(feel, dead)
+	assert_float(_hitstop._left).is_equal_approx(0.1 + MULTI_KILL.hitlag_bonus_for(2), TOLERANCE)
+	assert_float(feel.hitlag).is_equal(0.1)
+	assert_float(feel.shake_strength).is_equal(0.2)
+
+
+func test_ac1161_a_strike_that_does_not_pause_gets_no_bonus() -> void:
+	var feel := StrikeFeel.new()
+	feel.hitlag = 0.0
+	feel.shake_strength = 0.0
+	var dead: Array[Enemy] = []
+	for i: int in 2:
+		var enemy: Enemy = _spawn_enemy(Vector3(float(i), 0.0, -3.0))
+		enemy.health.receive_hit(100000.0)
+		dead.append(enemy)
+	var ability: AbilityComponent = _player.get_node("BasicAbility") as AbilityComponent
+	ability.struck.emit(feel, dead)
+	assert_bool(_hitstop.is_active()).is_false()
