@@ -77,6 +77,7 @@ func test_ac251_the_hud_slot_shows_the_charge_while_held() -> void:
 	Session.character_class = SAMURAI
 	var arena: Node3D = auto_free(ARENA_SCENE.instantiate())
 	add_child(arena)
+	preload("res://test/helpers/test_world.gd").without_horde(arena)
 	await get_tree().process_frame
 	(arena.get_node("UI/AbilityPicker") as AbilityPicker).choose(SHEATHE)
 	get_tree().paused = false
@@ -99,6 +100,7 @@ func test_ac255_a_samurai_run_picks_sheathe_and_slashes_with_the_ability_key() -
 	Session.character_class = SAMURAI
 	var arena: Node3D = auto_free(ARENA_SCENE.instantiate())
 	add_child(arena)
+	preload("res://test/helpers/test_world.gd").without_horde(arena)
 	await get_tree().process_frame
 	var picker: AbilityPicker = arena.get_node("UI/AbilityPicker") as AbilityPicker
 	assert_array(picker.get_offered()).is_equal([SHEATHE])

@@ -1,11 +1,10 @@
 [gd_resource type="Resource" script_class="EnemySpawnEntry" format=3]
 
 [ext_resource type="Script" path="res://resources/enemy_spawn_entry.gd" id="1_script"]
-[ext_resource type="Resource" path="res://data/enemies/grunt_stats.tres" id="2_stats"]
+[ext_resource type="Resource" path="res://data/enemies/fodder_stats.tres" id="2_stats"]
 
 [resource]
 script = ExtResource("1_script")
 stats = ExtResource("2_stats")
-weight = 4.0
 first_wave = 1
-max_per_wave = 7
+max_per_wave = 20

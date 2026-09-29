@@ -172,3 +172,25 @@ func test_ac562_an_unused_token_does_not_rest() -> void:
 	a.end_attack()
 	assert_int(_coordinator.get_resting_count()).is_equal(0)
 	assert_bool(_coordinator.request_token(c)).is_true()
+
+
+## fodder-minion (AC1147): the fodder have their own tokens.
+func test_ac1147_fodder_tokens_are_a_separate_pool_of_two() -> void:
+	var fodder_stats: EnemyStats = load("res://data/enemies/fodder_stats.tres") as EnemyStats
+	var a: Enemy = _enemy(Vector3(10.0, 0.0, 10.0), fodder_stats)
+	var b: Enemy = _enemy(Vector3(12.0, 0.0, 10.0), fodder_stats)
+	var c: Enemy = _enemy(Vector3(14.0, 0.0, 10.0), fodder_stats)
+	assert_bool(_coordinator.request_token(a)).is_true()
+	_coordinator.advance(CONFIG.token_gap)
+	assert_bool(_coordinator.request_token(b)).is_true()
+	_coordinator.advance(CONFIG.token_gap)
+	assert_bool(_coordinator.request_token(c)).is_false()
+	assert_int(_coordinator.get_holder_count(EnemyStats.AttackTokenGroup.FODDER)).is_equal(2)
+	assert_int(_coordinator.get_holder_count(EnemyStats.AttackTokenGroup.MAIN)).is_equal(0)
+	# A Bruto still gets its own token, right away (the gap is per group too).
+	var bruto: Enemy = _enemy()
+	assert_bool(_coordinator.request_token(bruto)).is_true()
+	assert_int(_coordinator.get_holder_count(EnemyStats.AttackTokenGroup.MAIN)).is_equal(1)
+	_coordinator.release_token(a)
+	_coordinator.advance(CONFIG.token_gap)
+	assert_bool(_coordinator.request_token(c)).is_true()

@@ -25,6 +25,7 @@ func before_test() -> void:
 	Session.mode = GameSession.Mode.SANDBOX
 	_arena = auto_free(ARENA_SCENE.instantiate())
 	add_child(_arena)
+	preload("res://test/helpers/test_world.gd").without_horde(_arena)
 	_registry = _arena.get_node("EnemyRegistry") as EnemyRegistry
 	_player = _arena.get_node("Player") as Player
 	_run_state = _arena.get_node("RunState") as RunState

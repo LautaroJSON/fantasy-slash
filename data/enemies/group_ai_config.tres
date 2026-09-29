@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_script")
 base_attackers = 2
+fodder_max_attackers = 2
 rage_levels_per_extra_attacker = 3
 max_attackers_cap = 4
 token_gap = 0.35

@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="FodderConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/fodder_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+swarm_distance = 2.2

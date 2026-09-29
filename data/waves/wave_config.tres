@@ -11,6 +11,7 @@
 [ext_resource type="Resource" path="res://data/enemies/spawn/leaper_spawn.tres" id="9_leaper"]
 [ext_resource type="Resource" path="res://data/enemies/spawn/shieldbearer_spawn.tres" id="10_shieldbearer"]
 [ext_resource type="Resource" path="res://data/enemies/boss_challenges/verdugo.tres" id="11_verdugo"]
+[ext_resource type="Resource" path="res://data/waves/horde_config.tres" id="12_horde"]
 
 [resource]
 script = ExtResource("1_script")
@@ -26,3 +27,4 @@ boss_wave_interval = 12
 boss_challenges = Array[ExtResource("2_challenge_script")]([ExtResource("3_titan"), ExtResource("4_colmena"), ExtResource("11_verdugo")])
 min_spawn_separation = 3.0
 enemy_types = Array[ExtResource("5_spawn_script")]([ExtResource("6_grunt"), ExtResource("7_charger"), ExtResource("8_harasser"), ExtResource("9_leaper"), ExtResource("10_shieldbearer")])
+horde = ExtResource("12_horde")

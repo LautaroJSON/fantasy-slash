@@ -21,6 +21,8 @@ signal boss_wave_started(bosses: Array[Enemy])
 ## One pool per regular enemy type (matched through EnemyPool.spawn_entry
 ## against WaveConfig.enemy_types; docs/specs/enemy-types.md).
 @export var pools: Array[EnemyPool]
+## Pool of the horde's fodder (docs/specs/fodder-minion.md); they do not go through `pools`.
+@export var horde_pool: EnemyPool
 ## One pool per boss challenge (matched through EnemyPool.challenge).
 @export var boss_pools: Array[EnemyPool]
 @export var registry: EnemyRegistry
@@ -43,6 +45,11 @@ var _spawned_enemies: Array[Enemy] = []
 var _type_counts: Array[int] = []
 ## Pool of each WaveConfig.enemy_types entry, same order (filled in _ready).
 var _type_pools: Array[EnemyPool] = []
+## Fodder still to come out this wave, and the ones alive now.
+var _horde_remaining: int = 0
+var _horde_alive: int = 0
+## Seconds until the next group comes out (< 0 = none scheduled).
+var _refill_left: float = -1.0
 
 
 func _ready() -> void:
@@ -73,6 +80,7 @@ func start_wave() -> void:
 		return
 	run_state.set_challenge("")
 	_spawn_mix(config.enemies_per_wave)
+	_start_horde()
 
 
 ## Seeds the draw of the wave mix (tests).
@@ -83,6 +91,8 @@ func set_seed(value: int) -> void:
 ## Spawns `challenge` as the current wave (public so tests can pick the challenge).
 func start_boss_wave(challenge: BossChallengeData) -> void:
 	run_state.set_challenge(challenge.title)
+	_horde_remaining = 0
+	_refill_left = -1.0
 	_spawn_from(_pool_for(challenge), challenge.count)
 	for boss: Enemy in _spawned_enemies:
 		if not boss.summon_requested.is_connected(_on_summon_requested):
@@ -210,8 +220,12 @@ func _on_ability_chosen(ability: AbilityData) -> void:
 	start_wave()
 
 
-func _on_enemy_killed(_enemy: Enemy) -> void:
+func _on_enemy_killed(enemy: Enemy) -> void:
 	run_state.add_kill()
+	if _is_horde_member(enemy):
+		_horde_alive -= 1
+		if _horde_remaining > 0 and _horde_alive <= config.horde.refill_below and _refill_left < 0.0:
+			_refill_left = config.horde.refill_delay
 
 
 ## Sandbox skips the cards (upgrades are picked from the pause menu), and so
@@ -219,6 +233,10 @@ func _on_enemy_killed(_enemy: Enemy) -> void:
 ## deferred so the last enemy finishes its own death before the pool reuses it.
 func _on_all_dead() -> void:
 	if player.health.is_dead():
+		return
+	if _horde_remaining > 0:
+		_refill_left = -1.0
+		spawn_horde_group.call_deferred()
 		return
 	if Session.is_sandbox():
 		_advance_wave.call_deferred()
@@ -294,3 +312,67 @@ func _pick_summon_position(center: Vector3, summon: SummonData) -> Vector3:
 		if from_player.length() >= summon.min_player_distance and _is_apart_from_spawned(candidate):
 			return candidate
 	return candidate
+
+
+func _physics_process(delta: float) -> void:
+	_advance_horde_refill(delta)
+
+
+## Fodder still to come out this wave.
+func get_horde_remaining() -> int:
+	return _horde_remaining
+
+
+## Fodder alive now.
+func get_horde_alive() -> int:
+	return _horde_alive
+
+
+## Sets the fodder total of the wave that starts and brings out its first groups.
+func _start_horde() -> void:
+	_horde_remaining = 0
+	_horde_alive = 0
+	_refill_left = -1.0
+	if config.horde == null or horde_pool == null:
+		return
+	_horde_remaining = config.horde.total_for(run_state.wave, config.is_boss_wave(run_state.wave))
+	for i: int in config.horde.initial_groups:
+		spawn_horde_group()
+
+
+## Brings out one group of fodder around a point away from the player and from
+## this wave's spawns, cut to what is left and to max_alive. Returns how many
+## came out.
+func spawn_horde_group() -> int:
+	if config.horde == null or horde_pool == null or _horde_remaining <= 0:
+		return 0
+	var horde: HordeConfig = config.horde
+	var count: int = mini(horde.group_size(_rng.randf()), mini(_horde_remaining, horde.max_alive - _horde_alive))
+	if count <= 0:
+		return 0
+	var center: Vector3 = _pick_spawn_position()
+	var extent: float = config.spawn_half_extent
+	var spawned: int = 0
+	for i: int in count:
+		var fodder: Enemy = horde_pool.acquire()
+		if fodder == null:
+			break
+		var at: Vector3 = center + horde.member_offset(i)
+		_place(fodder, Vector3(clampf(at.x, -extent, extent), center.y, clampf(at.z, -extent, extent)))
+		spawned += 1
+	_horde_remaining -= spawned
+	_horde_alive += spawned
+	return spawned
+
+
+func _advance_horde_refill(delta: float) -> void:
+	if _refill_left < 0.0:
+		return
+	_refill_left -= delta
+	if _refill_left <= 0.0:
+		_refill_left = -1.0
+		spawn_horde_group()
+
+
+func _is_horde_member(enemy: Enemy) -> bool:
+	return config.horde != null and enemy.stats == config.horde.entry.stats

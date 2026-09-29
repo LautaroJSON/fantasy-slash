@@ -26,9 +26,12 @@ var _holder_idle: Array[float] = []
 var _queue: Array[Enemy] = []
 ## Physics frame of each queued enemy's last request.
 var _queue_frame: Array[int] = []
-var _gap_left: float = 0.0
+## Seconds until the next grant, per token group (MAIN, FODDER).
+var _gap_left: Array[float] = [0.0, 0.0]
 ## Seconds left of each resting token (they count as taken).
 var _resting: Array[float] = []
+## Token group of each resting token.
+var _resting_group: Array[int] = []
 ## Enemy holding each place, or null.
 var _slot_owner: Array[Enemy] = []
 
@@ -42,8 +45,8 @@ func _physics_process(delta: float) -> void:
 	advance(delta)
 
 
-func get_max_attackers() -> int:
-	return config.max_attackers_for(_rage_level())
+func get_max_attackers(group: EnemyStats.AttackTokenGroup = EnemyStats.AttackTokenGroup.MAIN) -> int:
+	return config.max_attackers_for_group(group, _rage_level())
 
 
 func _rage_level() -> int:
@@ -62,22 +65,41 @@ func request_token(enemy: Enemy) -> bool:
 		index = _queue.size() - 1
 	else:
 		_queue_frame[index] = frame
-	if index != 0 or _gap_left > 0.0 or _holders.size() + _resting.size() >= get_max_attackers():
+	var group: int = enemy.stats.token_group
+	if _is_queued_behind_group(index, group) or _gap_left[group] > 0.0 or _taken_count(group) >= get_max_attackers(group as EnemyStats.AttackTokenGroup):
 		return false
-	_queue.remove_at(0)
-	_queue_frame.remove_at(0)
+	_queue.remove_at(index)
+	_queue_frame.remove_at(index)
 	_holders.append(enemy)
 	_holder_idle.append(0.0)
-	_gap_left = config.token_gap
+	_gap_left[group] = config.token_gap
 	return true
+
+
+## True when an enemy of `group` is queued before position `index`: each group
+## has its own queue, so fodder never keeps a Bruto waiting.
+func _is_queued_behind_group(index: int, group: int) -> bool:
+	for i: int in index:
+		if _queue[i].stats.token_group == group:
+			return true
+	return false
+
+
+## Tokens of `group` held or resting.
+func _taken_count(group: int) -> int:
+	return get_holder_count(group as EnemyStats.AttackTokenGroup) + get_resting_count(group as EnemyStats.AttackTokenGroup)
 
 
 func has_token(enemy: Enemy) -> bool:
 	return _holders.has(enemy)
 
 
-func get_holder_count() -> int:
-	return _holders.size()
+func get_holder_count(group: EnemyStats.AttackTokenGroup = EnemyStats.AttackTokenGroup.MAIN) -> int:
+	var count: int = 0
+	for holder: Enemy in _holders:
+		if holder.stats.token_group == group:
+			count += 1
+	return count
 
 
 ## Position of `enemy` in the queue (−1 when not queued).
@@ -100,12 +122,18 @@ func release_token(enemy: Enemy) -> void:
 		return
 	if _holder_idle[index] < 0.0:
 		_resting.append(config.rest_for(enemy.level, _rage_level()))
+		_resting_group.append(enemy.stats.token_group)
 	_holders.remove_at(index)
 	_holder_idle.remove_at(index)
 
 
-func get_resting_count() -> int:
-	return _resting.size()
+## Resting tokens of `group`.
+func get_resting_count(group: EnemyStats.AttackTokenGroup = EnemyStats.AttackTokenGroup.MAIN) -> int:
+	var count: int = 0
+	for resting_group: int in _resting_group:
+		if resting_group == group:
+			count += 1
+	return count
 
 
 func withdraw(enemy: Enemy) -> void:
@@ -123,11 +151,13 @@ func forget(enemy: Enemy) -> void:
 
 
 func advance(delta: float) -> void:
-	_gap_left = maxf(_gap_left - delta, 0.0)
+	for group: int in _gap_left.size():
+		_gap_left[group] = maxf(_gap_left[group] - delta, 0.0)
 	for i: int in range(_resting.size() - 1, -1, -1):
 		_resting[i] -= delta
 		if _resting[i] <= 0.0:
 			_resting.remove_at(i)
+			_resting_group.remove_at(i)
 	for i: int in range(_holders.size() - 1, -1, -1):
 		if _holder_idle[i] < 0.0:
 			continue
