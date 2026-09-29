@@ -13,6 +13,10 @@ extends Resource
 @export var enemy_time_scale: float
 ## Real seconds the slow time lasts.
 @export var slow_duration: float
+## Degrees the view widens when it happens (negative narrows it) and seconds it
+## takes to ease back; a camera kick, like the one of the dash start.
+@export var fov_kick_degrees: float
+@export var fov_kick_return: float
 ## Text floated over the player.
 @export var popup_text: String
 ## Height of that text above the player's feet, in meters.

@@ -2,10 +2,10 @@
 
 - **Estado:** Implementada (2026-09-29), revisión 2, en la rama `feature/perfect-dodge`. Los tests están escritos pero no se corrieron en esta sesión: la verificación es manual (pedido del responsable). Fase B, 3 de 3: `fodder-minion` (implementada) → `kill-feedback` (implementada) → **`perfect-dodge`**.
 - **Constitución:** `docs/constitution.md` **v5.0.0** → **MINOR 5.1.0** aplicada con esta spec (Principio VII, viñeta "Tiempo lento"; ver `constitution-history.md`). Sin cambios en el anexo de colores.
-- **Criterios de aceptación:** reserva **AC1171–AC1182** (los AC1183–AC1190 del rango original quedan libres).
+- **Criterios de aceptación:** reserva **AC1171–AC1183** (los AC1184–AC1190 del rango original quedan libres).
 - **Pilar (Principio I):** Combate.
   - Hoy esquivar solo evita el daño: dashear en el momento justo y dashear "por las dudas" terminan igual, y los jugadores dicen que esquivar no se siente recompensante.
-  - Con esta spec, un dash que atraviesa un golpe enemigo responde al instante: los enemigos se ralentizan una fracción de segundo mientras el jugador sigue a velocidad normal, y un texto lo confirma. Esquivar pasa a abrir un respiro para contraatacar, no solo a defender.
+  - Con esta spec, un dash que atraviesa un golpe enemigo responde al instante: los enemigos se ralentizan un segundo mientras el jugador sigue a velocidad normal, y un texto lo confirma. Esquivar pasa a abrir un respiro para contraatacar, no solo a defender.
 - **Tipo:** feature (mecánica de combate común a las tres clases).
 - **Dependencias:** `dash-iframes.md` (la invulnerabilidad dura exactamente el dash), `enemy-attack-telegraph.md` y `enemy-types.md` (todos los golpes enemigos pasan por `HealthComponent.receive_hit_from`), `parry-riposte-rework.md` (identidad de la Parry y `Enemy.freeze_time`, Principio VII 4.23.0), `readable-damage-numbers.md` (`DamageNumberPool.spawn_text`), `fodder-minion.md` (los golpes de los Esbirros cuentan).
 
@@ -14,9 +14,9 @@
 | Pregunta | Decisión |
 |---|---|
 | Ventana | **0.2 s** desde el inicio del dash, recortada a su duración: todo golpe que el dash atraviesa cuenta. |
-| Tiempo lento | **0.3 s a ×0.25, bosses incluidos**. Es **solo de los enemigos**: no es una cámara lenta global; el jugador, la cámara, los VFX y la UI siguen a velocidad normal. |
-| Recompensas | **Solo** el tiempo lento de los enemigos y el texto flotante "¡Esquive perfecto!". |
-| Fuera de esta spec | Viñeteado blanco, golpe de FOV e imagen residual; recarga del dash; Instinto (crítico garantizado, su buff, su ícono y el cambio en `StatsComponent`). Pueden volver en otra spec. |
+| Tiempo lento | **1 s a ×0.25, bosses incluidos** (revisión posterior: era 0.3 s). Es **solo de los enemigos**: no es una cámara lenta global; el jugador, la cámara, los VFX y la UI siguen a velocidad normal. |
+| Recompensas | El tiempo lento de los enemigos, un golpe de FOV de la cámara (+10°, se recupera en 0.6 s; agregado después) y el texto flotante "¡Esquive perfecto!". |
+| Fuera de esta spec | Viñeteado blanco e imagen residual; recarga del dash; Instinto (crítico garantizado, su buff, su ícono y el cambio en `StatsComponent`). Pueden volver en otra spec. |
 | Golpes de Esbirros | **Cuentan.** |
 | Esquivar "hacia afuera" | **No** por ahora. |
 | Agarres de bosses | **No** en esta spec. |
@@ -26,8 +26,9 @@
 
 Si un golpe enemigo alcanza al jugador **mientras dashea** y dentro de los primeros `perfect_window` segundos del dash (sin daño, como hoy), se dispara un **esquive perfecto**:
 
-1. **Tiempo lento:** todos los enemigos activos se mueven y actúan a `enemy_time_scale` (×0.25) durante `slow_duration` (0.3 s de tiempo real). El jugador, la cámara, los VFX y la UI siguen a velocidad normal.
+1. **Tiempo lento:** todos los enemigos activos se mueven y actúan a `enemy_time_scale` (×0.25) durante `slow_duration` (1 s de tiempo real). El jugador, la cámara, los VFX y la UI siguen a velocidad normal.
 2. **Texto:** "¡Esquive perfecto!" flota sobre la cabeza del jugador.
+3. **Golpe de FOV:** la cámara se ensancha `fov_kick_degrees` de golpe y vuelve en `fov_kick_return` (`ThirdPersonCamera.kick_fov`).
 
 Un solo esquive perfecto por dash y, como mucho, uno cada `min_interval` (0.5 s).
 
@@ -55,9 +56,10 @@ Un solo esquive perfecto por dash y, como mucho, uno cada `min_interval` (0.5 s)
 - `PerfectDodgeComponent` lo aplica a todos los enemigos de `registry.get_active()` (lista viva, sin copiar), bosses incluidos. Los que aparecen durante el tiempo lento no se ralentizan.
 - **`Engine.time_scale` no se toca.**
 
-### 2.3 Texto
+### 2.3 Texto y golpe de FOV
 
 - `DamageNumberPool` escucha `player.perfect_dodge.perfect_dodged` y llama a `spawn_text(config.popup_text, punto sobre la cabeza del jugador)`; el punto es la posición del jugador más `popup_height` de alto. Sin tinte propio (blanco, como los demás textos). El pool ya tiene `player` como export.
+- **Golpe de FOV:** `PerfectDodgeComponent` llama a `camera.kick_fov(fov_kick_degrees, fov_kick_return)` (export `camera`, el `CameraRig` del jugador). El dash ya da un golpe de +6° en 0.25 s al empezar (`dash_fov_kick_config.tres`); un `kick_fov` nuevo reinicia el anterior, así que el del esquive (+10°, 0.6 s) continúa el gesto sin saltos. Un valor negativo cierra la vista en lugar de abrirla.
 
 ## 3. Estructura de nodos
 
@@ -79,7 +81,8 @@ entities/player/player.tscn
 | `perfect_window` | 0.2 s | Desde el inicio del dash; recortada a la duración del dash. |
 | `min_interval` | 0.5 s | Entre dos esquives perfectos. |
 | `enemy_time_scale` | 0.25 | Velocidad de los enemigos durante el tiempo lento. |
-| `slow_duration` | 0.3 s | Tiempo real. |
+| `slow_duration` | 1.0 s | Tiempo real. |
+| `fov_kick_degrees` / `fov_kick_return` | 10° / 0.6 s | Golpe de FOV de la cámara: se ensancha de golpe y vuelve (negativo la cierra). El dash ya da +6° en 0.25 s; este continúa el gesto. |
 | `popup_text` | "¡Esquive perfecto!" | Texto flotante. |
 | `popup_height` | 2.4 m | Altura del texto sobre los pies del jugador. |
 
@@ -112,7 +115,7 @@ _physics_process(delta): advance(delta)            # _since_last += delta
 
 Todo en miembros `bool`/`float`: sin allocations por cuadro (Principio V). Con la horda (hasta 16 Esbirros más la mezcla), el recorrido de `registry.get_active()` son ~25 llamadas por esquive perfecto, una vez cada 0.5 s como mínimo.
 
-## 7. Criterios de aceptación (AC1171–AC1182)
+## 7. Criterios de aceptación (AC1171–AC1183)
 
 **Detección** (`test/components/perfect_dodge_test.gd`):
 - **AC1171:** `receive_hit_from` con `is_invulnerable` emite `hit_evaded(raw, attacker)` una vez y devuelve 0; sin invulnerabilidad no la emite; muerto, tampoco. `receive_hit`, `receive_true_damage` y un tick de sangrado nunca la emiten.
@@ -124,7 +127,7 @@ Todo en miembros `bool`/`float`: sin allocations por cuadro (Principio V). Con l
 
 **Tiempo lento** (`test/entities/enemy/time_dilation_test.gd`):
 - **AC1177:** tras un esquive perfecto, todos los enemigos activos (un boss incluido) tienen `get_time_dilation()` = `enemy_time_scale` durante `slow_duration` (± 1 cuadro) y 1 después. `Engine.time_scale` queda en 1 y el dash del jugador recorre su `DASH_DISTANCE` en su duración normal.
-- **AC1178:** un Bruto en preparación avanza su preparación a ×0.25 mientras dura el tiempo lento: una preparación que terminaba en 0.2 s termina 0.225 s más tarde (0.3 × 0.75), con tolerancia de un cuadro. Su velocidad al caminar y su empuje también se reducen a ×0.25.
+- **AC1178:** un Bruto en preparación avanza su preparación a ×0.25 mientras dura el tiempo lento: una preparación de 0.2 s que empieza con el tiempo lento activo dura 0.8 s (0.2 s a ×0.25), con tolerancia de un cuadro. Su velocidad al caminar y su empuje también se reducen a ×0.25.
 - **AC1179:** con Escarcha (lentitud) el factor se multiplica; con `freeze_time` activo el enemigo sigue congelado y el tiempo lento se descuenta igual; `activate()` y `deactivate()` limpian el tiempo lento; un enemigo que aparece durante el tiempo lento no queda ralentizado.
 
 **Texto** (`test/effects/damage_number_pool_test.gd`, caso nuevo):
@@ -132,11 +135,12 @@ Todo en miembros `bool`/`float`: sin allocations por cuadro (Principio V). Con l
 
 **Integración y datos** (`test/levels/perfect_dodge_arena_test.gd`):
 - **AC1181:** en la arena, con cada clase, un dash que empieza 0.05 s antes de que el golpe de un Bruto entre en su fase activa (jugador dentro del arco) dispara el esquive perfecto; un dash que empieza 0.5 s antes, alejándose, no lo dispara y tampoco recibe daño.
+- **AC1183:** al dispararse un esquive perfecto, la cámara recibe `kick_fov(fov_kick_degrees, fov_kick_return)`: su FOV queda al menos `fov_kick_degrees` sobre el base y el config lo tiene con `fov_kick_return` > 0.
 - **AC1182:** `perfect_dodge_config.tres` existe con `perfect_window > 0`, `0 < enemy_time_scale < 1` y `slow_duration > 0`, y el nodo `PerfectDodge` de `player.tscn` lo tiene asignado.
 
 ## 8. Plan de implementación
 
-1. Reservar AC1171–AC1182 al empezar (ya reservados en `docs/ac-registry.md`; ajustar el texto al rango reducido). Releer `player.tscn`, `health_component.gd`, `dash_component.gd`, `enemy.gd` y `damage_number_pool.gd` (otras sesiones los tocan).
+1. Reservar AC1171–AC1183 al empezar (ya reservados en `docs/ac-registry.md`; ajustar el texto al rango reducido). Releer `player.tscn`, `health_component.gd`, `dash_component.gd`, `enemy.gd` y `damage_number_pool.gd` (otras sesiones los tocan).
 2. `HealthComponent.hit_evaded` y `DashComponent.get_elapsed()`. Test AC1171.
 3. `PerfectDodgeConfig` y su `.tres`; `PerfectDodgeComponent` con detección y señal (sin recompensas). Tests AC1172–AC1176 y AC1182.
 4. `Enemy.dilate_time` y su aplicación desde el componente. Tests AC1177–AC1179.
@@ -161,7 +165,7 @@ Todo en miembros `bool`/`float`: sin allocations por cuadro (Principio V). Con l
 ## 10. Enmienda de la constitución (MINOR → 5.1.0)
 
 - **Principio VII, nueva viñeta después de "Tiempo congelado":**
-  > **Tiempo lento** (desde 5.1.0): un esquive perfecto (un golpe enemigo que alcanza al jugador durante los primeros instantes de su dash, definido en datos; ver `perfect-dodge.md`) puede ralentizar a todos los enemigos activos, bosses incluidos, a una fracción de su velocidad durante una fracción de segundo, sin tocar `Engine.time_scale`: el jugador, la cámara, los VFX y la UI siguen a velocidad normal. Sigue prohibido modificar `Engine.time_scale`.
+  > **Tiempo lento** (desde 5.1.0): un esquive perfecto (un golpe enemigo que alcanza al jugador durante los primeros instantes de su dash, definido en datos; ver `perfect-dodge.md`) puede ralentizar a todos los enemigos activos, bosses incluidos, a una fracción de su velocidad durante un breve lapso definido en datos, sin tocar `Engine.time_scale`: el jugador, la cámara, los VFX y la UI siguen a velocidad normal. Sigue prohibido modificar `Engine.time_scale`.
 - Se agrega su entrada en `constitution-history.md` y se actualiza la versión al pie de `constitution.md`. **MINOR** porque suma una regla nueva (una segunda forma permitida de alterar el tiempo de los enemigos) sin quitar ni redefinir ninguna. Sin cambios en el anexo de colores: no hay colores nuevos.
 
 ## 11. Notas

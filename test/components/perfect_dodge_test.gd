@@ -141,3 +141,13 @@ func test_ac1182_the_config_is_valid_and_assigned_to_the_player() -> void:
 	assert_float(CONFIG.slow_duration).is_greater(0.0)
 	assert_str(CONFIG.popup_text).is_not_empty()
 	assert_object(_player.perfect_dodge.config).is_same(CONFIG)
+
+
+func test_ac1183_a_perfect_dodge_kicks_the_field_of_view() -> void:
+	var camera: ThirdPersonCamera = _player.get_camera()
+	assert_float(CONFIG.fov_kick_return).is_greater(0.0)
+	_dash()
+	await _physics_frames(3)
+	_player.health.receive_hit_from(HIT, _attacker)
+	assert_array(_dodges).is_equal([_attacker])
+	assert_float(camera.get_fov()).is_greater_equal(camera.get_base_fov() + CONFIG.fov_kick_degrees - 0.01)

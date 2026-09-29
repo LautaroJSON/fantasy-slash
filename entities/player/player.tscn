@@ -110,10 +110,11 @@ visual = NodePath("../Visual")
 health = NodePath("../HealthComponent")
 stats = NodePath("../StatsComponent")
 
-[node name="PerfectDodge" type="Node" parent="." node_paths=PackedStringArray("dash", "health")]
+[node name="PerfectDodge" type="Node" parent="." node_paths=PackedStringArray("dash", "health", "camera")]
 script = ExtResource("52_perfect_dodge")
 dash = NodePath("../DashComponent")
 health = NodePath("../HealthComponent")
+camera = NodePath("../CameraRig")
 config = ExtResource("53_perfect_dodge_config")
 
 [node name="StaminaComponent" type="Node" parent="." node_paths=PackedStringArray("stats")]

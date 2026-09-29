@@ -12,6 +12,8 @@ signal perfect_dodged(attacker: Enemy)
 
 @export var dash: DashComponent
 @export var health: HealthComponent
+## Its field of view kicks on a perfect dodge. Optional (tests).
+@export var camera: ThirdPersonCamera
 ## Assigned by the player; the enemies to slow. Optional (tests).
 @export var registry: EnemyRegistry
 @export var config: PerfectDodgeConfig
@@ -53,11 +55,18 @@ func _on_hit_evaded(_raw: float, attacker: Enemy) -> void:
 	_triggered_this_dash = true
 	_since_last = 0.0
 	_slow_enemies()
+	_kick_view()
 	perfect_dodged.emit(attacker)
 
 
 func _on_dash_started() -> void:
 	_triggered_this_dash = false
+
+
+## The view widens at once and eases back.
+func _kick_view() -> void:
+	if camera != null:
+		camera.kick_fov(config.fov_kick_degrees, config.fov_kick_return)
 
 
 ## Walks the registry's live list (no copy).
