@@ -1,4 +1,5 @@
 # Feature: velocidad del dash como stat
+> **Reemplazada en parte (2026-09-29):** la duración del dash ya no es `DASH_DISTANCE / DASH_SPEED`: es el parámetro `DASH_DURATION` de cada clase y `dash_speed` dejó de existir. Ver `dash-duration-parameter.md`.
 
 - **Estado:** Implementada (2026-09-26). 446 tests GdUnit4: los 10 del dash en verde; 5 tests fallan por cambios de datos ajenos a esta spec (ver notas). Import y smoke test sin errores ni warnings.
 - **Constitución:** `docs/constitution.md` v4.0.1 (sin enmienda).

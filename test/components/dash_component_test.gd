@@ -8,7 +8,6 @@ const BERSERKER_STATS: PlayerStats = preload("res://data/classes/berserker/berse
 const SAMURAI_STATS: PlayerStats = preload("res://data/classes/samurai/samurai_stats.tres")
 const DISPLAY_TABLE: StatDisplayTable = preload("res://data/ui/stat_display_table.tres")
 const CATALOG: UpgradeCatalog = preload("res://data/upgrades/upgrade_catalog.tres")
-const BASE_DASH_SPEED: float = 15.0
 const MAX_DASH_FRAMES: int = 120
 
 
@@ -108,40 +107,40 @@ func _assert_dash(measured: Array[float], expected_duration: float, expected_dis
 	assert_float(measured[1]).is_equal_approx(expected_distance, 0.1)
 
 
-func test_ac395_dash_speed_is_the_last_stat_and_every_class_has_one() -> void:
-	# Adapted (sprint-stamina.md): the stamina stats come after it; DASH_SPEED keeps
-	# its index as the last of the stats before them.
-	assert_int(PlayerStats.Stat.DASH_SPEED).is_equal(PlayerStats.Stat.STAMINA_MAX - 1)
+func test_ac395_dash_duration_is_the_last_stat_and_every_class_has_one() -> void:
+	# Adapted (sprint-stamina.md): the stamina stats come after it; DASH_DURATION keeps
+	# the index DASH_SPEED had, the last of the stats before them (docs/specs/dash-duration-parameter.md).
+	assert_int(PlayerStats.Stat.DASH_DURATION).is_equal(PlayerStats.Stat.STAMINA_MAX - 1)
 	for stats: PlayerStats in [PLAYER_STATS, BERSERKER_STATS, SAMURAI_STATS]:
-		assert_float(stats.dash_speed).is_greater(0.0)
-		assert_float(stats.get_base(PlayerStats.Stat.DASH_SPEED)).is_equal(stats.dash_speed)
+		assert_float(stats.dash_duration).is_greater(0.0)
+		assert_float(stats.get_base(PlayerStats.Stat.DASH_DURATION)).is_equal(stats.dash_duration)
 
 
-func test_ac396_dash_speed_is_internal() -> void:
-	assert_object(DISPLAY_TABLE.find(PlayerStats.Stat.DASH_SPEED)).is_null()
+func test_ac396_dash_duration_is_internal() -> void:
+	assert_object(DISPLAY_TABLE.find(PlayerStats.Stat.DASH_DURATION)).is_null()
 	for upgrade: UpgradeData in CATALOG.upgrades:
-		assert_int(upgrade.stat).override_failure_message(upgrade.title).is_not_equal(PlayerStats.Stat.DASH_SPEED)
+		assert_int(upgrade.stat).override_failure_message(upgrade.title).is_not_equal(PlayerStats.Stat.DASH_DURATION)
 
 
-func test_ac397_dash_lasts_distance_over_speed() -> void:
+func test_ac397_dash_lasts_its_duration_parameter() -> void:
 	var player: Player = await _spawn_player_on_floor()
 	var measured: Array[float] = await _measure_dash(player)
-	_assert_dash(measured, PLAYER_STATS.dash_distance / PLAYER_STATS.dash_speed, PLAYER_STATS.dash_distance)
+	_assert_dash(measured, PLAYER_STATS.dash_duration, PLAYER_STATS.dash_distance)
 
 
-func test_ac398_faster_dash_covers_the_same_distance_in_half_the_time() -> void:
+func test_ac398_shorter_dash_covers_the_same_distance_in_half_the_time() -> void:
 	var player: Player = await _spawn_player_on_floor()
-	_upgrade(player, PlayerStats.Stat.DASH_SPEED, BASE_DASH_SPEED)
+	_upgrade(player, PlayerStats.Stat.DASH_DURATION, -0.5 * PLAYER_STATS.dash_duration)
 	var measured: Array[float] = await _measure_dash(player)
-	_assert_dash(measured, PLAYER_STATS.dash_distance / (2.0 * BASE_DASH_SPEED), PLAYER_STATS.dash_distance)
+	_assert_dash(measured, 0.5 * PLAYER_STATS.dash_duration, PLAYER_STATS.dash_distance)
 
 
-func test_ac398_longer_dash_lasts_longer_at_the_same_speed() -> void:
+func test_ac398_longer_dash_distance_keeps_the_duration_and_goes_faster() -> void:
 	var player: Player = await _spawn_player_on_floor()
 	var distance: float = 2.0 * PLAYER_STATS.dash_distance
 	_upgrade(player, PlayerStats.Stat.DASH_DISTANCE, PLAYER_STATS.dash_distance)
 	var measured: Array[float] = await _measure_dash(player)
-	_assert_dash(measured, distance / PLAYER_STATS.dash_speed, distance)
+	_assert_dash(measured, PLAYER_STATS.dash_duration, distance)
 
 
 func test_ac399_dash_duration_and_dash_tuning_are_gone() -> void:
@@ -181,7 +180,7 @@ func test_ac546_iframe_duration_is_no_longer_a_stat() -> void:
 func test_ac547_warrior_is_invulnerable_exactly_while_dashing() -> void:
 	var player: Player = await _spawn_player_on_floor()
 	var seconds: float = await _measure_invulnerability(player)
-	_assert_seconds(seconds, PLAYER_STATS.dash_distance / PLAYER_STATS.dash_speed)
+	_assert_seconds(seconds, PLAYER_STATS.dash_duration)
 	assert_bool(player.health.is_invulnerable).is_false()
 
 
@@ -189,15 +188,17 @@ func test_ac547_samurai_is_invulnerable_exactly_while_dashing() -> void:
 	var player: Player = await _spawn_player_on_floor()
 	player.stats.set_base_stats(SAMURAI_STATS)
 	var seconds: float = await _measure_invulnerability(player)
-	_assert_seconds(seconds, SAMURAI_STATS.dash_distance / SAMURAI_STATS.dash_speed)
+	_assert_seconds(seconds, SAMURAI_STATS.dash_duration)
 
 
-func test_ac549_invulnerability_follows_dash_upgrades() -> void:
+func test_ac549_invulnerability_follows_the_dash_duration() -> void:
+	# Adapted (docs/specs/dash-duration-parameter.md): the duration is the parameter, so a
+	# distance upgrade no longer lengthens the invulnerability; a duration one does.
 	var player: Player = await _spawn_player_on_floor()
-	_upgrade(player, PlayerStats.Stat.DASH_DISTANCE, PLAYER_STATS.dash_distance)
+	_upgrade(player, PlayerStats.Stat.DASH_DURATION, PLAYER_STATS.dash_duration)
 	var longer: float = await _measure_invulnerability(player)
-	_assert_seconds(longer, 2.0 * PLAYER_STATS.dash_distance / PLAYER_STATS.dash_speed)
+	_assert_seconds(longer, 2.0 * PLAYER_STATS.dash_duration)
 	player.dash.reset_cooldown()
-	_upgrade(player, PlayerStats.Stat.DASH_SPEED, PLAYER_STATS.dash_speed)
-	var faster: float = await _measure_invulnerability(player)
-	_assert_seconds(faster, PLAYER_STATS.dash_distance / PLAYER_STATS.dash_speed)
+	_upgrade(player, PlayerStats.Stat.DASH_DISTANCE, PLAYER_STATS.dash_distance)
+	var same: float = await _measure_invulnerability(player)
+	_assert_seconds(same, 2.0 * PLAYER_STATS.dash_duration)

@@ -5,7 +5,11 @@ extends Node
 ## (guaranteed by StatsComponent), so invulnerability cannot be chained.
 ## The body turns to the dash direction when it starts. A class dash (DashData,
 ## docs/specs/dash-feel.md) sets its clip, its VFX and an optional DashBehavior
-## whose hooks add rules; without one it is the standard dash.
+## whose hooks add rules; without one it is the standard dash. Its duration is the
+## DASH_DURATION stat and its speed is DASH_DISTANCE / DASH_DURATION.
+
+## Shortest dash duration, in seconds: keeps the speed finite if data says 0. Structural.
+const MIN_DURATION: float = 0.001
 
 signal dash_started
 signal dash_ready
@@ -63,9 +67,9 @@ func try_dash(direction: Vector3) -> bool:
 		return false
 	_direction = _resolve_direction(direction)
 	_face_direction()
-	_speed = stats.get_stat(PlayerStats.Stat.DASH_SPEED)
-	_dash_time_left = stats.get_stat(PlayerStats.Stat.DASH_DISTANCE) / _speed
-	_duration = _dash_time_left
+	_duration = maxf(stats.get_stat(PlayerStats.Stat.DASH_DURATION), MIN_DURATION)
+	_dash_time_left = _duration
+	_speed = stats.get_stat(PlayerStats.Stat.DASH_DISTANCE) / _duration
 	_elapsed = 0.0
 	_cooldown_total = stats.get_stat(PlayerStats.Stat.DASH_COOLDOWN)
 	_cooldown_left = _cooldown_total
