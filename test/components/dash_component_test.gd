@@ -120,6 +120,8 @@ func test_ac396_dash_duration_is_internal() -> void:
 	assert_object(DISPLAY_TABLE.find(PlayerStats.Stat.DASH_DURATION)).is_null()
 	for upgrade: UpgradeData in CATALOG.upgrades:
 		assert_int(upgrade.stat).override_failure_message(upgrade.title).is_not_equal(PlayerStats.Stat.DASH_DURATION)
+		assert_int(upgrade.stat).override_failure_message(upgrade.title).is_not_equal(PlayerStats.Stat.DASH_INVULNERABILITY)
+	assert_object(DISPLAY_TABLE.find(PlayerStats.Stat.DASH_INVULNERABILITY)).is_null()
 
 
 func test_ac397_dash_lasts_its_duration_parameter() -> void:
@@ -157,7 +159,7 @@ func _measure_invulnerability(player: Player) -> float:
 	var frames: int = 0
 	await get_tree().physics_frame
 	while player.health.is_invulnerable and frames < MAX_DASH_FRAMES:
-		assert_bool(player.dash.is_dashing()).is_true()
+		assert_bool(player.dash.is_invulnerable_by_dash()).is_true()
 		await get_tree().physics_frame
 		frames += 1
 	assert_bool(player.dash.is_dashing()).is_false()
@@ -180,7 +182,7 @@ func test_ac546_iframe_duration_is_no_longer_a_stat() -> void:
 func test_ac547_warrior_is_invulnerable_exactly_while_dashing() -> void:
 	var player: Player = await _spawn_player_on_floor()
 	var seconds: float = await _measure_invulnerability(player)
-	_assert_seconds(seconds, PLAYER_STATS.dash_duration)
+	_assert_seconds(seconds, PLAYER_STATS.dash_invulnerability)
 	assert_bool(player.health.is_invulnerable).is_false()
 
 
@@ -188,17 +190,34 @@ func test_ac547_samurai_is_invulnerable_exactly_while_dashing() -> void:
 	var player: Player = await _spawn_player_on_floor()
 	player.stats.set_base_stats(SAMURAI_STATS)
 	var seconds: float = await _measure_invulnerability(player)
-	_assert_seconds(seconds, SAMURAI_STATS.dash_duration)
+	_assert_seconds(seconds, SAMURAI_STATS.dash_invulnerability)
 
 
-func test_ac549_invulnerability_follows_the_dash_duration() -> void:
-	# Adapted (docs/specs/dash-duration-parameter.md): the duration is the parameter, so a
-	# distance upgrade no longer lengthens the invulnerability; a duration one does.
+func test_ac549_invulnerability_follows_its_own_parameter() -> void:
+	# Adapted (docs/specs/dash-invulnerability-parameter.md): the invulnerability has its
+	# own parameter; the movement duration and the distance do not change it.
 	var player: Player = await _spawn_player_on_floor()
-	_upgrade(player, PlayerStats.Stat.DASH_DURATION, PLAYER_STATS.dash_duration)
+	_upgrade(player, PlayerStats.Stat.DASH_INVULNERABILITY, PLAYER_STATS.dash_invulnerability)
 	var longer: float = await _measure_invulnerability(player)
-	_assert_seconds(longer, 2.0 * PLAYER_STATS.dash_duration)
+	_assert_seconds(longer, 2.0 * PLAYER_STATS.dash_invulnerability)
 	player.dash.reset_cooldown()
-	_upgrade(player, PlayerStats.Stat.DASH_DISTANCE, PLAYER_STATS.dash_distance)
+	_upgrade(player, PlayerStats.Stat.DASH_DURATION, PLAYER_STATS.dash_duration)
 	var same: float = await _measure_invulnerability(player)
-	_assert_seconds(same, 2.0 * PLAYER_STATS.dash_duration)
+	_assert_seconds(same, 2.0 * PLAYER_STATS.dash_invulnerability)
+
+
+func test_dash_invulnerability_can_outlast_the_movement() -> void:
+	# A longer invulnerability leaves the movement (duration, distance, speed) as it was.
+	var player: Player = await _spawn_player_on_floor()
+	_upgrade(player, PlayerStats.Stat.DASH_INVULNERABILITY, 1.0 - PLAYER_STATS.dash_invulnerability)
+	var seconds: float = await _measure_invulnerability(player)
+	_assert_seconds(seconds, 1.0)
+	player.dash.reset_cooldown()
+	await _physics_frames_wait(5)
+	var measured: Array[float] = await _measure_dash(player)
+	_assert_dash(measured, PLAYER_STATS.dash_duration, PLAYER_STATS.dash_distance)
+
+
+func _physics_frames_wait(count: int) -> void:
+	for i: int in count:
+		await get_tree().physics_frame

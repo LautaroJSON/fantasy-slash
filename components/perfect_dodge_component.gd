@@ -1,12 +1,12 @@
 class_name PerfectDodgeComponent
 extends Node
 ## Perfect dodge (docs/specs/perfect-dodge.md): when an enemy hit reaches the
-## player while the dash makes it invulnerable, within the first
+## player while its dash makes it invulnerable (DASH_INVULNERABILITY), within the first
 ## config.effective_window() seconds of that dash, every active enemy slows to
 ## config.enemy_time_scale for config.slow_duration seconds (Enemy.dilate_time).
 ## The player, the camera and the UI keep their speed: Engine.time_scale is never
 ## touched. One per dash and one every config.min_interval seconds at most. The
-## Parry's invulnerable riposte does not count: only a running dash does.
+## Parry riposte invulnerability does not count: only the dash one does.
 
 signal perfect_dodged(attacker: Enemy)
 
@@ -43,10 +43,10 @@ func get_time_since_last() -> float:
 
 func _can_trigger(attacker: Enemy) -> bool:
 	return attacker != null \
-			and dash.is_dashing() \
+			and dash.is_invulnerable_by_dash() \
 			and not _triggered_this_dash \
 			and _since_last >= config.min_interval \
-			and dash.get_elapsed() <= config.effective_window(dash.get_duration())
+			and dash.get_invulnerability_elapsed() <= config.effective_window(dash.get_invulnerability_total())
 
 
 func _on_hit_evaded(_raw: float, attacker: Enemy) -> void:

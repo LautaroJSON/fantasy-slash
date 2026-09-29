@@ -55,7 +55,7 @@ El juego es un **hack and slash roguelike en tercera persona para PC y Android, 
 - Cada tipo de dato configurable es una clase `class_name X extends Resource` con campos `@export` tipados (p. ej. `PlayerStats`, `EnemyStats`, `UpgradeData`, `WaveConfig`).
 - Los valores concretos viven en instancias `.tres` (p. ej. `data/classes/warrior/warrior_stats.tres`, `data/enemies/grunt_stats.tres`, `data/upgrades/*.tres`).
 - Los scripts de comportamiento (Nodes) reciben sus datos por `@export var stats: PlayerStats` y **leen** de ellos. No declaran valores de diseño propios, ni siquiera como valor por defecto de un `@export`.
-- **Stats de gameplay del jugador = mejorables.** Todo valor que define cómo juega el personaje (daño, defensa, vida, velocidad de movimiento, salto, dash, cooldowns, rango y arco de ataque…) es un stat con **valor inicial en `.tres`** y **puede subir con mejoras**. La invulnerabilidad del dash no es un stat propio: dura lo que el dash (`DASH_DURATION`, un parámetro de cada clase), así que sigue dependiendo de stats en `.tres`. Los topes y pisos que protegen reglas de diseño (p. ej. "el cooldown del dash siempre supera la duración del dash") también son datos.
+- **Stats de gameplay del jugador = mejorables.** Todo valor que define cómo juega el personaje (daño, defensa, vida, velocidad de movimiento, salto, dash, cooldowns, rango y arco de ataque…) es un stat con **valor inicial en `.tres`** y **puede subir con mejoras**. La invulnerabilidad del dash es un parámetro de cada clase (`DASH_INVULNERABILITY`, en segundos, desde el inicio del dash; puede durar más que su movimiento, `DASH_DURATION`), así que sigue dependiendo de stats en `.tres`. Los topes y pisos que protegen reglas de diseño (p. ej. "el cooldown del dash siempre supera la duración del dash") también son datos.
 - **Stats fijos por diseño** (desde 3.1.1): un stat puede no tener carta en el catálogo de mejoras (p. ej. dash, salto, arco). Sigue siendo un stat en `.tres`, leído por los componentes y soportado por el sistema de mejoras; qué stats tienen carta es una decisión de diseño que se registra en la spec.
 - **Qué cuenta como literal prohibido:** velocidades, daños, vidas, cooldowns, rangos, probabilidades, multiplicadores, tiempos de juego, cantidades de spawn, costos… cualquier número que un diseñador querría ajustar.
 - **Qué está permitido en código:** identidades matemáticas y del motor (`0`, `1`, `-1`, `Vector3.UP`, `PI`, `Vector3.ZERO`), índices, y constantes estructurales no tuneables (nombres de acciones, nombres de estados).
@@ -221,4 +221,4 @@ Las versiones y enmiendas están en [`constitution-history.md`](constitution-his
 
 ---
 
-**Version**: 5.1.1 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-29
+**Version**: 5.2.0 | **Ratified**: 2026-09-24 | **Last Amended**: 2026-09-29

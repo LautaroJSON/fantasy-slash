@@ -151,3 +151,20 @@ func test_ac1183_a_perfect_dodge_kicks_the_field_of_view() -> void:
 	_player.health.receive_hit_from(HIT, _attacker)
 	assert_array(_dodges).is_equal([_attacker])
 	assert_float(camera.get_fov()).is_greater_equal(camera.get_base_fov() + CONFIG.fov_kick_degrees - 0.01)
+
+
+func test_ac1173_the_window_counts_from_the_start_of_a_long_invulnerability() -> void:
+	# Invulnerable for 1 s (the movement still lasts 0.2 s): only the first
+	# perfect_window seconds of it are perfect.
+	var upgrade := UpgradeData.new()
+	upgrade.stat = PlayerStats.Stat.DASH_INVULNERABILITY
+	upgrade.amount = 1.0 - _player.stats.get_stat(PlayerStats.Stat.DASH_INVULNERABILITY)
+	_player.stats.add_upgrade(upgrade)
+	_dash()
+	await _physics_frames(30)
+	assert_bool(_player.dash.is_dashing()).is_false()
+	assert_bool(_player.health.is_invulnerable).is_true()
+	assert_float(_player.health.receive_hit_from(HIT, _attacker)).is_equal(0.0)
+	assert_int(_dodges.size()).is_equal(0)
+	await _physics_frames(45)
+	assert_bool(_player.health.is_invulnerable).is_false()

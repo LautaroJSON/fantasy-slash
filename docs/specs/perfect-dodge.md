@@ -13,7 +13,7 @@
 
 | Pregunta | Decisión |
 |---|---|
-| Ventana | **0.2 s** desde el inicio del dash, recortada a su duración: todo golpe que el dash atraviesa cuenta. |
+| Ventana | **0.2 s** desde el inicio del dash, recortada a la invulnerabilidad del dash (`DASH_INVULNERABILITY`, ver `dash-invulnerability-parameter.md`): con la invulnerabilidad de las clases actuales igual al movimiento, todo golpe que el dash atraviesa cuenta. |
 | Tiempo lento | **1 s a ×0.25, bosses incluidos** (revisión posterior: era 0.3 s). Es **solo de los enemigos**: no es una cámara lenta global; el jugador, la cámara, los VFX y la UI siguen a velocidad normal. |
 | Recompensas | El tiempo lento de los enemigos, un golpe de FOV de la cámara (+10°, se recupera en 0.6 s; agregado después) y el texto flotante "¡Esquive perfecto!". |
 | Fuera de esta spec | Viñeteado blanco e imagen residual; recarga del dash; Instinto (crítico garantizado, su buff, su ícono y el cambio en `StatsComponent`). Pueden volver en otra spec. |
@@ -39,8 +39,8 @@ Un solo esquive perfecto por dash y, como mucho, uno cada `min_interval` (0.5 s)
 - **Todos** los golpes enemigos (Bruto, Embestidor, Saltador, Hostigador, Escudero, Esbirro, ondas y golpes de bosses) llaman a `target.health.receive_hit_from(daño, enemigo)`. La Parry se apoya en el mismo punto (`ShieldGuard.absorb`), pero solo con el escudo levantado.
 - **`HealthComponent`** suma la señal **`hit_evaded(raw: float, attacker: Enemy)`**: `receive_hit_from` la emite cuando el golpe llega con `is_invulnerable` y el dueño no está muerto (hoy ese caso devuelve 0 en silencio). `receive_hit`, `receive_true_damage` y los ticks de estados no la emiten.
 - **`PerfectDodgeComponent`** (nodo nuevo del jugador) escucha `hit_evaded` y dispara el esquive perfecto si:
-  1. `dash.is_dashing()` (la invulnerabilidad viene del dash; la de la estocada de la Parry no cuenta);
-  2. `dash.get_elapsed() ≤ config.effective_window(dash.get_duration())`, con `effective_window(d) = minf(perfect_window, d)`;
+  1. `dash.is_invulnerable_by_dash()` (la invulnerabilidad viene del dash; la de la estocada de la Parry no cuenta);
+  2. `dash.get_invulnerability_elapsed() ≤ config.effective_window(dash.get_invulnerability_total())`, con `effective_window(i) = minf(perfect_window, i)`;
   3. no hubo otro esquive perfecto en este dash;
   4. pasaron `min_interval` segundos desde el anterior;
   5. `attacker != null`.
@@ -78,7 +78,7 @@ entities/player/player.tscn
 
 | Campo | Valor | Qué es |
 |---|---|---|
-| `perfect_window` | 0.2 s | Desde el inicio del dash; recortada a la duración del dash. |
+| `perfect_window` | 0.2 s | Desde el inicio del dash; recortada a la invulnerabilidad del dash. |
 | `min_interval` | 0.5 s | Entre dos esquives perfectos. |
 | `enemy_time_scale` | 0.25 | Velocidad de los enemigos durante el tiempo lento. |
 | `slow_duration` | 1.0 s | Tiempo real. |

@@ -11,7 +11,7 @@ extends Resource
 ## Upper bound of the effective attack arc, in degrees.
 @export var max_attack_arc_degrees: float
 ## The effective dash cooldown never drops below the dash duration
-## (dash_duration) + this gap,
+## (the longer of dash_duration and dash_invulnerability) + this gap,
 ## so invulnerability can never be chained.
 @export var min_dash_cooldown_gap: float
 ## Health a death-protected entity (sandbox player) never drops below.

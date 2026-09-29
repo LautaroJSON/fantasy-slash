@@ -5,7 +5,7 @@ extends Resource
 ## Common to every class.
 
 ## Seconds from the start of the dash during which a hit counts; cut to the
-## dash's own duration.
+## dash invulnerability.
 @export var perfect_window: float
 ## Least seconds between two perfect dodges.
 @export var min_interval: float
@@ -23,6 +23,6 @@ extends Resource
 @export var popup_height: float
 
 
-## Pure: the window in effect for a dash of `dash_duration` seconds.
-func effective_window(dash_duration: float) -> float:
-	return minf(perfect_window, dash_duration)
+## Pure: the window in effect for a dash whose invulnerability lasts `invulnerability` seconds.
+func effective_window(invulnerability: float) -> float:
+	return minf(perfect_window, invulnerability)

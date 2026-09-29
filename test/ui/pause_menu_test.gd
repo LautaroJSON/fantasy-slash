@@ -16,7 +16,7 @@ const BOTTOM_ROWS: Array[PlayerStats.Stat] = [
 ]
 const HIDDEN_STATS: Array[PlayerStats.Stat] = [
 	PlayerStats.Stat.ATTACK_ARC, PlayerStats.Stat.DASH_COOLDOWN,
-	PlayerStats.Stat.DASH_DISTANCE, PlayerStats.Stat.JUMP_VELOCITY, PlayerStats.Stat.DASH_DURATION,
+	PlayerStats.Stat.DASH_DISTANCE, PlayerStats.Stat.JUMP_VELOCITY, PlayerStats.Stat.DASH_DURATION, PlayerStats.Stat.DASH_INVULNERABILITY,
 	PlayerStats.Stat.STAMINA_REGEN, PlayerStats.Stat.SPRINT_STAMINA_COST, PlayerStats.Stat.SPRINT_SPEED_FACTOR,
 ]
 

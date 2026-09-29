@@ -1,5 +1,5 @@
 # Feature: la invulnerabilidad dura lo mismo que el dash
-> **Nota (2026-09-29):** la invulnerabilidad sigue durando exactamente lo que el dash, pero esa duración es ahora el parámetro `DASH_DURATION` y no `DASH_DISTANCE / DASH_SPEED`. Una mejora de distancia ya no la alarga. Ver `dash-duration-parameter.md`.
+> **Nota (2026-09-29):** la invulnerabilidad ya no dura "exactamente lo que el dash": tiene su propio parámetro, `DASH_INVULNERABILITY`, que puede ser mayor que el movimiento (`DASH_DURATION`). Ver `dash-duration-parameter.md` y `dash-invulnerability-parameter.md`.
 
 - **Estado:** Implementada (2026-09-26). 598 tests GdUnit4: los de esta spec en verde; 7 tests fallan por cambios de datos previos y ajenos (ver notas). 0 orphans. Import y smoke test sin errores ni warnings.
 - **Constitución:** `docs/constitution.md` v4.6.0 → **v4.6.1** (enmienda PATCH aplicada, ver §5).

@@ -8,7 +8,7 @@ const BERSERKER: CharacterClassData = preload("res://data/classes/berserker/bers
 const CATALOG: UpgradeCatalog = preload("res://data/upgrades/upgrade_catalog.tres")
 const FIXED_STATS: Array[PlayerStats.Stat] = [
 	PlayerStats.Stat.ATTACK_ARC, PlayerStats.Stat.DASH_DISTANCE, PlayerStats.Stat.DASH_COOLDOWN,
-	PlayerStats.Stat.JUMP_VELOCITY, PlayerStats.Stat.DASH_DURATION,
+	PlayerStats.Stat.JUMP_VELOCITY, PlayerStats.Stat.DASH_DURATION, PlayerStats.Stat.DASH_INVULNERABILITY,
 ]
 const CRIT_ROLL: float = 0.0
 const NO_CRIT_ROLL: float = 0.99
