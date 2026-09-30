@@ -7,5 +7,6 @@ script = ExtResource("1_script")
 stat = 2
 amount = 20.0
 max_stacks = 10
+group = 1
 title = "Vida"
 description = "+20 de vida máxima"

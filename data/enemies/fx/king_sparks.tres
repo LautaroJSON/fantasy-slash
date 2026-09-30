@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyParticlesConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_particles_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+amount = 8
+lifetime = 0.5
+direction = Vector3(0, 1, 0)
+spread_degrees = 80.0
+speed_min = 1.5
+speed_max = 3.0
+gravity = Vector3(0, -8, 0)
+size = 0.06
+world_space = true
+emission_radius = 0.3

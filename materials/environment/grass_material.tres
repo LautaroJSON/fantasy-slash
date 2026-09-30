@@ -1,0 +1,11 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/models/environment/stylized_nature/textures/grass.png" id="1_tex"]
+
+[resource]
+cull_mode = 2
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+albedo_color = Color(0.62, 0.86, 0.4, 1)
+albedo_texture = ExtResource("1_tex")
+roughness = 0.95

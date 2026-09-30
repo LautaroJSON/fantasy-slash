@@ -136,6 +136,7 @@ func _break_hand(index: int) -> void:
 	_other_stage = Stage2.RECOVERY
 	enemy.get_body().position.y = enemy.get_body_rest_height() - _titan().stun_body_drop * enemy.get_body_scale()
 	hands.return_to_rest()
+	hands.announce_pose(&"stunned", _titan().break_stun_time)
 
 
 func _hand_max_health() -> float:
@@ -157,11 +158,13 @@ func _begin_other_move(move: BossMoveData) -> void:
 		var slam: HandSlamMoveData = move as HandSlamMoveData
 		_impact_point = _target_floor_point()
 		hands.move_hand(_move_hand_left, rest + _side(slam.raise_offset), _windup(slam.attack.windup_time))
+		hands.announce_windup(slam.attack.model_clip, _windup(slam.attack.windup_time))
 		enemy.get_telegraph().show_circle(_impact_point, slam.impact_radius, _windup(slam.attack.windup_time) + slam.attack.active_time)
 	elif move is SweepMoveData:
 		var sweep: SweepMoveData = move as SweepMoveData
 		_has_hit = false
 		hands.move_hand(_move_hand_left, rest + _side(sweep.attack.hand_windup_offset), _windup(sweep.attack.windup_time))
+		hands.announce_windup(sweep.attack.model_clip, _windup(sweep.attack.windup_time))
 		enemy.get_telegraph().show_sector(enemy.global_position, enemy.get_facing(), sweep.attack.hit_range, sweep.attack.hit_arc_degrees, _windup(sweep.attack.windup_time))
 
 
@@ -191,6 +194,7 @@ func _update_slam(slam: HandSlamMoveData, delta: float) -> void:
 				_other_stage = Stage2.ACTIVE
 				var landing: Vector3 = _impact_point + Vector3.UP * hands.get_hand_radius(_move_hand_left)
 				hands.move_hand(_move_hand_left, hands.to_local(landing), slam.attack.active_time)
+				hands.announce_strike(slam.attack.model_clip, slam.attack.active_time)
 		Stage2.ACTIVE:
 			if _time >= slam.attack.active_time:
 				_time -= slam.attack.active_time
@@ -225,6 +229,7 @@ func _update_sweep(sweep: SweepMoveData, delta: float) -> void:
 				_time -= windup
 				_other_stage = Stage2.ACTIVE
 				hands.move_hand(_move_hand_left, rest + _side(sweep.attack.hand_strike_offset), sweep.attack.active_time)
+				hands.announce_strike(sweep.attack.model_clip, sweep.attack.active_time)
 				enemy.get_telegraph().flash(false)
 		Stage2.ACTIVE:
 			var target: Player = enemy.target

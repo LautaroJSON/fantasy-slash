@@ -58,7 +58,7 @@ func _update_guard() -> void:
 	if guarding and not _guard_was_up:
 		hands.return_to_rest()
 	elif not guarding and hands.is_at_rest():
-		hands.play_pose(_guard().guard_down_offset, hands.config.return_time)
+		hands.play_pose(_guard().guard_down_offset, hands.config.return_time, &"guard_down")
 	_guard_was_up = guarding
 
 

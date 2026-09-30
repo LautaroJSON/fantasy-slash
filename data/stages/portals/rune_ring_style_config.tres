@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PortalStyleConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/portal_style_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+rise_depth = 3.5
+disc_start_scale = 0.1
+flash_energy = 3.0
+flash_fade = 0.6
+particle_amount = 24
+particle_lifetime = 1.6
+particle_speed = 1.2

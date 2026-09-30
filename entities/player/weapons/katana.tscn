@@ -1,14 +1,23 @@
 [gd_scene format=3]
 
 [ext_resource type="ArrayMesh" path="res://assets/models/weapons/katana/katana_blade.res" id="1_model"]
-[ext_resource type="Material" path="res://materials/weapons/katana_material.tres" id="2_material"]
+[ext_resource type="Material" path="res://materials/weapons/katana_steel_material.tres" id="2_steel"]
+[ext_resource type="Material" path="res://materials/weapons/katana_hamon_material.tres" id="3_hamon"]
+[ext_resource type="Material" path="res://materials/weapons/katana_iron_material.tres" id="4_iron"]
+[ext_resource type="Material" path="res://materials/weapons/katana_gold_material.tres" id="5_gold"]
+[ext_resource type="Material" path="res://materials/weapons/katana_tsuka_material.tres" id="6_tsuka"]
+[ext_resource type="Material" path="res://materials/weapons/katana_tsuka_relief_material.tres" id="7_relief"]
 
 [node name="Katana" type="Node3D"]
 
 [node name="Model" type="MeshInstance3D" parent="."]
-transform = Transform3D(1.1, 0, 0, 0, 0, 1.1, 0, -1.1, 0, 0, 0, 0.055)
 mesh = ExtResource("1_model")
-surface_material_override/0 = ExtResource("2_material")
+surface_material_override/0 = ExtResource("2_steel")
+surface_material_override/1 = ExtResource("3_hamon")
+surface_material_override/2 = ExtResource("4_iron")
+surface_material_override/3 = ExtResource("5_gold")
+surface_material_override/4 = ExtResource("6_tsuka")
+surface_material_override/5 = ExtResource("7_relief")
 
 [node name="TrailBase" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.2)

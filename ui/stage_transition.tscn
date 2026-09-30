@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/stage_transition.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/stages/stage_transition_config.tres" id="2_config"]
+
+[node name="StageTransition" type="Control" node_paths=PackedStringArray("fade", "banner", "title_label", "name_label", "subtitle_label")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+config = ExtResource("2_config")
+fade = NodePath("Fade")
+banner = NodePath("Banner")
+title_label = NodePath("Banner/Title")
+name_label = NodePath("Banner/Name")
+subtitle_label = NodePath("Banner/Subtitle")
+
+[node name="Fade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="Banner" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 90.0
+offset_bottom = 260.0
+grow_horizontal = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="Title" type="Label" parent="Banner"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Name" type="Label" parent="Banner"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Banner"]
+layout_mode = 2
+horizontal_alignment = 1

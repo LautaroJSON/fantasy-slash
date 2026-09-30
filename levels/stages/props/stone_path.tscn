@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/stylized_nature/meshes/stone_path.res" id="1_mesh"]
+[ext_resource type="Material" path="res://materials/environment/path_rock_material.tres" id="2_rock"]
+
+[node name="StonePath" type="Node3D"]
+
+[node name="Model" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0, 0)
+mesh = ExtResource("1_mesh")
+surface_material_override/0 = ExtResource("2_rock")

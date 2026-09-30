@@ -52,6 +52,9 @@ enum AttackTokenGroup { MAIN, FODDER }
 @export var affliction_resistance: float
 ## Which pool of attack tokens the enemy asks (MAIN unless it is fodder).
 @export var token_group: AttackTokenGroup
+## Own model of the type (docs/specs/enemy-models.md): an EnemyModel scene under
+## entities/enemy/models/. Empty = the grey capsule of enemy.tscn.
+@export var model: PackedScene
 
 
 func get_stat(stat: Stat) -> float:

@@ -56,7 +56,7 @@ func test_ac147_grunt_body_is_unchanged() -> void:
 
 func test_ac148_ac494_big_body_and_bar_are_scaled() -> void:
 	var big: Enemy = _spawn(BIG_STATS, Vector3(0.0, 0.0, -8.0))
-	var body: MeshInstance3D = big.get_node("Body") as MeshInstance3D
+	var body: Node3D = big.get_node("Body") as Node3D
 	assert_vector(_collision(big).scale).is_equal_approx(Vector3.ONE * BIG_STATS.body_scale, Vector3(0.0001, 0.0001, 0.0001))
 	assert_vector(body.scale).is_equal_approx(Vector3.ONE * BIG_STATS.body_scale, Vector3(0.0001, 0.0001, 0.0001))
 	assert_float(_collision(big).position.y).is_equal_approx(0.9 * BIG_STATS.body_scale, 0.0001)

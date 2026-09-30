@@ -10,12 +10,6 @@ const KnightBuilder := preload("res://assets/models/weapons/knight_set/tools/bui
 const SPARTAN_SWORD_MODEL: Mesh = preload("res://assets/models/weapons/spartan_sword/spartan_sword.obj")
 const KNIGHT_GREATSWORD_MODEL: Mesh = preload("res://assets/models/weapons/knight_set/knight_greatsword.res")
 const KATANA_SCENE: PackedScene = preload("res://entities/player/weapons/katana.tscn")
-const KATANA_SHEATH_SCENE: PackedScene = preload("res://entities/player/weapons/katana_sheath.tscn")
-const KATANA_BLADE_MODEL: Mesh = preload("res://assets/models/weapons/katana/katana_blade.res")
-const KATANA_SHEATH_MODEL: Mesh = preload("res://assets/models/weapons/katana/katana_sheath.res")
-const KATANA_MATERIAL: StandardMaterial3D = preload("res://materials/weapons/katana_material.tres")
-const KATANA_ASSET_DIR: String = "res://assets/models/weapons/katana/"
-const KatanaBuilder := preload("res://assets/models/weapons/katana/tools/build_katana_meshes.gd")
 const SAMURAI_STATS: PlayerStats = preload("res://data/classes/samurai/samurai_stats.tres")
 const KATANA_SWING: SwordSwingConfig = preload("res://data/classes/samurai/katana_swing_config.tres")
 const KatanaParts := preload("res://test/helpers/katana_parts.gd")
@@ -36,36 +30,10 @@ const SPARTAN_TIP_Z: float = -1.47
 const GREATSWORD_TIP_Z: float = -2.21
 const KATANA_TIP_Z: float = -1.27
 const TIP_TOLERANCE: float = 0.05
-## AC683: handle length and least section, guard diameter and greatest
-## thickness, in meters.
-const HANDLE_LENGTH_MIN: float = 0.29
-const HANDLE_LENGTH_MAX: float = 0.33
-const HANDLE_SECTION_MIN: float = 0.045
-const GUARD_DIAMETER_MIN: float = 0.16
-const GUARD_DIAMETER_MAX: float = 0.185
-const GUARD_THICKNESS_MAX: float = 0.035
 ## AC686: attack reach kept, and farthest the trail base may be from the guard.
 const SAMURAI_ATTACK_RANGE: float = 2.3
 const KATANA_HILT_OFFSET: float = 0.35
 const TRAIL_BASE_GAP: float = 0.05
-## AC694: sheath thickness range, the band where it is measured (weapon z), and
-## how much its neck rings stand out of the body, in meters.
-const SHEATH_THICKNESS_MIN: float = 0.021
-const SHEATH_THICKNESS_MAX: float = 0.023
-const SHEATH_BODY_FROM_Z: float = -1.15
-const SHEATH_BODY_TO_Z: float = -0.60
-const SHEATH_RING_FROM_Z: float = -0.53
-const SHEATH_RING_TO_Z: float = -0.29
-const SHEATH_RING_OUT: float = 0.0081
-const SHEATH_WIDTH_TOLERANCE: float = 0.001
-## AC695: end of the sheath, radius of its corners, sharpest turn of its end
-## outline and width tolerance at the end.
-const SHEATH_END_Z: float = -1.282
-const SHEATH_END_TOLERANCE: float = 0.002
-const SHEATH_CORNER_RADIUS: float = 0.015
-const SHEATH_CORNER_TOLERANCE: float = 0.003
-const SHEATH_MAX_TURN_DEGREES: float = 45.0
-const SHEATH_END_WIDTH_TOLERANCE: float = 0.002
 
 
 func _model_of(scene: PackedScene) -> MeshInstance3D:
@@ -144,36 +112,11 @@ func test_ac214_every_weapon_has_blade_markers_for_the_trail() -> void:
 	_assert_trail_markers(GREATSWORD_SCENE)
 
 
-func test_ac237_the_katana_and_its_sheath_use_the_textured_katana_material() -> void:
-	var material: Array[Material] = [KATANA_MATERIAL]
-	_assert_model(KATANA_SCENE, KATANA_BLADE_MODEL, material)
-	_assert_model(KATANA_SHEATH_SCENE, KATANA_SHEATH_MODEL, material)
-	assert_object(KATANA_MATERIAL.albedo_texture).is_not_null()
-	assert_str(KATANA_MATERIAL.albedo_texture.resource_path).starts_with(KATANA_ASSET_DIR)
-
-
 func test_ac237_the_katana_tip_and_trail_markers() -> void:
 	var mesh_instance: MeshInstance3D = _model_of(KATANA_SCENE)
 	var bounds: AABB = mesh_instance.transform * mesh_instance.mesh.get_aabb()
 	assert_float(bounds.position.z).is_equal_approx(KATANA_TIP_Z, TIP_TOLERANCE)
 	_assert_trail_markers(KATANA_SCENE)
-
-
-# --- Katana proportions (docs/specs/katana-hand-proportions.md)
-
-func test_ac683_the_katana_handle_and_guard_match_the_hand() -> void:
-	var model: MeshInstance3D = _model_of(KATANA_SCENE)
-	var guard: AABB = KatanaParts.bounds(KatanaParts.guard_points(model))
-	var handle: AABB = KatanaParts.bounds(KatanaParts.handle_points(model))
-	# From the back face of the guard to the pommel end.
-	var handle_length: float = handle.end.z - guard.end.z
-	assert_float(handle_length).is_between(HANDLE_LENGTH_MIN, HANDLE_LENGTH_MAX)
-	assert_float(handle.size.x).is_greater_equal(HANDLE_SECTION_MIN)
-	assert_float(guard.size.x).is_between(GUARD_DIAMETER_MIN, GUARD_DIAMETER_MAX)
-	assert_float(guard.size.y).is_between(GUARD_DIAMETER_MIN, GUARD_DIAMETER_MAX)
-	assert_float(guard.size.z).is_less_equal(GUARD_THICKNESS_MAX)
-	var bounds: AABB = model.transform * model.mesh.get_aabb()
-	assert_float(bounds.position.z).is_equal_approx(KATANA_TIP_Z, TIP_TOLERANCE)
 
 
 func test_ac686_the_katana_keeps_its_reach_and_the_trail_starts_at_the_guard() -> void:
@@ -186,145 +129,6 @@ func test_ac686_the_katana_keeps_its_reach_and_the_trail_starts_at_the_guard() -
 	assert_float(base).is_less(guard.position.z)
 	assert_float(guard.position.z - base).is_less_equal(TRAIL_BASE_GAP)
 	_assert_trail_markers(KATANA_SCENE)
-
-
-## Source vertices of one bone of katana.glb, in their original order.
-func _source_part(bone: int) -> Dictionary:
-	var arrays: Array = KatanaBuilder.source_arrays()
-	var positions: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
-	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
-	var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
-	var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
-	var per_vertex: int = bones.size() / positions.size()
-	var part_uvs: PackedVector2Array = []
-	var in_part: Array[bool] = []
-	for i: int in positions.size():
-		in_part.append(KatanaBuilder.main_bone(bones, weights, i, per_vertex) == bone)
-		if in_part[i]:
-			part_uvs.append(uvs[i])
-	var index_count: int = 0
-	for t: int in indices.size() / 3:
-		if in_part[indices[t * 3]] and in_part[indices[t * 3 + 1]] and in_part[indices[t * 3 + 2]]:
-			index_count += 3
-	return {"uvs": part_uvs, "index_count": index_count}
-
-
-func _assert_same_mesh(built: ArrayMesh, saved: Mesh) -> void:
-	var a: Array = built.surface_get_arrays(0)
-	var b: Array = saved.surface_get_arrays(0)
-	assert_array(b[Mesh.ARRAY_INDEX]).is_equal(a[Mesh.ARRAY_INDEX])
-	var pa: PackedVector3Array = a[Mesh.ARRAY_VERTEX]
-	var pb: PackedVector3Array = b[Mesh.ARRAY_VERTEX]
-	assert_int(pb.size()).is_equal(pa.size())
-	for i: int in pa.size():
-		assert_vector(pb[i]).is_equal_approx(pa[i], Vector3.ONE * 0.00001)
-
-
-func test_ac688_the_derived_katana_meshes_keep_the_source_topology_and_are_reproducible() -> void:
-	var parts: Array = [[KatanaBuilder.BLADE_BONE, KATANA_BLADE_MODEL], [KatanaBuilder.SHEATH_BONE, KATANA_SHEATH_MODEL]]
-	for part: Array in parts:
-		var source: Dictionary = _source_part(part[0])
-		var mesh: Mesh = part[1]
-		var arrays: Array = mesh.surface_get_arrays(0)
-		assert_array(arrays[Mesh.ARRAY_TEX_UV]).is_equal(source["uvs"])
-		assert_int((arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size()).is_equal(source["index_count"])
-		_assert_same_mesh(KatanaBuilder.build(part[0]), mesh)
-	var source_md: String = FileAccess.get_file_as_string(KATANA_ASSET_DIR + "SOURCE.md")
-	assert_str(source_md).contains("build_katana_meshes.gd")
-
-
-# --- Katana sheath shape (docs/specs/katana-sheath-shape.md)
-
-## Saved sheath vertices in the weapon space, with their source vertices of the
-## glb (same order: the generator keeps the vertices of the bone in order).
-func _sheath_vertices() -> Array[PackedVector3Array]:
-	var model: MeshInstance3D = _model_of(KATANA_SHEATH_SCENE)
-	var saved: PackedVector3Array = []
-	for p: Vector3 in model.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array:
-		saved.append(model.transform * p)
-	var arrays: Array = KatanaBuilder.source_arrays()
-	var positions: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES]
-	var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
-	var per_vertex: int = bones.size() / positions.size()
-	var source: PackedVector3Array = []
-	for i: int in positions.size():
-		if KatanaBuilder.main_bone(bones, weights, i, per_vertex) == KatanaBuilder.SHEATH_BONE:
-			source.append(model.transform * positions[i])
-	return [saved, source]
-
-
-func test_ac694_the_sheath_is_twice_as_thick_and_as_wide() -> void:
-	var vertices: Array[PackedVector3Array] = _sheath_vertices()
-	var saved: PackedVector3Array = vertices[0]
-	var source: PackedVector3Array = vertices[1]
-	assert_int(saved.size()).is_equal(source.size())
-	var body_half: float = 0.0
-	var ring_half: float = 0.0
-	var end_start: float = 0.055 - 1.1 * KatanaBuilder.SHEATH_END_REGION_Y
-	for i: int in saved.size():
-		var p: Vector3 = saved[i]
-		if p.z >= SHEATH_BODY_FROM_Z and p.z <= SHEATH_BODY_TO_Z:
-			body_half = maxf(body_half, absf(p.y))
-		if p.z >= SHEATH_RING_FROM_Z and p.z <= SHEATH_RING_TO_Z:
-			ring_half = maxf(ring_half, absf(p.y))
-		# Same width: X does not move outside the end.
-		if source[i].z > end_start:
-			assert_float(p.x).is_equal_approx(source[i].x, SHEATH_WIDTH_TOLERANCE)
-	assert_float(body_half * 2.0).is_between(SHEATH_THICKNESS_MIN, SHEATH_THICKNESS_MAX)
-	assert_float(ring_half - body_half).is_equal_approx(SHEATH_RING_OUT, SHEATH_WIDTH_TOLERANCE)
-
-
-## Distinct outline points (weapon X, Z) of the sheath end, from its outer edge
-## to its inner edge, framed by the last station of each edge before the end.
-func _sheath_end_outline() -> PackedVector2Array:
-	var saved: PackedVector3Array = _sheath_vertices()[0]
-	var end_start: float = 0.055 - 1.1 * KatanaBuilder.SHEATH_END_REGION_Y
-	var points: Array[Vector2] = []
-	for p: Vector3 in saved:
-		var q := Vector2(p.x, p.z)
-		if points.all(func(o: Vector2) -> bool: return o.distance_to(q) > 0.0001):
-			points.append(q)
-	var end: Array = points.filter(func(q: Vector2) -> bool: return q.y < end_start)
-	end.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x > b.x)
-	var body: Array = points.filter(func(q: Vector2) -> bool: return q.y >= end_start)
-	body.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.y < b.y)
-	var station: Array[Vector2] = [body[0], body[1]]
-	station.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x > b.x)
-	var outline: PackedVector2Array = [station[0]]
-	outline.append_array(PackedVector2Array(end))
-	outline.append(station[1])
-	return outline
-
-
-## Center of the circle through three points.
-func _circumcenter(a: Vector2, b: Vector2, c: Vector2) -> Vector2:
-	var d: float = 2.0 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y))
-	var ux: float = (a.length_squared() * (b.y - c.y) + b.length_squared() * (c.y - a.y) + c.length_squared() * (a.y - b.y)) / d
-	var uy: float = (a.length_squared() * (c.x - b.x) + b.length_squared() * (a.x - c.x) + c.length_squared() * (b.x - a.x)) / d
-	return Vector2(ux, uy)
-
-
-func test_ac695_the_sheath_end_has_rounded_corners() -> void:
-	var outline: PackedVector2Array = _sheath_end_outline()
-	var end: PackedVector2Array = outline.slice(1, outline.size() - 1)
-	var tip: float = INF
-	for q: Vector2 in end:
-		tip = minf(tip, q.y)
-	assert_float(tip).is_equal_approx(SHEATH_END_Z, SHEATH_END_TOLERANCE)
-	# Each half of the end outline is a corner arc.
-	var half: int = end.size() / 2
-	for corner: PackedVector2Array in [end.slice(0, half), end.slice(half)]:
-		var center: Vector2 = _circumcenter(corner[0], corner[corner.size() / 2], corner[corner.size() - 1])
-		for q: Vector2 in corner:
-			assert_float(q.distance_to(center)).is_equal_approx(SHEATH_CORNER_RADIUS, SHEATH_CORNER_TOLERANCE)
-	for i: int in range(1, outline.size() - 1):
-		var turn: float = rad_to_deg((outline[i] - outline[i - 1]).angle_to(outline[i + 1] - outline[i]))
-		assert_float(absf(turn)).override_failure_message("turn of %.1f° at %s" % [turn, outline[i]]).is_less_equal(SHEATH_MAX_TURN_DEGREES)
-	# The width where the arcs end is the width of the sheath before its end.
-	var station_width: float = outline[0].x - outline[outline.size() - 1].x
-	assert_float(end[0].x - end[end.size() - 1].x).is_equal_approx(station_width, SHEATH_END_WIDTH_TOLERANCE)
 
 
 # --- Knight sword and shield (docs/specs/warrior-sword-and-shield.md)

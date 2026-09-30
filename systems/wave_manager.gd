@@ -3,11 +3,19 @@ extends Node
 ## Run loop: first the basic ability is chosen (from the class pool), then infinite waves: spawn a
 ## wave, wait until it is cleared, offer upgrade cards (player and ability,
 ## minus the banned ones, plus the red ban card every few waves), apply the
-## choice and start the next wave. Every boss_wave_interval waves the wave is a
-## random boss challenge, and only clearing one offers the golden (unique) cards.
+## choice and start the next wave. The last wave of each stage is a random boss
+## challenge of that stage, and only clearing one offers the golden (unique)
+## cards. The enemy types, the bosses and the spawn area come from the StageMap in
+## play (docs/specs/stages.md).
 
 ## A boss challenge spawned; the HUD shows one bar per boss.
 signal boss_wave_started(bosses: Array[Enemy])
+## The boss of a stage that is not the last was cleared (cards included): no
+## wave starts until the StageDirector moves the run to the next stage.
+signal stage_cleared
+## The sandbox cleared the arena: the HUD drops its boss bars
+## (docs/specs/sandbox-arena-control.md).
+signal bosses_cleared
 
 @export var config: WaveConfig
 @export var catalog: UpgradeCatalog
@@ -18,8 +26,8 @@ signal boss_wave_started(bosses: Array[Enemy])
 @export var pace: EnemyPaceConfig
 ## Buff of the enemies once no upgrades are left (docs/specs/enemy-rage.md).
 @export var rage: RageConfig
-## One pool per regular enemy type (matched through EnemyPool.spawn_entry
-## against WaveConfig.enemy_types; docs/specs/enemy-types.md).
+## One pool per regular enemy type of any stage (matched through
+## EnemyPool.spawn_entry against the stage's enemy_types; docs/specs/enemy-types.md).
 @export var pools: Array[EnemyPool]
 ## Pool of the horde's fodder (docs/specs/fodder-minion.md); they do not go through `pools`.
 @export var horde_pool: EnemyPool
@@ -28,11 +36,15 @@ signal boss_wave_started(bosses: Array[Enemy])
 @export var registry: EnemyRegistry
 ## Attack turns and spawn-in of the enemies (docs/specs/enemy-group-ai.md).
 @export var coordinator: AttackCoordinator
+## How walking enemies steer around the stage's obstacles (docs/specs/stages.md).
+@export var obstacle_avoidance: ObstacleAvoidanceConfig
 @export var player: Player
 @export var run_state: RunState
 @export var picker: UpgradePicker
 @export var ability_picker: AbilityPicker
 @export var ban_picker: UpgradeBanPicker
+## Caps, respawn delay and default group of the sandbox (docs/specs/sandbox-arena-control.md).
+@export var sandbox_config: SandboxConfig
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 ## Every card that can be offered; rebuilt when an ability is equipped.
@@ -41,9 +53,9 @@ var _card_pool: Array[UpgradeCard] = []
 var _spawned_this_wave: Array[Vector3] = []
 ## Enemies activated by the last spawn (reused buffer).
 var _spawned_enemies: Array[Enemy] = []
-## Enemies of each WaveConfig.enemy_types entry spawned this wave (reused buffer).
+## Enemies of each StageData.enemy_types entry spawned this wave (reused buffer).
 var _type_counts: Array[int] = []
-## Pool of each WaveConfig.enemy_types entry, same order (filled in _ready).
+## Pool of each StageData.enemy_types entry, same order (filled by set_stage).
 var _type_pools: Array[EnemyPool] = []
 ## Cards still to pick after the current wave (WaveConfig.picks_for_wave).
 var _picks_left: int = 0
@@ -52,11 +64,18 @@ var _horde_remaining: int = 0
 var _horde_alive: int = 0
 ## Seconds until the next group comes out (< 0 = none scheduled).
 var _refill_left: float = -1.0
+## StageMap in play, set by the StageDirector, and whether it is the last one.
+var _stage: StageMap
+var _stage_is_last: bool = true
+## What the sandbox can summon (built on first use) and the group in play.
+var _roster: SandboxRoster
+var _sandbox_request: SandboxSpawnRequest
+## Seconds until the sandbox group comes back (< 0 = none scheduled).
+var _sandbox_respawn_left: float = -1.0
 
 
 func _ready() -> void:
 	_rng.randomize()
-	_match_type_pools()
 	registry.enemy_killed.connect(_on_enemy_killed)
 	registry.all_dead.connect(_on_all_dead)
 	picker.upgrade_chosen.connect(_on_upgrade_chosen)
@@ -73,12 +92,25 @@ func offer_abilities() -> void:
 	ability_picker.show_choices(player.get_character_class().abilities.get_for_slot(AbilityData.Slot.BASIC))
 
 
-## Every enemy of the wave spawns at the level given by WaveConfig. Boss waves
-## draw one challenge at random.
+## The StageDirector hands over the stage in play (docs/specs/stages.md):
+## its enemy types, bosses and spawn area are used from now on.
+func set_stage(stage: StageMap, is_last: bool) -> void:
+	_stage = stage
+	_stage_is_last = is_last
+	_match_type_pools()
+
+
+func get_stage() -> StageMap:
+	return _stage
+
+
+## Every enemy of the wave spawns at the level given by WaveConfig. The boss
+## wave of the stage draws one of its challenges at random.
 func start_wave() -> void:
-	if config.is_boss_wave(run_state.wave) and not config.boss_challenges.is_empty():
-		var index: int = _rng.randi_range(0, config.boss_challenges.size() - 1)
-		start_boss_wave(config.boss_challenges[index])
+	var stage_data: StageData = _stage.get_data()
+	if _is_boss_wave() and not stage_data.boss_challenges.is_empty():
+		var index: int = _rng.randi_range(0, stage_data.boss_challenges.size() - 1)
+		start_boss_wave(stage_data.boss_challenges[index])
 		return
 	run_state.set_challenge("")
 	_spawn_mix(config.enemies_for_wave(run_state.wave))
@@ -136,14 +168,15 @@ func _spawn_from(source: EnemyPool, count: int) -> void:
 		_place(enemy, _pick_spawn_position())
 
 
-## Regular wave: each enemy's type is drawn from WaveConfig.enemy_types
+## Regular wave: each enemy's type is drawn from the stage's enemy_types
 ## (EnemySpawnTable); an exhausted pool falls back to entry 0.
 func _spawn_mix(count: int) -> void:
 	_spawned_this_wave.clear()
 	_spawned_enemies.clear()
 	_type_counts.fill(0)
+	var types: Array[EnemySpawnEntry] = _stage.get_data().enemy_types
 	for i: int in count:
-		var index: int = EnemySpawnTable.pick(config.enemy_types, run_state.wave, _type_counts, _rng.randf())
+		var index: int = EnemySpawnTable.pick(types, run_state.wave, _type_counts, _rng.randf())
 		if _type_pools[index].available_count() == 0:
 			index = 0
 		var enemy: Enemy = _type_pools[index].acquire()
@@ -154,11 +187,16 @@ func _spawn_mix(count: int) -> void:
 
 
 func _place(enemy: Enemy, at: Vector3) -> void:
+	_place_at_level(enemy, at, config.enemy_level_for(run_state.wave), run_state.get_rage_level())
+
+
+func _place_at_level(enemy: Enemy, at: Vector3, level: int, rage_level: int) -> void:
 	_spawned_this_wave.append(at)
-	enemy.activate(at, player, config.enemy_level_for(run_state.wave))
-	enemy.enrage(rage, run_state.get_rage_level())
+	enemy.activate(at, player, level)
+	enemy.set_obstacles(_stage.get_obstacles(), obstacle_avoidance)
+	enemy.enrage(rage, rage_level)
 	if pace != null:
-		enemy.apply_pace(pace, run_state.get_rage_level())
+		enemy.apply_pace(pace, rage_level)
 	if coordinator != null:
 		enemy.begin_spawn_in(coordinator.config)
 	_spawned_enemies.append(enemy)
@@ -166,7 +204,8 @@ func _place(enemy: Enemy, at: Vector3) -> void:
 
 func _match_type_pools() -> void:
 	_type_pools.clear()
-	for entry: EnemySpawnEntry in config.enemy_types:
+	var types: Array[EnemySpawnEntry] = _stage.get_data().enemy_types
+	for entry: EnemySpawnEntry in types:
 		var found: EnemyPool = null
 		for type_pool: EnemyPool in pools:
 			if type_pool.spawn_entry == entry:
@@ -174,7 +213,7 @@ func _match_type_pools() -> void:
 		if found == null:
 			push_error("WaveManager: no pool for enemy type '%s'." % entry.resource_path)
 		_type_pools.append(found)
-	_type_counts.resize(config.enemy_types.size())
+	_type_counts.resize(types.size())
 
 
 func _pool_for(challenge: BossChallengeData) -> EnemyPool:
@@ -185,25 +224,22 @@ func _pool_for(challenge: BossChallengeData) -> EnemyPool:
 	return null
 
 
-## Random point inside the spawn square, at least min_spawn_distance from the
-## player and min_spawn_separation from this wave's other spawns.
+## Random point of the stage's spawn area, min_spawn_distance to the layout's
+## max_spawn_distance (0 = no cap) from the player and min_spawn_separation from
+## this wave's other spawns.
 func _pick_spawn_position() -> Vector3:
 	var candidate := Vector3.ZERO
 	for attempt: int in config.spawn_attempts:
-		candidate = _random_point()
-		if _is_far_from_player(candidate) and _is_apart_from_spawned(candidate):
+		candidate = _stage.random_spawn_point(_rng)
+		if _is_in_player_ring(candidate) and _is_apart_from_spawned(candidate):
 			return candidate
 	return candidate
 
 
-func _random_point() -> Vector3:
-	var extent: float = config.spawn_half_extent
-	return Vector3(_rng.randf_range(-extent, extent), 0.0, _rng.randf_range(-extent, extent))
-
-
-func _is_far_from_player(point: Vector3) -> bool:
-	var offset := Vector2(point.x - player.global_position.x, point.z - player.global_position.z)
-	return offset.length() >= config.min_spawn_distance
+func _is_in_player_ring(point: Vector3) -> bool:
+	var distance: float = Vector2(point.x - player.global_position.x, point.z - player.global_position.z).length()
+	var max_distance: float = _stage.get_data().layout.max_spawn_distance
+	return distance >= config.min_spawn_distance and (max_distance <= 0.0 or distance <= max_distance)
 
 
 func _is_apart_from_spawned(point: Vector3) -> bool:
@@ -219,6 +255,9 @@ func _on_ability_chosen(ability: AbilityData) -> void:
 	_card_pool.append_array(ability.unique_upgrades)
 	if affliction_catalog != null:
 		_card_pool.append_array(affliction_catalog.cards)
+	if Session.is_sandbox():
+		spawn_sandbox(Session.get_sandbox_request(sandbox_config))
+		return
 	start_wave()
 
 
@@ -230,25 +269,26 @@ func _on_enemy_killed(enemy: Enemy) -> void:
 			_refill_left = config.horde.refill_delay
 
 
-## Sandbox skips the cards (upgrades are picked from the pause menu), and so
-## does a run with every card maxed or banned (which also starts Rage);
-## deferred so the last enemy finishes its own death before the pool reuses it.
+## Sandbox has no waves: the group comes back only with Respawn (upgrades are
+## picked from the pause menu). A run with every card maxed or banned skips the
+## cards and starts Rage; deferred so the last enemy finishes its own death
+## before the pool reuses it.
 func _on_all_dead() -> void:
 	if player.health.is_dead():
+		return
+	if Session.is_sandbox():
+		_schedule_sandbox_respawn()
 		return
 	if _horde_remaining > 0:
 		_refill_left = -1.0
 		spawn_horde_group.call_deferred()
-		return
-	if Session.is_sandbox():
-		_advance_wave.call_deferred()
 		return
 	var offer: Array[UpgradeCard] = build_offer()
 	if offer.is_empty():
 		run_state.start_rage()
 		_advance_wave.call_deferred()
 		return
-	_picks_left = config.picks_for_wave(run_state.wave)
+	_picks_left = config.picks_for_wave(run_state.wave, run_state.is_boss_wave())
 	picker.show_offer(offer, ban_rules.is_offered(run_state.wave, run_state.ban_count()))
 
 
@@ -286,9 +326,22 @@ func _on_ban_chosen(card: UpgradeCard) -> void:
 	_finish_pick()
 
 
+## After the boss of a stage that is not the last, the run waits for the
+## portal (stage_cleared); after the boss of the last stage, a new lap of its
+## waves starts (docs/specs/stages.md).
 func _advance_wave() -> void:
+	if run_state.is_boss_wave() and not _stage_is_last:
+		stage_cleared.emit()
+		return
+	var lap_over: bool = run_state.is_boss_wave()
 	run_state.next_wave()
+	if lap_over:
+		run_state.set_stage(run_state.get_stage_index())
 	start_wave()
+
+
+func _is_boss_wave() -> bool:
+	return run_state.is_stage_boss_wave(_stage.get_data().regular_waves)
 
 
 ## A boss calls minions (docs/specs/boss-colmena.md): each one comes from the
@@ -303,37 +356,112 @@ func _on_summon_requested(boss: Enemy, summon: SummonData) -> void:
 		if source == null or source.available_count() == 0:
 			continue
 		var minion: Enemy = source.acquire()
-		_place(minion, _pick_summon_position(boss.global_position, summon))
+		_place_minion(minion, _pick_summon_position(boss.global_position, summon))
 		if colmena != null:
 			colmena.add_minion(minion)
 
 
+## Any regular pool of the run (not only the stage's types) can lend a minion.
 func _pool_for_stats(stats: EnemyStats) -> EnemyPool:
-	for i: int in config.enemy_types.size():
-		if config.enemy_types[i].stats == stats:
-			return _type_pools[i]
+	for type_pool: EnemyPool in pools:
+		if type_pool.spawn_entry != null and type_pool.spawn_entry.stats == stats:
+			return type_pool
 	return null
 
 
 ## Random point between summon.min_radius and max_radius from `center`, at
 ## least min_player_distance from the player, apart from this batch and inside
-## the spawn square.
+## the stage's spawn area.
 func _pick_summon_position(center: Vector3, summon: SummonData) -> Vector3:
 	var candidate := center
-	var extent: float = config.spawn_half_extent
 	for attempt: int in config.spawn_attempts:
 		var angle: float = _rng.randf_range(0.0, TAU)
 		var radius: float = _rng.randf_range(summon.min_radius, summon.max_radius)
 		candidate = center + Vector3(sin(angle), 0.0, cos(angle)) * radius
-		candidate = Vector3(clampf(candidate.x, -extent, extent), center.y, clampf(candidate.z, -extent, extent))
+		candidate = _stage.clamp_inside(Vector3(candidate.x, center.y, candidate.z))
 		var from_player := Vector2(candidate.x - player.global_position.x, candidate.z - player.global_position.z)
 		if from_player.length() >= summon.min_player_distance and _is_apart_from_spawned(candidate):
 			return candidate
 	return candidate
 
 
+## In the sandbox a minion takes the group's level and immortality, never the
+## dummy option (docs/specs/sandbox-arena-control.md).
+func _place_minion(minion: Enemy, at: Vector3) -> void:
+	if _sandbox_request == null:
+		_place(minion, at)
+		return
+	_place_at_level(minion, at, _sandbox_request.level, 0)
+	minion.set_sandbox_options(_sandbox_request.immortal, false, sandbox_config.dummy_turn_speed)
+
+
 func _physics_process(delta: float) -> void:
 	_advance_horde_refill(delta)
+	_advance_sandbox_respawn(delta)
+
+
+## Everything the sandbox can summon (built on first use from the pools).
+func get_roster() -> SandboxRoster:
+	if _roster == null:
+		_roster = SandboxRoster.build(pools, horde_pool, boss_pools, sandbox_config)
+	return _roster
+
+
+## Sandbox (docs/specs/sandbox-arena-control.md): replaces the enemies in play
+## with `request` (its entry, count, level and options), without Rage and
+## around the player like a wave. Bosses get their HUD bars and summons.
+func spawn_sandbox(request: SandboxSpawnRequest) -> void:
+	clear_arena()
+	_sandbox_request = request
+	var entry: SandboxRoster.Entry = get_roster().get_entry(request.entry)
+	_spawned_this_wave.clear()
+	_spawned_enemies.clear()
+	for i: int in mini(request.count, entry.max_count):
+		var enemy: Enemy = entry.pool.acquire()
+		if enemy == null:
+			break
+		_place_at_level(enemy, _pick_spawn_position(), request.level, 0)
+		enemy.set_sandbox_options(request.immortal, request.dummy, sandbox_config.dummy_turn_speed)
+	if entry.is_boss:
+		_start_sandbox_bosses(entry)
+	else:
+		run_state.set_challenge("")
+
+
+## Sends every active enemy back to its pool without counting kills.
+func clear_arena() -> void:
+	_sandbox_respawn_left = -1.0
+	_horde_remaining = 0
+	_refill_left = -1.0
+	while registry.alive_count() > 0:
+		registry.get_active()[0].return_to_pool()
+	run_state.set_challenge("")
+	bosses_cleared.emit()
+
+
+func is_sandbox_respawn_scheduled() -> bool:
+	return _sandbox_respawn_left >= 0.0
+
+
+func _start_sandbox_bosses(entry: SandboxRoster.Entry) -> void:
+	run_state.set_challenge(entry.title)
+	for boss: Enemy in _spawned_enemies:
+		if not boss.summon_requested.is_connected(_on_summon_requested):
+			boss.summon_requested.connect(_on_summon_requested)
+	boss_wave_started.emit(_spawned_enemies)
+
+
+func _schedule_sandbox_respawn() -> void:
+	if _sandbox_request != null and _sandbox_request.respawn:
+		_sandbox_respawn_left = sandbox_config.respawn_delay
+
+
+func _advance_sandbox_respawn(delta: float) -> void:
+	if _sandbox_respawn_left < 0.0:
+		return
+	_sandbox_respawn_left -= delta
+	if _sandbox_respawn_left <= 0.0:
+		spawn_sandbox(_sandbox_request)
 
 
 ## Fodder still to come out this wave.
@@ -353,7 +481,7 @@ func _start_horde() -> void:
 	_refill_left = -1.0
 	if config.horde == null or horde_pool == null:
 		return
-	_horde_remaining = config.horde.total_for(run_state.wave, config.is_boss_wave(run_state.wave))
+	_horde_remaining = config.horde.total_for(run_state.wave, _is_boss_wave())
 	for i: int in config.horde.initial_groups:
 		spawn_horde_group()
 
@@ -369,14 +497,13 @@ func spawn_horde_group() -> int:
 	if count <= 0:
 		return 0
 	var center: Vector3 = _pick_spawn_position()
-	var extent: float = config.spawn_half_extent
 	var spawned: int = 0
 	for i: int in count:
 		var fodder: Enemy = horde_pool.acquire()
 		if fodder == null:
 			break
 		var at: Vector3 = center + horde.member_offset(i)
-		_place(fodder, Vector3(clampf(at.x, -extent, extent), center.y, clampf(at.z, -extent, extent)))
+		_place(fodder, _stage.clamp_inside(Vector3(at.x, center.y, at.z)))
 		spawned += 1
 	_horde_remaining -= spawned
 	_horde_alive += spawned

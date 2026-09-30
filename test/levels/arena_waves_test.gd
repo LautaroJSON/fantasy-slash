@@ -2,6 +2,7 @@ extends GdUnitTestSuite
 
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
 const WAVE_CONFIG: WaveConfig = preload("res://data/waves/wave_config.tres")
+const ARENA_STAGE: StageData = preload("res://data/stages/arena/arena_stage.tres")
 const PLAYER_STATS: PlayerStats = preload("res://data/classes/warrior/warrior_stats.tres")
 const DAMAGE_UPGRADE: UpgradeData = preload("res://data/upgrades/damage.tres")
 const HEALTH_UPGRADE: UpgradeData = preload("res://data/upgrades/max_health.tres")
@@ -20,6 +21,7 @@ var _game_over: GameOverScreen
 
 func before_test() -> void:
 	_arena = auto_free(ARENA_SCENE.instantiate())
+	preload("res://test/helpers/test_world.gd").arena_only(_arena)
 	add_child(_arena)
 	preload("res://test/helpers/test_world.gd").without_horde(_arena)
 	_registry = _arena.get_node("EnemyRegistry") as EnemyRegistry
@@ -56,8 +58,8 @@ func test_ac19_first_wave_spawns_exactly_five_enemies_away_from_the_player() -> 
 	for enemy: Enemy in _registry.get_active():
 		var offset := Vector2(enemy.global_position.x - _player.global_position.x, enemy.global_position.z - _player.global_position.z)
 		assert_float(offset.length()).is_greater_equal(WAVE_CONFIG.min_spawn_distance)
-		assert_float(absf(enemy.global_position.x)).is_less_equal(WAVE_CONFIG.spawn_half_extent)
-		assert_float(absf(enemy.global_position.z)).is_less_equal(WAVE_CONFIG.spawn_half_extent)
+		assert_float(absf(enemy.global_position.x)).is_less_equal(ARENA_STAGE.layout.bounds().end.x)
+		assert_float(absf(enemy.global_position.z)).is_less_equal(ARENA_STAGE.layout.bounds().end.x)
 
 
 func test_ac20_clearing_the_wave_pauses_and_offers_three_cards() -> void:
@@ -146,12 +148,12 @@ func test_ac268_without_upgrades_the_next_wave_starts_on_its_own() -> void:
 
 func test_ac269_without_upgrades_boss_waves_still_come() -> void:
 	_exhaust_upgrades()
-	# Jump to wave 9: clearing it advances to wave 10, a boss wave.
-	for i: int in 8:
+	# Jump to wave 10: clearing it advances to wave 11, the boss wave of the stage (stages.md).
+	for i: int in 9:
 		_run_state.next_wave()
 	_kill_all_active()
 	await get_tree().process_frame
-	assert_int(_run_state.wave).is_equal(10)
+	assert_int(_run_state.wave).is_equal(11)
 	assert_bool(_run_state.is_boss_wave()).is_true()
 	assert_int(_registry.alive_count()).is_greater(0)
 
@@ -248,7 +250,7 @@ func test_ac415_regular_waves_mix_the_allowed_types() -> void:
 		assert_int(_run_state.wave).is_equal(wave)
 		if not _run_state.is_boss_wave():
 			assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
-			for entry: EnemySpawnEntry in WAVE_CONFIG.enemy_types:
+			for entry: EnemySpawnEntry in ARENA_STAGE.enemy_types:
 				var count: int = 0
 				for enemy: Enemy in _registry.get_active():
 					if enemy.stats == entry.stats:

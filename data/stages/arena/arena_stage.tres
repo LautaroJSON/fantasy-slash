@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="StageData" format=3]
+
+[ext_resource type="Script" path="res://resources/stage_data.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://levels/stages/arena/arena_stage.tscn" id="2_scene"]
+[ext_resource type="Script" path="res://resources/enemy_spawn_entry.gd" id="3_spawn_script"]
+[ext_resource type="Resource" path="res://data/enemies/spawn/grunt_spawn.tres" id="4_grunt"]
+[ext_resource type="Resource" path="res://data/enemies/spawn/charger_spawn.tres" id="5_charger"]
+[ext_resource type="Resource" path="res://data/enemies/spawn/harasser_spawn.tres" id="6_harasser"]
+[ext_resource type="Resource" path="res://data/enemies/spawn/leaper_spawn.tres" id="7_leaper"]
+[ext_resource type="Resource" path="res://data/enemies/spawn/shieldbearer_spawn.tres" id="8_shieldbearer"]
+[ext_resource type="Script" path="res://resources/boss_challenge_data.gd" id="9_challenge_script"]
+[ext_resource type="Resource" path="res://data/enemies/boss_challenges/titan.tres" id="10_titan"]
+[ext_resource type="Resource" path="res://data/enemies/boss_challenges/colmena.tres" id="11_colmena"]
+[ext_resource type="Resource" path="res://data/enemies/boss_challenges/verdugo.tres" id="12_verdugo"]
+[ext_resource type="Resource" path="res://data/enemies/boss_challenges/king.tres" id="13_king"]
+[ext_resource type="Resource" path="res://data/stages/portals/rune_ring_portal.tres" id="14_portal"]
+[ext_resource type="Resource" path="res://data/stages/arena/arena_layout.tres" id="15_layout"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"arena"
+display_name = "Arena"
+subtitle = "El último círculo"
+scene = ExtResource("2_scene")
+regular_waves = 10
+enemy_types = Array[ExtResource("3_spawn_script")]([ExtResource("4_grunt"), ExtResource("5_charger"), ExtResource("6_harasser"), ExtResource("7_leaper"), ExtResource("8_shieldbearer")])
+boss_challenges = Array[ExtResource("9_challenge_script")]([ExtResource("10_titan"), ExtResource("11_colmena"), ExtResource("12_verdugo"), ExtResource("13_king")])
+portal = ExtResource("14_portal")
+layout = ExtResource("15_layout")

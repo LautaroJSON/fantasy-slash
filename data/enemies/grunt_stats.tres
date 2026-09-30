@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://components/enemies/melee_behavior.tscn" id="3_behavior"]
 [ext_resource type="Resource" path="res://data/enemies/attacks/grunt_punch.tres" id="4_attack"]
 [ext_resource type="Script" uid="uid://djw82ehqq88oc" path="res://resources/enemy_attack_data.gd" id="5_attack_script"]
+[ext_resource type="PackedScene" path="res://entities/enemy/models/bruto_model.tscn" id="6_model"]
 
 [sub_resource type="Resource" id="Resource_max_health"]
 script = ExtResource("2_growth")
@@ -25,6 +26,7 @@ cap = 5.0
 
 [resource]
 script = ExtResource("1_script")
+display_name = "Bruto"
 damage = 8.0
 max_health = 40.0
 attack_interval = 0.4
@@ -35,4 +37,5 @@ level_growth = Array[ExtResource("2_growth")]([SubResource("Resource_max_health"
 body_scale = 1.0
 health_bar_scale = 1.0
 behavior = ExtResource("3_behavior")
+model = ExtResource("6_model")
 attacks = Array[ExtResource("5_attack_script")]([ExtResource("4_attack")])

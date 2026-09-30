@@ -2,7 +2,39 @@
 
 [ext_resource type="Script" path="res://ui/pause_menu.gd" id="1_script"]
 [ext_resource type="Resource" path="res://data/ui/stat_display_table.tres" id="2_table"]
-[ext_resource type="PackedScene" path="res://ui/sandbox_upgrade_panel.tscn" id="3_sandbox_panel"]
+[ext_resource type="PackedScene" path="res://ui/upgrade_panel.tscn" id="3_upgrade_panel"]
+[ext_resource type="PackedScene" path="res://ui/sandbox_enemy_panel.tscn" id="4_enemy_panel"]
+[ext_resource type="Resource" path="res://data/ui/pause_menu_config.tres" id="5_config"]
+[ext_resource type="Resource" path="res://data/sandbox/sandbox_config.tres" id="6_sandbox_config"]
+[ext_resource type="Resource" path="res://data/ui/input_prompt_config.tres" id="7_prompts"]
+[ext_resource type="Script" path="res://components/input/input_device_monitor.gd" id="8_device_monitor"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_selected"]
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+bg_color = Color(0.3, 0.3, 0.36, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_unselected"]
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+bg_color = Color(0.14, 0.14, 0.17, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_hovered"]
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+bg_color = Color(0.22, 0.22, 0.27, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
 
 [node name="PauseMenu" type="Control"]
 process_mode = 3
@@ -14,7 +46,15 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 display_table = ExtResource("2_table")
+config = ExtResource("5_config")
+sandbox_config = ExtResource("6_sandbox_config")
+prompts = ExtResource("7_prompts")
 main_menu_path = "res://ui/main_menu.tscn"
+
+[node name="InputDeviceMonitor" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("8_device_monitor")
+config = ExtResource("7_prompts")
 
 [node name="Dim" type="ColorRect" parent="."]
 layout_mode = 1
@@ -32,7 +72,8 @@ offset_left = 16.0
 offset_top = 16.0
 theme_override_font_sizes/font_size = 22
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Frame" type="MarginContainer" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -40,92 +81,131 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Panel" type="PanelContainer" parent="Center"]
+[node name="Panel" type="PanelContainer" parent="Frame"]
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+[node name="Margin" type="MarginContainer" parent="Frame/Panel"]
 layout_mode = 2
 theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
+theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_bottom = 12
 
-[node name="Layout" type="VBoxContainer" parent="Center/Panel/Margin"]
+[node name="Layout" type="VBoxContainer" parent="Frame/Panel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Center/Panel/Margin/Layout"]
+[node name="Header" type="HBoxContainer" parent="Frame/Panel/Margin/Layout"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+alignment = 1
+theme_override_constants/separation = 24
+
+[node name="Title" type="Label" parent="Frame/Panel/Margin/Layout/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
 text = "PAUSA"
 horizontal_alignment = 1
 
-[node name="RunLabel" type="Label" parent="Center/Panel/Margin/Layout"]
+[node name="RunLabel" type="Label" parent="Frame/Panel/Margin/Layout/Header"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 
-[node name="Columns" type="HBoxContainer" parent="Center/Panel/Margin/Layout"]
-layout_mode = 2
-theme_override_constants/separation = 32
-
-[node name="StatsBlock" type="VBoxContainer" parent="Center/Panel/Margin/Layout/Columns"]
-layout_mode = 2
-size_flags_vertical = 0
-theme_override_constants/separation = 16
-
-[node name="StatColumns" type="HBoxContainer" parent="Center/Panel/Margin/Layout/Columns/StatsBlock"]
-layout_mode = 2
-theme_override_constants/separation = 48
-
-[node name="LeftGrid" type="GridContainer" parent="Center/Panel/Margin/Layout/Columns/StatsBlock/StatColumns"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-theme_override_constants/h_separation = 32
-theme_override_constants/v_separation = 4
-columns = 2
-
-[node name="RightGrid" type="GridContainer" parent="Center/Panel/Margin/Layout/Columns/StatsBlock/StatColumns"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-theme_override_constants/h_separation = 32
-theme_override_constants/v_separation = 4
-columns = 2
-
-[node name="BottomGrid" type="GridContainer" parent="Center/Panel/Margin/Layout/Columns/StatsBlock"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-theme_override_constants/h_separation = 32
-theme_override_constants/v_separation = 4
-columns = 2
-
-[node name="AfflictionsLabel" type="Label" parent="Center/Panel/Margin/Layout/Columns/StatsBlock"]
+[node name="Tabs" type="TabContainer" parent="Frame/Panel/Margin/Layout"]
+size_flags_vertical = 3
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
+theme_override_styles/tab_selected = SubResource("StyleBoxFlat_tab_selected")
+theme_override_styles/tab_unselected = SubResource("StyleBoxFlat_tab_unselected")
+theme_override_styles/tab_hovered = SubResource("StyleBoxFlat_tab_hovered")
+current_tab = 0
 
-[node name="SandboxPanel" parent="Center/Panel/Margin/Layout/Columns" instance=ExtResource("3_sandbox_panel")]
+[node name="Personaje" type="VBoxContainer" parent="Frame/Panel/Margin/Layout/Tabs"]
+layout_mode = 2
+theme_override_constants/separation = 16
+metadata/_tab_index = 0
+
+[node name="StatColumns" type="HBoxContainer" parent="Frame/Panel/Margin/Layout/Tabs/Personaje"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 48
+
+[node name="LeftGrid" type="GridContainer" parent="Frame/Panel/Margin/Layout/Tabs/Personaje/StatColumns"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/h_separation = 32
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="RightGrid" type="GridContainer" parent="Frame/Panel/Margin/Layout/Tabs/Personaje/StatColumns"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/h_separation = 32
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="BottomGrid" type="GridContainer" parent="Frame/Panel/Margin/Layout/Tabs/Personaje"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+theme_override_constants/h_separation = 32
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="StatusColumns" type="HBoxContainer" parent="Frame/Panel/Margin/Layout/Tabs/Personaje"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 48
+
+[node name="BuffsLabel" type="Label" parent="Frame/Panel/Margin/Layout/Tabs/Personaje/StatusColumns"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 18
+
+[node name="AfflictionsLabel" type="Label" parent="Frame/Panel/Margin/Layout/Tabs/Personaje/StatusColumns"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 18
+
+[node name="Mejoras" parent="Frame/Panel/Margin/Layout/Tabs" instance=ExtResource("3_upgrade_panel")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+metadata/_tab_index = 1
 
-[node name="Buttons" type="HBoxContainer" parent="Center/Panel/Margin/Layout"]
+[node name="Enemigos" parent="Frame/Panel/Margin/Layout/Tabs" instance=ExtResource("4_enemy_panel")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="TabHint" type="Label" parent="Frame/Panel/Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="Frame/Panel/Margin/Layout"]
 layout_mode = 2
 alignment = 1
 theme_override_constants/separation = 16
 
-[node name="ResumeButton" type="Button" parent="Center/Panel/Margin/Layout/Buttons"]
+[node name="ResumeButton" type="Button" parent="Frame/Panel/Margin/Layout/Buttons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 44)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Reanudar (Esc)"
 
-[node name="MainMenuButton" type="Button" parent="Center/Panel/Margin/Layout/Buttons"]
+[node name="MainMenuButton" type="Button" parent="Frame/Panel/Margin/Layout/Buttons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 44)
 layout_mode = 2

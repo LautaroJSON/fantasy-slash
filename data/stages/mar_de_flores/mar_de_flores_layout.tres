@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="StageLayout" format=3]
+
+[ext_resource type="Script" path="res://resources/stage_layout.gd" id="1_beqft"]
+
+[resource]
+script = ExtResource("1_beqft")
+spawn_polygon = PackedVector2Array(-19.98, -13.59, -11.5199995, -18.72, 0, -19.98, 11.5199995, -18.539999, 20.97, -14.49, 25.74, -6.2999997, 24.75, 4.14, 20.97, 12.599999, 11.5199995, 17.82, 0, 19.98, -11.5199995, 18.359999, -19.98, 13.59, -24.569998, 5.31, -24.21, -5.31)
+max_spawn_distance = 18.0
+spawn_lift = 0.3
+obstacle_margin = 0.5
+point_attempts = 20

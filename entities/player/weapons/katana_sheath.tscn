@@ -1,14 +1,19 @@
 [gd_scene format=3]
 
 [ext_resource type="ArrayMesh" path="res://assets/models/weapons/katana/katana_sheath.res" id="1_model"]
-[ext_resource type="Material" path="res://materials/weapons/katana_material.tres" id="2_material"]
+[ext_resource type="Material" path="res://materials/weapons/katana_lacquer_material.tres" id="2_lacquer"]
+[ext_resource type="Material" path="res://materials/weapons/katana_lacquer_red_material.tres" id="3_red"]
+[ext_resource type="Material" path="res://materials/weapons/katana_gold_material.tres" id="4_gold"]
+[ext_resource type="Material" path="res://materials/weapons/katana_sageo_material.tres" id="5_sageo"]
 
 [node name="KatanaSheath" type="Node3D"]
 
 [node name="Model" type="MeshInstance3D" parent="."]
-transform = Transform3D(1.1, 0, 0, 0, 0, 1.1, 0, -1.1, 0, 0, 0, 0.055)
 mesh = ExtResource("1_model")
-surface_material_override/0 = ExtResource("2_material")
+surface_material_override/0 = ExtResource("2_lacquer")
+surface_material_override/1 = ExtResource("3_red")
+surface_material_override/2 = ExtResource("4_gold")
+surface_material_override/3 = ExtResource("5_sageo")
 
 [node name="Grip" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3032)

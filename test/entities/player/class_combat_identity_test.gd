@@ -3,6 +3,7 @@ extends GdUnitTestSuite
 ## (docs/specs/class-combat-identity.md, AC639–AC660 and AC678–AC682).
 
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
+const KatanaParts := preload("res://test/helpers/katana_parts.gd")
 const TestWorld := preload("res://test/helpers/test_world.gd")
 const PLAYER_SCENE: PackedScene = preload("res://entities/player/player.tscn")
 const ENEMY_SCENE: PackedScene = preload("res://entities/enemy/enemy.tscn")
@@ -30,6 +31,8 @@ const TORSO_HALF_DEPTH: float = 0.08
 ## AC653: head center and radius in the neck joint's space.
 const HEAD_CENTER: Vector3 = Vector3(0.0, 0.21, 0.0)
 const HEAD_RADIUS: float = 0.2
+## AC1240: how far the guard may sink into the (rough, spherical) head volume, in meters.
+const GUARD_HEAD_GRAZE: float = 0.02
 ## AC678: the greatsword across the shoulders: its tip reaches this far to the
 ## left (m) and its blade rises at most this much (degrees) from horizontal.
 const BERSERKER_TIP_LEFT: float = 1.0
@@ -427,6 +430,48 @@ func test_ac653_the_weapon_never_goes_through_the_body() -> void:
 				var inside: String = _blade_hits_body(humanoid, trail_base.global_position, trail_tip.global_position)
 				assert_str(inside).override_failure_message("%s %s at %.2f s: the blade goes through the %s" % [character_class.title, clip_name, time, inside]).is_empty()
 				time += SAMPLE_STEP
+
+
+## AC1240 (docs/specs/katana-visual-rework.md): the tsuba and the seppa of the katana never go through
+## the torso or the head in any clip of the Samurai (except the frames where the blade itself already does, AC653).
+func test_ac1240_the_katana_guard_never_goes_through_the_body() -> void:
+	_spawn_player(SAMURAI)
+	ComboDriver.drive_by_hand(_player)
+	var humanoid: LowPolyHumanoid = _humanoid()
+	var mount: WeaponMount = _player.get_node("WeaponMount") as WeaponMount
+	var model: MeshInstance3D = _player.get_node("Visual/SwordPivot").get_child(0).get_node("Model") as MeshInstance3D
+	var guard: PackedVector3Array = KatanaParts.guard_points(model)
+	var points: PackedVector3Array = guard
+	var failures: Array[String] = []
+	var library: AnimationLibrary = _library(SAMURAI)
+	for clip_name: StringName in library.get_animation_list():
+		var clip: Animation = library.get_animation(clip_name)
+		humanoid.anim.play(clip_name)
+		var time: float = 0.0
+		while time <= clip.length:
+			var charging: bool = clip_name == SHEATHE_CONFIG.charge_body_clip or SHEATHE_CONFIG.charge_sink_clips.has(clip_name)
+			mount.hold_in_sheath(charging or (clip_name == SHEATHE_CONFIG.release_body_clip and is_zero_approx(time)))
+			humanoid.anim.seek(time, true)
+			mount.update(1.0)
+			var to_torso: Transform3D = humanoid.get_joint("torso").global_transform.affine_inverse()
+			var to_neck: Transform3D = humanoid.get_joint("neck").global_transform.affine_inverse()
+			var trail_base: Node3D = model.get_parent().get_node("TrailBase") as Node3D
+			var trail_tip: Node3D = model.get_parent().get_node("TrailTip") as Node3D
+			if not _blade_hits_body(humanoid, trail_base.global_position, trail_tip.global_position).is_empty():
+				time += SAMPLE_STEP
+				continue
+			for i: int in points.size():
+				var world: Vector3 = (model.get_parent() as Node3D).global_transform * points[i]
+				var local: Vector3 = to_torso * world
+				var ellipse: float = pow(local.x / TORSO_HALF_WIDTH, 2.0) + pow(local.z / TORSO_HALF_DEPTH, 2.0)
+				var in_torso: bool = local.y >= TORSO_BOTTOM and local.y <= TORSO_TOP and ellipse < 1.0
+				var head_depth: float = HEAD_RADIUS - (to_neck * world).distance_to(HEAD_CENTER)
+				var in_head: bool = head_depth > GUARD_HEAD_GRAZE
+				if in_torso or in_head:
+					failures.append("%s %.2f s: %s vertex %s in the %s" % [clip_name, time, "guard", points[i], "torso" if in_torso else "head (%.3f m deep)" % head_depth])
+					break
+			time += SAMPLE_STEP
+	assert_array(failures).override_failure_message("%d frames: %s" % [failures.size(), "; ".join(failures.slice(0, 25))]).is_empty()
 
 
 func test_ac654_the_trail_emits_during_every_strike() -> void:

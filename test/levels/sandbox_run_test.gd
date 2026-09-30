@@ -18,7 +18,7 @@ var _picker: UpgradePicker
 var _pause: PauseMenu
 var _game_over: GameOverScreen
 var _wave_manager: WaveManager
-var _panel: SandboxUpgradePanel
+var _panel: UpgradePanel
 
 
 func before_test() -> void:
@@ -33,7 +33,7 @@ func before_test() -> void:
 	_pause = _arena.get_node("UI/PauseMenu") as PauseMenu
 	_game_over = _arena.get_node("UI/GameOverScreen") as GameOverScreen
 	_wave_manager = _arena.get_node("WaveManager") as WaveManager
-	_panel = _pause.get_sandbox_panel()
+	_panel = _pause.get_upgrade_panel()
 	get_tree().paused = true
 	await get_tree().process_frame
 	var ability_picker: AbilityPicker = _arena.get_node("UI/AbilityPicker") as AbilityPicker
@@ -42,6 +42,7 @@ func before_test() -> void:
 
 func after_test() -> void:
 	Session.mode = GameSession.Mode.NORMAL
+	Session.sandbox_request = null
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
@@ -55,13 +56,16 @@ func _kill_all_active() -> void:
 		enemy.health.receive_hit(LETHAL_HIT)
 
 
-func test_ac110_cleared_waves_skip_the_cards() -> void:
+## Replaces AC110 (sandbox-arena-control.md): no cards and no next wave; the
+## group only comes back through Respawn (AC1332).
+func test_ac1333_cleared_groups_skip_the_cards_and_the_waves() -> void:
+	var cleared: Array[bool] = [false]
+	_wave_manager.stage_cleared.connect(func() -> void: cleared[0] = true)
 	_kill_all_active()
 	assert_bool(_picker.is_open()).is_false()
-	assert_bool(get_tree().paused).is_false()
 	await get_tree().process_frame
-	assert_int(_run_state.wave).is_equal(2)
-	assert_int(_registry.alive_count()).is_equal(WAVE_CONFIG.enemies_for_wave(_run_state.wave))
+	assert_int(_run_state.wave).is_equal(1)
+	assert_bool(cleared[0]).is_false()
 
 
 func test_ac111_the_player_cannot_die() -> void:
@@ -73,7 +77,7 @@ func test_ac111_the_player_cannot_die() -> void:
 
 func test_ac112_pause_lists_the_whole_pool() -> void:
 	_pause.open()
-	assert_bool(_panel.visible).is_true()
+	assert_bool(_panel.is_editable()).is_true()
 	assert_int(_panel.get_row_count()).is_equal(_wave_manager.get_card_pool().size())
 
 
@@ -82,7 +86,8 @@ func test_ac113_plus_and_minus_change_the_stats() -> void:
 	assert_bool(_panel.is_minus_enabled(DAMAGE_UPGRADE)).is_false()
 	_panel.add(DAMAGE_UPGRADE)
 	assert_float(_player.stats.get_stat(PlayerStats.Stat.DAMAGE)).is_equal_approx(PLAYER_STATS.damage + DAMAGE_UPGRADE.amount, 0.0001)
-	assert_str(_pause.get_value_text(PlayerStats.Stat.DAMAGE)).is_equal("19.0")
+	# Adapted (sandbox-arena-control.md): read from the warrior data, not a fixed value.
+	assert_str(_pause.get_value_text(PlayerStats.Stat.DAMAGE)).is_equal("%.1f" % (PLAYER_STATS.damage + DAMAGE_UPGRADE.amount))
 	assert_str(_panel.get_count_text(DAMAGE_UPGRADE)).is_equal("1/%d" % DAMAGE_UPGRADE.max_stacks)
 	assert_bool(_panel.is_minus_enabled(DAMAGE_UPGRADE)).is_true()
 	_panel.remove(DAMAGE_UPGRADE)
@@ -113,7 +118,7 @@ func test_ac115_reset_returns_to_the_base_build() -> void:
 	assert_int(_player.basic_ability.get_upgrades().size()).is_equal(0)
 	assert_int(_player.basic_ability.get_unique_level(CONCUSSIVE.id)).is_equal(0)
 	assert_float(_player.basic_ability.get_stat(AbilityData.Stat.BASE_DAMAGE)).is_equal_approx(SHIELD_CHARGE.base_damage, 0.0001)
-	assert_str(_pause.get_value_text(PlayerStats.Stat.DAMAGE)).is_equal("15.0")
+	assert_str(_pause.get_value_text(PlayerStats.Stat.DAMAGE)).is_equal("%.1f" % PLAYER_STATS.damage)
 
 
 func test_ac121_stat_cards_stop_at_their_cap() -> void:
@@ -194,9 +199,11 @@ func test_ac898_the_sandbox_pause_fits_the_window() -> void:
 	var window := Vector2(ProjectSettings.get_setting("display/window/size/viewport_width"), ProjectSettings.get_setting("display/window/size/viewport_height"))
 	_pause.open()
 	await get_tree().process_frame
-	var panel: Control = _pause.get_node("Center/Panel") as Control
-	assert_float(panel.size.x).is_less_equal(window.x)
-	assert_float(panel.size.y).is_less_equal(window.y)
+	var panel: Control = _pause.get_node("Frame/Panel") as Control
+	# Adapted (pause-fullscreen-max-upgrades.md): the panel now stretches over the
+	# whole viewport, so what must fit is the size its content needs.
+	assert_float(panel.get_combined_minimum_size().x).is_less_equal(window.x)
+	assert_float(panel.get_combined_minimum_size().y).is_less_equal(window.y)
 
 
 func test_ac898_affliction_rows_name_their_source() -> void:

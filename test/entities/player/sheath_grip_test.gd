@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 ## The katana sheath is held in the left hand and the hands grip their targets
 ## (docs/specs/sheath-socket-hand-grip.md AC663–AC670 and
 ## docs/specs/sheath-in-left-hand.md AC671–AC677; docs/specs/katana-hand-proportions.md
-## AC684–AC685; docs/specs/katana-sheath-shape.md AC696)).
+## AC684–AC685; docs/specs/katana-sheath-shape.md AC696; docs/specs/katana-visual-rework.md AC1235)).
 
 const ComboDriver := preload("res://test/helpers/combo_driver.gd")
 const KatanaParts := preload("res://test/helpers/katana_parts.gd")
@@ -55,10 +55,8 @@ const POMMEL_OUT: float = 0.05
 ## mouth from the guard front face, in meters.
 const HILT_GAP: float = 0.01
 const MOUTH_GAP: float = 0.01
-## AC696: least gap between the sheathed blade and the sheath outline, in
-## meters, and the least X gap between the two edges of the sheath.
+## AC696: least gap between the sheathed blade and the sheath surface, in meters.
 const BLADE_MARGIN: float = 0.0015
-const ACROSS_WIDTH: float = 0.03
 
 var _player: Player
 
@@ -471,47 +469,20 @@ func test_ac685_sheathed_the_guard_sits_between_the_hands() -> void:
 	assert_float(tip.z).is_greater_equal(sheath_box.position.z)
 
 
-# --- Katana sheath shape (docs/specs/katana-sheath-shape.md)
+# --- Katana sheath shape (docs/specs/katana-visual-rework.md AC1235)
 
-## Outline of the sheath in its own space (X, Z), as a closed polygon: its outer
-## edge from the mouth, its end from outer to inner, and its inner edge back.
-## The last point is on the mouth, so the closing edge crosses the mouth.
-func _sheath_polygon(model: MeshInstance3D) -> PackedVector2Array:
-	var end_start: float = 0.055 - 1.1 * KatanaParts.KatanaBuilder.SHEATH_END_REGION_Y
-	var body: Array = []
-	var end: Array = []
-	for p: Vector3 in model.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array:
-		var w: Vector3 = model.transform * p
-		var q := Vector2(w.x, w.z)
-		var points: Array = end if q.y < end_start else body
-		if points.all(func(o: Vector2) -> bool: return o.distance_to(q) > 0.0001):
-			points.append(q)
-	# A point is on the outer edge when it has a greater X than the nearest point
-	# (along Z) across the width of the sheath.
-	var outer: Array = []
-	var inner: Array = []
-	for q: Vector2 in body:
-		var partner: Vector2 = q
-		for r: Vector2 in body:
-			if absf(r.x - q.x) > ACROSS_WIDTH and (partner == q or absf(r.y - q.y) < absf(partner.y - q.y)):
-				partner = r
-		(outer if q.x > partner.x else inner).append(q)
-	outer.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.y > b.y)
-	end.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x > b.x)
-	inner.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.y < b.y)
-	var polygon := PackedVector2Array(outer)
-	polygon.append_array(PackedVector2Array(end))
-	polygon.append_array(PackedVector2Array(inner))
-	return polygon
-
-
-## Distance from a point to the polygon edges, leaving out the closing edge.
-func _distance_to_outline(polygon: PackedVector2Array, q: Vector2) -> float:
-	var best: float = INF
-	for i: int in range(1, polygon.size()):
-		var closest: Vector2 = Geometry2D.get_closest_point_to_segment(q, polygon[i - 1], polygon[i])
-		best = minf(best, closest.distance_to(q))
-	return best
+## Whether a point is inside a closed triangle mesh: a ray along +Y crosses its
+## surface an odd number of times.
+func _is_inside(triangles: TriangleMesh, point: Vector3) -> bool:
+	var origin: Vector3 = point
+	var crossings: int = 0
+	while true:
+		var hit: Dictionary = triangles.intersect_ray(origin, Vector3.UP)
+		if hit.is_empty():
+			break
+		crossings += 1
+		origin = (hit["position"] as Vector3) + Vector3.UP * 0.00001
+	return crossings % 2 == 1
 
 
 func test_ac696_the_sheathed_blade_stays_inside_the_sheath() -> void:
@@ -521,18 +492,12 @@ func test_ac696_the_sheathed_blade_stays_inside_the_sheath() -> void:
 	_pose(humanoid, SHEATHE_CONFIG.charge_body_clip, 0.0)
 	mount.update(1.0)
 	var sheath_model: MeshInstance3D = _player.get_sheath().get_node("Model") as MeshInstance3D
-	var polygon: PackedVector2Array = _sheath_polygon(sheath_model)
-	var sheath_box: AABB = sheath_model.transform * sheath_model.mesh.get_aabb()
+	var triangles: TriangleMesh = sheath_model.mesh.generate_triangle_mesh()
 	var katana_model: MeshInstance3D = _katana_model()
-	var to_sheath: Transform3D = _player.get_sheath().global_transform.affine_inverse() * katana_model.global_transform
-	var guard_front: float = KatanaParts.bounds(KatanaParts.guard_points(katana_model)).position.z
-	for p: Vector3 in katana_model.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array:
-		# Blade only: in front of the guard.
-		if (katana_model.transform * p).z >= guard_front:
-			continue
+	var to_sheath: Transform3D = sheath_model.global_transform.affine_inverse() * katana_model.global_transform
+	var offsets: Array[Vector3] = [Vector3.ZERO, Vector3.RIGHT, Vector3.LEFT, Vector3.UP, Vector3.DOWN, Vector3.FORWARD]
+	for p: Vector3 in KatanaParts.blade_points(katana_model):
 		var s: Vector3 = to_sheath * p
-		var q := Vector2(s.x, s.z)
-		var label: String = "blade vertex %s" % s
-		assert_bool(Geometry2D.is_point_in_polygon(q, polygon)).override_failure_message(label + " is outside the sheath").is_true()
-		assert_float(_distance_to_outline(polygon, q)).override_failure_message(label).is_greater_equal(BLADE_MARGIN)
-		assert_float(absf(s.y)).override_failure_message(label).is_less_equal(sheath_box.end.y)
+		for offset: Vector3 in offsets:
+			var label: String = "blade vertex %s (offset %s)" % [s, offset]
+			assert_bool(_is_inside(triangles, s + offset * BLADE_MARGIN)).override_failure_message(label + " is outside the sheath").is_true()

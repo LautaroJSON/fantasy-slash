@@ -16,10 +16,20 @@ const ACTION_PAUSE: StringName = &"pause"
 var mode: Mode = Mode.NORMAL
 ## Class chosen in the main menu; null until one is chosen.
 var character_class: CharacterClassData = null
+## Group the sandbox summons; null until the first sandbox arena
+## (docs/specs/sandbox-arena-control.md).
+var sandbox_request: SandboxSpawnRequest = null
 
 
 func is_sandbox() -> bool:
 	return mode == Mode.SANDBOX
+
+
+## The sandbox request, created from `config` the first time.
+func get_sandbox_request(config: SandboxConfig) -> SandboxSpawnRequest:
+	if sandbox_request == null:
+		sandbox_request = SandboxSpawnRequest.from_config(config)
+	return sandbox_request
 
 
 ## Mode name as shown in the menus (same text as the main menu buttons).

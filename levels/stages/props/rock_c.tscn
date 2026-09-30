@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/stylized_nature/meshes/rock_c.res" id="1_mesh"]
+[ext_resource type="Material" path="res://materials/environment/rock_material.tres" id="2_rock"]
+[ext_resource type="Script" path="res://levels/stages/stage_obstacle.gd" id="3_obstacle"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_rock"]
+height = 2.0
+radius = 1.0
+
+[node name="RockC" type="Node3D"]
+
+[node name="Model" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0, 0)
+mesh = ExtResource("1_mesh")
+surface_material_override/0 = ExtResource("2_rock")
+
+[node name="Body" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+shape = SubResource("CylinderShape3D_rock")
+
+[node name="StageObstacle" type="Marker3D" parent="."]
+script = ExtResource("3_obstacle")
+radius = 1.1

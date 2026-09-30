@@ -4,6 +4,7 @@ extends GdUnitTestSuite
 const HORDE: HordeConfig = preload("res://data/waves/horde_config.tres")
 const FODDER_SPAWN: EnemySpawnEntry = preload("res://data/enemies/spawn/fodder_spawn.tres")
 const WAVE_CONFIG: WaveConfig = preload("res://data/waves/wave_config.tres")
+const ARENA_STAGE: StageData = preload("res://data/stages/arena/arena_stage.tres")
 
 
 func test_ac1148_total_for_grows_by_wave_and_is_capped() -> void:
@@ -30,5 +31,5 @@ func test_ac1152_the_fodder_pool_covers_max_alive_and_the_fodder_stay_out_of_the
 	assert_int(FODDER_SPAWN.max_per_wave).is_greater_equal(HORDE.max_alive)
 	assert_float(FODDER_SPAWN.weight).is_equal(0.0)
 	assert_object(HORDE.entry).is_same(FODDER_SPAWN)
-	assert_bool(WAVE_CONFIG.enemy_types.has(FODDER_SPAWN)).is_false()
+	assert_bool(ARENA_STAGE.enemy_types.has(FODDER_SPAWN)).is_false()
 	assert_object(WAVE_CONFIG.horde).is_same(HORDE)

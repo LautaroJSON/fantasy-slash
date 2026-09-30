@@ -1,0 +1,133 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/sandbox_enemy_panel.gd" id="1_script"]
+
+[node name="SandboxEnemyPanel" type="VBoxContainer"]
+custom_minimum_size = Vector2(620, 0)
+theme_override_constants/separation = 6
+script = ExtResource("1_script")
+
+[node name="TypeRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TypeTitle" type="Label" parent="TypeRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Enemigo"
+
+[node name="TypeOption" type="OptionButton" parent="TypeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="CountRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CountTitle" type="Label" parent="CountRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Cantidad"
+
+[node name="CountMinus" type="Button" parent="CountRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "−"
+
+[node name="CountLabel" type="Label" parent="CountRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+
+[node name="CountPlus" type="Button" parent="CountRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "+"
+
+[node name="LevelTitle" type="Label" parent="CountRow"]
+custom_minimum_size = Vector2(0, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Nivel"
+
+[node name="LevelMinus" type="Button" parent="CountRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "−"
+
+[node name="LevelLabel" type="Label" parent="CountRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+
+[node name="LevelPlus" type="Button" parent="CountRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "+"
+
+[node name="WaveHint" type="Label" parent="CountRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="ImmortalCheck" type="CheckButton" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Inmortal"
+
+[node name="DummyCheck" type="CheckButton" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Muñeco (no se mueve ni ataca)"
+
+[node name="RespawnCheck" type="CheckButton" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Reaparecer al morir"
+
+[node name="AliveLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="ActionRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="SpawnButton" type="Button" parent="ActionRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Invocar"
+
+[node name="ClearButton" type="Button" parent="ActionRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Limpiar arena"

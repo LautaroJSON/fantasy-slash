@@ -41,3 +41,7 @@ func get_description(level: int) -> String:
 	if level_descriptions.is_empty():
 		return description
 	return level_descriptions[clampi(level, 1, level_descriptions.size()) - 1]
+
+
+func get_group() -> UpgradeCard.Group:
+	return UpgradeCard.Group.AFFLICTION

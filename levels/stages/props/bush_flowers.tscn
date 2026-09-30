@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/stylized_nature/meshes/bush_flowers.res" id="1_mesh"]
+[ext_resource type="Material" path="res://materials/environment/leaves_green_light_material.tres" id="2_leaves"]
+[ext_resource type="Material" path="res://materials/environment/flower_material.tres" id="3_flowers"]
+
+[node name="BushFlowers" type="Node3D"]
+
+[node name="Model" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9, 0, 0, 0, 0.9, 0, 0, 0, 0.9, 0, 0, 0)
+mesh = ExtResource("1_mesh")
+surface_material_override/0 = ExtResource("2_leaves")
+surface_material_override/1 = ExtResource("3_flowers")

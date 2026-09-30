@@ -3,6 +3,7 @@ extends GdUnitTestSuite
 
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
 const WAVE_CONFIG: WaveConfig = preload("res://data/waves/wave_config.tres")
+const ARENA_STAGE: StageData = preload("res://data/stages/arena/arena_stage.tres")
 const HORDE: HordeConfig = preload("res://data/waves/horde_config.tres")
 const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const LETHAL_HIT: float = 100000.0
@@ -17,6 +18,7 @@ var _waves: WaveManager
 
 func before_test() -> void:
 	_arena = auto_free(ARENA_SCENE.instantiate())
+	preload("res://test/helpers/test_world.gd").arena_only(_arena)
 	add_child(_arena)
 	_registry = _arena.get_node("EnemyRegistry") as EnemyRegistry
 	_player = _arena.get_node("Player") as Player
@@ -71,8 +73,8 @@ func test_ac1150_wave_one_has_the_normal_mix_plus_the_first_groups() -> void:
 	assert_int(_waves.get_horde_alive()).is_equal(fodder.size())
 	assert_int(_waves.get_horde_alive() + _waves.get_horde_remaining()).is_equal(HORDE.total_for(1, false))
 	for enemy: Enemy in _registry.get_active():
-		assert_float(absf(enemy.global_position.x)).is_less_equal(WAVE_CONFIG.spawn_half_extent)
-		assert_float(absf(enemy.global_position.z)).is_less_equal(WAVE_CONFIG.spawn_half_extent)
+		assert_float(absf(enemy.global_position.x)).is_less_equal(ARENA_STAGE.layout.bounds().end.x)
+		assert_float(absf(enemy.global_position.z)).is_less_equal(ARENA_STAGE.layout.bounds().end.x)
 
 
 func test_ac1151_a_new_group_comes_out_after_the_refill_delay() -> void:
@@ -135,7 +137,7 @@ func test_ac1154_a_boss_wave_has_no_horde() -> void:
 	_kill_all_active()
 	_picker.hide()
 	get_tree().paused = false
-	_run_state.wave = WAVE_CONFIG.boss_wave_interval
+	_run_state.stage_wave = ARENA_STAGE.regular_waves + 1
 	_waves.start_wave()
 	assert_int(_waves.get_horde_remaining()).is_equal(0)
 	assert_int(_fodder_alive().size()).is_equal(0)

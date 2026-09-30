@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SandboxConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/sandbox_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+max_regular_count = 10
+max_boss_count = 3
+respawn_delay = 1.0
+dummy_turn_speed = 240.0
+default_entry = 0
+default_count = 1
+default_level = 1
+default_immortal = false
+default_dummy = false
+default_respawn = true

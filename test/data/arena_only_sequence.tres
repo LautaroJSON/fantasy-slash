@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="StageSequence" format=3]
+
+[ext_resource type="Script" path="res://resources/stage_sequence.gd" id="1_script"]
+[ext_resource type="Script" path="res://resources/stage_data.gd" id="2_stage_script"]
+[ext_resource type="Resource" path="res://data/stages/arena/arena_stage.tres" id="3_arena"]
+
+[resource]
+script = ExtResource("1_script")
+stages = Array[ExtResource("2_stage_script")]([ExtResource("3_arena")])

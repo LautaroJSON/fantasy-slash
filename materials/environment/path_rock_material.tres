@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/models/environment/stylized_nature/textures/path_rocks.png" id="1_tex"]
+
+[resource]
+
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("1_tex")
+roughness = 0.95

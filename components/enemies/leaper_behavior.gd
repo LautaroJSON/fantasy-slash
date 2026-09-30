@@ -94,15 +94,17 @@ func _chase(attack: LeapAttackData, delta: float) -> void:
 		enemy.face(offset)
 
 
-## Landing point: the target now, clamped to max_leap_distance.
+## Landing point: the target now, clamped to max_leap_distance and kept out of
+## the stage's obstacles (docs/specs/stages.md).
 func _launch(attack: LeapAttackData) -> void:
-	var offset: Vector3 = _offset_to_target().limit_length(attack.max_leap_distance)
-	_landing_point = enemy.global_position + offset
+	var reach: Vector3 = _offset_to_target().limit_length(attack.max_leap_distance)
+	_landing_point = enemy.clear_of_obstacles(enemy.global_position + reach)
+	var offset: Vector3 = _landing_point - enemy.global_position
 	enemy.get_telegraph().move_center(_landing_point)
 	_leap_velocity = offset / attack.leap_time
 	enemy.face(offset)
 	enemy.launch(attack.get_launch_speed(), attack.get_leap_gravity() / enemy.get_gravity_strength())
-	enemy.get_hands().play_pose(attack.air_hand_offset, attack.leap_time * 0.25)
+	enemy.get_hands().play_pose(attack.air_hand_offset, attack.leap_time * 0.25, &"airborne")
 	_phase = Phase.AIRBORNE
 	_phase_time = 0.0
 	_left_ground = false

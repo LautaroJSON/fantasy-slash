@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PauseMenuConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/pause_menu_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+group_titles = Array[String](["Ofensivo", "Defensivo", "Habilidad", "Aflicción"])
+empty_group_text = "Sin mejoras"
+buffs_title = "Buffs activos"
+buff_entry_format = "%s ×%d · %.1f s"
+no_buffs_text = "Ninguno"
+sandbox_run_format = "%d enemigos eliminados"
+wave_hint_format = "≈ oleada %d"
+alive_format = "Activos: %d"
+tab_hint_format = "%s / %s  Cambiar pestaña"
+screen_margin = 16.0
+right_column_groups = Array[int]([2, 3])
+max_section_groups = Array[int]([0, 1, 2])
+max_button_text = "Max"

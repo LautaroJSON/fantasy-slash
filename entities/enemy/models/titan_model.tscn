@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://assets/models/enemies/titan/titan_model.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/enemies/fx/titan_rubble.tres" id="2_fx"]
+
+[node name="TitanModel" type="Node3D"]
+script = ExtResource("1_script")
+walk_reference_speed = 1.8
+rubble = ExtResource("2_fx")

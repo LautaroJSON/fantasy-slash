@@ -56,6 +56,7 @@ func _ready() -> void:
 	run_state.changed.connect(_on_run_changed)
 	if wave_manager != null:
 		wave_manager.boss_wave_started.connect(_boss_bars.show_bosses)
+		wave_manager.bosses_cleared.connect(_boss_bars.clear)
 	_on_health_changed(player.health.current_health, player.health.max_health)
 	_on_stamina_changed(player.stamina.get_current(), player.stamina.get_max())
 	_on_run_changed()

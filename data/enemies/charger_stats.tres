@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://components/enemies/charger_behavior.tscn" id="3_behavior"]
 [ext_resource type="Resource" uid="uid://dehqkmjjtckmw" path="res://data/enemies/attacks/charger_charge.tres" id="4_attack"]
 [ext_resource type="Script" uid="uid://djw82ehqq88oc" path="res://resources/enemy_attack_data.gd" id="5_attack_script"]
+[ext_resource type="PackedScene" path="res://entities/enemy/models/charger_model.tscn" id="9_model"]
 [ext_resource type="Resource" path="res://data/enemies/hands/charger_hands.tres" id="6_hands"]
 
 [sub_resource type="Resource" id="Resource_max_health"]
@@ -26,6 +27,7 @@ cap = 4.0
 
 [resource]
 script = ExtResource("1_script")
+display_name = "Embestidor"
 damage = 10.0
 defense = 1.0
 max_health = 60.0
@@ -37,5 +39,6 @@ level_growth = Array[ExtResource("2_growth")]([SubResource("Resource_max_health"
 body_scale = 1.0
 health_bar_scale = 1.0
 behavior = ExtResource("3_behavior")
+model = ExtResource("9_model")
 attacks = Array[ExtResource("5_attack_script")]([ExtResource("4_attack")])
 hands_config = ExtResource("6_hands")

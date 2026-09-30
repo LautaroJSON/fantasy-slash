@@ -1,8 +1,8 @@
 # Modelos y animaciones propios para los enemigos
 
-- **Estado:** Propuesta (2026-09-28). Pendiente de aprobación. No se escribió código.
+- **Estado:** En implementación (2026-09-29). Pasos 1 a 3 del plan hechos (reservas, enmienda 6.0.0, infraestructura y piloto del Bruto). **Pausa de revisión del piloto**: falta aprobar antes de los pasos 4 a 7.
 - **Constitución:** `docs/constitution.md` **v5.0.0** → **v6.0.0** (enmienda **MAJOR**, ver *Enmienda*).
-- **Criterios de aceptación:** reserva propuesta **AC1191–AC1230**. Se reservan en `CLAUDE.md` y `docs/ac-registry.md` al aprobar (otras sesiones toman números en paralelo).
+- **Criterios de aceptación:** **AC1191–AC1230**, reservados en `CLAUDE.md` y `docs/ac-registry.md` (próximo libre AC1231).
 - **Pilar (Principio I):** Combate.
   - Un enemigo que se lee de un vistazo (forma, color, postura) permite reaccionar a tiempo. Hoy los tipos "se distinguen poco a la distancia" (nota de `enemy-types.md`) y los avisos dependen de dos esferas.
   - Las animaciones de aviso, golpe y recuperación **cuentan lo que el enemigo está por hacer**, y refuerzan el sector rojo del piso sin reemplazarlo.
@@ -214,3 +214,14 @@ Cada bloque termina con tests dirigidos (`godot-tester`) y, si tiene arte, con h
 - [ ] **VI.** Sin input nuevo.
 - [ ] **VII.** Los tiempos de gameplay no cambian.
 - [ ] **VIII.** Clips horneados con el estándar. Video antes y después por bloque.
+
+## Notas de implementación (piloto del Bruto, 2026-09-29)
+
+- **Hecho:** pasos 1, 2 y 3. AC1191–AC1200 (`test/entities/enemy/enemy_model_test.gd`), AC1201–AC1208 (`test/assets/enemy_models_test.gd`, con la lista `TYPES` para sumar cada tipo nuevo) y AC1209 (`test/entities/enemy/bruto_model_test.gd`) en verde. Pendientes: AC1210–AC1230 (tipos, bosses y cierre). AC1200 verifica por texto que los cuatro `play_pose` existentes pasan su nombre; el Titán aturdido y la Colmena expuesta no llaman a `play_pose` hoy, así que su pose se cablea en el paso 6.
+- **Colores (desvío de la spec):** el brillo ámbar del Bruto choca con la miel y el rojo anaranjado reservados (AC1205), así que es **resina lima** `Color(0.65, 0.85, 0.2)`. El cuero es un marrón grisáceo de saturación ≤ 0.3 (`Color(0.3, 0.26, 0.22)`): un marrón saturado caería a ±20° del tierra. Las paletas de los demás tipos con "cuero" o "ámbar" (Embestidor, Escudero…) tienen la misma restricción; se ajustan al hacerlos. Registrado en `color-registry.md`.
+- **Materiales del Bruto:** tres (`materials/enemies/bruto_*_material.tres`). El brote apagado usa el material de acento y encendido el de brillo. Las esporas usan el material de brillo.
+- **Emisores (desvío técnico):** un clip los enciende con una pista float `emit_0`/`emit_1` sobre el modelo (se mezcla como un número; el emisor emite sobre 0.5). Probé pistas discretas y de método y ambas se pisaban al fundir un clip en otro. Un cambio de clip tarda unos 0.1 s en encender el emisor, y los tests avanzan el reloj en pasos de 0.05 s.
+- **Manos:** el Bruto usa el mismo puño en las dos manos (es simétrico); `get_hand_mesh(left)` queda listo para tipos asimétricos.
+- **Cambios en tests existentes (AC1221):** `boss_body_test.gd` leía `Body` como `MeshInstance3D`; ahora lo lee como `Node3D`. Nada más se adaptó.
+- **Estado de la suite de enemigos:** `test/entities/enemy` tiene **47 fallas que ya estaban en HEAD** (`d57985b`, antes de esta spec): jugador con 200 de vida en vez de 100 y tiempos de golpe desfasados en charger, enemy_attack, enemy_behaviour, enemy_level, enemy_pace, harasser, leaper, spawn_in, titan y verdugo. No las causa esta spec. Sin nuevas fallas por el modelo.
+- **Capturas del piloto:** hojas en `C:/Users/Admin/AppData/Local/Temp/fantasy-slash-capture/out/` (aviso, golpe y recuperación desde la cámara del juego y de cerca, a velocidad real y al 30 %; caminar; reposo contra aviso).

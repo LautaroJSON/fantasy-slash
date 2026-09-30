@@ -1,6 +1,6 @@
 # Feature: funda de la katana más gruesa y con el final redondeado
 
-- **Estado:** Implementada (2026-09-27).
+- **Estado:** Implementada (2026-09-27). **La forma de la funda la reemplaza `katana-visual-rework.md`** (AC694, AC695: reescritos; AC696 se conserva, medido con la malla nueva).
 - **Constitución:** `docs/constitution.md` v4.12.0 → **enmienda PATCH 4.12.1** (ver §8).
 - **Pilar (Principio I):** **combate.** La funda tiene casi el mismo ancho que la hoja y es una tira de 1.1 cm, así que en la mano izquierda y en la carga de Envainar se confunde con una segunda espada. Más gruesa y con el final (*kojiri*) redondeado, se lee como vaina, y la katana del Samurái se distingue de su funda.
 - **Dependencias:** `katana-hand-proportions.md` (generador `build_katana_meshes.gd`, AC683–AC688), `sheath-in-left-hand.md` (AC671–AC677), `sheath-socket-hand-grip.md` (AC670).

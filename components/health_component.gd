@@ -29,6 +29,10 @@ var current_health: float:
 	get:
 		return _current_health
 
+## Damage of the last hit before the overkill cap (what a kill would have
+## removed with unlimited health). Used to show the full number on screen.
+var last_full_damage: float = 0.0
+
 var _current_health: float = 0.0
 var _is_dead: bool = false
 
@@ -94,6 +98,7 @@ func get_health_ratio() -> float:
 
 
 func _apply_damage(amount: float) -> float:
+	last_full_damage = amount
 	var applied: float = minf(amount, _current_health - _health_floor())
 	_current_health -= applied
 	_emit_health_changed()

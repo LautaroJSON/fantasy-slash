@@ -139,7 +139,7 @@ func _begin_recovery(duration: float, attack: ChargeAttackData) -> void:
 	_phase = Phase.RECOVERY
 	_phase_time = 0.0
 	_recovery_duration = duration
-	enemy.get_hands().play_pose(attack.stun_hand_offset, enemy.get_hands().config.return_time)
+	enemy.get_hands().play_pose(attack.stun_hand_offset, enemy.get_hands().config.return_time, &"stunned")
 
 
 func _finish(completed: bool) -> void:

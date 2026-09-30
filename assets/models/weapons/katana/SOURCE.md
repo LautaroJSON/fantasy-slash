@@ -1,23 +1,13 @@
 # katana
 
-- **Origen:** modelo low poly de katana con funda (`katana.glb`), provisto por el usuario.
-- **Licencia:** free to use.
-- **Uso:** el glb es la fuente. Trae una sola malla skinned con dos huesos (`katana.base`: hoja y mango; `katana.sheath`: funda, hijo de la hoja), así que no se puede mostrar una parte sin la otra desde el glb. Por eso se derivaron dos mallas estáticas, una por hueso:
-  - `katana_blade.res` → `entities/player/weapons/katana.tscn`
-  - `katana_sheath.res` → `entities/player/weapons/katana_sheath.tscn`
-  
-  Las animaciones del glb (`Draw`, `Idle`, `Sheath`, `Unsheathed`) no se usan: el arma la mueven `SwordSwing` y el `SwingPlayer` del jugador.
-- **Material:** el material embebido se reemplaza por `materials/weapons/katana_material.tres`, que usa `katana_palette.png` (paleta 10×10) como albedo (Principio II, 3.2.0). El importador descarta la imagen embebida (`gltf/embedded_image_handling=0`).
-- **Modificaciones:**
-  - La textura `low-assets-texture.png` se renombró a `katana_palette.png`.
-  - `katana_blade.res` y `katana_sheath.res` se generan copiando posiciones, normales, tangentes y UV de los vértices de cada hueso, y los triángulos cuyos tres vértices son de ese hueso. Sin pesos ni huesos.
-  - **Reproporcionadas a la mano del jugador** (`docs/specs/katana-hand-proportions.md`, constitución 4.11.0). Cada vértice se mapea según su altura Y original (el eje de la hoja en la malla):
-    - **mango** (Y de 0.004 a 0.1605): Y se estira de 16.5 a 30.3 cm y la sección se escala ×1.5;
-    - **tsuba** (Y de 0.1605 a 0.1725): diámetro ×2 (8.7 → ~17 cm), espesor ×1.25 (→ 1.65 cm), ubicada 1 cm delante del puño derecho. Los vértices de la hoja dentro de esa franja (|z| ≤ 1.1 mm) conservan el ancho de la hoja;
-    - **hoja** y **funda**: Y se comprime para que la boca siga a la tsuba y la punta no se mueva (z = −1.27 en el arma).
-
-    Las normales se escalan por la inversa de la escala y las tangentes por la escala. Vértices, índices y UV no cambian, así que la paleta sigue calzando. Con el `Model` en ×1.1 y el origen en z = 0.055, el pomo queda 8 cm detrás del puño y la tsuba entre z = −0.170 y −0.187.
-  - **La funda, más gruesa y con el final suavizado** (`docs/specs/katana-sheath-shape.md`, constitución 4.12.1):
-    - **espesor** (Z de la malla): el cuerpo (|z| ≤ 0.005) se escala ×2 (1.1 → 2.2 cm en el arma); los anillos del cuello se corren hacia afuera lo mismo que creció el cuerpo, así siguen sobresaliendo 0.81 cm (3.8 cm en total);
-    - **final**: los 8 puntos de contorno del final (Y original > 1.1773, z < −1.24 en el arma) se reubican, en orden y con la misma fracción de largo, sobre un perfil nuevo: borde exterior, arco de 1.5 cm, final recto en z = −1.282 (1.2 cm más allá que antes), arco de 1.5 cm, borde interior. Cada borde sigue la dirección que va de la última estación antes del final a su primer punto del final, así se conserva el ensanche de la punta y la hoja envainada queda a ≥ 1.5 mm del contorno. Las normales laterales del final se recalculan con sus caras nuevas.
-  - **Para regenerarlas:** `tools/build_katana_meshes.gd` (`extends SceneTree`, headless, desde la raíz del proyecto; el comando está en el encabezado del script). Los límites de las regiones y los factores son constantes del script. Si cambia la mano del humanoide (`_gem(0.08)` × 1.333, medio largo sobre el eje del arma `h` = 0.1067 m) o el `grip_position` de `katana.tres`, recalculá `NEW_POMMEL_Y` y `NEW_GUARD_BACK_Y`. `weapon_model_test` (AC688) verifica que el script reproduzca las mallas del repo.
+- **Origen:** modelo original, generado por script (`tools/build_katana_meshes.gd`), a partir de las referencias del responsable (`docs/specs/katana-visual-rework.md`). No hay archivo fuente de terceros: reemplaza al `katana.glb` con textura de paleta que se usó hasta la versión anterior y que se borró.
+- **Licencia:** propia del proyecto.
+- **Uso:** dos mallas `ArrayMesh` de normales planas, guardadas como `.res` y cargadas por sus escenas adaptadoras:
+  - `katana_blade.res` → `entities/player/weapons/katana.tscn`. 6 superficies: 0 acero, 1 hamon, 2 hierro (tsuba), 3 oro, 4 tela de la tsuka, 5 rombos de la trenza.
+  - `katana_sheath.res` → `entities/player/weapons/katana_sheath.tscn`. 4 superficies: 0 laca negra, 1 laca roja, 2 oro, 3 sageo (gris).
+  - Materiales: `materials/weapons/katana_*_material.tres` (color plano, sin texturas).
+- **Espacio del arma** (los dos `Model` en identidad): la hoja apunta a −Z, el filo va a −X y el lomo a +X, la punta se curva hacia +X y las caras planas de la hoja son el plano XZ. El puño derecho queda en z = −0.0533 (marcador `Hilt`), el pomo en z = +0.133, la tsuba entre −0.173 y −0.181, la punta en z = −1.267 (x = +0.096) y el final de la funda en z = −1.282.
+- **Medidas:** todas son constantes del generador (tsuba de 12 cm con 4 calados, hoja de 5.0 → 4.0 cm con sori de 2 cm y kissaki de 5 cm, tsuka de 26 cm con 6 rombos y 2 menuki, funda de 2.5 cm de espesor con kurigata y sageo).
+- **Para regenerarlas:** `tools/build_katana_meshes.gd` (`extends SceneTree`, headless, desde la raíz del proyecto; el comando está en el encabezado del script). Reutiliza los helpers de `assets/models/weapons/knight_set/tools/build_knight_meshes.gd`. Si cambia la mano del humanoide o el `grip_position` de `katana.tres`, revisá `FIST_Z`, `KASHIRA_BACK_Z` y las medidas de la tsuka. `katana_visual_test` (AC1238) verifica que el script reproduzca las mallas del repo.
+- **Colores:** ver la tabla de `docs/specs/katana-visual-rework.md` §2.1 y `docs/color-registry.md`.
+- **Historial:** las proporciones de la mano (`katana-hand-proportions.md`) y la forma de la funda (`katana-sheath-shape.md`) se hicieron sobre el modelo derivado del glb; esta versión las conserva en cuanto a posiciones (pomo 8 cm detrás del puño, tsuba delante del puño, punta y final de la funda) y rehace las formas.

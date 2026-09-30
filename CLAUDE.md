@@ -19,7 +19,7 @@ Hack and slash roguelike en tercera persona (Godot 4.7, GDScript; PC con teclado
 5. Al cerrar: suite completa en verde, smoke test, checklist de review de la constitución en la spec y estado **Implementada**. Si un test viejo tenía valores fijos, adaptalo sin cambiar lo que verifica y anotalo en la spec.
 6. Respondé en **español**. Código, identificadores y comentarios en **inglés**.
 
-**Próximo criterio de aceptación libre: AC1191.** Los rangos usados o reservados por cada spec están en [`docs/ac-registry.md`](docs/ac-registry.md). Al cerrar cada spec, actualizá este número y agregá su rango al registro.
+**Próximo criterio de aceptación libre: AC1396.** Los rangos usados o reservados por cada spec están en [`docs/ac-registry.md`](docs/ac-registry.md). Al cerrar cada spec, actualizá este número y agregá su rango al registro.
 
 ## Mapa del proyecto
 
@@ -31,6 +31,7 @@ Hack and slash roguelike en tercera persona (Godot 4.7, GDScript; PC con teclado
 | `data/combat/combat_rules.tres` | Topes y pisos globales (crítico, daño crítico, arco, piso de recarga del dash). |
 | `data/ui/stat_display_table.tres` | Qué stats muestra la pausa, en qué columna y con qué formato. |
 | `resources/` | Scripts `class_name X extends Resource` (datos, sin lógica de nodos). |
+| `levels/` | `arena/arena.tscn` es la run (sistemas, jugador, UI); cada mapa es un stage en `levels/stages/<id>/` (`StageMap`), con sus props en `levels/stages/props/`. Datos de stages en `data/stages/`. |
 | `components/` | Comportamiento reutilizable (ataque, barrido, estela, stats, habilidades). |
 | `entities/player/weapons/` | Escenas adaptadoras de armas: `Model` + marcadores `TrailBase`/`TrailTip`. |
 | `assets/icons/status/` | Íconos SVG de buffs y debuffs (UI 2D), con su `SOURCE.md` (créditos CC BY 3.0). |

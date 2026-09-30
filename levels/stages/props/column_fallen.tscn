@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/modular_dungeon/meshes/column_a.res" id="1_mesh"]
+[ext_resource type="Material" path="res://materials/environment/ruin_stone_material.tres" id="2_stone"]
+[ext_resource type="Material" path="res://materials/environment/ruin_moss_material.tres" id="3_moss"]
+[ext_resource type="Script" path="res://levels/stages/stage_obstacle.gd" id="4_obstacle"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_column"]
+size = Vector3(4.9, 1.4, 1.4)
+
+[node name="ColumnFallen" type="Node3D"]
+
+[node name="Model" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1.2, 0, 1.2, 0, 0, 0, 0, 1.2, 2.45, 0.7, 0)
+mesh = ExtResource("1_mesh")
+surface_material_override/0 = ExtResource("2_stone")
+surface_material_override/1 = ExtResource("3_moss")
+
+[node name="Body" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+shape = SubResource("BoxShape3D_column")
+
+[node name="ObstacleA" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 0, 0)
+script = ExtResource("4_obstacle")
+radius = 0.8
+
+[node name="ObstacleB" type="Marker3D" parent="."]
+script = ExtResource("4_obstacle")
+radius = 0.8
+
+[node name="ObstacleC" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6, 0, 0)
+script = ExtResource("4_obstacle")
+radius = 0.8

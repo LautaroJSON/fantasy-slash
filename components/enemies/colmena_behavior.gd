@@ -61,6 +61,7 @@ func physics_update(delta: float) -> void:
 		_exposed_left = maxf(_exposed_left - delta, 0.0)
 		if _exposed_left <= 0.0:
 			_needs_summon = true
+			enemy.get_hands().return_to_rest()
 	var was_changing_phase: bool = _phase == Phase.TRANSITION
 	super.physics_update(delta)
 	# The change of phase cuts the exposed window short: it calls again at once.
@@ -115,9 +116,9 @@ func _update_other_move(delta: float) -> void:
 	_summoning = false
 	enemy.get_hands().play_strike(attack, attack.active_time)
 	enemy.summon_requested.emit(enemy, _colmena().summon_for(_boss_phase))
+	_begin_recovery(_scaled(attack.recovery_time))
 	if _minions.is_empty():
 		_expose()
-	_begin_recovery(_scaled(attack.recovery_time))
 
 
 func _on_minion_killed(minion: Enemy) -> void:
@@ -128,6 +129,18 @@ func _on_minion_killed(minion: Enemy) -> void:
 
 func _expose() -> void:
 	_exposed_left = _colmena().exposed_time_for(_boss_phase)
+	_announce_exposed()
+
+
+## The model shows the exposed abdomen for as long as the window lasts.
+func _announce_exposed() -> void:
+	if _exposed_left > 0.0:
+		enemy.get_hands().announce_pose(&"exposed", _exposed_left)
+
+
+func _finish_move() -> void:
+	super._finish_move()
+	_announce_exposed()
 
 
 ## Drops every minion; `kill` executes the ones still active (the Colmena died).

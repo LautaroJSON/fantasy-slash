@@ -1,0 +1,1208 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://levels/stages/stage_map.gd" id="1_tg1oq"]
+[ext_resource type="Environment" path="res://levels/stages/mar_de_flores/mar_de_flores_environment.tres" id="2_r3nop"]
+[ext_resource type="Material" path="res://materials/environment/terrain_material.tres" id="3_decbp"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/mar_de_flores/terrain.res" id="4_xaosj"]
+[ext_resource type="Shape3D" path="res://assets/models/environment/mar_de_flores/heights.res" id="5_dr2q2"]
+[ext_resource type="PlaneMesh" path="res://assets/models/environment/mar_de_flores/far_ground.tres" id="6_0r18c"]
+[ext_resource type="Material" path="res://materials/environment/water_material.tres" id="7_hbwtf"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/mar_de_flores/water.res" id="8_ab5uv"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/arch.tscn" id="9_necf6"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/column.tscn" id="10_7yvrt"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/column_broken.tscn" id="11_ikrru"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/column_fallen.tscn" id="12_2vf0d"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/tree_a.tscn" id="13_2ou1l"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/stylized_nature/meshes/tree_a.res" id="14_hs0ol"]
+[ext_resource type="Material" path="res://materials/environment/bark_material.tres" id="15_wo1bx"]
+[ext_resource type="Material" path="res://materials/environment/leaves_green_dark_material.tres" id="16_sy2mj"]
+[ext_resource type="Script" path="res://levels/stages/stage_obstacle.gd" id="17_c8a87"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/tree_c.tscn" id="18_olfnh"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/stylized_nature/meshes/tree_c.res" id="19_1kp8w"]
+[ext_resource type="Material" path="res://materials/environment/leaves_orange_material.tres" id="20_o16pr"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/tree_b.tscn" id="21_5obsc"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/stylized_nature/meshes/tree_b.res" id="22_n5lju"]
+[ext_resource type="Material" path="res://materials/environment/leaves_green_light_material.tres" id="23_ci2bw"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/tree_d.tscn" id="24_20box"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/stylized_nature/meshes/tree_d.res" id="25_s20ff"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/tree_e.tscn" id="26_lsp6x"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/stylized_nature/meshes/tree_e.res" id="27_bfs2n"]
+[ext_resource type="Material" path="res://materials/environment/leaves_yellow_material.tres" id="28_tsrcr"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/rock_a.tscn" id="29_pqkhl"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/rock_b.tscn" id="30_57r3d"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/rock_c.tscn" id="31_fil0a"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/bush.tscn" id="32_wd3g3"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/bush_flowers.tscn" id="33_dgyte"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/stone_path.tscn" id="34_xccqn"]
+[ext_resource type="PackedScene" path="res://levels/stages/props/pebble.tscn" id="35_xn74t"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_petal_0.res" id="36_yhfaj"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_petal_1.res" id="37_uqct0"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_petal_2.res" id="38_grrjp"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_petal_3.res" id="39_v2256"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_petal_4.res" id="40_b04as"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_petal_5.res" id="41_jjeu0"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_petal_6.res" id="42_3wu01"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_petal_7.res" id="43_m271k"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_petal_8.res" id="44_ta6oo"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_a_0.res" id="45_vu2u8"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_a_1.res" id="46_k3k3k"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_a_2.res" id="47_8j1l8"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_a_3.res" id="48_ud8qr"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_a_4.res" id="49_uolky"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_a_5.res" id="50_v6c11"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_a_6.res" id="51_jmtxb"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_a_7.res" id="52_ff3jg"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_a_8.res" id="53_q44hl"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_b_0.res" id="54_dcl4c"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_b_1.res" id="55_eag51"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_b_2.res" id="56_er3vt"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_b_3.res" id="57_cg4lp"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_b_4.res" id="58_lp08g"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_b_5.res" id="59_cmk4l"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_b_6.res" id="60_x5cu4"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_b_7.res" id="61_g58f6"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_single_b_8.res" id="62_d3e6q"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_group_a_0.res" id="63_8qd5i"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_group_a_1.res" id="64_tp80m"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_group_a_2.res" id="65_2vpj2"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_group_a_3.res" id="66_7odsn"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_group_a_4.res" id="67_1klre"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_group_a_5.res" id="68_16ld2"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_group_a_6.res" id="69_4gdnj"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_group_a_7.res" id="70_jinnp"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/flower_group_a_8.res" id="71_f6qs7"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/violet_patch_0.res" id="72_o8mvl"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/violet_patch_1.res" id="73_6pmr7"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/violet_patch_2.res" id="74_31vx2"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/violet_patch_3.res" id="75_pqwft"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/violet_patch_4.res" id="76_5wrwo"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/violet_patch_5.res" id="77_yr31y"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/violet_patch_6.res" id="78_nb7y2"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/violet_patch_7.res" id="79_j8ax7"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/violet_patch_8.res" id="80_vlt8b"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_short_0.res" id="81_hedul"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_short_1.res" id="82_je4r3"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_short_2.res" id="83_4yl60"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_short_3.res" id="84_lrhsq"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_short_4.res" id="85_xn3cr"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_short_5.res" id="86_5e5na"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_short_6.res" id="87_xsvkh"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_short_7.res" id="88_33677"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_short_8.res" id="89_wjf1g"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_tall_0.res" id="90_0aeqb"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_tall_1.res" id="91_jr80s"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_tall_2.res" id="92_p2udd"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_tall_3.res" id="93_40aci"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_tall_4.res" id="94_0fgxu"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_tall_5.res" id="95_cs3e5"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_tall_6.res" id="96_5yb6n"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_tall_7.res" id="97_ahd10"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/grass_tall_8.res" id="98_pt1pw"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/forest_tree_a.res" id="99_c4e4r"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/forest_tree_b.res" id="100_q2024"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/forest_tree_c.res" id="101_c5baj"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/forest_tree_d.res" id="102_wcugc"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/forest_tree_e.res" id="103_prmvy"]
+[ext_resource type="Material" path="res://materials/environment/backdrop_material.tres" id="104_w0ltc"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/mar_de_flores/backdrop.res" id="105_nerd8"]
+[ext_resource type="MultiMesh" path="res://assets/models/environment/mar_de_flores/scatter/clouds.res" id="106_613hc"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/castle_kit/meshes/tower_square_base.res" id="107_iieut"]
+[ext_resource type="Material" path="res://materials/environment/castle_material.tres" id="108_p5v0e"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/castle_kit/meshes/tower_square_mid_windows.res" id="109_y0k2b"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/castle_kit/meshes/tower_square_top_roof_high.res" id="110_6rlj8"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/castle_kit/meshes/tower_hexagon_base.res" id="111_4skgf"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/castle_kit/meshes/tower_hexagon_mid.res" id="112_xfupd"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/castle_kit/meshes/tower_hexagon_roof.res" id="113_72757"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/castle_kit/meshes/wall.res" id="114_kdkfn"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/castle_kit/meshes/gate.res" id="115_2ishi"]
+[ext_resource type="ArrayMesh" path="res://assets/models/environment/castle_kit/meshes/flag_pennant.res" id="116_8p5uk"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vh1y4"]
+size = Vector3(11.993179, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rmi01"]
+size = Vector3(13.876335, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_c3uk1"]
+size = Vector3(13.899612, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2d4oy"]
+size = Vector3(12.423658, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ytxcv"]
+size = Vector3(11.530908, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_p21to"]
+size = Vector3(12.65204, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5odsu"]
+size = Vector3(11.29563, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_y3x1w"]
+size = Vector3(12.995415, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lxmky"]
+size = Vector3(14.023057, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qrmvf"]
+size = Vector3(13.925943, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2clwq"]
+size = Vector3(11.7912, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bqxbi"]
+size = Vector3(11.519031, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ris0q"]
+size = Vector3(12.806778, 14, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_labu7"]
+size = Vector3(11.331021, 14, 1)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_trunk"]
+height = 4.0
+radius = 0.4
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_en5kv"]
+height = 4.0
+radius = 0.4
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_e0c0l"]
+height = 4.0
+radius = 0.4
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_0acnk"]
+height = 4.0
+radius = 0.4
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_nuiyq"]
+height = 4.0
+radius = 0.4
+
+[node name="MarDeFloresStage" type="Node3D" unique_id=42940950 node_paths=PackedStringArray("player_start", "portal_point", "terrain_shape")]
+script = ExtResource("1_tg1oq")
+player_start = NodePath("PlayerStart")
+portal_point = NodePath("PortalPoint")
+terrain_shape = NodePath("Terrain/Shape")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=221360803]
+environment = ExtResource("2_r3nop")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=10937162]
+transform = Transform3D(0.81915206, 0.4262504, -0.38379753, 0, 0.66913056, 0.74314487, 0.57357645, -0.6087487, 0.54811966, 0, 0, 0)
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 1.25
+shadow_enabled = true
+directional_shadow_max_distance = 60.0
+
+[node name="Terrain" type="StaticBody3D" parent="." unique_id=1113211661]
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Terrain" unique_id=236727415]
+material_override = ExtResource("3_decbp")
+mesh = ExtResource("4_xaosj")
+
+[node name="Shape" type="CollisionShape3D" parent="Terrain" unique_id=1219003338]
+shape = ExtResource("5_dr2q2")
+
+[node name="FarGround" type="MeshInstance3D" parent="." unique_id=1964809334]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+cast_shadow = 0
+mesh = ExtResource("6_0r18c")
+
+[node name="Water" type="MeshInstance3D" parent="." unique_id=508106528]
+material_override = ExtResource("7_hbwtf")
+cast_shadow = 0
+mesh = ExtResource("8_ab5uv")
+
+[node name="Bounds" type="Node3D" parent="." unique_id=2104746767]
+
+[node name="Wall0" type="StaticBody3D" parent="Bounds" unique_id=1317187977]
+transform = Transform3D(0.8550757, 0, 0.5185032, 0, 1, 0, -0.5185032, 0, 0.8550757, -17.75925, 3, -18.377539)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall0" unique_id=563558211]
+shape = SubResource("BoxShape3D_vh1y4")
+
+[node name="Wall1" type="StaticBody3D" parent="Bounds" unique_id=667933050]
+transform = Transform3D(0.99407166, 0, 0.10872671, 0, 1, 0, -0.10872671, 0, 0.99407166, -6.4543633, 3, -21.997036)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall1" unique_id=1912564121]
+shape = SubResource("BoxShape3D_rmi01")
+
+[node name="Wall2" type="StaticBody3D" parent="Bounds" unique_id=225390096]
+transform = Transform3D(0.99227786, 0, -0.12403476, 0, 1, 0, 0.12403476, 0, 0.99227786, 6.4620175, 3, -21.896141)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall2" unique_id=73736671]
+shape = SubResource("BoxShape3D_c3uk1")
+
+[node name="Wall3" type="StaticBody3D" parent="Bounds" unique_id=190047150]
+transform = Transform3D(0.919145, 0, -0.39391932, 0, 1, 0, 0.39391932, 0, 0.919145, 18.24696, 3, -18.809572)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall3" unique_id=2054913872]
+shape = SubResource("BoxShape3D_2d4oy")
+
+[node name="Wall4" type="StaticBody3D" parent="Bounds" unique_id=1087409992]
+transform = Transform3D(0.5032806, 0, -0.86412305, 0, 1, 0, 0.86412305, 0, 0.5032806, 26.382063, 3, -11.8016405)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall4" unique_id=777721733]
+shape = SubResource("BoxShape3D_ytxcv")
+
+[node name="Wall5" type="StaticBody3D" parent="Bounds" unique_id=2003981037]
+transform = Transform3D(-0.09440414, 0, -0.99553394, 0, 1, 0, 0.99553394, 0, -0.09440414, 28.547766, 3, -1.1527979)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall5" unique_id=570829682]
+shape = SubResource("BoxShape3D_p21to")
+
+[node name="Wall6" type="StaticBody3D" parent="Bounds" unique_id=1395969295]
+transform = Transform3D(-0.40794015, 0, -0.9130087, 0, 1, 0, 0.9130087, 0, -0.40794015, 25.856504, 3, 9.50397)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall6" unique_id=2074426905]
+shape = SubResource("BoxShape3D_5odsu")
+
+[node name="Wall7" type="StaticBody3D" parent="Bounds" unique_id=1398064841]
+transform = Transform3D(-0.8753344, 0, -0.48351803, 0, 1, 0, 0.48351803, 0, -0.8753344, 18.291758, 3, 17.337667)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall7" unique_id=1192001479]
+shape = SubResource("BoxShape3D_y3x1w")
+
+[node name="Wall8" type="StaticBody3D" parent="Bounds" unique_id=1019529541]
+transform = Transform3D(-0.9828722, 0, -0.18428853, 0, 1, 0, 0.18428853, 0, -0.9828722, 6.4921446, 3, 21.491436)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall8" unique_id=1548263588]
+shape = SubResource("BoxShape3D_lxmky")
+
+[node name="Wall9" type="StaticBody3D" parent="Bounds" unique_id=715641912]
+transform = Transform3D(-0.99025655, 0, 0.13925487, 0, 1, 0, -0.13925487, 0, -0.99025655, -6.4696274, 3, 21.795128)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall9" unique_id=1220736436]
+shape = SubResource("BoxShape3D_qrmvf")
+
+[node name="Wall10" type="StaticBody3D" parent="Bounds" unique_id=1447016344]
+transform = Transform3D(-0.87108016, 0, 0.4911409, 0, 1, 0, -0.4911409, 0, -0.87108016, -17.745571, 3, 18.18554)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall10" unique_id=849002687]
+shape = SubResource("BoxShape3D_2clwq")
+
+[node name="Wall11" type="StaticBody3D" parent="Bounds" unique_id=495234293]
+transform = Transform3D(-0.48483542, 0, 0.8746054, 0, 1, 0, -0.8746054, 0, -0.48483542, -25.187304, 3, 10.742417)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall11" unique_id=1991182949]
+shape = SubResource("BoxShape3D_bqxbi")
+
+[node name="Wall12" type="StaticBody3D" parent="Bounds" unique_id=2312406]
+transform = Transform3D(0.033878833, 0, 0.99942595, 0, 1, 0, -0.99942595, 0, 0.033878833, -27.599712, 3, -0.016939407)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall12" unique_id=1129403757]
+shape = SubResource("BoxShape3D_ris0q")
+
+[node name="Wall13" type="StaticBody3D" parent="Bounds" unique_id=467352940]
+transform = Transform3D(0.45494038, 0, 0.8905219, 0, 1, 0, -0.8905219, 0, 0.45494038, -24.99526, 3, -10.72747)
+collision_layer = 8
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Bounds/Wall13" unique_id=1942214396]
+shape = SubResource("BoxShape3D_labu7")
+
+[node name="Props" type="Node3D" parent="." unique_id=841573494]
+
+[node name="Arch1" type="Node3D" parent="Props" unique_id=428465166 instance=ExtResource("9_necf6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.29587507, -17)
+
+[node name="Column1" type="Node3D" parent="Props" unique_id=197588389 instance=ExtResource("10_7yvrt")]
+transform = Transform3D(0.9848077, 0, 0.17364818, 0, 1, 0, -0.17364818, 0, 0.9848077, -9.1, 0.29817203, -15.4)
+
+[node name="Column2" type="Node3D" parent="Props" unique_id=422326104 instance=ExtResource("10_7yvrt")]
+transform = Transform3D(0.76604444, 0, 0.6427876, 0, 1, 0, -0.6427876, 0, 0.76604444, 9.1, -0.058705572, -16.1)
+
+[node name="Column3" type="Node3D" parent="Props" unique_id=731635928 instance=ExtResource("10_7yvrt")]
+transform = Transform3D(0.34202015, 0, 0.9396926, 0, 1, 0, -0.9396926, 0, 0.34202015, -5.6, 0.1535757, -11.4)
+
+[node name="ColumnBroken1" type="Node3D" parent="Props" unique_id=1773518927 instance=ExtResource("11_ikrru")]
+transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, 6.1, 0.08113831, -11.2)
+
+[node name="ColumnFallen1" type="Node3D" parent="Props" unique_id=532513582 instance=ExtResource("12_2vf0d")]
+transform = Transform3D(0.8660254, 0, 0.5, 0, 1, 0, -0.5, 0, 0.8660254, 14.7, -0.089272924, -13.4)
+
+[node name="TreeA1" parent="Props" unique_id=2091920205 instance=ExtResource("13_2ou1l")]
+transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, -22.2, 0.08502117, -7)
+
+[node name="Model" parent="Props/TreeA1" index="0"]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
+mesh = ExtResource("14_hs0ol")
+surface_material_override/0 = ExtResource("15_wo1bx")
+surface_material_override/1 = ExtResource("16_sy2mj")
+
+[node name="Trunk" parent="Props/TreeA1" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" parent="Props/TreeA1/Trunk" index="0"]
+shape = SubResource("CylinderShape3D_trunk")
+
+[node name="StageObstacle" parent="Props/TreeA1" index="2"]
+script = ExtResource("17_c8a87")
+radius = 0.55
+
+[node name="TreeC1" parent="Props" unique_id=2009010934 instance=ExtResource("18_olfnh")]
+transform = Transform3D(-0.3078181, 0, 0.84572333, 0, 0.9, 0, -0.84572333, 0, -0.3078181, -18, -0.08956718, -4.2)
+
+[node name="Model" parent="Props/TreeC1" index="0"]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
+mesh = ExtResource("19_1kp8w")
+surface_material_override/0 = ExtResource("15_wo1bx")
+surface_material_override/1 = ExtResource("20_o16pr")
+
+[node name="Trunk" parent="Props/TreeC1" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" parent="Props/TreeC1/Trunk" index="0"]
+shape = SubResource("CylinderShape3D_en5kv")
+
+[node name="StageObstacle" parent="Props/TreeC1" index="2"]
+script = ExtResource("17_c8a87")
+radius = 0.55
+
+[node name="TreeB1" parent="Props" unique_id=1389175749 instance=ExtResource("21_5obsc")]
+transform = Transform3D(-0.9396926, 0, -0.34202015, 0, 1, 0, 0.34202015, 0, -0.9396926, -22.7, -0.041033383, 0.4)
+
+[node name="Model" parent="Props/TreeB1" index="0"]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
+mesh = ExtResource("22_n5lju")
+surface_material_override/0 = ExtResource("15_wo1bx")
+surface_material_override/1 = ExtResource("23_ci2bw")
+
+[node name="Trunk" parent="Props/TreeB1" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" parent="Props/TreeB1/Trunk" index="0"]
+shape = SubResource("CylinderShape3D_e0c0l")
+
+[node name="StageObstacle" parent="Props/TreeB1" index="2"]
+script = ExtResource("17_c8a87")
+radius = 0.55
+
+[node name="TreeD1" parent="Props" unique_id=2058828676 instance=ExtResource("24_20box")]
+transform = Transform3D(0.4749999, 0, -0.82272416, 0, 0.95, 0, 0.82272416, 0, 0.4749999, -17.2, -0.24053462, 4.2)
+
+[node name="Model" parent="Props/TreeD1" index="0"]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
+mesh = ExtResource("25_s20ff")
+surface_material_override/0 = ExtResource("15_wo1bx")
+surface_material_override/1 = ExtResource("16_sy2mj")
+
+[node name="Trunk" parent="Props/TreeD1" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" parent="Props/TreeD1/Trunk" index="0"]
+shape = SubResource("CylinderShape3D_0acnk")
+
+[node name="StageObstacle" parent="Props/TreeD1" index="2"]
+script = ExtResource("17_c8a87")
+radius = 0.55
+
+[node name="TreeE1" parent="Props" unique_id=712621055 instance=ExtResource("26_lsp6x")]
+transform = Transform3D(0.7424621, 0, 0.7424621, 0, 1.05, 0, -0.7424621, 0, 0.7424621, -21.9, -0.12756316, 8.4)
+
+[node name="Model" parent="Props/TreeE1" index="0"]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
+mesh = ExtResource("27_bfs2n")
+surface_material_override/0 = ExtResource("15_wo1bx")
+surface_material_override/1 = ExtResource("28_tsrcr")
+
+[node name="Trunk" parent="Props/TreeE1" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" parent="Props/TreeE1/Trunk" index="0"]
+shape = SubResource("CylinderShape3D_nuiyq")
+
+[node name="StageObstacle" parent="Props/TreeE1" index="2"]
+script = ExtResource("17_c8a87")
+radius = 0.55
+
+[node name="TreeC2" parent="Props" unique_id=1170934755 instance=ExtResource("18_olfnh")]
+transform = Transform3D(-0.84572333, 0, 0.30781817, 0, 0.9, 0, -0.30781817, 0, -0.84572333, -14.7, 0.05399989, -9.8)
+
+[node name="Model" parent="Props/TreeC2" index="0"]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
+mesh = ExtResource("19_1kp8w")
+surface_material_override/0 = ExtResource("15_wo1bx")
+surface_material_override/1 = ExtResource("23_ci2bw")
+
+[node name="Trunk" parent="Props/TreeC2" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" parent="Props/TreeC2/Trunk" index="0"]
+shape = SubResource("CylinderShape3D_en5kv")
+
+[node name="StageObstacle" parent="Props/TreeC2" index="2"]
+script = ExtResource("17_c8a87")
+radius = 0.55
+
+[node name="TreeA2" parent="Props" unique_id=221694208 instance=ExtResource("13_2ou1l")]
+transform = Transform3D(-0.32491904, 0, -0.892708, 0, 0.95, 0, 0.892708, 0, -0.32491904, 24.7, -0.17610776, -11)
+
+[node name="Model" parent="Props/TreeA2" index="0"]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
+mesh = ExtResource("14_hs0ol")
+surface_material_override/0 = ExtResource("15_wo1bx")
+surface_material_override/1 = ExtResource("23_ci2bw")
+
+[node name="Trunk" parent="Props/TreeA2" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" parent="Props/TreeA2/Trunk" index="0"]
+shape = SubResource("CylinderShape3D_trunk")
+
+[node name="StageObstacle" parent="Props/TreeA2" index="2"]
+script = ExtResource("17_c8a87")
+radius = 0.55
+
+[node name="TreeD2" parent="Props" unique_id=814525859 instance=ExtResource("24_20box")]
+transform = Transform3D(0.1562834, 0, 0.8863269, 0, 0.9, 0, -0.8863269, 0, 0.1562834, -13.5, 0.0029693504, 16.5)
+
+[node name="Model" parent="Props/TreeD2" index="0"]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
+mesh = ExtResource("25_s20ff")
+surface_material_override/0 = ExtResource("15_wo1bx")
+surface_material_override/1 = ExtResource("16_sy2mj")
+
+[node name="Trunk" parent="Props/TreeD2" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" parent="Props/TreeD2/Trunk" index="0"]
+shape = SubResource("CylinderShape3D_0acnk")
+
+[node name="StageObstacle" parent="Props/TreeD2" index="2"]
+script = ExtResource("17_c8a87")
+radius = 0.55
+
+[node name="TreeB2" parent="Props" unique_id=2146692587 instance=ExtResource("21_5obsc")]
+transform = Transform3D(1.0832886, 0, 0.191013, 0, 1.1, 0, -0.191013, 0, 1.0832886, 3.5, 1.2243772, -24.5)
+
+[node name="Model" parent="Props/TreeB2" index="0"]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
+mesh = ExtResource("22_n5lju")
+surface_material_override/0 = ExtResource("15_wo1bx")
+surface_material_override/1 = ExtResource("20_o16pr")
+
+[node name="Trunk" parent="Props/TreeB2" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape3D" parent="Props/TreeB2/Trunk" index="0"]
+shape = SubResource("CylinderShape3D_e0c0l")
+
+[node name="StageObstacle" parent="Props/TreeB2" index="2"]
+script = ExtResource("17_c8a87")
+radius = 0.55
+
+[node name="RockA1" type="Node3D" parent="Props" unique_id=2059126263 instance=ExtResource("29_pqkhl")]
+transform = Transform3D(0.8660254, 0, 0.5, 0, 1, 0, -0.5, 0, 0.8660254, -10.5, -0.1457606, 9.5)
+
+[node name="RockB1" type="Node3D" parent="Props" unique_id=1315255413 instance=ExtResource("30_57r3d")]
+transform = Transform3D(-0.50000006, 0, 0.8660254, 0, 1, 0, -0.8660254, 0, -0.50000006, 11, 0.25752077, -4.5)
+
+[node name="RockC1" type="Node3D" parent="Props" unique_id=867876964 instance=ExtResource("31_fil0a")]
+transform = Transform3D(-0.30781806, 0, -0.8457234, 0, 0.9, 0, 0.8457234, 0, -0.30781806, 15, 0.18153356, 9)
+
+[node name="Bush1" type="Node3D" parent="Props" unique_id=286980373 instance=ExtResource("32_wd3g3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.5, 0.07980493, -2.5)
+
+[node name="BushFlowers1" type="Node3D" parent="Props" unique_id=237862609 instance=ExtResource("33_dgyte")]
+transform = Transform3D(0.49999997, 0, 0.86602545, 0, 1, 0, -0.86602545, 0, 0.49999997, -6.5, 0.40053, -19)
+
+[node name="BushFlowers2" type="Node3D" parent="Props" unique_id=1433821351 instance=ExtResource("33_dgyte")]
+transform = Transform3D(-0.9396926, 0, -0.34202015, 0, 1, 0, 0.34202015, 0, -0.9396926, 8.5, -0.082901455, -19.5)
+
+[node name="Bush2" type="Node3D" parent="Props" unique_id=1613255542 instance=ExtResource("32_wd3g3")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 19, 0.012711437, -17)
+
+[node name="BushFlowers3" type="Node3D" parent="Props" unique_id=481608273 instance=ExtResource("33_dgyte")]
+transform = Transform3D(0.4999999, 0, -0.86602545, 0, 1, 0, 0.86602545, 0, 0.4999999, -20, -0.105762996, 12)
+
+[node name="StonePath1" type="Node3D" parent="Props" unique_id=483922286 instance=ExtResource("34_xccqn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15068929, -13.6)
+
+[node name="StonePath2" type="Node3D" parent="Props" unique_id=231787564 instance=ExtResource("34_xccqn")]
+transform = Transform3D(0.76604444, 0, 0.6427876, 0, 1, 0, -0.6427876, 0, 0.76604444, 0.7, 0.10913571, -11.2)
+
+[node name="StonePath3" type="Node3D" parent="Props" unique_id=1507173018 instance=ExtResource("34_xccqn")]
+transform = Transform3D(0.17364822, 0, 0.9848077, 0, 1, 0, -0.9848077, 0, 0.17364822, -0.3, 0.1615118, -8.9)
+
+[node name="Pebble1" type="Node3D" parent="Props" unique_id=464915249 instance=ExtResource("35_xn74t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21, -0.18745758, 4.5)
+
+[node name="Pebble2" type="Node3D" parent="Props" unique_id=569282949 instance=ExtResource("35_xn74t")]
+transform = Transform3D(0.34202015, 0, 0.9396926, 0, 1, 0, -0.9396926, 0, 0.34202015, 23.8, -0.3216969, 6.3)
+
+[node name="Pebble3" type="Node3D" parent="Props" unique_id=680298789 instance=ExtResource("35_xn74t")]
+transform = Transform3D(-0.76604444, 0, 0.64278764, 0, 1, 0, -0.64278764, 0, -0.76604444, 19.2, -0.10424076, 13.5)
+
+[node name="Pebble4" type="Node3D" parent="Props" unique_id=1302800991 instance=ExtResource("35_xn74t")]
+transform = Transform3D(-0.8660254, 0, -0.49999997, 0, 1, 0, 0.49999997, 0, -0.8660254, 17.4, -0.080505565, 16.8)
+
+[node name="Pebble5" type="Node3D" parent="Props" unique_id=67695366 instance=ExtResource("35_xn74t")]
+transform = Transform3D(0.17364815, 0, -0.9848077, 0, 1, 0, 0.9848077, 0, 0.17364815, 25.5, -0.4908162, 1.2)
+
+[node name="Scatter" type="Node3D" parent="." unique_id=1315087322]
+
+[node name="FlowerPetal0" type="MultiMeshInstance3D" parent="Scatter" unique_id=1881530191]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("36_yhfaj")
+
+[node name="FlowerPetal1" type="MultiMeshInstance3D" parent="Scatter" unique_id=310085303]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("37_uqct0")
+
+[node name="FlowerPetal2" type="MultiMeshInstance3D" parent="Scatter" unique_id=410689538]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("38_grrjp")
+
+[node name="FlowerPetal3" type="MultiMeshInstance3D" parent="Scatter" unique_id=112424516]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("39_v2256")
+
+[node name="FlowerPetal4" type="MultiMeshInstance3D" parent="Scatter" unique_id=49962005]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("40_b04as")
+
+[node name="FlowerPetal5" type="MultiMeshInstance3D" parent="Scatter" unique_id=1157968834]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("41_jjeu0")
+
+[node name="FlowerPetal6" type="MultiMeshInstance3D" parent="Scatter" unique_id=809700761]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("42_3wu01")
+
+[node name="FlowerPetal7" type="MultiMeshInstance3D" parent="Scatter" unique_id=2037461515]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("43_m271k")
+
+[node name="FlowerPetal8" type="MultiMeshInstance3D" parent="Scatter" unique_id=1277301696]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("44_ta6oo")
+
+[node name="FlowerSingleA0" type="MultiMeshInstance3D" parent="Scatter" unique_id=1746982257]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("45_vu2u8")
+
+[node name="FlowerSingleA1" type="MultiMeshInstance3D" parent="Scatter" unique_id=1653428577]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("46_k3k3k")
+
+[node name="FlowerSingleA2" type="MultiMeshInstance3D" parent="Scatter" unique_id=1596762582]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("47_8j1l8")
+
+[node name="FlowerSingleA3" type="MultiMeshInstance3D" parent="Scatter" unique_id=1958851596]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("48_ud8qr")
+
+[node name="FlowerSingleA4" type="MultiMeshInstance3D" parent="Scatter" unique_id=1006509861]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("49_uolky")
+
+[node name="FlowerSingleA5" type="MultiMeshInstance3D" parent="Scatter" unique_id=1676828539]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("50_v6c11")
+
+[node name="FlowerSingleA6" type="MultiMeshInstance3D" parent="Scatter" unique_id=973038460]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("51_jmtxb")
+
+[node name="FlowerSingleA7" type="MultiMeshInstance3D" parent="Scatter" unique_id=449196257]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("52_ff3jg")
+
+[node name="FlowerSingleA8" type="MultiMeshInstance3D" parent="Scatter" unique_id=1611140066]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("53_q44hl")
+
+[node name="FlowerSingleB0" type="MultiMeshInstance3D" parent="Scatter" unique_id=100538870]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("54_dcl4c")
+
+[node name="FlowerSingleB1" type="MultiMeshInstance3D" parent="Scatter" unique_id=1331896425]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("55_eag51")
+
+[node name="FlowerSingleB2" type="MultiMeshInstance3D" parent="Scatter" unique_id=437980788]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("56_er3vt")
+
+[node name="FlowerSingleB3" type="MultiMeshInstance3D" parent="Scatter" unique_id=1501355765]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("57_cg4lp")
+
+[node name="FlowerSingleB4" type="MultiMeshInstance3D" parent="Scatter" unique_id=875182647]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("58_lp08g")
+
+[node name="FlowerSingleB5" type="MultiMeshInstance3D" parent="Scatter" unique_id=581112599]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("59_cmk4l")
+
+[node name="FlowerSingleB6" type="MultiMeshInstance3D" parent="Scatter" unique_id=2071433059]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("60_x5cu4")
+
+[node name="FlowerSingleB7" type="MultiMeshInstance3D" parent="Scatter" unique_id=938006994]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("61_g58f6")
+
+[node name="FlowerSingleB8" type="MultiMeshInstance3D" parent="Scatter" unique_id=339711267]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("62_d3e6q")
+
+[node name="FlowerGroupA0" type="MultiMeshInstance3D" parent="Scatter" unique_id=2044443988]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("63_8qd5i")
+
+[node name="FlowerGroupA1" type="MultiMeshInstance3D" parent="Scatter" unique_id=449171417]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("64_tp80m")
+
+[node name="FlowerGroupA2" type="MultiMeshInstance3D" parent="Scatter" unique_id=1322238712]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("65_2vpj2")
+
+[node name="FlowerGroupA3" type="MultiMeshInstance3D" parent="Scatter" unique_id=24756964]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("66_7odsn")
+
+[node name="FlowerGroupA4" type="MultiMeshInstance3D" parent="Scatter" unique_id=918511947]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("67_1klre")
+
+[node name="FlowerGroupA5" type="MultiMeshInstance3D" parent="Scatter" unique_id=424816179]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("68_16ld2")
+
+[node name="FlowerGroupA6" type="MultiMeshInstance3D" parent="Scatter" unique_id=909807418]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("69_4gdnj")
+
+[node name="FlowerGroupA7" type="MultiMeshInstance3D" parent="Scatter" unique_id=1564494288]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("70_jinnp")
+
+[node name="FlowerGroupA8" type="MultiMeshInstance3D" parent="Scatter" unique_id=157756159]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("71_f6qs7")
+
+[node name="VioletPatch0" type="MultiMeshInstance3D" parent="Scatter" unique_id=2092588755]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("72_o8mvl")
+
+[node name="VioletPatch1" type="MultiMeshInstance3D" parent="Scatter" unique_id=267685796]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("73_6pmr7")
+
+[node name="VioletPatch2" type="MultiMeshInstance3D" parent="Scatter" unique_id=687256099]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("74_31vx2")
+
+[node name="VioletPatch3" type="MultiMeshInstance3D" parent="Scatter" unique_id=325729706]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("75_pqwft")
+
+[node name="VioletPatch4" type="MultiMeshInstance3D" parent="Scatter" unique_id=1994430745]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("76_5wrwo")
+
+[node name="VioletPatch5" type="MultiMeshInstance3D" parent="Scatter" unique_id=1888643948]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("77_yr31y")
+
+[node name="VioletPatch6" type="MultiMeshInstance3D" parent="Scatter" unique_id=301023504]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("78_nb7y2")
+
+[node name="VioletPatch7" type="MultiMeshInstance3D" parent="Scatter" unique_id=1094004745]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("79_j8ax7")
+
+[node name="VioletPatch8" type="MultiMeshInstance3D" parent="Scatter" unique_id=1151827658]
+cast_shadow = 0
+visibility_range_end = 45.0
+multimesh = ExtResource("80_vlt8b")
+
+[node name="GrassShort0" type="MultiMeshInstance3D" parent="Scatter" unique_id=814406390]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("81_hedul")
+
+[node name="GrassShort1" type="MultiMeshInstance3D" parent="Scatter" unique_id=1612570248]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("82_je4r3")
+
+[node name="GrassShort2" type="MultiMeshInstance3D" parent="Scatter" unique_id=171441000]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("83_4yl60")
+
+[node name="GrassShort3" type="MultiMeshInstance3D" parent="Scatter" unique_id=1080815423]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("84_lrhsq")
+
+[node name="GrassShort4" type="MultiMeshInstance3D" parent="Scatter" unique_id=192374932]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("85_xn3cr")
+
+[node name="GrassShort5" type="MultiMeshInstance3D" parent="Scatter" unique_id=1526018413]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("86_5e5na")
+
+[node name="GrassShort6" type="MultiMeshInstance3D" parent="Scatter" unique_id=176709571]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("87_xsvkh")
+
+[node name="GrassShort7" type="MultiMeshInstance3D" parent="Scatter" unique_id=422815116]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("88_33677")
+
+[node name="GrassShort8" type="MultiMeshInstance3D" parent="Scatter" unique_id=669509326]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("89_wjf1g")
+
+[node name="GrassTall0" type="MultiMeshInstance3D" parent="Scatter" unique_id=1143361190]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("90_0aeqb")
+
+[node name="GrassTall1" type="MultiMeshInstance3D" parent="Scatter" unique_id=509010455]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("91_jr80s")
+
+[node name="GrassTall2" type="MultiMeshInstance3D" parent="Scatter" unique_id=1393140387]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("92_p2udd")
+
+[node name="GrassTall3" type="MultiMeshInstance3D" parent="Scatter" unique_id=464744182]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("93_40aci")
+
+[node name="GrassTall4" type="MultiMeshInstance3D" parent="Scatter" unique_id=347428417]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("94_0fgxu")
+
+[node name="GrassTall5" type="MultiMeshInstance3D" parent="Scatter" unique_id=360937985]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("95_cs3e5")
+
+[node name="GrassTall6" type="MultiMeshInstance3D" parent="Scatter" unique_id=351334250]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("96_5yb6n")
+
+[node name="GrassTall7" type="MultiMeshInstance3D" parent="Scatter" unique_id=1382389925]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("97_ahd10")
+
+[node name="GrassTall8" type="MultiMeshInstance3D" parent="Scatter" unique_id=1707483610]
+cast_shadow = 0
+visibility_range_end = 40.0
+multimesh = ExtResource("98_pt1pw")
+
+[node name="Forest" type="Node3D" parent="." unique_id=981158707]
+
+[node name="TreeA" type="MultiMeshInstance3D" parent="Forest" unique_id=2524137]
+multimesh = ExtResource("99_c4e4r")
+
+[node name="TreeB" type="MultiMeshInstance3D" parent="Forest" unique_id=1237074507]
+multimesh = ExtResource("100_q2024")
+
+[node name="TreeC" type="MultiMeshInstance3D" parent="Forest" unique_id=1992838337]
+multimesh = ExtResource("101_c5baj")
+
+[node name="TreeD" type="MultiMeshInstance3D" parent="Forest" unique_id=77909648]
+multimesh = ExtResource("102_wcugc")
+
+[node name="TreeE" type="MultiMeshInstance3D" parent="Forest" unique_id=1608562542]
+multimesh = ExtResource("103_prmvy")
+
+[node name="Backdrop" type="Node3D" parent="." unique_id=318317630]
+
+[node name="Mountains" type="MeshInstance3D" parent="Backdrop" unique_id=1148566842]
+material_override = ExtResource("104_w0ltc")
+cast_shadow = 0
+mesh = ExtResource("105_nerd8")
+
+[node name="Clouds" type="MultiMeshInstance3D" parent="Backdrop" unique_id=728357198]
+cast_shadow = 0
+multimesh = ExtResource("106_613hc")
+
+[node name="Castle" type="Node3D" parent="Backdrop" unique_id=771181393]
+transform = Transform3D(12, 0, 0, 0, 12, 0, 0, 0, 12, 4, 29, -200)
+
+[node name="TowerSquareBase0" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=806741750]
+cast_shadow = 0
+mesh = ExtResource("107_iieut")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerSquareMidWindows1" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1984313493]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.01, 0)
+cast_shadow = 0
+mesh = ExtResource("109_y0k2b")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerSquareMidWindows2" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1160556387]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.02, 0)
+cast_shadow = 0
+mesh = ExtResource("109_y0k2b")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerSquareTopRoofHigh3" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1595738646]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.03, 0)
+cast_shadow = 0
+mesh = ExtResource("110_6rlj8")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonBase4" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1928403455]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, 0.8)
+cast_shadow = 0
+mesh = ExtResource("111_4skgf")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid5" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=358210051]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 1.31, 0.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid6" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=444514703]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 1.77, 0.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid7" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1236558574]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 2.23, 0.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonRoof8" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1567014516]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 2.69, 0.8)
+cast_shadow = 0
+mesh = ExtResource("113_72757")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonBase9" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=727761699]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, 0.8)
+cast_shadow = 0
+mesh = ExtResource("111_4skgf")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid10" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1042655948]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 1.31, 0.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid11" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1585774547]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 1.77, 0.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid12" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=2023054001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 2.23, 0.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid13" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=252316885]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 2.69, 0.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonRoof14" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=347061986]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 3.15, 0.8)
+cast_shadow = 0
+mesh = ExtResource("113_72757")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonBase15" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1666382321]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, -1.8)
+cast_shadow = 0
+mesh = ExtResource("111_4skgf")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid16" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=674535199]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 1.31, -1.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid17" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=87199622]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 1.77, -1.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid18" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1575189683]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 2.23, -1.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid19" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=273373807]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 2.69, -1.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid20" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1941061602]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 3.15, -1.8)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonRoof21" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=66866171]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 3.61, -1.8)
+cast_shadow = 0
+mesh = ExtResource("113_72757")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonBase22" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=75235345]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0, -1.9)
+cast_shadow = 0
+mesh = ExtResource("111_4skgf")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid23" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=643635579]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 1.31, -1.9)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid24" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=990158180]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 1.77, -1.9)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid25" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=541260684]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 2.23, -1.9)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid26" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=277006792]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 2.69, -1.9)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid27" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1459287083]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 3.15, -1.9)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid28" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1454402248]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 3.61, -1.9)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonRoof29" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=305207834]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 4.07, -1.9)
+cast_shadow = 0
+mesh = ExtResource("113_72757")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonBase30" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=332537165]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.6)
+cast_shadow = 0
+mesh = ExtResource("111_4skgf")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid31" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1938122717]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.31, -2.6)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid32" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=563464944]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.77, -2.6)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid33" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=810397495]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.23, -2.6)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid34" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=665755650]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.69, -2.6)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid35" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=593995341]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.15, -2.6)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid36" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1619903911]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.61, -2.6)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonMid37" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1790730653]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.07, -2.6)
+cast_shadow = 0
+mesh = ExtResource("112_xfupd")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="TowerHexagonRoof38" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=984150453]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.53, -2.6)
+cast_shadow = 0
+mesh = ExtResource("113_72757")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="Wall39" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1840192714]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0, 0.8)
+cast_shadow = 0
+mesh = ExtResource("114_kdkfn")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="Wall40" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=799480027]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0, 0.8)
+cast_shadow = 0
+mesh = ExtResource("114_kdkfn")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="Gate41" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=950387862]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0.8)
+cast_shadow = 0
+mesh = ExtResource("115_2ishi")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="FlagPennant42" type="MeshInstance3D" parent="Backdrop/Castle" unique_id=1481840537]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.4, 0)
+cast_shadow = 0
+mesh = ExtResource("116_8p5uk")
+surface_material_override/0 = ExtResource("108_p5v0e")
+
+[node name="PlayerStart" type="Marker3D" parent="." unique_id=1462072367]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08339323, 16)
+
+[node name="PortalPoint" type="Marker3D" parent="." unique_id=1829750725]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.29587507, -17)
+
+[editable path="Props/TreeA1"]
+[editable path="Props/TreeC1"]
+[editable path="Props/TreeB1"]
+[editable path="Props/TreeD1"]
+[editable path="Props/TreeE1"]
+[editable path="Props/TreeC2"]
+[editable path="Props/TreeA2"]
+[editable path="Props/TreeD2"]
+[editable path="Props/TreeB2"]

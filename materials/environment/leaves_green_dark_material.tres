@@ -1,0 +1,11 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/models/environment/stylized_nature/textures/leaves_mask.png" id="1_tex"]
+
+[resource]
+transparency = 2
+alpha_scissor_threshold = 0.5
+cull_mode = 2
+albedo_color = Color(0.24, 0.47, 0.26, 1)
+albedo_texture = ExtResource("1_tex")
+roughness = 0.9

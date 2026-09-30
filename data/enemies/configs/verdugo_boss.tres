@@ -10,6 +10,7 @@
 [ext_resource type="Resource" path="res://data/enemies/attacks/verdugo_slash_1.tres" id="8_slash_1"]
 [ext_resource type="Resource" path="res://data/enemies/attacks/verdugo_slash_2.tres" id="9_slash_2"]
 [ext_resource type="Resource" path="res://data/enemies/attacks/verdugo_slash_3.tres" id="10_slash_3"]
+[ext_resource type="Resource" path="res://data/enemies/attacks/verdugo_slash_4.tres" id="13_slash_4"]
 [ext_resource type="Resource" path="res://data/enemies/attacks/verdugo_slam.tres" id="11_slam"]
 [ext_resource type="Resource" path="res://data/enemies/attacks/verdugo_grab.tres" id="12_grab"]
 
@@ -17,7 +18,7 @@
 script = ExtResource("3_combo_script")
 steps = Array[ExtResource("7_attack_script")]([ExtResource("8_slash_1"), ExtResource("9_slash_2"), ExtResource("10_slash_3")])
 advance_distance = 0.8
-phase_two_extra_steps = Array[ExtResource("7_attack_script")]([ExtResource("8_slash_1")])
+phase_two_extra_steps = Array[ExtResource("7_attack_script")]([ExtResource("13_slash_4")])
 max_range = 4.5
 weight = 3.0
 close_weight = 3.0

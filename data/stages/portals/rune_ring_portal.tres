@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PortalData" format=3]
+
+[ext_resource type="Script" path="res://resources/portal_data.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://entities/portal/styles/rune_ring_portal.tscn" id="2_style"]
+
+[resource]
+script = ExtResource("1_script")
+style_scene = ExtResource("2_style")
+open_delay = 1.0
+open_duration = 1.5
+enter_radius = 1.2

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ObstacleAvoidanceConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/obstacle_avoidance_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+lookahead = 3.0
+margin = 0.7
+strength = 2.5

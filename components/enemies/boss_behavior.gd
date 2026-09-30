@@ -362,7 +362,9 @@ func _begin_transition() -> void:
 	_time = 0.0
 	_phase_two_pending = false
 	enemy.health.is_invulnerable = true
-	enemy.get_hands().play_pose(_config().phase_two.transition_hand_offset, enemy.get_hands().config.return_time)
+	var phase_two: BossPhaseData = _config().phase_two
+	var pose_time: float = phase_two.transition_pose_time if phase_two.transition_pose_time > 0.0 else enemy.get_hands().config.return_time
+	enemy.get_hands().play_pose(phase_two.transition_hand_offset, pose_time, &"transition", phase_two.transition_hand_rotation)
 
 
 func _transition(delta: float) -> void:
@@ -372,6 +374,7 @@ func _transition(delta: float) -> void:
 		return
 	enemy.health.is_invulnerable = false
 	_boss_phase = 2
+	enemy.get_hands().announce_phase(2)
 	enemy.get_hands().set_size_multiplier(_config().phase_two.phase_two_hand_scale)
 	enemy.get_hands().return_to_rest()
 	_phase = Phase.CHASE

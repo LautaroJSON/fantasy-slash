@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://components/enemies/titan_behavior.tscn" id="3_behavior"]
 [ext_resource type="Resource" path="res://data/enemies/hands/titan_hands.tres" id="4_hands"]
 [ext_resource type="Resource" uid="uid://ps6ui6qxtl3l" path="res://data/enemies/configs/titan_boss.tres" id="5_config"]
+[ext_resource type="PackedScene" path="res://entities/enemy/models/titan_model.tscn" id="19_model"]
 
 [sub_resource type="Resource" id="Resource_max_health"]
 script = ExtResource("2_growth")
@@ -46,6 +47,7 @@ health_bar_scale = 2.2
 display_name = "Titán"
 hud_health_bar = true
 behavior = ExtResource("3_behavior")
+model = ExtResource("19_model")
 hands_config = ExtResource("4_hands")
 behavior_config = ExtResource("5_config")
 ignores_attack_tokens = true

@@ -7,5 +7,6 @@ script = ExtResource("1_script")
 stat = 9
 amount = 0.5
 max_stacks = 6
+group = 1
 title = "Velocidad"
 description = "+0.5 m/s de velocidad de movimiento"

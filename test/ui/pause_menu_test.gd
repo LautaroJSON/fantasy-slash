@@ -4,6 +4,7 @@ const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
 const DISPLAY_TABLE: StatDisplayTable = preload("res://data/ui/stat_display_table.tres")
 const DAMAGE_UPGRADE: UpgradeData = preload("res://data/upgrades/damage.tres")
 const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
+const PLAYER_STATS: PlayerStats = preload("res://data/classes/warrior/warrior_stats.tres")
 const LETHAL_HIT: float = 100000.0
 const LEFT_COLUMN: Array[PlayerStats.Stat] = [
 	PlayerStats.Stat.DAMAGE, PlayerStats.Stat.CRIT_CHANCE, PlayerStats.Stat.CRIT_DAMAGE,
@@ -99,7 +100,8 @@ func test_ac26_pause_shows_stats_wave_and_kills() -> void:
 	assert_bool(_pause.is_open()).is_true()
 	assert_bool(get_tree().paused).is_true()
 	assert_int(_pause.get_stat_row_count()).is_equal(DISPLAY_TABLE.row_count())
-	assert_str(_pause.get_value_text(PlayerStats.Stat.DAMAGE)).is_equal("19.0")
+	# Adapted (sandbox-arena-control.md): read from the warrior data, not a fixed "19.0".
+	assert_str(_pause.get_value_text(PlayerStats.Stat.DAMAGE)).is_equal("%.1f" % (PLAYER_STATS.damage + DAMAGE_UPGRADE.amount))
 	assert_str(_pause.get_value_text(PlayerStats.Stat.CRIT_CHANCE)).is_equal("5 %")
 	assert_str(_pause.get_value_text(PlayerStats.Stat.CRIT_DAMAGE)).is_equal("100 %")
 	assert_str(_pause.get_run_text()).is_equal("Oleada 1 · 1 enemigos eliminados")
@@ -132,7 +134,10 @@ func test_ac27_pause_is_ignored_while_choosing_an_upgrade() -> void:
 
 func test_ac112_normal_mode_hides_the_sandbox_ui() -> void:
 	_pause.open()
-	assert_bool(_pause.get_sandbox_panel().visible).is_false()
+	# Adapted (sandbox-arena-control.md): the sandbox UI is the enemy tab and the
+	# editable upgrade tab, both absent in normal mode.
+	assert_int(_pause.get_visible_tab_count()).is_equal(2)
+	assert_bool(_pause.get_upgrade_panel().is_editable()).is_false()
 	assert_bool(_player.health.death_protected).is_false()
 
 

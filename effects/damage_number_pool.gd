@@ -128,7 +128,7 @@ func _camera_right() -> Vector3:
 
 ## Basic combo: the number is born where the blade crossed the enemy.
 func _on_blade_hit(enemy: Enemy, applied: float, is_crit: bool) -> void:
-	spawn(applied, is_crit, contact_spawn_point(enemy) + next_fan_offset())
+	spawn(_full_damage(enemy, applied), is_crit, contact_spawn_point(enemy) + next_fan_offset())
 
 
 ## Abilities that show the hit impact (Sheathe, Spin) use the contact point;
@@ -142,13 +142,29 @@ func _on_ability_hit(enemy: Enemy, applied: float, is_crit: bool, ability: Abili
 
 
 func _on_anchored_hit(enemy: Enemy, applied: float, is_crit: bool) -> void:
-	spawn(applied, is_crit, anchor_spawn_point(enemy) + next_fan_offset())
+	spawn(_full_damage(enemy, applied), is_crit, anchor_spawn_point(enemy) + next_fan_offset())
+
+
+## The number shows the full damage of the hit, not just the health it removed
+## (a 100 hit on a 40 HP enemy reads 100). Hits that removed nothing stay as
+## is, except on an immortal sandbox enemy already at its health floor
+## (docs/specs/sandbox-arena-control.md): the hit landed, so it shows in full.
+func _full_damage(enemy: Enemy, applied: float) -> float:
+	if applied <= 0.0 and not _landed_on_floor(enemy):
+		return applied
+	return maxf(applied, enemy.health.last_full_damage)
+
+
+## The last hit reached a death-protected enemy (not invulnerable) and was cut
+## by its health floor.
+func _landed_on_floor(enemy: Enemy) -> bool:
+	return enemy.health.death_protected and not enemy.health.is_invulnerable and not enemy.health.is_dead()
 
 
 ## Area damage of an Affliction burst (docs/specs/affliction.md): never critical,
 ## in the color of its bar.
 func _on_affliction_burst_hit(enemy: Enemy, applied: float, type: AfflictionData) -> void:
-	spawn(applied, false, anchor_spawn_point(enemy) + next_fan_offset(), type.damage_number_material)
+	spawn(_full_damage(enemy, applied), false, anchor_spawn_point(enemy) + next_fan_offset(), type.damage_number_material)
 
 
 ## Every Affliction says its name in its color each time its bar fills

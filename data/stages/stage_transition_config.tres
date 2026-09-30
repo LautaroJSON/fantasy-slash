@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StageTransitionConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/stage_transition_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+fade_out = 0.5
+hold = 0.3
+fade_in = 0.6
+banner_duration = 2.5
+banner_fade = 0.6
+fade_color = Color(0, 0, 0, 1)
+banner_title_format = "Stage %d"
+title_font_size = 26
+name_font_size = 56
+subtitle_font_size = 24
+text_color = Color(0.98, 0.96, 0.9, 1)
+outline_color = Color(0.1, 0.12, 0.18, 0.85)
+outline_size = 8

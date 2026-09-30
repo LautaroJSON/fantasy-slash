@@ -28,6 +28,15 @@ enum Hands { BOTH, LEFT, RIGHT, ALTERNATE }
 @export var hand_windup_offset: Vector3
 ## Hand offset (enemy local space, relative to the rest pose) at the peak of the strike.
 @export var hand_strike_offset: Vector3
+## Name the model plays for this attack: `<model_clip>_windup` and `<model_clip>_strike`
+## (`windup` and `strike` when the model lacks them; docs/specs/enemy-models.md).
+@export var model_clip: StringName = &"attack"
+## Rotation of the attacking hands' meshes at the end of the windup and at the peak
+## of the strike, in degrees, turned in the enemy's space on top of
+## EnemyHandsConfig.hand_rotation (a greatsword that rises, turns and falls). Written
+## for the right hand; the left one mirrors Y and Z. Zero keeps the hand as it is.
+@export var hand_windup_rotation: Vector3
+@export var hand_strike_rotation: Vector3
 
 
 ## Pure: whether a target at `point` with radius `padding` is inside the arc
@@ -38,6 +47,8 @@ func is_hit(origin: Vector3, facing: Vector3, point: Vector3, padding: float) ->
 	if distance - padding > hit_range:
 		return false
 	if distance <= padding:
+		return true
+	if hit_arc_degrees >= 360.0:
 		return true
 	var flat_facing := Vector3(facing.x, 0.0, facing.z)
 	if flat_facing.is_zero_approx():

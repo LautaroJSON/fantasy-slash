@@ -15,3 +15,4 @@ windup_turn_speed = 40.0
 hands = 0
 hand_windup_offset = Vector3(0, 0.5, 0)
 hand_strike_offset = Vector3(0, -0.3, 0)
+model_clip = &"stomp"

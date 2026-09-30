@@ -9,3 +9,4 @@ bob_amplitude = 0.08
 bob_frequency = 2.0
 return_time = 0.2
 hand_scale = 1.0
+hand_radius = 0.2

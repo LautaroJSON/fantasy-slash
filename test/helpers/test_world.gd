@@ -26,3 +26,10 @@ static func make_box(size: Vector3, position: Vector3) -> StaticBody3D:
 ## the run tests that count enemies or clear a wave verify the regular mix.
 static func without_horde(arena: Node) -> void:
 	(arena.get_node("WaveManager") as WaveManager).horde_pool = null
+
+
+## The run with only the Arena stage (docs/specs/stages.md §7): the arena tests
+## that check the old spawn square or a boss followed by the next wave. Call it
+## before adding the arena to the tree.
+static func arena_only(arena: Node) -> void:
+	(arena.get_node("StageDirector") as StageDirector).sequence = load("res://test/data/arena_only_sequence.tres")

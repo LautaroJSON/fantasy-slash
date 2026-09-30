@@ -3,7 +3,7 @@ extends GdUnitTestSuite
 
 const MIN_TOUCH_HEIGHT: float = 44.0
 const SCENES: Array[String] = [
-	"res://ui/main_menu.tscn", "res://ui/pause_menu.tscn", "res://ui/sandbox_upgrade_panel.tscn",
+	"res://ui/main_menu.tscn", "res://ui/pause_menu.tscn", "res://ui/upgrade_panel.tscn", "res://ui/sandbox_enemy_panel.tscn",
 	"res://ui/upgrade_picker.tscn", "res://ui/upgrade_ban_picker.tscn", "res://ui/ability_picker.tscn",
 	"res://ui/game_over_screen.tscn",
 ]

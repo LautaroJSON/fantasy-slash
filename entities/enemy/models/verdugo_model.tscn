@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://assets/models/enemies/verdugo/verdugo_model.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/enemies/fx/verdugo_sparks.tres" id="2_fx"]
+
+[node name="VerdugoModel" type="Node3D"]
+script = ExtResource("1_script")
+walk_reference_speed = 3.0
+sparks = ExtResource("2_fx")

@@ -1,6 +1,6 @@
 # Feature: proporciones de la katana acordes a la mano
 
-- **Estado:** Implementada (2026-09-27).
+- **Estado:** Implementada (2026-09-27). **Las mallas y las medidas de la katana y de la funda las reemplaza `katana-visual-rework.md`** (AC683, AC688: reescritos; las posiciones del pomo, la tsuba y la punta se conservan).
 - **Constitución:** `docs/constitution.md` v4.10.1 → **enmienda MINOR 4.11.0** (ver §8).
 - **Pilar (Principio I):** **combate.** La silueta del arma es parte de la lectura del Samurái. Hoy la mano del humanoide (una gema de ~21 cm) tapa el mango entero y la tsuba, así que la katana parece salir del puño sin guarda. Con un mango y una tsuba a la escala de la mano, se lee como katana en la guardia, en cada corte y en la carga de Envainar.
 - **Dependencias:** `samurai.md` (malla derivada `katana_blade.res`, AC237), `weapon-reach.md` (regla de AC211), `sheath-in-left-hand.md` (AC671–AC677: funda en la mano izquierda), `sheath-socket-hand-grip.md` (`Hilt`, AC675).

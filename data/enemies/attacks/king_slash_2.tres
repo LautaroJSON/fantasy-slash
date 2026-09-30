@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="EnemyAttackData" format=3]
+
+[ext_resource type="Script" path="res://resources/enemy_attack_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+damage_multiplier = 1.0
+windup_time = 0.45
+active_time = 0.15
+recovery_time = 0.25
+trigger_range = 4.5
+hit_range = 3.6
+hit_arc_degrees = 110.0
+windup_turn_speed = 90.0
+hands = 0
+hand_windup_offset = Vector3(-0.5, -0.31, 0.1)
+hand_strike_offset = Vector3(0.4, 0.29, -0.2)
+model_clip = &"slash_b"
+hand_windup_rotation = Vector3(68, 0, -37)
+hand_strike_rotation = Vector3(129, 0, 37)

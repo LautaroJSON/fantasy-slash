@@ -1,6 +1,7 @@
 # Feature: Menú principal + modo Sandbox
 
 - **Estado:** Implementada (2026-09-25, 180 tests GdUnit4 en verde, smoke tests headless del menú y de la arena limpios)
+- **Reemplazada en parte:** la §2 "Oleadas sin cartas" la reemplaza `sandbox-arena-control.md` (el sandbox ya no tiene oleadas; AC110 → AC1333). `SandboxUpgradePanel` ahora es `UpgradePanel`.
 - **Constitución:** `docs/constitution.md` v2.2.0 (sin enmiendas ni excepciones)
 - **Pilar (Principio I):** Progresión, como herramienta. El sandbox permite probar builds y medir daño, y el menú principal es el punto de entrada al ciclo de runs.
 - **Dependencias:** todas las features de combate, habilidades y cartas.

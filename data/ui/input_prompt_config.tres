@@ -8,13 +8,17 @@ keyboard_prompts = Dictionary[StringName, String]({
 &"ability_basic": "E",
 &"dash": "Clic D",
 &"ability_ultimate": "R",
-&"sprint": "Shift"
+&"sprint": "Shift",
+&"pause_tab_prev": "Q",
+&"pause_tab_next": "E"
 })
 gamepad_prompts = Dictionary[StringName, String]({
 &"ability_basic": "LB",
 &"dash": "B",
 &"ability_ultimate": "RT",
-&"sprint": "L3"
+&"sprint": "L3",
+&"pause_tab_prev": "LB",
+&"pause_tab_next": "RB"
 })
 touch_prompts = Dictionary[StringName, String]({
 &"ability_basic": "",

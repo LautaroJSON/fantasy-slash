@@ -10,6 +10,8 @@ signal killed(enemy: Enemy)
 signal hit_notified(applied: float, is_crit: bool)
 ## A boss calls a batch of minions (docs/specs/boss-colmena.md); WaveManager spawns them.
 signal summon_requested(enemy: Enemy, summon: SummonData)
+## Sent back to its pool without dying (sandbox "Limpiar arena", docs/specs/sandbox-arena-control.md).
+signal returned(enemy: Enemy)
 
 @export var stats: EnemyStats
 @export var target: Player
@@ -31,6 +33,8 @@ var _hit_padding: float = 0.0
 ## Collision radius of the target, added to the attack hitboxes (set on activate).
 var _target_padding: float = 0.0
 var _behavior: EnemyBehavior
+## Own model of the type (docs/specs/enemy-models.md); null = the grey capsule.
+var _model: EnemyModel
 var _knockback: Vector3 = Vector3.ZERO
 ## Gravity multiplier of the current jump (launch()); back to 1 on landing.
 var _gravity_scale: float = 1.0
@@ -62,6 +66,14 @@ var _speed_scale: float = 1.0
 ## Time dilation (docs/specs/perfect-dodge.md): seconds left and the speed factor.
 var _dilation_left: float = 0.0
 var _dilation_scale: float = 1.0
+## Sandbox dummy (docs/specs/sandbox-arena-control.md): the behavior is not
+## updated; the enemy stays put and turns to the player at this speed (deg/s).
+var dummy: bool = false
+var _dummy_turn_speed: float = 0.0
+## Round obstacles of the stage in play and how to steer around them
+## (docs/specs/stages.md §2.5); set by the WaveManager on spawn.
+var _obstacles: PackedVector3Array = []
+var _avoidance: ObstacleAvoidanceConfig
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var debuffs: DebuffComponent = $DebuffComponent
@@ -69,7 +81,8 @@ var _dilation_scale: float = 1.0
 @onready var health_bar: EnemyHealthBar = $HealthBar
 @onready var affliction_bars: AfflictionBarRow = $HealthBar/AfflictionBars
 @onready var _collision: CollisionShape3D = $CollisionShape3D
-@onready var _body: MeshInstance3D = $Body
+@onready var _body: Node3D = $Body
+@onready var _fallback: MeshInstance3D = $Body/Fallback
 @onready var _hands: EnemyHands = $Hands
 @onready var _spawn_marker: MeshInstance3D = $SpawnMarker
 @onready var _shockwaves: Array[MeshInstance3D] = [$Shockwave as MeshInstance3D, $Shockwave2 as MeshInstance3D, $Shockwave3 as MeshInstance3D]
@@ -85,6 +98,7 @@ func _ready() -> void:
 	add_child(_behavior)
 	_behavior.setup(self)
 	_telegraph.prepare_arcs(_behavior.get_telegraph_arcs())
+	_setup_model()
 	_apply_body_scale()
 	health.died.connect(_on_died)
 	if start_active:
@@ -99,10 +113,13 @@ func _physics_process(delta: float) -> void:
 		_advance_spawn_in(delta)
 		return
 	if _advance_time_freeze(delta):
+		_set_model_time_scale(0.0)
 		return
 	if _advance_hitlag(delta):
+		_set_model_time_scale(0.0)
 		return
 	_update_behaviour(delta)
+	_update_model()
 
 
 func activate(at: Vector3, new_target: Player, new_level: int = 1) -> void:
@@ -116,10 +133,13 @@ func activate(at: Vector3, new_target: Player, new_level: int = 1) -> void:
 	_target_padding = _collision_radius(target)
 	_behavior.reset()
 	_hands.reset()
+	_reset_model()
 	_end_spawn_in()
 	_end_hitlag()
 	_time_freeze_left = 0.0
 	_dilation_left = 0.0
+	dummy = false
+	health.death_protected = false
 	_telegraph.clear()
 	for ring: MeshInstance3D in _shockwaves:
 		ring.visible = false
@@ -181,9 +201,27 @@ func deactivate() -> void:
 	_end_hitlag()
 	_time_freeze_left = 0.0
 	_dilation_left = 0.0
+	_reset_model()
 	visible = false
 	process_mode = Node.PROCESS_MODE_DISABLED
 	_collision.set_deferred(&"disabled", true)
+
+
+## Deactivates without dying (no `killed`, no kill counted) and lets its pool
+## take it back (docs/specs/sandbox-arena-control.md).
+func return_to_pool() -> void:
+	deactivate()
+	returned.emit(self)
+
+
+## Sandbox options (docs/specs/sandbox-arena-control.md): `immortal` keeps the
+## health above CombatRules.protected_min_health; `as_dummy` stops the
+## behavior and turns towards the player at `turn_speed` degrees per second.
+## Call after activate(), which clears both.
+func set_sandbox_options(immortal: bool, as_dummy: bool, turn_speed: float) -> void:
+	health.death_protected = immortal
+	dummy = as_dummy
+	_dummy_turn_speed = turn_speed
 
 
 ## Pushes the enemy horizontally; it decelerates with its knockback_friction.
@@ -260,6 +298,28 @@ func get_facing() -> Vector3:
 	return Vector3(-sin(rotation.y), 0.0, -cos(rotation.y))
 
 
+## `point` pushed out of every obstacle (grown by the steering margin), so a
+## leap never lands inside a column (docs/specs/stages.md §2.5); y is kept.
+func clear_of_obstacles(point: Vector3) -> Vector3:
+	if _avoidance == null:
+		return point
+	var flat := Vector2(point.x, point.z)
+	for obstacle: Vector3 in _obstacles:
+		var center := Vector2(obstacle.x, obstacle.y)
+		var reach: float = obstacle.z + _avoidance.margin
+		var offset: Vector2 = flat - center
+		if offset.length() < reach:
+			flat = center + (offset.normalized() if not offset.is_zero_approx() else Vector2.RIGHT) * reach
+	return Vector3(flat.x, point.y, flat.y)
+
+
+## The stage's obstacles ((x, z, radius) each, shared, not copied) and the
+## steering config; walking bends around them.
+func set_obstacles(obstacles: PackedVector3Array, config: ObstacleAvoidanceConfig) -> void:
+	_obstacles = obstacles
+	_avoidance = config
+
+
 ## Walks at move_speed along a flat, normalized `direction` and faces it.
 func move_towards(direction: Vector3, delta: float) -> void:
 	walk(direction, delta)
@@ -267,11 +327,14 @@ func move_towards(direction: Vector3, delta: float) -> void:
 
 
 ## Walks at move_speed along `direction` without turning. With a coordinator
-## the walk also pushes away from nearby enemies.
+## the walk also pushes away from nearby enemies, and it bends around the
+## stage's obstacles (charges, lunges and jumps do not: they hit them).
 func walk(direction: Vector3, delta: float) -> void:
 	var heading: Vector3 = direction
 	if coordinator != null:
 		heading = (direction + coordinator.separation_for(self)).limit_length(1.0)
+	if _avoidance != null:
+		heading = ObstacleSteering.steer(global_position, heading, _obstacles, _avoidance)
 	velocity.x = heading.x * _scaled.move_speed * _speed_scale
 	velocity.z = heading.z * _scaled.move_speed * _speed_scale
 	_apply_gravity(_unscaled(delta))
@@ -323,7 +386,7 @@ func is_spawning_in() -> bool:
 	return _spawn_left > 0.0
 
 
-func get_body() -> MeshInstance3D:
+func get_body() -> Node3D:
 	return _body
 
 
@@ -426,6 +489,53 @@ func turn_towards(direction: Vector3, max_angle: float) -> void:
 	rotation.y = rotate_toward(rotation.y, atan2(-direction.x, -direction.z), max_angle)
 
 
+## The type's own model, or null when it uses the grey capsule.
+func get_model() -> EnemyModel:
+	return _model
+
+
+## Instances stats.model under Body (feet on the floor), drops the grey capsule,
+## gives the hands the model's meshes and connects the hands' signals to it.
+## Runs once per instance, before _apply_body_scale.
+func _setup_model() -> void:
+	if stats.model == null:
+		return
+	_model = stats.model.instantiate() as EnemyModel
+	_model.position = Vector3.DOWN * _body.position.y
+	_body.remove_child(_fallback)
+	_fallback.free()
+	_body.add_child(_model)
+	_model.recover_seconds = _hands.config.return_time
+	_hands.set_hand_meshes(_model.get_hand_mesh(true), _model.get_hand_mesh(false), _model.get_hand_material())
+	_model.bind_hands(_hands)
+	_hands.windup_started.connect(_model.on_windup)
+	_hands.strike_started.connect(_model.on_strike)
+	_hands.pose_started.connect(_model.on_pose)
+	_hands.rested.connect(_model.on_rest)
+	_hands.phase_started.connect(_model.on_phase)
+
+
+func _reset_model() -> void:
+	if _model != null:
+		_model.reset()
+
+
+## The model walks as fast as the enemy does (a push or a rise from the floor is not a walk).
+func _update_model() -> void:
+	if _model == null:
+		return
+	_model.set_time_scale(_speed_scale)
+	if is_knocked_back():
+		_model.set_locomotion(Vector3.ZERO)
+	else:
+		_model.set_locomotion(global_basis.inverse() * velocity)
+
+
+func _set_model_time_scale(time_scale: float) -> void:
+	if _model != null:
+		_model.set_time_scale(time_scale)
+
+
 ## Scales the body, its collision and the hands (never the CharacterBody3D
 ## itself) and lifts the health bar to match. Runs once per instance.
 func _apply_body_scale() -> void:
@@ -451,10 +561,23 @@ func _update_behaviour(delta: float) -> void:
 		_slide_back(delta, dilation)
 		return
 	_speed_scale = debuffs.get_speed_scale() * dilation
+	if dummy:
+		_hold_as_dummy(delta)
+		return
 	if _speed_scale <= 0.0:
 		stand_still(delta)
 		return
 	_behavior.physics_update(delta * _speed_scale)
+
+
+## Sandbox dummy: stays in place and turns towards its target.
+## Takes the real delta; slows (SLOW, dilation) slow the turn, not gravity.
+func _hold_as_dummy(delta: float) -> void:
+	var slowed: float = delta * _speed_scale if _speed_scale > 0.0 else delta
+	stand_still(slowed)
+	if target != null and _speed_scale > 0.0:
+		var offset: Vector3 = target.global_position - global_position
+		turn_towards(Vector3(offset.x, 0.0, offset.z), deg_to_rad(_dummy_turn_speed) * slowed)
 
 
 func get_speed_scale() -> float:
@@ -503,6 +626,8 @@ func _on_died() -> void:
 ## Called for every player hit (EnemyHitFeedback): shakes the floating bar
 ## and lets the HUD boss bar react too.
 func notify_hit(applied: float, is_crit: bool) -> void:
+	if _model != null:
+		_model.on_hit()
 	health_bar.notify_hit(applied, is_crit)
 	hit_notified.emit(applied, is_crit)
 

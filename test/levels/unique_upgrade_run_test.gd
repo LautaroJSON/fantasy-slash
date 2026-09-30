@@ -83,8 +83,8 @@ func test_ac103_maxed_unique_cards_leave_the_pool() -> void:
 
 func test_ac123_binary_unique_rows_show_active_or_inactive() -> void:
 	var pause: PauseMenu = _arena.get_node("UI/PauseMenu") as PauseMenu
-	var panel: SandboxUpgradePanel = pause.get_sandbox_panel()
-	panel.setup(_player, _wave_manager.get_card_pool())
+	var panel: UpgradePanel = pause.get_upgrade_panel()
+	panel.setup(_player, _wave_manager.get_card_pool(), true)
 	assert_str(panel.value_text(MOMENTUM)).is_equal("(inactivo)")
 	_player.apply_upgrade(MOMENTUM)
 	assert_str(panel.value_text(MOMENTUM)).is_equal("(activo)")

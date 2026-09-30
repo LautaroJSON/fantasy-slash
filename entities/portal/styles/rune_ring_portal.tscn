@@ -1,0 +1,105 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://entities/portal/styles/rune_ring_portal.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/stages/portals/rune_ring_style_config.tres" id="2_config"]
+[ext_resource type="Material" path="res://materials/portal/portal_stone_material.tres" id="3_stone"]
+[ext_resource type="Material" path="res://materials/portal/portal_rune_material.tres" id="4_rune"]
+[ext_resource type="Material" path="res://materials/portal/portal_disc_material.tres" id="5_disc"]
+[ext_resource type="Material" path="res://materials/portal/portal_particle_material.tres" id="6_particle"]
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+material = ExtResource("3_stone")
+inner_radius = 1.35
+outer_radius = 1.7
+rings = 32
+ring_segments = 8
+
+[sub_resource type="BoxMesh" id="BoxMesh_rune"]
+material = ExtResource("4_rune")
+size = Vector3(0.14, 0.26, 0.06)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_disc"]
+material = ExtResource("5_disc")
+top_radius = 1.35
+bottom_radius = 1.35
+height = 0.03
+radial_segments = 32
+rings = 1
+
+[sub_resource type="SphereMesh" id="SphereMesh_mote"]
+material = ExtResource("6_particle")
+radius = 0.05
+height = 0.1
+radial_segments = 6
+rings = 3
+
+[node name="RuneRingPortal" type="Node3D" node_paths=PackedStringArray("ring", "disc", "flash", "particles")]
+script = ExtResource("1_script")
+config = ExtResource("2_config")
+ring = NodePath("Ring")
+disc = NodePath("Ring/Disc")
+flash = NodePath("Ring/Flash")
+particles = NodePath("Particles")
+
+[node name="Ring" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, 0)
+
+[node name="Stone" type="MeshInstance3D" parent="Ring"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = SubResource("TorusMesh_ring")
+
+[node name="Disc" type="MeshInstance3D" parent="Ring"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = SubResource("CylinderMesh_disc")
+
+[node name="Rune1" type="MeshInstance3D" parent="Ring"]
+transform = Transform3D(1.00000, -0.00000, 0, 0.00000, 1.00000, 0, 0, 0, 1, 1.5250, 0.0000, 0.17)
+mesh = SubResource("BoxMesh_rune")
+
+[node name="Rune2" type="MeshInstance3D" parent="Ring"]
+transform = Transform3D(0.70711, -0.70711, 0, 0.70711, 0.70711, 0, 0, 0, 1, 1.0783, 1.0783, 0.17)
+mesh = SubResource("BoxMesh_rune")
+
+[node name="Rune3" type="MeshInstance3D" parent="Ring"]
+transform = Transform3D(0.00000, -1.00000, 0, 1.00000, 0.00000, 0, 0, 0, 1, 0.0000, 1.5250, 0.17)
+mesh = SubResource("BoxMesh_rune")
+
+[node name="Rune4" type="MeshInstance3D" parent="Ring"]
+transform = Transform3D(-0.70711, -0.70711, 0, 0.70711, -0.70711, 0, 0, 0, 1, -1.0783, 1.0783, 0.17)
+mesh = SubResource("BoxMesh_rune")
+
+[node name="Rune5" type="MeshInstance3D" parent="Ring"]
+transform = Transform3D(-1.00000, -0.00000, 0, 0.00000, -1.00000, 0, 0, 0, 1, -1.5250, 0.0000, 0.17)
+mesh = SubResource("BoxMesh_rune")
+
+[node name="Rune6" type="MeshInstance3D" parent="Ring"]
+transform = Transform3D(-0.70711, 0.70711, 0, -0.70711, -0.70711, 0, 0, 0, 1, -1.0783, -1.0783, 0.17)
+mesh = SubResource("BoxMesh_rune")
+
+[node name="Rune7" type="MeshInstance3D" parent="Ring"]
+transform = Transform3D(-0.00000, 1.00000, 0, -1.00000, -0.00000, 0, 0, 0, 1, -0.0000, -1.5250, 0.17)
+mesh = SubResource("BoxMesh_rune")
+
+[node name="Rune8" type="MeshInstance3D" parent="Ring"]
+transform = Transform3D(0.70711, 0.70711, 0, -0.70711, 0.70711, 0, 0, 0, 1, 1.0783, -1.0783, 0.17)
+mesh = SubResource("BoxMesh_rune")
+
+[node name="Flash" type="OmniLight3D" parent="Ring"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.6)
+light_color = Color(0.45, 0.8, 1, 1)
+light_energy = 0.0
+omni_range = 7.0
+
+[node name="Particles" type="CPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+emitting = false
+amount = 24
+lifetime = 1.6
+mesh = SubResource("SphereMesh_mote")
+emission_shape = 3
+emission_box_extents = Vector3(1.1, 0.1, 0.15)
+direction = Vector3(0, 1, 0)
+spread = 10.0
+gravity = Vector3(0, 0, 0)
+initial_velocity_min = 1.2
+initial_velocity_max = 1.2

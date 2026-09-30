@@ -6,8 +6,14 @@ extends UpgradeCard
 @export var amount: float
 ## Times this card can be taken in a run.
 @export var max_stacks: int
+## Section of the pause menu (offensive, defensive or Affliction).
+@export var group: UpgradeCard.Group
 
 
 func is_same_kind(other: UpgradeCard) -> bool:
 	var upgrade: UpgradeData = other as UpgradeData
 	return upgrade != null and upgrade.stat == stat
+
+
+func get_group() -> UpgradeCard.Group:
+	return group

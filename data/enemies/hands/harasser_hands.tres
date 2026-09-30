@@ -9,3 +9,5 @@ bob_amplitude = 0.05
 bob_frequency = 1.8
 return_time = 0.15
 hand_scale = 0.9
+hand_radius = 0.2
+hand_rotation = Vector3(-90, 0, 0)

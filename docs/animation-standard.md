@@ -6,7 +6,7 @@
 
 ## 1. Alcance
 
-Toda animación del cuerpo del jugador (`LowPolyHumanoid` y sus perfiles), en especial combos y habilidades con arma. Los VFX que acompañan un golpe siguen la sección 8. Los enemigos y bosses lo adoptan cuando se rehagan sus animaciones.
+Toda animación del cuerpo del jugador (`LowPolyHumanoid` y sus perfiles), en especial combos y habilidades con arma. Los VFX que acompañan un golpe siguen la sección 8. Los enemigos y bosses lo adoptan con sus modelos propios (`EnemyModel`, desde 6.0.0, ver `docs/specs/enemy-models.md`): mismas capas 1 (poses clave horneadas) y sin capa en vivo, mismo flujo de video antes/después.
 
 ---
 

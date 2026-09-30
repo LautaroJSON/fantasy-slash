@@ -5,6 +5,10 @@ extends Node
 signal changed
 
 var wave: int = 1
+## Stage of the run (index in the StageSequence) and wave within it (1-based;
+## the boss is wave regular_waves + 1, docs/specs/stages.md).
+var stage_index: int = 0
+var stage_wave: int = 1
 var kills: int = 0
 ## Title of the current wave's boss challenge; empty on normal waves.
 var challenge_title: String = ""
@@ -23,6 +27,7 @@ func add_kill() -> void:
 
 func next_wave() -> void:
 	wave += 1
+	stage_wave += 1
 	changed.emit()
 
 
@@ -68,3 +73,23 @@ func get_rage_level() -> int:
 	if rage_start_wave <= 0 or wave < rage_start_wave:
 		return 0
 	return wave - rage_start_wave + 1
+
+
+## Enters stage `index` (also a new lap of the last stage): its waves count from 1 again.
+func set_stage(index: int) -> void:
+	stage_index = index
+	stage_wave = 1
+	changed.emit()
+
+
+func get_stage_index() -> int:
+	return stage_index
+
+
+func get_stage_wave() -> int:
+	return stage_wave
+
+
+## Whether the current wave is the boss wave of a stage with `regular_waves` regular waves.
+func is_stage_boss_wave(regular_waves: int) -> bool:
+	return stage_wave == regular_waves + 1

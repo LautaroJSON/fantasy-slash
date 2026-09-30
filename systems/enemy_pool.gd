@@ -16,6 +16,7 @@ extends Node
 @export var spawn_entry: EnemySpawnEntry
 
 var _available: Array[Enemy] = []
+var _created: int = 0
 
 
 func _ready() -> void:
@@ -35,6 +36,18 @@ func available_count() -> int:
 	return _available.size()
 
 
+## Creates the enemies missing to reach `count` (sandbox caps). Only called
+## while the level loads, never in combat (Principle V).
+func grow_to(count: int) -> void:
+	for i: int in count - get_size():
+		_create_enemy()
+
+
+## Enemies the pool owns, active or not.
+func get_size() -> int:
+	return _created
+
+
 func _pool_size() -> int:
 	if challenge != null:
 		return challenge.count
@@ -52,10 +65,12 @@ func _create_enemy() -> void:
 	enemy.registry = registry
 	enemy.coordinator = coordinator
 	enemy.start_active = false
-	enemy.killed.connect(_on_enemy_killed)
+	enemy.killed.connect(_reclaim)
+	enemy.returned.connect(_reclaim)
 	add_child(enemy)
+	_created += 1
 	_available.append(enemy)
 
 
-func _on_enemy_killed(enemy: Enemy) -> void:
+func _reclaim(enemy: Enemy) -> void:
 	_available.append(enemy)

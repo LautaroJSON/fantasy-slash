@@ -2,6 +2,7 @@ extends GdUnitTestSuite
 
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
 const WAVE_CONFIG: WaveConfig = preload("res://data/waves/wave_config.tres")
+const ARENA_STAGE: StageData = preload("res://data/stages/arena/arena_stage.tres")
 const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
 const RIPOSTE: AbilityUniqueUpgradeData = preload("res://data/abilities/parry/unique/riposte.tres")
 const DUEL: AbilityUniqueUpgradeData = preload("res://data/abilities/parry/unique/duel.tres")
@@ -11,6 +12,7 @@ const COLMENA: BossChallengeData = preload("res://data/enemies/boss_challenges/c
 const COLMENA_BOSS: ColmenaConfig = preload("res://data/enemies/configs/colmena_boss.tres")
 const PACE: EnemyPaceConfig = preload("res://data/enemies/enemy_pace_config.tres")
 const VERDUGO: BossChallengeData = preload("res://data/enemies/boss_challenges/verdugo.tres")
+const KING: BossChallengeData = preload("res://data/enemies/boss_challenges/king.tres")
 const LETHAL_HIT: float = 100000.0
 ## Offers checked to be sure normal waves never draw a golden card. If golden
 ## cards leaked in (~25 % per offer), 30 clean offers would happen < 0.1 % of runs.
@@ -27,6 +29,7 @@ var _wave_label: Label
 
 func before_test() -> void:
 	_arena = auto_free(ARENA_SCENE.instantiate())
+	preload("res://test/helpers/test_world.gd").arena_only(_arena)
 	add_child(_arena)
 	preload("res://test/helpers/test_world.gd").without_horde(_arena)
 	_registry = _arena.get_node("EnemyRegistry") as EnemyRegistry
@@ -55,13 +58,14 @@ func _kill_all_active() -> void:
 		enemy.health.receive_hit(LETHAL_HIT)
 
 
-## Jumps to wave 9 and clears it so wave 10, a boss wave, is running.
+## Jumps to wave 10 and clears it so wave 11, the boss wave of the stage, is running
+## (stages.md: 10 regular waves + the boss).
 func _reach_boss_wave() -> void:
-	for i: int in 8:
+	for i: int in 9:
 		_run_state.next_wave()
 	_kill_all_active()
 	_picker.choose(DAMAGE_UPGRADE)
-	assert_int(_run_state.wave).is_equal(10)
+	assert_int(_run_state.wave).is_equal(11)
 
 
 ## Picks every card of the wave (waves 1-3 give two).
@@ -81,26 +85,26 @@ func _count_unique(cards: Array[UpgradeCard]) -> int:
 	return UpgradeOffer.only_unique(cards).size()
 
 
-func test_ac146_boss_waves_are_every_tenth() -> void:
-	for wave: int in [10, 20, 30]:
-		assert_bool(WAVE_CONFIG.is_boss_wave(wave)).is_true()
-	for wave: int in [1, 4, 12, 24]:
-		assert_bool(WAVE_CONFIG.is_boss_wave(wave)).is_false()
+## stages.md: the boss is the 11th wave of each stage (it was every 10th wave).
+func test_ac146_the_boss_wave_is_the_eleventh_of_the_stage() -> void:
+	assert_bool(ARENA_STAGE.is_boss_wave(11)).is_true()
+	for stage_wave: int in [1, 4, 10, 12]:
+		assert_bool(ARENA_STAGE.is_boss_wave(stage_wave)).is_false()
 
 
-func test_ac151_wave_10_spawns_only_level_5_bosses() -> void:
+func test_ac151_wave_11_spawns_only_level_6_bosses() -> void:
 	_reach_boss_wave()
 	var active: Array[Enemy] = _registry.get_active()
 	# boss-verdugo: any challenge of the list, with its own count.
 	var challenge: BossChallengeData = null
-	for candidate: BossChallengeData in WAVE_CONFIG.boss_challenges:
+	for candidate: BossChallengeData in ARENA_STAGE.boss_challenges:
 		if candidate.stats == active[0].stats:
 			challenge = candidate
 	assert_object(challenge).is_not_null()
 	assert_int(active.size()).is_equal(challenge.count)
 	for enemy: Enemy in active:
 		assert_object(enemy.stats).is_same(challenge.stats)
-		assert_int(enemy.level).is_equal(5)
+		assert_int(enemy.level).is_equal(WAVE_CONFIG.enemy_level_for(11))
 	assert_bool(_run_state.is_boss_wave()).is_true()
 
 
@@ -160,15 +164,15 @@ func test_ac155_boss_offer_is_normal_without_golden_cards_left() -> void:
 func test_ac156_hud_names_the_boss_challenge() -> void:
 	assert_str(_wave_label.text).is_equal("Oleada 1")
 	_reach_boss_wave()
-	assert_str(_wave_label.text).is_equal("Oleada 10 · %s" % _run_state.challenge_title)
+	assert_str(_wave_label.text).is_equal("Oleada 11 · %s" % _run_state.challenge_title)
 	_kill_all_active()
 	_picker.choose(DAMAGE_UPGRADE)
-	assert_str(_wave_label.text).is_equal("Oleada 11")
+	assert_str(_wave_label.text).is_equal("Oleada 12")
 
 
-## enemy-types: regular waves mix the types of WaveConfig.enemy_types.
+## enemy-types: regular waves mix the types of the stage's enemy_types.
 func _is_regular_type(stats: EnemyStats) -> bool:
-	for entry: EnemySpawnEntry in WAVE_CONFIG.enemy_types:
+	for entry: EnemySpawnEntry in ARENA_STAGE.enemy_types:
 		if entry.stats == stats:
 			return true
 	return false
@@ -182,7 +186,7 @@ func test_ac456_bosses_come_out_of_the_floor_and_skip_the_turns() -> void:
 
 
 func test_ac474_the_verdugo_challenge() -> void:
-	assert_bool(WAVE_CONFIG.boss_challenges.has(VERDUGO)).is_true()
+	assert_bool(ARENA_STAGE.boss_challenges.has(VERDUGO)).is_true()
 	_force_boss(VERDUGO)
 	var active: Array[Enemy] = _registry.get_active()
 	assert_int(active.size()).is_equal(1)
@@ -196,10 +200,10 @@ func test_ac474_the_verdugo_challenge() -> void:
 
 
 func test_ac490_ac540_the_boss_rotation() -> void:
-	assert_bool(WAVE_CONFIG.boss_challenges.has(TITAN)).is_true()
-	assert_bool(WAVE_CONFIG.boss_challenges.has(COLMENA)).is_true()
-	assert_bool(WAVE_CONFIG.boss_challenges.has(VERDUGO)).is_true()
-	assert_int(WAVE_CONFIG.boss_challenges.size()).is_equal(3)
+	assert_bool(ARENA_STAGE.boss_challenges.has(TITAN)).is_true()
+	assert_bool(ARENA_STAGE.boss_challenges.has(COLMENA)).is_true()
+	assert_bool(ARENA_STAGE.boss_challenges.has(VERDUGO)).is_true()
+	assert_int(ARENA_STAGE.boss_challenges.size()).is_equal(4)
 	assert_object(_arena.get_node_or_null("BossPoolTitan")).is_not_null()
 	assert_object(_arena.get_node_or_null("BossPoolColossus")).is_null()
 	assert_bool(ResourceLoader.exists("res://data/enemies/colossus_stats.tres")).is_false()
@@ -282,3 +286,18 @@ func test_ac539_the_colmena_dying_takes_its_minions() -> void:
 	boss.health.receive_hit(LETHAL_HIT)
 	assert_int(_registry.alive_count()).is_equal(0)
 	assert_bool(_picker.is_open()).is_true()
+
+
+func test_ac1257_the_king_challenge() -> void:
+	assert_bool(ARENA_STAGE.boss_challenges.has(KING)).is_true()
+	assert_object(_arena.get_node_or_null("BossPoolKing")).is_not_null()
+	_force_boss(KING)
+	var active: Array[Enemy] = _registry.get_active()
+	assert_int(active.size()).is_equal(1)
+	var boss: Enemy = active[0]
+	assert_object(boss.stats).is_same(KING.stats)
+	assert_str(boss.stats.display_name).is_equal("The King")
+	assert_bool(boss.stats.hud_health_bar).is_true()
+	assert_bool(boss.is_spawning_in()).is_true()
+	assert_bool(boss.uses_attack_tokens()).is_false()
+	assert_bool(boss.get_behavior() is KingBehavior).is_true()
