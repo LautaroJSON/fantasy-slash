@@ -3,13 +3,7 @@
 [ext_resource type="Script" path="res://levels/stages/stage_map.gd" id="1_stage"]
 [ext_resource type="Material" path="res://materials/floor_material.tres" id="1_floor_material"]
 [ext_resource type="Material" path="res://materials/wall_material.tres" id="2_wall_material"]
-
-[sub_resource type="Environment" id="Environment_arena"]
-background_mode = 1
-background_color = Color(0.42, 0.56, 0.74, 1)
-ambient_light_source = 2
-ambient_light_color = Color(0.62, 0.66, 0.72, 1)
-ambient_light_energy = 0.6
+[ext_resource type="Resource" path="res://data/stages/arena/arena_lighting.tres" id="3_lighting"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(30, 1, 30)
@@ -32,13 +26,15 @@ size = Vector3(1, 3, 30)
 material = ExtResource("2_wall_material")
 size = Vector3(1, 3, 30)
 
-[node name="ArenaStage" type="Node3D" node_paths=PackedStringArray("player_start", "portal_point")]
+[node name="ArenaStage" type="Node3D" node_paths=PackedStringArray("player_start", "portal_point", "world_environment", "sun")]
 script = ExtResource("1_stage")
 player_start = NodePath("PlayerStart")
 portal_point = NodePath("PortalPoint")
+lighting = ExtResource("3_lighting")
+world_environment = NodePath("WorldEnvironment")
+sun = NodePath("DirectionalLight3D")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_arena")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866025, 0, -0.5, -0.391667, 0.62161, -0.678383, 0.310806, 0.78333, 0.538332, 0, 10, 0)

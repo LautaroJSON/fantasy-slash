@@ -11,7 +11,7 @@ const NATURE: String = "res://assets/models/environment/stylized_nature/meshes"
 const CASTLE: String = "res://assets/models/environment/castle_kit/meshes"
 const MATERIALS: String = "res://materials/environment"
 const STAGE_SCENE: String = "res://levels/stages/mar_de_flores/mar_de_flores_stage.tscn"
-const ENVIRONMENT: String = "res://levels/stages/mar_de_flores/mar_de_flores_environment.tres"
+const LIGHTING: String = "res://data/stages/mar_de_flores/mar_de_flores_lighting.tres"
 const LAYOUT: String = "res://data/stages/mar_de_flores/mar_de_flores_layout.tres"
 const PROPS: String = "res://levels/stages/props"
 
@@ -47,20 +47,6 @@ const FAR_GROUND_Y: float = -0.3
 ## Castle: kit units scaled by CASTLE_SCALE on top of the castle hill.
 const CASTLE_SCALE: float = 12.0
 const CASTLE_SINK: float = 1.0
-## Sky, fog and sun.
-const SKY_TOP := Color(0.18, 0.42, 0.86)
-const SKY_HORIZON := Color(0.62, 0.78, 0.95)
-const GROUND_BOTTOM := Color(0.3, 0.45, 0.3)
-const SUN_ANGLE_MAX: float = 20.0
-const FOG_COLOR := Color(0.7, 0.82, 0.95)
-const FOG_DENSITY: float = 0.0011
-const FOG_AERIAL: float = 0.5
-const GLOW_INTENSITY: float = 0.4
-const SUN_COLOR := Color(1.0, 0.95, 0.85)
-const SUN_ENERGY: float = 1.25
-const SUN_PITCH: float = -48.0
-const SUN_YAW: float = -35.0
-const SHADOW_DISTANCE: float = 60.0
 
 var _builder := MarDeFloresBuilder.new()
 
@@ -75,9 +61,7 @@ func _init() -> void:
 	_save_scatter_meshes()
 	_save_scatter()
 	_save_forest()
-	_save_clouds()
 	_save_layout()
-	_save_environment()
 	_save_stage_scene()
 	quit()
 
@@ -106,13 +90,6 @@ func _save_scatter_meshes() -> void:
 		mesh.surface_set_material(0, _material("bark_material"))
 		mesh.surface_set_material(1, _material("leaves_tint_material"))
 		_save(mesh, "%s/scatter_meshes/%s.res" % [BASE, tree])
-	var puff := SphereMesh.new()
-	puff.radius = 1.0
-	puff.height = 2.0
-	puff.radial_segments = 12
-	puff.rings = 6
-	puff.material = _material("cloud_material")
-	_save(puff, BASE + "/cloud_puff.tres")
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(FAR_GROUND_SIZE, FAR_GROUND_SIZE)
 	plane.material = _material("far_ground_material")
@@ -150,12 +127,6 @@ func _save_forest() -> void:
 		_save(_multimesh(mesh, transforms, colors), "%s/scatter/forest_%s.res" % [BASE, TREE_MESHES[index]])
 
 
-func _save_clouds() -> void:
-	var puffs: Array[Transform3D] = _builder.clouds()
-	var colors: Array[Color] = []
-	_save(_multimesh(load(BASE + "/cloud_puff.tres"), puffs, colors), BASE + "/scatter/clouds.res")
-
-
 func _multimesh(mesh: Mesh, transforms: Array[Transform3D], colors: Array[Color]) -> MultiMesh:
 	var multimesh := MultiMesh.new()
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
@@ -179,30 +150,6 @@ func _save_layout() -> void:
 	_save(layout, LAYOUT)
 
 
-func _save_environment() -> void:
-	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = SKY_TOP
-	sky_material.sky_horizon_color = SKY_HORIZON
-	sky_material.ground_horizon_color = SKY_HORIZON
-	sky_material.ground_bottom_color = GROUND_BOTTOM
-	sky_material.sun_angle_max = SUN_ANGLE_MAX
-	var sky := Sky.new()
-	sky.sky_material = sky_material
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_SKY
-	environment.sky = sky
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	environment.fog_enabled = true
-	environment.fog_light_color = FOG_COLOR
-	environment.fog_density = FOG_DENSITY
-	environment.fog_aerial_perspective = FOG_AERIAL
-	environment.fog_sky_affect = 0.0
-	environment.glow_enabled = true
-	environment.glow_intensity = GLOW_INTENSITY
-	_save(environment, ENVIRONMENT)
-
-
 # --- stage scene -------------------------------------------------------------
 
 func _save_stage_scene() -> void:
@@ -210,9 +157,10 @@ func _save_stage_scene() -> void:
 	root.name = "MarDeFloresStage"
 	var world := WorldEnvironment.new()
 	world.name = "WorldEnvironment"
-	world.environment = load(ENVIRONMENT)
 	_add(root, root, world)
-	_add(root, root, _sun())
+	var sun := DirectionalLight3D.new()
+	sun.name = "Sun"
+	_add(root, root, sun)
 	var terrain_shape: CollisionShape3D = _add_terrain(root)
 	var far_ground := MeshInstance3D.new()
 	far_ground.name = "FarGround"
@@ -242,6 +190,9 @@ func _save_stage_scene() -> void:
 	root.player_start = start
 	root.portal_point = portal
 	root.terrain_shape = terrain_shape
+	root.lighting = load(LIGHTING)
+	root.world_environment = world
+	root.sun = sun
 	var scene := PackedScene.new()
 	if scene.pack(root) != OK:
 		push_error("cannot pack the stage")
@@ -260,17 +211,6 @@ func _group(root: Node, group_name: String) -> Node3D:
 	node.name = group_name
 	_add(root, root, node)
 	return node
-
-
-func _sun() -> DirectionalLight3D:
-	var sun := DirectionalLight3D.new()
-	sun.name = "Sun"
-	sun.light_color = SUN_COLOR
-	sun.light_energy = SUN_ENERGY
-	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = SHADOW_DISTANCE
-	sun.rotation = Vector3(deg_to_rad(SUN_PITCH), deg_to_rad(SUN_YAW), 0.0)
-	return sun
 
 
 func _add_terrain(root: Node) -> CollisionShape3D:
@@ -363,11 +303,6 @@ func _add_backdrop(root: Node) -> void:
 	mountains.material_override = _material("backdrop_material")
 	mountains.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_add(root, backdrop, mountains)
-	var clouds := MultiMeshInstance3D.new()
-	clouds.name = "Clouds"
-	clouds.multimesh = load(BASE + "/scatter/clouds.res")
-	clouds.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_add(root, backdrop, clouds)
 	_add_castle(root, backdrop)
 
 

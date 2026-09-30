@@ -1,8 +1,8 @@
 class_name MarDeFloresBuilder
 extends RefCounted
 ## Deterministic geometry of the Mar de Flores stage (docs/specs/stages.md §3):
-## terrain, height map, backdrop, stream, prop layout, vegetation scatter and
-## clouds, all from the constants below and fixed noise seeds. Used offline by
+## terrain, height map, backdrop, stream, prop layout and vegetation scatter,
+## all from the constants below and fixed noise seeds. Used offline by
 ## build_mar_de_flores.gd (never at runtime) and by the tests that check the
 ## saved files match it.
 
@@ -60,9 +60,9 @@ const HILLS_FREQUENCY: float = 0.015
 const PATCH_SEED: int = 29
 const PATCH_FREQUENCY: float = 0.06
 ## Ground colours (sRGB, see docs/color-registry.md "Escenario").
-const MEADOW := Color(0.47, 0.68, 0.31)
+const MEADOW := Color(0.38, 0.6, 0.22)
 const MEADOW_VARIATION := Vector2(0.05, 0.06)
-const OUTSIDE := Color(0.4, 0.6, 0.28)
+const OUTSIDE := Color(0.33, 0.55, 0.2)
 const HIGH_ROCK := Color(0.56, 0.56, 0.5)
 const HIGH_FROM: float = 9.0
 const HIGH_SPAN: float = 6.0
@@ -189,15 +189,6 @@ const HILL_GREEN := Color(0.4, 0.58, 0.32)
 const CASTLE_HILL := Vector3(4.0, 0.0, -200.0)
 const CASTLE_HILL_RADIUS: float = 55.0
 const CASTLE_HILL_HEIGHT: float = 30.0
-## Clouds: clusters of puffs (a unit SphereMesh scaled per instance).
-const CLOUD_SEED: int = 13
-const CLOUD_CLUSTERS: int = 12
-const CLOUD_PUFFS := Vector2i(6, 9)
-const CLOUD_DISTANCE := Vector2(420.0, 600.0)
-const CLOUD_HEIGHT := Vector2(190.0, 280.0)
-const CLOUD_PUFF_SIZE := Vector2(28.0, 55.0)
-const CLOUD_SPREAD := Vector3(55.0, 22.0, 25.0)
-const CLOUD_FLATTEN: float = 0.7
 
 var _detail := FastNoiseLite.new()
 var _hills := FastNoiseLite.new()
@@ -452,22 +443,6 @@ func parcel_of(point: Vector2) -> int:
 	return pz * PARCELS + px
 
 
-## Cloud puffs (a unit sphere scaled by each transform).
-func clouds() -> Array[Transform3D]:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = CLOUD_SEED
-	var puffs: Array[Transform3D] = []
-	for i: int in CLOUD_CLUSTERS:
-		var angle: float = TAU * float(i) / CLOUD_CLUSTERS + rng.randf_range(-0.2, 0.2)
-		var distance: float = rng.randf_range(CLOUD_DISTANCE.x, CLOUD_DISTANCE.y)
-		var center := Vector3(cos(angle) * distance, rng.randf_range(CLOUD_HEIGHT.x, CLOUD_HEIGHT.y), sin(angle) * distance)
-		var along := Vector3(-sin(angle), 0.0, cos(angle))
-		var out := Vector3(cos(angle), 0.0, sin(angle))
-		for k: int in rng.randi_range(CLOUD_PUFFS.x, CLOUD_PUFFS.y):
-			var size: float = rng.randf_range(CLOUD_PUFF_SIZE.x, CLOUD_PUFF_SIZE.y)
-			var offset: Vector3 = along * rng.randf_range(-CLOUD_SPREAD.x, CLOUD_SPREAD.x) + Vector3.UP * rng.randf_range(-CLOUD_SPREAD.y * 0.4, CLOUD_SPREAD.y) + out * rng.randf_range(-CLOUD_SPREAD.z, CLOUD_SPREAD.z)
-			puffs.append(Transform3D(Basis.from_scale(Vector3(size, size * CLOUD_FLATTEN, size)), center + offset))
-	return puffs
 
 
 # --- helpers -------------------------------------------------------------------

@@ -6,7 +6,7 @@
 
 ## Cómo se genera
 
-Todo sale de `tools/mar_de_flores_builder.gd` (`MarDeFloresBuilder`): constantes de forma (línea de muros, polígono de spawn, arroyo, sendero), relieve (ondulación, montículo de las ruinas, colinas del borde, ruido `FastNoiseLite` con semillas fijas), colores por vértice, ubicación de los props, bosque del borde, flores, pasto y nubes. `tools/build_mar_de_flores.gd` escribe los archivos y arma la escena del stage.
+Todo sale de `tools/mar_de_flores_builder.gd` (`MarDeFloresBuilder`): constantes de forma (línea de muros, polígono de spawn, arroyo, sendero), relieve (ondulación, montículo de las ruinas, colinas del borde, ruido `FastNoiseLite` con semillas fijas), colores por vértice, ubicación de los props, bosque del borde, flores y pasto. `tools/build_mar_de_flores.gd` escribe los archivos y arma la escena del stage (la luz y el cielo ya no salen de acá: viven en `data/stages/mar_de_flores/mar_de_flores_lighting.tres`; las nubes 3D se quitaron en la spec `stage-lighting-sky.md`).
 
 1. En una copia del proyecto, **sin `--headless`** (el renderer falso de `--headless` no guarda las instancias de los `MultiMesh`):
    `godot --path <copia> -s res://assets/models/environment/mar_de_flores/tools/build_mar_de_flores.gd`
@@ -22,8 +22,7 @@ Un test (`test/levels/mar_de_flores_test.gd`) verifica que el builder reproduce 
 | `heights.res` | `HeightMapShape3D` de 81 × 81 (±40 m, 1 m) para la colisión y `StageMap.height_at`. |
 | `backdrop.res` | Montañas con nieve, colinas lejanas y la colina del castillo (colores por vértice). |
 | `water.res` | Superficie del arroyo. |
-| `far_ground.tres`, `cloud_puff.tres` | `PlaneMesh` del suelo lejano y `SphereMesh` de las nubes (primitivas). |
+| `far_ground.tres` | `PlaneMesh` del suelo lejano (primitiva). |
 | `scatter_meshes/*.res` | Copias de las mallas de `stylized_nature` con sus materiales puestos (un `MultiMesh` no tiene override por superficie). |
 | `scatter/<tipo>_<parcela>.res` | `MultiMesh` de flores y pasto en 3 × 3 parcelas de 30 m (para el descarte por cámara). |
 | `scatter/forest_<árbol>.res` | `MultiMesh` del bosque del borde; el color del follaje va en el color de cada instancia (30 % otoñal). |
-| `scatter/clouds.res` | `MultiMesh` de las nubes. |

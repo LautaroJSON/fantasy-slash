@@ -3,6 +3,8 @@
 [ext_resource type="Texture2D" path="res://assets/models/environment/stylized_nature/textures/bark.png" id="1_tex"]
 
 [resource]
+diffuse_mode = 3
+specular_mode = 2
 
 albedo_color = Color(1, 1, 1, 1)
 albedo_texture = ExtResource("1_tex")

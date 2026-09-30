@@ -7,7 +7,7 @@
 - AC1241–AC1265 reservados por `boss-king.md`.
 - AC1266–AC1285 reservados por `boss-king-rework.md`.
 - AC1361–AC1375 reservados por `pause-fullscreen-max-upgrades.md`.
-- AC1376–AC1395 reservados por `stage-lighting-sky.md`. Próximo libre: AC1396.
+- AC1376–AC1395 los usa `stage-lighting-sky.md`. Próximo libre: AC1396.
 - AC1326–AC1360 reservados por `sandbox-arena-control.md`.
 - AC1286–AC1325 los usa `stages.md`.
 - AC1141–AC1190 reservados por la Fase B de la curva de poder: `fodder-minion.md` (AC1141–AC1155), `kill-feedback.md` (usa AC1156–AC1162; AC1163–AC1170 quedan libres) y `perfect-dodge.md` (usa AC1171–AC1183; AC1184–AC1190 quedan libres).

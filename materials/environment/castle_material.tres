@@ -3,5 +3,7 @@
 [ext_resource type="Texture2D" path="res://assets/models/environment/castle_kit/textures/colormap.png" id="1_tex"]
 
 [resource]
+diffuse_mode = 3
+specular_mode = 2
 albedo_texture = ExtResource("1_tex")
 roughness = 0.9

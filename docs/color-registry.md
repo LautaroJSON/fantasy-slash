@@ -33,6 +33,8 @@ A modo de registro: celeste pálido para las cartas de mejora de habilidad (desd
 ## Escenario y portal (desde 6.2.0, ver `stages.md`)
 
 - **Escenario:** el decorado de cada stage (terreno, vegetación, rocas, ruinas, agua, fondo y nubes) usa colores propios no reservados: nunca el blanco puro `Color(1, 1, 1)` ni el gris `Color(0.5, 0.5, 0.5)` (las nubes y las flores claras son crema). Dentro de la zona de combate, flores, follaje y terreno se mantienen a más de 20° de tono (con saturación > 0.3) del rojo anaranjado de los avisos `Color(1.0, 0.3, 0.1)` y del rojo de Rage `Color(0.9, 0.1, 0.1)`, para que un aviso se lea siempre sobre el piso. Los verdes del pasto son más apagados que los cuerpos de los personajes. En el Mar de Flores, el follaje otoñal es amarillo `Color(0.9, 0.78, 0.28)` y naranja ámbar `Color(0.9, 0.6, 0.15)`.
+- **Cielo panorámico** (desde 6.4.0, ver `stage-lighting-sky.md`): la imagen de `assets/skies/<id>/` es fondo, no un elemento del mundo, y queda fuera de esta tabla y de sus reglas de color.
+- **Borde de luz** (desde 6.4.0): el `rim` de los materiales de personajes, armas y enemigos no cambia ningún `albedo_color`. El de un enemigo nunca es blanco puro (blanco reservado del jugador): se usa `rim_tint` hacia el color propio del material.
 - **Portal:** celeste luminoso `Color(0.45, 0.8, 1.0)` para el anillo emisivo, el disco translúcido (alpha ≤ 0.6), las partículas y su luz breve. Distinto del celeste pálido de las cartas de habilidad (es un objeto 3D del mundo, no una carta) y del cian de Escarcha (más verde y en barras de UI).
 
 ## Enemigos: paletas por tipo (desde 6.0.0, ver `enemy-models.md`)

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StageLighting" format=3]
+
+[ext_resource type="Script" path="res://resources/stage_lighting.gd" id="1_lighting"]
+
+[sub_resource type="Environment" id="Environment_arena"]
+background_mode = 1
+background_color = Color(0.42, 0.56, 0.74, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.62, 0.66, 0.72, 1)
+ambient_light_energy = 0.6
+
+[resource]
+script = ExtResource("1_lighting")
+environment = SubResource("Environment_arena")
+sun_pitch_deg = 42.72
+sun_yaw_deg = -42.88
+sun_shadows = false

@@ -8,14 +8,28 @@ extends Node3D
 ## Terrain collision holding a HeightMapShape3D (1 m between samples); flat
 ## stages leave it empty and stand on y = 0.
 @export var terrain_shape: CollisionShape3D
+## Light of the stage (docs/specs/stage-lighting-sky.md): applied in _ready to
+## the two nodes below. A map without `lighting` keeps the nodes as they are.
+@export var lighting: StageLighting
+@export var world_environment: WorldEnvironment
+@export var sun: DirectionalLight3D
 
 var _data: StageData
 ## (x, z, radius) of every StageObstacle, gathered once in _ready.
 var _obstacles: PackedVector3Array = []
+## Copy of lighting.environment in use (the Resource is shared, Principle III).
+var _environment: Environment
+var _sky_yaw_deg: float
 
 
 func _ready() -> void:
 	_collect_obstacles(self)
+	_apply_lighting()
+
+
+func _process(delta: float) -> void:
+	_sky_yaw_deg += lighting.sky_rotation_speed_deg / 60.0 * delta
+	_environment.sky_rotation.y = deg_to_rad(_sky_yaw_deg)
 
 
 ## Called by the StageDirector right after instancing the stage.
@@ -97,6 +111,25 @@ func clamp_inside(point: Vector3) -> Vector3:
 
 func _on_ground(point: Vector2) -> Vector3:
 	return Vector3(point.x, height_at(point.x, point.y) + _data.layout.spawn_lift, point.y)
+
+
+func _apply_lighting() -> void:
+	set_process(false)
+	if lighting == null:
+		return
+	if lighting.environment != null and world_environment != null:
+		_environment = lighting.environment.duplicate() as Environment
+		_sky_yaw_deg = lighting.sky_yaw_offset_deg
+		_environment.sky_rotation.y = deg_to_rad(_sky_yaw_deg)
+		world_environment.environment = _environment
+		set_process(not is_zero_approx(lighting.sky_rotation_speed_deg))
+	if sun != null:
+		sun.light_color = lighting.sun_color
+		sun.light_energy = lighting.sun_energy
+		sun.rotation = Vector3(deg_to_rad(lighting.sun_pitch_deg), deg_to_rad(lighting.sun_yaw_deg), 0.0)
+		sun.shadow_enabled = lighting.sun_shadows
+		sun.shadow_blur = lighting.sun_shadow_blur
+		sun.directional_shadow_max_distance = lighting.sun_shadow_max_distance
 
 
 func _collect_obstacles(node: Node) -> void:
