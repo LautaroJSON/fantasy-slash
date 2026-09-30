@@ -22,11 +22,14 @@ extends Control
 ## Enemies whose statuses the overlay draws over their health bars
 ## (docs/specs/status-icons.md).
 @export var enemy_registry: EnemyRegistry
+## Gold shown under the wave (docs/specs/gold-system.md). Optional.
+@export var wallet: GoldWallet
 
 @onready var _health_bar: ProgressBar = %HealthBar
 @onready var _health_label: Label = %HealthLabel
 @onready var _stamina_bar: ProgressBar = %StaminaBar
 @onready var _wave_label: Label = %WaveLabel
+@onready var _gold_label: Label = %GoldLabel
 @onready var _dash_slot: AbilitySlotView = %DashSlot
 @onready var _basic_slot: AbilitySlotView = %BasicSlot
 @onready var _ultimate_slot: AbilitySlotView = %UltimateSlot
@@ -54,6 +57,9 @@ func _ready() -> void:
 	player.health.health_changed.connect(_on_health_changed)
 	player.stamina.stamina_changed.connect(_on_stamina_changed)
 	run_state.changed.connect(_on_run_changed)
+	if wallet != null:
+		wallet.changed.connect(_on_gold_changed)
+	_on_gold_changed()
 	if wave_manager != null:
 		wave_manager.boss_wave_started.connect(_boss_bars.show_bosses)
 		wave_manager.bosses_cleared.connect(_boss_bars.clear)
@@ -113,3 +119,9 @@ func _rounded_box(color: Color, corner_radius: int) -> StyleBoxFlat:
 	box.bg_color = color
 	box.set_corner_radius_all(corner_radius)
 	return box
+
+
+func _on_gold_changed() -> void:
+	_gold_label.visible = wallet != null
+	if wallet != null:
+		_gold_label.text = "Oro: %d" % wallet.get_gold()

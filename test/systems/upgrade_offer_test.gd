@@ -4,7 +4,7 @@ const CATALOG: UpgradeCatalog = preload("res://data/upgrades/upgrade_catalog.tre
 const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 ## Stats with a card: all but the five fixed by design (docs/specs/stats-rework.md),
 ## plus AFFLICTION_BUILDUP (docs/specs/affliction.md).
-const UPGRADEABLE_STAT_COUNT: int = 11
+const UPGRADEABLE_STAT_COUNT: int = 12
 
 
 func _player_pool() -> Array[UpgradeCard]:

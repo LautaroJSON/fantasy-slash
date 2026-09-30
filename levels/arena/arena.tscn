@@ -32,25 +32,31 @@
 [ext_resource type="Script" uid="uid://bd7vexxsykwwd" path="res://systems/attack_coordinator.gd" id="33_attack_coordinator"]
 [ext_resource type="Resource" path="res://data/enemies/group_ai_config.tres" id="34_group_ai_config"]
 [ext_resource type="Resource" path="res://data/enemies/boss_challenges/verdugo.tres" id="35_verdugo"]
-[ext_resource type="Resource" path="res://data/enemies/boss_challenges/king.tres" id="91_king"]
 [ext_resource type="Resource" path="res://data/enemies/enemy_pace_config.tres" id="36_pace"]
 [ext_resource type="Resource" path="res://data/enemies/spawn/fodder_spawn.tres" id="37_fodder_spawn"]
 [ext_resource type="Resource" path="res://data/afflictions/affliction_catalog.tres" id="90_affliction_catalog"]
-[ext_resource type="Script" path="res://systems/stage_director.gd" id="92_stage_director"]
+[ext_resource type="Resource" path="res://data/enemies/boss_challenges/king.tres" id="91_king"]
+[ext_resource type="Script" uid="uid://dod031q54d1ov" path="res://systems/stage_director.gd" id="92_stage_director"]
 [ext_resource type="Resource" path="res://data/stages/stage_sequence.tres" id="93_stage_sequence"]
 [ext_resource type="PackedScene" path="res://entities/portal/portal.tscn" id="94_portal"]
 [ext_resource type="PackedScene" path="res://ui/stage_transition.tscn" id="95_stage_transition"]
-[ext_resource type="Resource" path="res://data/sandbox/sandbox_config.tres" id="96_sandbox_config"]
 [ext_resource type="Resource" path="res://data/enemies/obstacle_avoidance_config.tres" id="96_obstacle_avoidance"]
+[ext_resource type="Resource" path="res://data/sandbox/sandbox_config.tres" id="96_sandbox_config"]
+[ext_resource type="Script" uid="uid://ctguv0hof0niy" path="res://systems/gold_wallet.gd" id="97_wallet"]
+[ext_resource type="Script" uid="uid://b3w713s1x3wrw" path="res://systems/coin_spawner.gd" id="98_coin_spawner"]
+[ext_resource type="Resource" path="res://data/economy/gold_config.tres" id="99_gold_config"]
+[ext_resource type="Resource" path="res://data/economy/shop_config.tres" id="100_shop_config"]
+[ext_resource type="PackedScene" path="res://entities/pickups/coin.tscn" id="101_coin"]
+[ext_resource type="Resource" path="res://data/upgrades/roll_config.tres" id="102_roll_config"]
 
 [node name="Arena" type="Node3D" unique_id=386986998 node_paths=PackedStringArray("player", "wave_manager")]
 script = ExtResource("22_arena_script")
 player = NodePath("Player")
 wave_manager = NodePath("WaveManager")
 
-[node name="StageRoot" type="Node3D" parent="."]
+[node name="StageRoot" type="Node3D" parent="." unique_id=14124186]
 
-[node name="Portal" parent="." node_paths=PackedStringArray("player") instance=ExtResource("94_portal")]
+[node name="Portal" parent="." unique_id=166213205 node_paths=PackedStringArray("player") instance=ExtResource("94_portal")]
 player = NodePath("../Player")
 
 [node name="EnemyRegistry" type="Node" parent="." unique_id=30444790]
@@ -59,7 +65,7 @@ script = ExtResource("4_registry")
 [node name="Player" parent="." unique_id=1301126492 node_paths=PackedStringArray("enemy_registry") instance=ExtResource("3_player")]
 enemy_registry = NodePath("../EnemyRegistry")
 
-[node name="StageDirector" type="Node" parent="." node_paths=PackedStringArray("stage_root", "player", "wave_manager", "run_state", "portal", "transition")]
+[node name="StageDirector" type="Node" parent="." unique_id=482212157 node_paths=PackedStringArray("stage_root", "player", "wave_manager", "run_state", "portal", "transition")]
 script = ExtResource("92_stage_director")
 sequence = ExtResource("93_stage_sequence")
 stage_root = NodePath("../StageRoot")
@@ -153,7 +159,7 @@ registry = NodePath("../EnemyRegistry")
 coordinator = NodePath("../AttackCoordinator")
 challenge = ExtResource("35_verdugo")
 
-[node name="BossPoolKing" type="Node" parent="." node_paths=PackedStringArray("registry", "coordinator")]
+[node name="BossPoolKing" type="Node" parent="." unique_id=1421144376 node_paths=PackedStringArray("registry", "coordinator")]
 script = ExtResource("7_pool")
 enemy_scene = ExtResource("5_enemy")
 config = ExtResource("10_wave_config")
@@ -171,18 +177,33 @@ player = NodePath("../Player")
 [node name="RunState" type="Node" parent="." unique_id=968092995]
 script = ExtResource("8_run_state")
 
+[node name="GoldWallet" type="Node" parent="." unique_id=1073263352]
+script = ExtResource("97_wallet")
+
+[node name="CoinSpawner" type="Node3D" parent="." unique_id=1547290760 node_paths=PackedStringArray("registry", "wallet", "player", "run_state", "wave_manager")]
+script = ExtResource("98_coin_spawner")
+config = ExtResource("99_gold_config")
+registry = NodePath("../EnemyRegistry")
+wallet = NodePath("../GoldWallet")
+player = NodePath("../Player")
+run_state = NodePath("../RunState")
+coin_scene = ExtResource("101_coin")
+wave_manager = NodePath("../WaveManager")
+
 [node name="UI" type="CanvasLayer" parent="." unique_id=48373861]
 
-[node name="Hud" parent="UI" unique_id=874545095 node_paths=PackedStringArray("player", "run_state", "wave_manager", "enemy_registry") instance=ExtResource("6_hud")]
+[node name="Hud" parent="UI" unique_id=874545095 node_paths=PackedStringArray("player", "run_state", "wave_manager", "enemy_registry", "wallet") instance=ExtResource("6_hud")]
 player = NodePath("../../Player")
 run_state = NodePath("../../RunState")
 wave_manager = NodePath("../../WaveManager")
 enemy_registry = NodePath("../../EnemyRegistry")
+wallet = NodePath("../../GoldWallet")
 
-[node name="StageTransition" parent="UI" instance=ExtResource("95_stage_transition")]
+[node name="StageTransition" parent="UI" unique_id=1105869505 instance=ExtResource("95_stage_transition")]
 
 [node name="UpgradePicker" parent="UI" unique_id=1328616733 node_paths=PackedStringArray("player") instance=ExtResource("12_picker")]
 player = NodePath("../../Player")
+rolls = ExtResource("102_roll_config")
 
 [node name="AbilityPicker" parent="UI" unique_id=945594056 instance=ExtResource("18_ability_picker")]
 
@@ -201,7 +222,7 @@ ban_picker = NodePath("../UpgradeBanPicker")
 game_over = NodePath("../GameOverScreen")
 wave_manager = NodePath("../../WaveManager")
 
-[node name="WaveManager" type="Node" parent="." unique_id=414700449 node_paths=PackedStringArray("pools", "horde_pool", "boss_pools", "registry", "coordinator", "player", "run_state", "picker", "ability_picker", "ban_picker")]
+[node name="WaveManager" type="Node" parent="." unique_id=414700449 node_paths=PackedStringArray("pools", "horde_pool", "boss_pools", "registry", "coordinator", "player", "run_state", "picker", "ability_picker", "ban_picker", "wallet")]
 script = ExtResource("9_wave_manager")
 config = ExtResource("10_wave_config")
 catalog = ExtResource("11_catalog")
@@ -209,7 +230,6 @@ affliction_catalog = ExtResource("90_affliction_catalog")
 ban_rules = ExtResource("21_ban_rules")
 pace = ExtResource("36_pace")
 rage = ExtResource("27_rage_config")
-sandbox_config = ExtResource("96_sandbox_config")
 pools = [NodePath("../EnemyPool"), NodePath("../EnemyPoolCharger"), NodePath("../EnemyPoolHarasser"), NodePath("../EnemyPoolLeaper"), NodePath("../EnemyPoolShieldbearer")]
 horde_pool = NodePath("../EnemyPoolFodder")
 boss_pools = [NodePath("../BossPoolTitan"), NodePath("../BossPoolColmena"), NodePath("../BossPoolVerdugo"), NodePath("../BossPoolKing")]
@@ -221,3 +241,7 @@ run_state = NodePath("../RunState")
 picker = NodePath("../UI/UpgradePicker")
 ability_picker = NodePath("../UI/AbilityPicker")
 ban_picker = NodePath("../UI/UpgradeBanPicker")
+sandbox_config = ExtResource("96_sandbox_config")
+wallet = NodePath("../GoldWallet")
+shop = ExtResource("100_shop_config")
+rolls = ExtResource("102_roll_config")

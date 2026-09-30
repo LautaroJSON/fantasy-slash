@@ -1,12 +1,12 @@
-[gd_resource type="Resource" script_class="EnemyStats" format=3]
+[gd_resource type="Resource" script_class="EnemyStats" format=3 uid="uid://bw0gygilfch25"]
 
-[ext_resource type="Script" path="res://resources/enemy_stats.gd" id="1_script"]
-[ext_resource type="Script" path="res://resources/enemy_attack_data.gd" id="1_xpba2"]
-[ext_resource type="Script" path="res://resources/enemy_stat_growth.gd" id="2_growth"]
+[ext_resource type="Script" uid="uid://b7jvh5hu4k1jl" path="res://resources/enemy_stats.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://djw82ehqq88oc" path="res://resources/enemy_attack_data.gd" id="1_xpba2"]
+[ext_resource type="Script" uid="uid://bccm8umkwltgo" path="res://resources/enemy_stat_growth.gd" id="2_growth"]
 [ext_resource type="PackedScene" path="res://components/enemies/king_behavior.tscn" id="3_behavior"]
-[ext_resource type="PackedScene" path="res://entities/enemy/models/king_model.tscn" id="19_model"]
 [ext_resource type="Resource" path="res://data/enemies/hands/king_hands.tres" id="4_hands"]
-[ext_resource type="Resource" path="res://data/enemies/configs/king_boss.tres" id="5_config"]
+[ext_resource type="Resource" uid="uid://b6mqedyhxjdt6" path="res://data/enemies/configs/king_boss.tres" id="5_config"]
+[ext_resource type="PackedScene" path="res://entities/enemy/models/king_model.tscn" id="19_model"]
 
 [sub_resource type="Resource" id="Resource_max_health"]
 script = ExtResource("2_growth")
@@ -47,7 +47,6 @@ health_bar_scale = 1.7
 display_name = "The King"
 hud_health_bar = true
 behavior = ExtResource("3_behavior")
-model = ExtResource("19_model")
 hands_config = ExtResource("4_hands")
 behavior_config = ExtResource("5_config")
 ignores_attack_tokens = true
@@ -55,3 +54,4 @@ resists_hitlag = true
 resists_control = true
 stun_duration_scale = 0.3
 affliction_resistance = 0.5
+model = ExtResource("19_model")

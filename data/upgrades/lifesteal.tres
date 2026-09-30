@@ -1,6 +1,12 @@
-[gd_resource type="Resource" script_class="UpgradeData" format=3]
+[gd_resource type="Resource" script_class="UpgradeData" format=3 uid="uid://ddwbvsvomkvte"]
 
-[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bbp4wfw353l2u" path="res://resources/upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://clqaknbxq40nf" path="res://resources/value_format.gd" id="2_format"]
+
+[sub_resource type="Resource" id="Resource_format"]
+script = ExtResource("2_format")
+format = "+%.0f %%"
+multiplier = 100.0
 
 [resource]
 script = ExtResource("1_script")
@@ -8,5 +14,12 @@ stat = 7
 amount = 0.03
 max_stacks = 5
 group = 1
+category = 2
+ascension_levels = 5
+ascension_factor = 0.7
+ascension_price_growth = 1.5
+roll_amounts = Array[float]([0.01, 0.03, 0.05, 0.09])
+value_format = SubResource("Resource_format")
+value_label = "de robo de vida"
 title = "Robo de vida"
 description = "+3 % de robo de vida"

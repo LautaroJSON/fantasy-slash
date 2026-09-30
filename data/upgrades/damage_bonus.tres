@@ -1,11 +1,23 @@
-[gd_resource type="Resource" script_class="UpgradeData" format=3]
+[gd_resource type="Resource" script_class="UpgradeData" format=3 uid="uid://c5k0d27jwy31o"]
 
-[ext_resource type="Script" path="res://resources/upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bbp4wfw353l2u" path="res://resources/upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://clqaknbxq40nf" path="res://resources/value_format.gd" id="2_format"]
+
+[sub_resource type="Resource" id="Resource_format"]
+script = ExtResource("2_format")
+format = "+%.0f %%"
+multiplier = 100.0
 
 [resource]
 script = ExtResource("1_script")
 stat = 8
 amount = 0.1
 max_stacks = 10
+ascension_levels = 5
+ascension_factor = 0.7
+ascension_price_growth = 1.5
+roll_amounts = Array[float]([0.05, 0.1, 0.18, 0.3])
+value_format = SubResource("Resource_format")
+value_label = "de daño"
 title = "Bono de daño"
 description = "+10 % de daño"

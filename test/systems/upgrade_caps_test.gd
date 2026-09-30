@@ -6,7 +6,8 @@ const RULES: CombatRules = preload("res://data/combat/combat_rules.tres")
 const SHIELD_CHARGE: AbilityData = preload("res://data/abilities/shield_charge/shield_charge.tres")
 const PARRY: AbilityData = preload("res://data/abilities/parry/parry.tres")
 const ARENA_SCENE: PackedScene = preload("res://levels/arena/arena.tscn")
-const DAMAGE_UPGRADE: UpgradeData = preload("res://data/upgrades/damage.tres")
+## A card without ascension levels: it leaves the pool at its cap.
+const DAMAGE_UPGRADE: UpgradeData = preload("res://data/upgrades/attack_range.tres")
 const EPSILON: float = 0.0001
 
 
@@ -37,10 +38,12 @@ func test_ac119_ability_speed_and_cooldown_caps_land_exactly_on_the_floor() -> v
 			assert_float(capped).override_failure_message(upgrade.title).is_equal_approx(_floor_of(ability, upgrade.stat), EPSILON)
 
 
-func test_ac230_crit_chance_cap_lands_exactly_on_100_percent() -> void:
+func test_ac230_crit_chance_cap_is_the_first_copy_to_reach_100_percent() -> void:
 	var crit: UpgradeData = _card_for(PlayerStats.Stat.CRIT_CHANCE)
 	var capped: float = _capped_value(PLAYER_STATS.crit_chance, crit.amount, crit.max_stacks)
-	assert_float(capped).is_equal_approx(RULES.max_crit_chance, EPSILON)
+	var one_less: float = _capped_value(PLAYER_STATS.crit_chance, crit.amount, crit.max_stacks - 1)
+	assert_float(capped).is_greater_equal(RULES.max_crit_chance)
+	assert_float(one_less).is_less(RULES.max_crit_chance)
 
 
 func test_ac231_crit_damage_cap_is_the_first_copy_to_reach_300_percent() -> void:
@@ -64,8 +67,8 @@ func test_ac120_a_capped_card_leaves_the_pool_and_is_not_applied_again() -> void
 	assert_bool(wave_manager.get_available_pool().has(DAMAGE_UPGRADE)).is_false()
 	player.apply_upgrade(DAMAGE_UPGRADE)
 	assert_int(player.count_upgrade(DAMAGE_UPGRADE)).is_equal(DAMAGE_UPGRADE.max_stacks)
-	assert_float(player.stats.get_stat(PlayerStats.Stat.DAMAGE)).is_equal_approx(
-		_capped_value(PLAYER_STATS.damage, DAMAGE_UPGRADE.amount, DAMAGE_UPGRADE.max_stacks), EPSILON)
+	assert_float(player.stats.get_stat(PlayerStats.Stat.ATTACK_RANGE)).is_equal_approx(
+		_capped_value(PLAYER_STATS.attack_range, DAMAGE_UPGRADE.amount, DAMAGE_UPGRADE.max_stacks), EPSILON)
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 

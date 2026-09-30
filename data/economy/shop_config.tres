@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ShopConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/shop_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+free_picks_until_wave = 3
+card_base_price = 60
+card_growth_per_wave = 1.06
+card_growth_per_copy = 1.35
+unique_price_factor = 3.0
+reroll_base_price = 25
+reroll_growth = 1.5
+heal_base_price = 40
+heal_growth = 1.4
+heal_fraction = 0.3
+ban_base_price = 150
+ban_growth = 1.6

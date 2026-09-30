@@ -26,7 +26,6 @@ cap = 5.0
 
 [resource]
 script = ExtResource("1_script")
-display_name = "Bruto"
 damage = 8.0
 max_health = 40.0
 attack_interval = 0.4
@@ -36,6 +35,7 @@ knockback_friction = 20.0
 level_growth = Array[ExtResource("2_growth")]([SubResource("Resource_max_health"), SubResource("Resource_damage"), SubResource("Resource_move_speed")])
 body_scale = 1.0
 health_bar_scale = 1.0
+display_name = "Bruto"
 behavior = ExtResource("3_behavior")
-model = ExtResource("6_model")
 attacks = Array[ExtResource("5_attack_script")]([ExtResource("4_attack")])
+model = ExtResource("6_model")

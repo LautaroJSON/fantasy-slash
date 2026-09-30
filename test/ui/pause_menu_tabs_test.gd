@@ -14,7 +14,7 @@ const BUFF: BuffData = preload("res://data/buffs/compensation.tres")
 const GRUNT_SPAWN: EnemySpawnEntry = preload("res://data/enemies/spawn/grunt_spawn.tres")
 const MIN_TOUCH_HEIGHT: float = 44.0
 const OFFENSE_TITLES: Array[String] = ["Daño", "Bono de daño", "Crítico", "Daño crítico", "Velocidad de ataque", "Rango"]
-const DEFENSE_TITLES: Array[String] = ["Vida", "Defensa", "Robo de vida", "Velocidad"]
+const DEFENSE_TITLES: Array[String] = ["Vida", "Defensa", "Robo de vida", "Velocidad", "Imán"]
 const AFFLICTION_TITLES: Array[String] = ["Acumulación de Aflicción"]
 
 var _arena: Node3D
@@ -188,7 +188,7 @@ func test_ac1355_normal_lists_only_the_cards_taken() -> void:
 	assert_bool(panel.is_editable()).is_false()
 	assert_int(panel.get_row_count()).is_equal(1)
 	assert_int(panel.get_group_row_count(UpgradeCard.Group.OFFENSE)).is_equal(1)
-	assert_str(panel.get_count_text(DAMAGE_UPGRADE)).is_equal("2/%d" % DAMAGE_UPGRADE.max_stacks)
+	assert_str(panel.get_count_text(DAMAGE_UPGRADE)).is_equal("2/%d" % DAMAGE_UPGRADE.total_copies())
 	assert_str(panel.get_value_text(DAMAGE_UPGRADE)).is_equal("(%.1f → %.1f)" % [PLAYER_STATS.damage, PLAYER_STATS.damage + 2.0 * DAMAGE_UPGRADE.amount])
 	assert_bool(panel.is_section_empty_shown(UpgradeCard.Group.OFFENSE)).is_false()
 	for group: UpgradeCard.Group in [UpgradeCard.Group.DEFENSE, UpgradeCard.Group.ABILITY, UpgradeCard.Group.AFFLICTION]:

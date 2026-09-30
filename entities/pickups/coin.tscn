@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://entities/pickups/coin.gd" id="1_script"]
+[ext_resource type="Material" path="res://materials/pickups/coin_material.tres" id="2_material"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_coin"]
+top_radius = 0.22
+bottom_radius = 0.22
+height = 0.06
+radial_segments = 12
+rings = 1
+
+[node name="Coin" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
+mesh = SubResource("CylinderMesh_coin")
+surface_material_override/0 = ExtResource("2_material")

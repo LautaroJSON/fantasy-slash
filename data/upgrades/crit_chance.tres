@@ -1,11 +1,20 @@
 [gd_resource type="Resource" script_class="UpgradeData" format=3 uid="uid://byg5bjlsvgk1x"]
 
 [ext_resource type="Script" uid="uid://bbp4wfw353l2u" path="res://resources/upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://clqaknbxq40nf" path="res://resources/value_format.gd" id="2_format"]
+
+[sub_resource type="Resource" id="Resource_format"]
+script = ExtResource("2_format")
+format = "+%.0f %%"
+multiplier = 100.0
 
 [resource]
 script = ExtResource("1_script")
 stat = 3
-amount = 0.05
-max_stacks = 19
+amount = 0.03
+max_stacks = 32
+roll_amounts = Array[float]([0.01, 0.03, 0.06, 0.1])
+value_format = SubResource("Resource_format")
+value_label = "de prob. de crítico"
 title = "Crítico"
-description = "+5 % de probabilidad de crítico"
+description = "+3 % de probabilidad de crítico"

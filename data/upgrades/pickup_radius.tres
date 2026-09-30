@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3 uid="uid://cyxyyw82qouqq"]
+
+[ext_resource type="Script" uid="uid://bbp4wfw353l2u" path="res://resources/upgrade_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://clqaknbxq40nf" path="res://resources/value_format.gd" id="2_format"]
+
+[sub_resource type="Resource" id="Resource_format"]
+script = ExtResource("2_format")
+format = "+%.1f m"
+multiplier = 1.0
+
+[resource]
+script = ExtResource("1_script")
+stat = 21
+amount = 1.5
+max_stacks = 4
+group = 1
+category = 2
+ascension_levels = 3
+ascension_factor = 0.6
+ascension_price_growth = 1.8
+roll_amounts = Array[float]([0.5, 1.5, 2.7, 4.5])
+value_format = SubResource("Resource_format")
+value_label = "de radio de recogida"
+title = "Imán"
+description = "+1.5 m de radio de recogida"

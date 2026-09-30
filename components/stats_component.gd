@@ -53,7 +53,7 @@ func get_upgrades() -> Array[UpgradeData]:
 
 ## Removes one copy of the upgrade (sandbox). Does nothing if it was not taken.
 func remove_upgrade(upgrade: UpgradeData) -> void:
-	var index: int = _upgrades.find(upgrade)
+	var index: int = _index_of(upgrade)
 	if index < 0:
 		return
 	_upgrades.remove_at(index)
@@ -61,8 +61,13 @@ func remove_upgrade(upgrade: UpgradeData) -> void:
 	stats_changed.emit()
 
 
+## Copies of the same stat: offered cards are rolled copies, so identity is not used.
 func count_upgrade(upgrade: UpgradeData) -> int:
-	return _upgrades.count(upgrade)
+	var count: int = 0
+	for taken: UpgradeData in _upgrades:
+		if taken.stat == upgrade.stat:
+			count += 1
+	return count
 
 
 func clear_upgrades() -> void:
@@ -75,8 +80,11 @@ func _recalculate() -> void:
 	_cache.resize(PlayerStats.Stat.size())
 	for i: int in PlayerStats.Stat.size():
 		_cache[i] = base_stats.get_base(i as PlayerStats.Stat)
+	var copies: Dictionary = {}
 	for upgrade: UpgradeData in _upgrades:
-		_cache[upgrade.stat] += upgrade.amount
+		var taken: int = copies.get(upgrade.stat, 0)
+		_cache[upgrade.stat] += upgrade.amount_for_copy(taken)
+		copies[upgrade.stat] = taken + 1
 	_apply_limits()
 
 
@@ -90,3 +98,14 @@ func _apply_limits() -> void:
 	_cache[crit_damage] = minf(_cache[crit_damage], rules.max_crit_damage)
 	_cache[arc] = minf(_cache[arc], rules.max_attack_arc_degrees)
 	_cache[cooldown] = maxf(_cache[cooldown], dash_invulnerability + rules.min_dash_cooldown_gap)
+
+
+## The very card if it was taken, else the last copy of the same stat.
+func _index_of(upgrade: UpgradeData) -> int:
+	var index: int = _upgrades.find(upgrade)
+	if index >= 0:
+		return index
+	for i: int in range(_upgrades.size() - 1, -1, -1):
+		if _upgrades[i].stat == upgrade.stat:
+			return i
+	return -1

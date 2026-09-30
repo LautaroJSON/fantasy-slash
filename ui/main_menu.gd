@@ -34,6 +34,8 @@ func _ready() -> void:
 	_normal_button.pressed.connect(choose_mode.bind(GameSession.Mode.NORMAL))
 	_sandbox_button.pressed.connect(choose_mode.bind(GameSession.Mode.SANDBOX))
 	_build_class_cards()
+	for button: Button in [_play_button, _back_button, _class_back_button, _normal_button, _sandbox_button]:
+		UiNav.bind_focus_frame(button)
 	show_main()
 
 
@@ -115,6 +117,7 @@ func _make_class_card(character_class: CharacterClassData) -> Button:
 	card.text = "%s\n\n%s" % [character_class.title, character_class.description]
 	card.visible = true
 	card.pressed.connect(choose_class.bind(character_class))
+	UiNav.bind_focus_frame(card)
 	return card
 
 

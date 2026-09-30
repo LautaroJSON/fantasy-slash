@@ -53,6 +53,7 @@ func _make_card(ability: AbilityData) -> Button:
 	card.text = "%s\n\n%s" % [ability.title, ability.description]
 	card.visible = true
 	card.pressed.connect(choose.bind(ability))
+	UiNav.bind_focus_frame(card)
 	return card
 
 

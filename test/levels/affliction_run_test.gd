@@ -112,7 +112,7 @@ func test_ac890_the_pause_lists_the_afflictions() -> void:
 	_player.apply_upgrade(FROST_ABILITY)
 	get_tree().paused = false
 	pause.toggle()
-	assert_str(pause.get_value_text(PlayerStats.Stat.AFFLICTION_BUILDUP)).is_equal("+20 %")
+	assert_str(pause.get_value_text(PlayerStats.Stat.AFFLICTION_BUILDUP)).is_equal("+14 %")
 	assert_str(pause.get_afflictions_text()).is_equal("Aflicciones 2/3\nVeneno (básicos) nv. 2\nEscarcha (habilidad) nv. 1")
 	pause.toggle()
 
@@ -125,7 +125,9 @@ func test_ac891_violet_cards_show_the_next_level() -> void:
 	var style: StyleBoxFlat = button.get_theme_stylebox(&"normal") as StyleBoxFlat
 	assert_that(style.bg_color).is_equal(PICKER_CONFIG.affliction_card_color)
 	assert_str(button.text).starts_with("Aflicción: Veneno (Nv 2)\n")
-	assert_str(button.text).contains(POISON_BASIC.get_description(2))
+	# The first line of the level text ("Tus ataques básicos acumulan…") is now the colored header.
+	var rest: PackedStringArray = POISON_BASIC.get_description(2).split("\n").slice(1)
+	assert_str(button.text).contains("\n".join(rest))
 
 
 func test_ac895_a_wave_grunt_gets_poisoned_and_its_bar_empties() -> void:

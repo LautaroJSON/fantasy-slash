@@ -88,7 +88,7 @@ func test_ac113_plus_and_minus_change_the_stats() -> void:
 	assert_float(_player.stats.get_stat(PlayerStats.Stat.DAMAGE)).is_equal_approx(PLAYER_STATS.damage + DAMAGE_UPGRADE.amount, 0.0001)
 	# Adapted (sandbox-arena-control.md): read from the warrior data, not a fixed value.
 	assert_str(_pause.get_value_text(PlayerStats.Stat.DAMAGE)).is_equal("%.1f" % (PLAYER_STATS.damage + DAMAGE_UPGRADE.amount))
-	assert_str(_panel.get_count_text(DAMAGE_UPGRADE)).is_equal("1/%d" % DAMAGE_UPGRADE.max_stacks)
+	assert_str(_panel.get_count_text(DAMAGE_UPGRADE)).is_equal("1/%d" % DAMAGE_UPGRADE.total_copies())
 	assert_bool(_panel.is_minus_enabled(DAMAGE_UPGRADE)).is_true()
 	_panel.remove(DAMAGE_UPGRADE)
 	assert_float(_player.stats.get_stat(PlayerStats.Stat.DAMAGE)).is_equal_approx(PLAYER_STATS.damage, 0.0001)
@@ -140,7 +140,7 @@ func test_ac122_rows_show_base_and_current_values() -> void:
 		_panel.add(charge_damage)
 		_panel.add(CRIT_UPGRADE)
 	assert_str(_panel.get_value_text(charge_damage)).is_equal("(12 → 32)")
-	assert_str(_panel.get_value_text(CRIT_UPGRADE)).is_equal("(5 % → 30 %)")
+	assert_str(_panel.get_value_text(CRIT_UPGRADE)).is_equal("(5 % → 20 %)")
 
 
 func test_ac123_unique_rows_show_their_effect() -> void:
@@ -155,7 +155,7 @@ func test_ac124_name_tooltip_summarises_the_card() -> void:
 	_pause.open()
 	var tooltip: String = _panel.get_name_tooltip(DAMAGE_UPGRADE)
 	assert_str(tooltip).contains(DAMAGE_UPGRADE.description)
-	assert_str(tooltip).contains(str(DAMAGE_UPGRADE.max_stacks))
+	assert_str(tooltip).contains(str(DAMAGE_UPGRADE.total_copies()))
 	assert_str(_panel.get_name_tooltip(CONCUSSIVE)).contains("Nv 2")
 
 

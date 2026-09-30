@@ -271,11 +271,11 @@ func count_upgrade(card: UpgradeCard) -> int:
 	return ultimate_ability.count_card(card)
 
 
-## Highest count a card can reach: max_stacks for stat cards, max_level for
+## Highest count a card can reach: max_stacks (+ ascension) for stat cards, max_level for
 ## unique and Affliction upgrades.
 func max_count(card: UpgradeCard) -> int:
 	if card is UpgradeData:
-		return (card as UpgradeData).max_stacks
+		return (card as UpgradeData).total_copies()
 	if card is AbilityUpgradeData:
 		return (card as AbilityUpgradeData).max_stacks
 	if card is AfflictionUpgradeData:

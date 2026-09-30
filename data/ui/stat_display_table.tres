@@ -86,8 +86,15 @@ label = "Acum. Aflicción"
 format = "+%.0f %%"
 multiplier = 100.0
 
+[sub_resource type="Resource" id="Row_pickup_radius"]
+script = ExtResource("2_row")
+stat = 21
+label = "Radio de recogida"
+format = "%.1f m"
+multiplier = 1.0
+
 [resource]
 script = ExtResource("1_table")
 left_column = Array[ExtResource("2_row")]([SubResource("Row_damage"), SubResource("Row_crit_chance"), SubResource("Row_crit_damage"), SubResource("Row_lifesteal"), SubResource("Row_damage_bonus")])
-right_column = Array[ExtResource("2_row")]([SubResource("Row_max_health"), SubResource("Row_defense"), SubResource("Row_stamina_max"), SubResource("Row_affliction_buildup")])
+right_column = Array[ExtResource("2_row")]([SubResource("Row_max_health"), SubResource("Row_defense"), SubResource("Row_stamina_max"), SubResource("Row_affliction_buildup"), SubResource("Row_pickup_radius")])
 bottom_rows = Array[ExtResource("2_row")]([SubResource("Row_attack_speed"), SubResource("Row_move_speed"), SubResource("Row_attack_range")])

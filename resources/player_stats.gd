@@ -25,6 +25,7 @@ enum Stat {
 	SPRINT_SPEED_FACTOR,
 	AFFLICTION_BUILDUP,
 	DASH_INVULNERABILITY,
+	PICKUP_RADIUS,
 }
 
 @export var damage: float
@@ -69,6 +70,8 @@ enum Stat {
 ## Seconds the player is invulnerable from the start of a dash; it may outlast
 ## the dash movement (dash_duration). The dash cooldown never drops below it.
 @export var dash_invulnerability: float
+## Meters within which coins fly to the player (docs/specs/gold-system.md). Same in every class.
+@export var pickup_radius: float
 
 
 func get_base(stat: Stat) -> float:
@@ -115,4 +118,6 @@ func get_base(stat: Stat) -> float:
 			return affliction_buildup
 		Stat.DASH_INVULNERABILITY:
 			return dash_invulnerability
+		Stat.PICKUP_RADIUS:
+			return pickup_radius
 	return 0.0

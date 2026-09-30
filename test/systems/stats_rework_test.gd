@@ -67,7 +67,7 @@ func test_ac230_a_base_crit_deals_double_damage() -> void:
 
 
 func test_ac232_the_catalog_has_ten_cards_and_no_fixed_stat() -> void:
-	# 10 from stats-rework.md + "Acumulación de Aflicción" (affliction.md, AC859).
-	assert_int(CATALOG.upgrades.size()).is_equal(11)
+	# 10 from stats-rework.md + "Acumulación de Aflicción" (affliction.md, AC859) + "Imán" (gold-system.md).
+	assert_int(CATALOG.upgrades.size()).is_equal(12)
 	for upgrade: UpgradeData in CATALOG.upgrades:
 		assert_bool(FIXED_STATS.has(upgrade.stat)).override_failure_message(upgrade.title).is_false()

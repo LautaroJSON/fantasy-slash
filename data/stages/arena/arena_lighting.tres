@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="StageLighting" format=3]
+[gd_resource type="Resource" script_class="StageLighting" format=3 uid="uid://bgyl8d66braix"]
 
-[ext_resource type="Script" path="res://resources/stage_lighting.gd" id="1_lighting"]
+[ext_resource type="Script" uid="uid://bv6l3kl5wbcon" path="res://resources/stage_lighting.gd" id="1_lighting"]
 
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 1

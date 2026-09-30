@@ -32,3 +32,5 @@
 - AC731–AC736 por `samurai-rest-guard.md`.
 - AC737–AC742 por `samurai-run.md`.
 - AC743–AC756 por `warrior-sword-and-shield.md`.
+- AC1396–AC1425 por `gold-system.md`.
+- AC1426–AC1447 los usa `upgrade-cards-redesign.md` (AC1448–AC1470 quedan libres para su spec hermana del sandbox).

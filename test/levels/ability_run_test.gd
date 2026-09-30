@@ -121,7 +121,8 @@ func test_ac56_ability_cards_are_light_blue() -> void:
 	var ability_style: StyleBoxFlat = buttons[0].get_theme_stylebox(&"normal") as StyleBoxFlat
 	assert_object(ability_style).is_not_null()
 	assert_that(ability_style.bg_color).is_equal(PICKER_CONFIG.ability_card_color)
-	assert_bool(buttons[1].has_theme_stylebox_override(&"normal")).is_false()
+	var common_style: StyleBoxFlat = buttons[1].get_theme_stylebox(&"normal") as StyleBoxFlat
+	assert_that(common_style.bg_color).is_equal(PICKER_CONFIG.common_card_color)
 
 
 func test_ac57_hud_shows_the_basic_slot_and_a_bigger_locked_ultimate() -> void:

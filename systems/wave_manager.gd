@@ -45,6 +45,11 @@ signal bosses_cleared
 @export var ban_picker: UpgradeBanPicker
 ## Caps, respawn delay and default group of the sandbox (docs/specs/sandbox-arena-control.md).
 @export var sandbox_config: SandboxConfig
+## Gold and prices (docs/specs/gold-system.md). Without them every pick is free.
+@export var wallet: GoldWallet
+@export var shop: ShopConfig
+## Quality tiers of the white cards (docs/specs/upgrade-cards-redesign.md).
+@export var rolls: RollConfig
 
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 ## Every card that can be offered; rebuilt when an ability is equipped.
@@ -59,6 +64,12 @@ var _type_counts: Array[int] = []
 var _type_pools: Array[EnemyPool] = []
 ## Cards still to pick after the current wave (WaveConfig.picks_for_wave).
 var _picks_left: int = 0
+## Shop of the current wave (docs/specs/gold-system.md): open, offer on sale, and
+## the rerolls and heals bought this wave.
+var _shop_open: bool = false
+var _shop_offer: Array[UpgradeCard] = []
+var _rerolls: int = 0
+var _heals: int = 0
 ## Fodder still to come out this wave, and the ones alive now.
 var _horde_remaining: int = 0
 var _horde_alive: int = 0
@@ -80,6 +91,10 @@ func _ready() -> void:
 	registry.all_dead.connect(_on_all_dead)
 	picker.upgrade_chosen.connect(_on_upgrade_chosen)
 	picker.ban_requested.connect(_on_ban_requested)
+	picker.upgrade_bought.connect(_on_upgrade_bought)
+	picker.reroll_requested.connect(_on_reroll_requested)
+	picker.heal_requested.connect(_on_heal_requested)
+	picker.shop_closed.connect(_on_shop_closed)
 	ability_picker.ability_chosen.connect(_on_ability_chosen)
 	ban_picker.ban_chosen.connect(_on_ban_chosen)
 	ban_picker.ban_cancelled.connect(_on_ban_cancelled)
@@ -151,9 +166,12 @@ func get_available_pool() -> Array[UpgradeCard]:
 
 ## Golden cards only after a boss wave; the rest of the time they are left out.
 func build_offer() -> Array[UpgradeCard]:
+	var picked: Array[UpgradeCard]
 	if run_state.is_boss_wave():
-		return UpgradeOffer.boss_offer(get_available_pool(), config.cards_per_offer, _rng)
-	return UpgradeOffer.pick(UpgradeOffer.without_unique(get_available_pool()), config.cards_per_offer, _rng)
+		picked = UpgradeOffer.boss_offer(get_available_pool(), config.cards_per_offer, _rng)
+	else:
+		picked = UpgradeOffer.pick(UpgradeOffer.without_unique(get_available_pool()), config.cards_per_offer, _rng)
+	return UpgradeRoll.roll_offer(picked, rolls, _rng)
 
 
 func _spawn_from(source: EnemyPool, count: int) -> void:
@@ -288,8 +306,75 @@ func _on_all_dead() -> void:
 		run_state.start_rage()
 		_advance_wave.call_deferred()
 		return
+	if is_shop_wave():
+		_open_shop(offer)
+		return
 	_picks_left = config.picks_for_wave(run_state.wave, run_state.is_boss_wave())
 	picker.show_offer(offer, ban_rules.is_offered(run_state.wave, run_state.ban_count()))
+
+
+## True when this wave's cards are sold (docs/specs/gold-system.md): the wave is
+## past the free picks and the level has a wallet and prices.
+func is_shop_wave() -> bool:
+	return shop != null and wallet != null and run_state.wave > shop.free_picks_until_wave
+
+
+func is_shop_open() -> bool:
+	return _shop_open
+
+
+func _open_shop(offer: Array[UpgradeCard]) -> void:
+	_shop_open = true
+	_shop_offer = offer
+	_rerolls = 0
+	_heals = 0
+	_refresh_shop()
+
+
+## Shows the shop again with current prices, gold and offer.
+func _refresh_shop() -> void:
+	var prices: Array[int] = []
+	for card: UpgradeCard in _shop_offer:
+		prices.append(ShopPricing.card_price(card, run_state.wave, player.count_upgrade(card), shop, rolls))
+	var heal_price: int = -1
+	if player.health.get_health_ratio() < 1.0:
+		heal_price = ShopPricing.heal_price(_heals, shop)
+	var heal_amount: int = roundi(minf(player.health.max_health * shop.heal_fraction, player.health.max_health - player.health.current_health))
+	var ban_price: int = -1
+	if ban_rules.is_offered(run_state.wave, run_state.ban_count()):
+		ban_price = ShopPricing.ban_price(run_state.ban_count(), shop)
+	picker.show_shop(_shop_offer, prices, wallet.get_gold(), ShopPricing.reroll_price(_rerolls, shop), heal_price, ban_price, heal_amount)
+
+
+func _on_upgrade_bought(card: UpgradeCard) -> void:
+	var price: int = ShopPricing.card_price(card, run_state.wave, player.count_upgrade(card), shop, rolls)
+	if not wallet.try_spend(price):
+		return
+	player.apply_upgrade(card)
+	_shop_offer.erase(card)
+	_refresh_shop()
+
+
+func _on_reroll_requested() -> void:
+	if not wallet.try_spend(ShopPricing.reroll_price(_rerolls, shop)):
+		return
+	_rerolls += 1
+	_shop_offer = build_offer()
+	_refresh_shop()
+
+
+func _on_heal_requested() -> void:
+	if not wallet.try_spend(ShopPricing.heal_price(_heals, shop)):
+		return
+	_heals += 1
+	player.health.heal(player.health.max_health * shop.heal_fraction)
+	_refresh_shop()
+
+
+func _on_shop_closed() -> void:
+	_shop_open = false
+	_shop_offer = []
+	_advance_wave()
 
 
 func _on_upgrade_chosen(upgrade: UpgradeCard) -> void:
@@ -320,8 +405,16 @@ func _on_ban_cancelled() -> void:
 	picker.reopen()
 
 
-## Banning replaces one of this wave's picks.
+## Banning replaces one of this wave's picks; in the shop it costs gold instead.
 func _on_ban_chosen(card: UpgradeCard) -> void:
+	if _shop_open:
+		if not wallet.try_spend(ShopPricing.ban_price(run_state.ban_count(), shop)):
+			picker.reopen()
+			return
+		run_state.ban(card)
+		_shop_offer.erase(card)
+		_refresh_shop()
+		return
 	run_state.ban(card)
 	_finish_pick()
 

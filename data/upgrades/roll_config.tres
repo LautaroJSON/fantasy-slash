@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RollConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/roll_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+weights = Array[float]([50.0, 30.0, 15.0, 5.0])
+price_factors = Array[float]([0.6, 1.0, 1.5, 2.5])
+colors = Array[Color]([Color(1, 1, 1, 1), Color(0.45, 0.72, 1, 1), Color(0.78, 0.55, 1, 1), Color(1, 0.82, 0.3, 1)])
+names = Array[String](["Mínimo", "Medio", "Alto", "Máximo"])

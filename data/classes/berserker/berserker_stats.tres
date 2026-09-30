@@ -23,3 +23,4 @@ stamina_max = 150.0
 stamina_regen = 30.0
 sprint_stamina_cost = 20.0
 sprint_speed_factor = 1.6
+pickup_radius = 4.0

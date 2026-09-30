@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GoldConfig" format=3]
+
+[ext_resource type="Script" path="res://resources/gold_config.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+coin_value_base = 3.0
+coin_value_per_wave = 0.5
+fodder_multiplier = 0.4
+boss_multiplier = 25.0
+max_coins_on_floor = 80
+magnet_speed = 8.0
+magnet_acceleration = 30.0
+collect_distance = 0.6
+rest_height = 0.5
+spin_speed = 3.0
+stage_change_auto_collect = true
